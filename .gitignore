@@ -10,3 +10,7 @@ enrollment_demo/**
 # FVM Version Cache
 .fvm/
 .vscode/
+
+# native_deploy clone and its test stacks' run directories (justfile_app_tests.just)
+.native_deploy/
+.native_deploy.*/

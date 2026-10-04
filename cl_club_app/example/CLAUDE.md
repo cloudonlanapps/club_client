@@ -18,7 +18,8 @@ just app-test-one app_test_server1.conf <file> keep=1   # leave the server up
 ```
 
 Each run starts its own stack with `background_server.sh <conf> start
---auto-ports` (native_deploy, on PATH): free ports, a fresh run directory, a
+--auto-ports` (native_deploy, cloned by the recipe into the repo root's
+gitignored `.native_deploy/`): free ports, a fresh run directory, a
 fresh database, torn down on exit. It never touches the dev, beta or prod
 stacks, so there is nothing to ask permission about. Runs are Linux desktop
 (`flutter test -d linux`); a web target is club_core#89.

@@ -1,0 +1,43 @@
+name: cl_club_evaluation
+description: Member evaluations — the member's reviews, the coach's evaluations and editor, the admin's template library and designer, and the start-review dialog.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.10.0"
+
+dependencies:
+  cl_gallery_viewer:
+    git:
+      url: https://github.com/cloudonlanapps/cl_gallery_viewer.git
+      ref: 500db1a19fa953d73a3d9d4cfa04f48c5047b86d   # request headers (#12)
+  cl_member_auth:
+    path: ../cl_member_auth
+  cl_remote_store:
+    path: ../cl_remote_store
+  club_sdk_2:
+    git:
+      url: https://github.com/cloudonlanapps/club_sdk.git
+      ref: d6c62856c965ad5175eb71ea8f16cdabd3988d47
+  flutter:
+    sdk: flutter
+  flutter_riverpod: 2.6.1
+  shadcn_ui: 0.56.1
+  ui_lib:
+    path: ../ui_lib
+
+dev_dependencies:
+  cl_server_config:
+    path: ../cl_server_config
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: 10.3.0
+
+# Local development against the workspace checkouts. Uncomment to build
+# against the working trees; it must stay commented in a commit.
+#dependency_overrides:
+#  cl_gallery_viewer:
+#    path: ../../packages/cl_gallery_viewer
+#  club_sdk_2:
+#    path: ../../packages/club_sdk

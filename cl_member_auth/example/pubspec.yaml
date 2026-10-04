@@ -1,0 +1,23 @@
+name: cl_member_auth_example
+description: Example app demonstrating cl_member_auth usage without GoRouter.
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.10.0"
+
+dependencies:
+  cl_member_auth:
+    path: ../
+  club_sdk_2:
+    git:
+      url: https://github.com/cloudonlanapps/club_sdk.git
+      ref: d6c62856c965ad5175eb71ea8f16cdabd3988d47
+  flutter:
+    sdk: flutter
+  flutter_riverpod: 2.6.1
+  shadcn_ui: 0.56.1
+
+#dependency_overrides:
+#  club_sdk_2:
+#    path: ../../../packages/club_sdk

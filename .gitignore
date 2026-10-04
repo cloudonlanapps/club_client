@@ -1,0 +1,12 @@
+.DS_Store
+**/*.swp
+**/.env
+**/.test_env
+enrollment_demo/**
+.claude/**
+!.claude/agents/
+!.claude/agents/**
+
+# FVM Version Cache
+.fvm/
+.vscode/

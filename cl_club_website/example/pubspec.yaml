@@ -1,0 +1,32 @@
+name: cl_club_website_example
+description: A neutral club website over club_core. The template a club's site is generated from; its test/ checks the brand files.
+version: 0.1.0+1
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.10.0"
+
+dependencies:
+  cl_club_website:
+    path: ..
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  # For the brand-file test: the contact file must parse the way the site reads it.
+  cl_remote_store:
+    path: ../../cl_remote_store
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: 10.3.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+    - assets/config/
+    - assets/data/
+    - assets/images/
+    - assets/l10n/
+    - assets/media/

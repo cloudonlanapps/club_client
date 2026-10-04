@@ -1,0 +1,102 @@
+{
+  "ctaTemplates": {
+    "available": {
+      "title": "Ready to Join?",
+      "description": "Register before {deadline} to confirm your spot",
+      "primaryButtonText": "Register Now",
+      "secondaryButtonText": "View Other Events",
+      "primaryRoute": "/auth/signup",
+      "secondaryRoute": "/public/one-off"
+    },
+    "closed": {
+      "title": "Registration Closed",
+      "description": "The registration deadline has passed. Contact us for inquiries.",
+      "primaryButtonText": "Contact Us",
+      "secondaryButtonText": "View Other Events",
+      "primaryRoute": "/public/contact-us",
+      "secondaryRoute": "/public/one-off"
+    },
+    "completed": {
+      "title": "This Event Has Ended",
+      "description": "Thank you to all participants! Check out our upcoming events.",
+      "primaryButtonText": "View Upcoming Events",
+      "secondaryButtonText": "",
+      "primaryRoute": "/public/one-off",
+      "secondaryRoute": null
+    }
+  },
+  "pageDataDefaults": {
+    "activeSection": {
+      "badge": "",
+      "title": "",
+      "description": ""
+    },
+    "emptyState": {
+      "iconName": "calendar",
+      "title": "No Content",
+      "description": "Event details unavailable.",
+      "buttonText": "Contact Us"
+    }
+  },
+  "labels": {
+    "hero": {
+      "datesLabel": "Date",
+      "timingsLabel": "Timings",
+      "venueLabel": "Venue",
+      "eligibilityLabel": "Eligibility"
+    },
+    "highlights": {
+      "titleActive": "What to Expect",
+      "titlePast": "Event Highlights"
+    },
+    "coach": {
+      "labelActive": "Featured Coaches",
+      "labelPast": "Featured Coaches"
+    },
+    "fees": {
+      "title": "Event Fees",
+      "includesLabel": "Includes"
+    },
+    "feeStructure": {
+      "title": "Fee Structure",
+      "feeTypeHeader": "Fee Type",
+      "periodHeader": "Period",
+      "amountHeader": "Amount"
+    },
+    "batchTimings": {
+      "title": "Event Schedule",
+      "batchHeader": "SESSION",
+      "timeHeader": "TIME",
+      "sessionHeader": "ACTIVITY",
+      "detailsHeader": "DETAILS"
+    },
+    "facilities": {
+      "title": "Additional Facilities"
+    },
+    "packages": {
+      "title": "Ticket Packages",
+      "subtitle": "Group discounts available!"
+    },
+    "offers": {
+      "title": "Special Offers",
+      "validUntilPrefix": "Valid until: "
+    },
+    "eligibility": {
+      "title": "Eligibility"
+    },
+    "gallery": {
+      "title": "Event Gallery",
+      "subtitle": "Moments from the event"
+    },
+    "navigation": {
+      "viewAllRoute": "/public/one-off",
+      "viewOthersButtonText": "View Other Events"
+    }
+  },
+  "cardLabels": {
+    "viewDetails": "View Details",
+    "actionButton": "Register Now",
+    "viewGallery": "View Gallery",
+    "whatsIncluded": "What's Included"
+  }
+}

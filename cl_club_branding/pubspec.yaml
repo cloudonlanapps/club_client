@@ -1,0 +1,33 @@
+name: cl_club_branding
+description: Club identity for the shared UI — brand strings, logo, footer, colour scheme, the remembered theme mode and the contact button. Carries no club's values; the host app supplies them by provider override.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.10.0"
+
+dependencies:
+  cl_remote_store:
+    path: ../cl_remote_store
+  flutter:
+    sdk: flutter
+  flutter_riverpod: 2.6.1
+  shadcn_ui: 0.56.1
+  shared_preferences: 2.5.5
+  simple_speed_dial: 0.1.7
+  url_launcher: 6.3.2
+
+dev_dependencies:
+  club_sdk_2:
+    git:
+      url: https://github.com/cloudonlanapps/club_sdk.git
+      ref: d6c62856c965ad5175eb71ea8f16cdabd3988d47
+  flutter_test:
+    sdk: flutter
+  url_launcher_platform_interface: 2.3.2
+  very_good_analysis: 10.3.0
+
+#dependency_overrides:
+#  club_sdk_2:
+#    path: ../../packages/club_sdk

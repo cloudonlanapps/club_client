@@ -1,0 +1,242 @@
+// workflow_edituser: focused coverage of the user-profile section editors and
+// the bio/achievements markdown editors, across roles and on the self profile.
+//
+// Flow:
+//   0. Sudo creates an admin, a coach, and a member.
+//   1. Admin opens the member's profile: sections present and editable; the
+//      empty Address section is shown (with the add affordance) to the admin.
+//   2. Coach opens the member's profile: read-only (no pencils, no markdown
+//      editors) and the empty Address section is hidden entirely.
+//   3. Member opens their own profile: sections present and self-editable.
+//   4. Admin edits personal details / contact / address (inline) + bio
+//      (markdown); each change round-trips to the server and reflects in place.
+//   5. Member confirms the updates on their own profile.
+//   6. Cleanup: admin soft-deletes the member; sudo soft-deletes admin + coach.
+
+import 'package:cl_club_members/src/views/user_profile_view.dart'
+    show AddressCard, PersonalDetailsCard;
+import 'package:cl_club_members/src/widgets/user_contact_info_card.dart';
+import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
+import 'package:cl_remote_store/cl_remote_store.dart'
+    show clUserPrivateProvider;
+import 'package:club_sdk_2/club_sdk_2.dart' show Role, UserPrivate;
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/integration_test.dart';
+
+import '_helpers/auth.dart';
+import '_helpers/editors.dart';
+import '_helpers/forms.dart';
+import '_helpers/pump.dart';
+import '_helpers/users.dart';
+
+const _kApiBaseUrl = String.fromEnvironment(
+  'CLUB_API_BASE_URL',
+  defaultValue: 'http://127.0.0.1:8155/v1',
+);
+const _kSudoUsername = String.fromEnvironment(
+  'SUDO_USERNAME',
+  defaultValue: 'sudo',
+);
+const _kSudoPassword = String.fromEnvironment('SUDO_PASSWORD');
+
+const _kAdmin = 'workflow_edituser_admin';
+const _kCoach = 'workflow_edituser_coach';
+const _kMember = 'workflow_edituser_member';
+const _kPwd = 'WfEditUserPwd!2024';
+
+const _kEditedFirstName = 'WfEdited';
+const _kEditedPhone = '9876500011';
+const _kEditedAddrLine1 = 'WfEdited line 1';
+const _kEditedBio = 'workflow_edituser bio: edited by admin.';
+
+void main() {
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+
+  if (_kSudoPassword.isEmpty) {
+    throw StateError(
+      'SUDO_PASSWORD must be supplied via --dart-define '
+      '(or --dart-define-from-file=integration_test/.test_env).',
+    );
+  }
+
+  testWidgets(
+    'user profile section + markdown editors across roles + self',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1600, 4000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
+      await ensureLoggedOut(tester);
+
+      // ─── Phase 0: sudo creates the three actors ────────────────────────
+      await loginViaUi(tester, _kSudoUsername, _kSudoPassword);
+      await createUserViaUi(tester, username: _kAdmin, password: _kPwd);
+      await grantRolesViaCheckboxViaUi(
+        tester,
+        username: _kAdmin,
+        roles: {Role.admin},
+      );
+      await createUserViaUi(tester, username: _kCoach, password: _kPwd);
+      await grantRolesViaCheckboxViaUi(
+        tester,
+        username: _kCoach,
+        roles: {Role.coach},
+      );
+      await createUserViaUi(tester, username: _kMember, password: _kPwd);
+      await logout(tester);
+
+      // ─── Phase 1: admin sees editable sections (empty Address shown) ───
+      await loginViaUi(tester, _kAdmin, _kPwd);
+      await _openMemberProfile(tester, _kMember);
+      expect(find.text('Personal details'), findsOneWidget);
+      expect(find.text('Contact'), findsOneWidget);
+      expect(
+        find.text('Address'),
+        findsOneWidget,
+        reason: 'empty Address section is shown (with add affordance) to admin',
+      );
+      expectSectionEditable(tester, find.byType(PersonalDetailsCard));
+      expect(find.byTooltip('Edit Bio'), findsOneWidget);
+      await logout(tester);
+
+      // ─── Phase 2: coach view is read-only; empty Address is hidden ─────
+      await loginViaUi(tester, _kCoach, _kPwd);
+      await _openMemberProfile(tester, _kMember);
+      expect(find.text('Personal details'), findsOneWidget);
+      expectSectionReadOnly(tester, find.byType(PersonalDetailsCard));
+      expectSectionReadOnly(tester, find.byType(UserContactInfoCard));
+      expect(
+        find.byTooltip('Edit Bio'),
+        findsNothing,
+        reason: 'coach must not get the bio editor',
+      );
+      // The AddressCard widget stays in the tree but renders nothing
+      // (SizedBox.shrink) when empty + read-only, so assert its title is gone.
+      expect(
+        find.text('Address'),
+        findsNothing,
+        reason: 'empty Address section is hidden from a read-only viewer',
+      );
+      await logout(tester);
+
+      // ─── Phase 3: member self-profile is editable ──────────────────────
+      await loginViaUi(tester, _kMember, _kPwd);
+      await go(tester, '/memberzone/profile');
+      await waitFor(
+        tester,
+        () => find.text('Personal details').evaluate().isNotEmpty,
+        description: 'self profile to render',
+      );
+      expectSectionEditable(tester, find.byType(PersonalDetailsCard));
+      await logout(tester);
+
+      // ─── Phase 4: admin edits sections + bio, server + view reflect ────
+      await loginViaUi(tester, _kAdmin, _kPwd);
+      await _openMemberProfile(tester, _kMember);
+
+      // Personal details — first name.
+      await tapSectionPencil(tester, find.byType(PersonalDetailsCard));
+      await enterTextById(tester, 'firstName', _kEditedFirstName);
+      await saveInlineEditor(tester);
+      await waitFor(
+        tester,
+        () => _member(tester).firstName == _kEditedFirstName,
+        description: 'first name to round-trip to the server',
+      );
+
+      // Contact — phone (shown verbatim in the card on save).
+      await tapSectionPencil(tester, find.byType(UserContactInfoCard));
+      await enterTextById(tester, 'phone', _kEditedPhone);
+      await saveInlineEditor(tester);
+      await waitFor(
+        tester,
+        () => _member(tester).phone == _kEditedPhone,
+        description: 'phone to round-trip to the server',
+      );
+      expect(
+        find.text(_kEditedPhone),
+        findsOneWidget,
+        reason: 'updated phone must show in the Contact card after save',
+      );
+
+      // Address — line 1 (was empty; now introduced).
+      await tapSectionPencil(tester, find.byType(AddressCard));
+      await enterTextById(tester, 'addrLine1', _kEditedAddrLine1);
+      await saveInlineEditor(tester);
+      await waitFor(
+        tester,
+        () => _member(tester).address?.addrLine1 == _kEditedAddrLine1,
+        description: 'address line 1 to round-trip to the server',
+      );
+
+      // Bio — markdown editor.
+      await editMarkdownField(
+        tester,
+        tooltip: 'Edit Bio',
+        markdown: _kEditedBio,
+      );
+      await waitFor(
+        tester,
+        () => _member(tester).bio == _kEditedBio,
+        description: 'bio to round-trip to the server',
+      );
+      await logout(tester);
+
+      // ─── Phase 5: member confirms updates on their own profile ─────────
+      await loginViaUi(tester, _kMember, _kPwd);
+      await go(tester, '/memberzone/profile');
+      await waitFor(
+        tester,
+        () => find.text(_kEditedPhone).evaluate().isNotEmpty,
+        description: 'updated phone visible on the self profile',
+      );
+      final self = container(tester).read(authStateProvider).valueOrNull!;
+      expect(self.firstName, _kEditedFirstName);
+      expect(self.address?.addrLine1, _kEditedAddrLine1);
+      expect(self.bio, _kEditedBio);
+      await logout(tester);
+
+      // ─── Phase 6: cleanup ──────────────────────────────────────────────
+      await loginViaUi(tester, _kAdmin, _kPwd);
+      await softDeleteUserViaUi(tester, _kMember);
+      await logout(tester);
+
+      await loginViaUi(tester, _kSudoUsername, _kSudoPassword);
+      await softDeleteUserViaUi(tester, _kAdmin);
+      await softDeleteUserViaUi(tester, _kCoach);
+      await logout(tester);
+    },
+    timeout: const Timeout(Duration(minutes: 20)),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Local helpers.
+// ---------------------------------------------------------------------------
+
+/// Reads the member's [UserPrivate]. Caller must be on the member's admin
+/// profile (which watches `clUserPrivateProvider`).
+UserPrivate _member(WidgetTester tester) {
+  final v = container(tester).read(clUserPrivateProvider(_kMember)).valueOrNull;
+  expect(v, isNotNull, reason: 'clUserPrivateProvider($_kMember) must be live');
+  return v!;
+}
+
+Future<void> _openMemberProfile(WidgetTester tester, String username) async {
+  await go(tester, '/memberzone/users');
+  final card = find.byKey(ValueKey(username));
+  await waitFor(
+    tester,
+    () => card.evaluate().isNotEmpty,
+    description: 'user card "$username" in the admin list',
+  );
+  await tester.tap(card);
+  await settle(tester);
+  await waitFor(
+    tester,
+    () => find.text('Personal details').evaluate().isNotEmpty,
+    description: 'profile (Personal details section) to render',
+  );
+}

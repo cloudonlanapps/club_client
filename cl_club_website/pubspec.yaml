@@ -1,0 +1,63 @@
+name: cl_club_website
+description: A club's public website. A club site supplies only its config, copy and assets, and calls websiteMain.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.10.0"
+
+dependencies:
+  cl_club_branding:
+    path: ../cl_club_branding
+  cl_club_events:
+    path: ../cl_club_events
+  cl_club_members:
+    path: ../cl_club_members
+  cl_club_venues:
+    path: ../cl_club_venues
+  cl_gallery_viewer:
+    git:
+      url: https://github.com/cloudonlanapps/cl_gallery_viewer.git
+      ref: 500db1a19fa953d73a3d9d4cfa04f48c5047b86d   # request headers (#12)
+  cl_remote_store:
+    path: ../cl_remote_store
+  cl_server_config:
+    path: ../cl_server_config
+  club_sdk_2:
+    git:
+      url: https://github.com/cloudonlanapps/club_sdk.git
+      ref: d6c62856c965ad5175eb71ea8f16cdabd3988d47
+  flutter:
+    sdk: flutter
+  flutter_riverpod: 2.6.1
+  flutter_web_plugins:
+    sdk: flutter
+  go_router: 18.0.0
+  http: 1.6.0
+  markdown_widget: 2.3.2+8
+  media_kit: 1.2.6
+  media_kit_libs_video: 1.0.7
+  media_kit_video: 2.0.1
+  meta: 1.19.0
+  qr_flutter: 4.1.0
+  scroll_to_index: 3.0.1
+  shadcn_ui: 0.56.1
+  ui_lib:
+    path: ../ui_lib
+  url_launcher: 6.3.2
+  visibility_detector: 0.4.0+2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: 10.3.0
+
+# Local development against the workspace checkouts. Uncomment to build
+# against the working tree instead of the pinned commit; it must stay
+# commented in a commit, or a clean container build resolves nothing.
+#dependency_overrides:
+#  cl_gallery_viewer:
+#    path: ../../packages/cl_gallery_viewer
+#  club_sdk_2:
+#    path: ../../packages/club_sdk

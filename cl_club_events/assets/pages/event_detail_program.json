@@ -1,0 +1,102 @@
+{
+  "ctaTemplates": {
+    "available": {
+      "title": "Ready to Join?",
+      "description": "Register now to start your journey",
+      "primaryButtonText": "Join Now",
+      "secondaryButtonText": "View Other Programs",
+      "primaryRoute": "/auth/signup",
+      "secondaryRoute": "/public/programs"
+    },
+    "closed": {
+      "title": "Registration Closed",
+      "description": "The registration deadline has passed. Contact us for inquiries.",
+      "primaryButtonText": "Contact Us",
+      "secondaryButtonText": "View Other Programs",
+      "primaryRoute": "/public/contact-us",
+      "secondaryRoute": "/public/programs"
+    },
+    "completed": {
+      "title": "This Program Has Ended",
+      "description": "Thank you to all participants! Check out our current programs.",
+      "primaryButtonText": "View Current Programs",
+      "secondaryButtonText": "",
+      "primaryRoute": "/public/programs",
+      "secondaryRoute": null
+    }
+  },
+  "pageDataDefaults": {
+    "activeSection": {
+      "badge": "",
+      "title": "",
+      "description": ""
+    },
+    "emptyState": {
+      "iconName": "calendar",
+      "title": "No Content",
+      "description": "Program details unavailable.",
+      "buttonText": "Contact Us"
+    }
+  },
+  "labels": {
+    "hero": {
+      "datesLabel": "Schedule",
+      "timingsLabel": "Timings",
+      "venueLabel": "Venue",
+      "eligibilityLabel": "Eligibility"
+    },
+    "highlights": {
+      "titleActive": "What You'll Learn",
+      "titlePast": "What Participants Learned"
+    },
+    "coach": {
+      "labelActive": "~ Led By ~",
+      "labelPast": "~ Led By ~"
+    },
+    "fees": {
+      "title": "Program Fees",
+      "includesLabel": "Includes:"
+    },
+    "feeStructure": {
+      "title": "Fee Structure",
+      "feeTypeHeader": "Fee Type",
+      "periodHeader": "Period",
+      "amountHeader": "Amount"
+    },
+    "batchTimings": {
+      "title": "Batch Timings",
+      "batchHeader": "BATCH",
+      "timeHeader": "TIME",
+      "sessionHeader": "SESSION",
+      "detailsHeader": "DETAILS"
+    },
+    "facilities": {
+      "title": "Additional Facilities"
+    },
+    "packages": {
+      "title": "Save More with Packages",
+      "subtitle": "Choose a longer commitment and save big!"
+    },
+    "offers": {
+      "title": "Special Offers",
+      "validUntilPrefix": "Valid until: "
+    },
+    "eligibility": {
+      "title": "Eligibility"
+    },
+    "gallery": {
+      "title": "Program Gallery",
+      "subtitle": "Moments from the program"
+    },
+    "navigation": {
+      "viewAllRoute": "/public/programs",
+      "viewOthersButtonText": "View Other Programs"
+    }
+  },
+  "cardLabels": {
+    "viewDetails": "View Details",
+    "actionButton": "Join Now",
+    "viewGallery": "View Gallery",
+    "whatsIncluded": "What's Included:"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "_comment": "Configurable color tokens for the app. Base scheme is 'blue' from shadcn_ui. Any token omitted below falls back to the scheme default. Hex strings are 6 or 8 digits (with optional leading '#'). Use '#AARRGGBB' to control alpha.",
+  "brandBlue": "#2563EB",
+  "light": {
+    "background": "#F7F6F2",
+    "card":       "#FDFCF9",
+    "popover":    "#FDFCF9",
+    "secondary":  "#EDEBE4",
+    "muted":      "#EDEBE4",
+    "accent":     "#EDEBE4",
+    "border":     "#E0DDD3",
+    "input":      "#E0DDD3"
+  },
+  "dark": {}
+}

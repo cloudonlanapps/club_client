@@ -1,0 +1,46 @@
+name: ui_lib
+description: Shared UI widgets for club management app. Built on shadcn_ui.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.10.0"
+
+dependencies:
+  cached_network_image: 3.4.1
+  # Direct dep so we can reference ImageRenderMethodForWeb (the
+  # cached_network_image barrel doesn't re-export it). Kept in lockstep with
+  # cached_network_image 3.4.1's transitive pin.
+  cached_network_image_platform_interface: 4.1.1
+  cl_calendar:
+    git:
+      url: https://github.com/cloudonlanapps/cl_calendar.git
+      ref: 2b0b93e1647d8efa132ecc68f188ea1e57d343bf   # IHM_RELEASE_0_4
+  cl_gallery_viewer:
+    git:
+      url: https://github.com/cloudonlanapps/cl_gallery_viewer.git
+      ref: 500db1a19fa953d73a3d9d4cfa04f48c5047b86d   # request headers (#12)
+  file_picker: 8.3.7
+  flutter:
+    sdk: flutter
+  markdown_widget: 2.3.2+8
+  pointer_interceptor: 0.10.1+2
+  shadcn_ui: 0.56.1
+  url_launcher: 6.3.2
+  webview_flutter: 4.14.1
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  url_launcher_platform_interface: 2.3.2
+  very_good_analysis: 10.3.0
+
+# Local development against the workspace checkouts. Uncomment to build
+# against the working trees; it must stay commented in a commit.
+#dependency_overrides:
+#  cl_gallery_viewer:
+#    path: ../../packages/cl_gallery_viewer
+#  cl_calendar:
+#    path: ../../packages/cl_calendar

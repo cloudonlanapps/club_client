@@ -1,0 +1,600 @@
+================================================================================
+CARDS DESIGN — club Flutter app
+================================================================================
+
+This document describes the unified list-row card design for the app. All
+entity list views (Users, Groups, Events, Venues, Occurrences) use the same
+card contract: a shared parent widget (EntityCard) plus a perspective-aware
+actions resolver picked internally by each card.
+
+Status: DESIGN — captured under umbrella issue #189.
+Scope:  Affects only list-row cards. Single-purpose layout primitives like
+        InfoCard and StatCard, profile-page section cards, and compact rows
+        (NotificationRow, BroadcastRow) are out of scope.
+
+
+================================================================================
+1. CARD INVENTORY — what we have and where it is used
+================================================================================
+
+There are five entity-list cards. Each card is rendered identically across
+every screen that consumes it; the action set rendered on the right is picked
+internally by the card based on the current user's role.
+
+┌──────────────────┬─────────────────────────────────────────────────────────┐
+│ Card             │ Used by                                                 │
+├──────────────────┼─────────────────────────────────────────────────────────┤
+│ UserCard         │ Users list (admin/coach)                                │
+├──────────────────┼─────────────────────────────────────────────────────────┤
+│ GroupCard        │ Groups list (admin/coach)                               │
+│                  │ My Groups view (member)                                 │
+├──────────────────┼─────────────────────────────────────────────────────────┤
+│ EventCard        │ Events list — Programmes / Camps / One-Off (admin)      │
+│                  │ My Events list (member)                                 │
+│                  │ Dashboard My-Events section body                        │
+├──────────────────┼─────────────────────────────────────────────────────────┤
+│ VenueCard        │ Venues list (admin/coach)                               │
+├──────────────────┼─────────────────────────────────────────────────────────┤
+│ OccurrenceCard   │ Dashboard Today's Events panel (admin/coach)            │
+│                  │ Dashboard My Events panel                               │
+│                  │ Dashboard Public Events panel                           │
+│                  │ Club Calendar (admin/coach)                             │
+│                  │ My Calendar — future days                               │
+│                  │ My Calendar — past days (trailing = AttendanceBadge)    │
+└──────────────────┴─────────────────────────────────────────────────────────┘
+
+Note: OccurrenceCard's My-Calendar past-day usage swaps the trailing
+ActionGroup for a static AttendanceBadge widget — same card shell, different
+trailing content.
+
+
+--------------------------------------------------------------------------------
+1.1 Per-card source location (post-refactor)
+--------------------------------------------------------------------------------
+
+┌──────────────────┬─────────────────────────────────────────────────────────┐
+│ Card             │ File                                                    │
+├──────────────────┼─────────────────────────────────────────────────────────┤
+│ UserCard         │ cl_club_members/lib/src/widgets/cards/user_card.dart    │
+│ GroupCard        │ cl_member_zone/lib/src/widgets/cards/group_card.dart    │
+│ EventCard        │ cl_club_events/lib/src/widgets/cards/event_card.dart    │
+│ VenueCard        │ cl_club_venues/lib/src/widgets/cards/venue_card.dart    │
+│ OccurrenceCard   │ cl_club_events/lib/src/widgets/cards/occurrence_card.dt │
+└──────────────────┴─────────────────────────────────────────────────────────┘
+
+Action resolvers (perspective-aware) live in:
+
+    <pkg>/lib/src/widgets/cards/actions/admin_<entity>_actions.dart
+    <pkg>/lib/src/widgets/cards/actions/user_<entity>_actions.dart
+
+
+================================================================================
+2. SHARED PRIMITIVES IN ui_lib
+================================================================================
+
+All cards build on three primitives shipped from ui_lib. These are the only
+widgets that know about card chrome, action layout, or image fallback.
+
+┌──────────────────┬─────────────────────────────────────────────────────────┐
+│ Primitive        │ Purpose                                                 │
+├──────────────────┼─────────────────────────────────────────────────────────┤
+│ EntityCard       │ The card shell. Owns padding, typography, tap          │
+│                  │ behaviour, image-edge-bleed geometry, dense / muted    │
+│                  │ variants.                                              │
+├──────────────────┼─────────────────────────────────────────────────────────┤
+│ ActionGroup      │ Right-side action area. Renders up to N actions inline │
+│                  │ (default 2); collapses overflow into a ⋮ menu.         │
+├──────────────────┼─────────────────────────────────────────────────────────┤
+│ EntityImage      │ Square left-column image. Three factories:             │
+│                  │   .network(url)      avatar / cover photo              │
+│                  │   .initials(letters) text placeholder                  │
+│                  │   .placeholder()     coloured square                   │
+├──────────────────┼─────────────────────────────────────────────────────────┤
+│ StatusBadge      │ Existing widget, parameterised in ui_lib as a          │
+│                  │ NON-coloured bordered chip (no coloured backgrounds).  │
+│                  │ Used inside card bodies (group kind, default venue)    │
+│                  │ and in AttendanceTable (outside cards scope).          │
+└──────────────────┴─────────────────────────────────────────────────────────┘
+
+Files:
+
+    ui_lib/lib/src/widgets/cards/entity_card.dart
+    ui_lib/lib/src/widgets/cards/action_group.dart
+    ui_lib/lib/src/widgets/cards/action_item.dart   (data class)
+    ui_lib/lib/src/widgets/cards/entity_image.dart
+    ui_lib/lib/src/widgets/status_badge.dart
+
+
+--------------------------------------------------------------------------------
+2.1 Rules every card must follow
+--------------------------------------------------------------------------------
+
+  - No Material widgets in our own widget code. That means:
+      no InkWell, no ListTile, no Card, no Material.
+    ShadCard provides the chrome; tap is GestureDetector + MouseRegion.
+
+  - No coloured chips or coloured-background badges. Plain text or the
+    bordered StatusBadge for visual codes.
+
+  - No decorative type-icons in the leading slot. The image slot is always
+    present; the screen context conveys what type the user is viewing.
+
+  - Theme typography only — no hardcoded TextStyle(fontSize: ...).
+
+  - Card public API is collapsed to (entity, onTap). The card watches
+    authStateProvider internally and picks Admin*Actions or User*Actions.
+
+
+================================================================================
+3. ENTITYCARD — the shared parent
+================================================================================
+
+Constructor:
+
+    EntityCard({
+      required Widget image,          // never null — always reserves slot
+      required String  title,
+      String?  caption,
+      Widget?  body,
+      Widget?  trailingAction,
+      VoidCallback? onTap,
+      bool     dense = false,
+      bool     muted = false,
+    })
+
+Visual layout:
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ ┌──────┐                                                                 │
+│ │      │  Title (theme.textTheme.p, w600, ellipsised)    [trailing⋮]    │
+│ │image │  Caption (theme.textTheme.muted, ellipsised)                    │
+│ │      │  body (any widget — usually a Row of meta facts)                │
+│ └──────┘                                                                 │
+└──────────────────────────────────────────────────────────────────────────┘
+  ^                                                                       ^
+  bleeds to card edge,                                  inner padding 16h × 12v
+  left corners rounded                                  (14h × 12v when dense)
+  to match ShadCard radius (8)
+
+Widget tree:
+
+    ShadCard(padding: EdgeInsets.zero)
+     └─ GestureDetector + MouseRegion        (only when onTap != null)
+         └─ IntrinsicHeight
+             └─ Row(crossAxisAlignment: stretch)
+                 ├─ SizedBox(width: <square>)
+                 │    └─ ClipRRect(
+                 │         borderRadius:
+                 │           BorderRadius.horizontal(left: Radius.circular(8))
+                 │       )
+                 │       └─ image      (EntityImage.network /
+                 │                       .initials / .placeholder)
+                 ├─ Expanded
+                 │   └─ Padding(16h × 12v  /  14h × 12v dense)
+                 │       └─ Row(crossAxisAlignment: start)
+                 │           ├─ Expanded
+                 │           │   └─ Column(crossAxisAlignment: start)
+                 │           │       ├─ Text(title)        (ellipsised)
+                 │           │       ├─ Text(caption?)     (ellipsised)
+                 │           │       └─ body?
+                 │           └─ trailingAction?           (typically ActionGroup)
+                 │       (gap: SizedBox(width: 12) before trailing)
+
+--------------------------------------------------------------------------------
+3.1 Mobile layout — narrow viewports (issues #489, #493)
+--------------------------------------------------------------------------------
+
+EntityCard switches to a stacked layout when its `maxWidth < 600` (see
+`kEntityCardMobileBreakpoint`). Image and info column keep the same shape;
+the trailing action area drops to a full-width row beneath the info column
+instead of competing for horizontal space.
+
+There are two ways to pass actions, and the mobile treatment differs:
+
+  trailingAction: Widget?           (legacy, bespoke)
+      desktop  → rendered to the right of the info column
+      mobile   → rendered as a full-width row beneath the info column
+
+  trailingActions: List<ActionItem>  (preferred, typed)
+      desktop  → ActionGroup to the right of the info column
+      mobile   → primary action (= actions.first) inline as a full-width
+                 row; remaining actions sit behind a ⋮ button at the end
+                 of that row. The ⋮ only renders when there are 2+
+                 actions.
+
+The ⋮ menu is the one home for secondary actions, on mobile and desktop
+alike. The card has no swipe gesture (#64).
+
+Layout sketch (mobile, typed actions):
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ ┌──────┐                                                                 │
+│ │      │  Title                                                          │
+│ │image │  Caption                                                        │
+│ │      │  body                                                           │
+│ │      │  ─────────────────────────────────────                          │
+│ │      │  [ ——— Primary action (full-width) ——— ] [⋮]                   │
+│ └──────┘                                                                 │
+└──────────────────────────────────────────────────────────────────────────┘
+
+Constraints:
+  - Pass either `trailingAction` OR `trailingActions`, never both (assert).
+  - Actions list ordering is meaningful: the FIRST entry is the primary
+    action and stays visible on every viewport. Order admin resolvers so
+    `Edit` is first.
+  - Single-action cards render the primary inline with no ⋮.
+  - Bespoke trailings that pass through `trailingAction` (e.g. the My
+    Calendar past-day `AttendanceBadge`) render as-is and simply stack
+    below on mobile.
+
+
+================================================================================
+4. ACTIONGROUP — right-side action contract
+================================================================================
+
+Constructor:
+
+    ActionGroup({
+      required List<ActionItem> actions,
+      int inlineLimit = 2,
+    })
+
+    ActionItem({
+      required String label,
+      VoidCallback? onPressed,
+      IconData?   icon,
+      bool        loading = false,
+      bool        destructive = false,
+      Widget?     popover,    // for ShadPopover-on-button (e.g. Cancel)
+    })
+
+Rendering rule:
+
+    if (actions.length <= inlineLimit) → all rendered inline as ActionButtons
+    else                                → first inline + remainder in ⋮ menu
+
+Widget tree:
+
+    Row(mainAxisSize: min)
+     ├─ ActionButton(label, onPressed, loading)          (for each inline item)
+     ├─ ...                                              (separated by 4px)
+     └─ PopupMenuButton<int>(icon: ellipsisVertical)     (only when overflowing)
+         └─ PopupMenuItem  ×N                            (for each overflow item)
+
+ActionGroup wraps the existing ui_lib ActionButton — no new button widget.
+
+
+================================================================================
+5. ENTITYIMAGE — leading slot content
+================================================================================
+
+Three factories, all produce a square widget the parent sizes:
+
+    EntityImage.network(String url)
+        └─ Image.network(url, fit: BoxFit.cover)
+
+    EntityImage.initials(String letters)
+        └─ ColoredBox(color: mutedBackground)
+            └─ Center
+                └─ Text(letters,
+                        style: textTheme.p.copyWith(fontWeight: w700))
+
+    EntityImage.placeholder({Color? background})
+        └─ ColoredBox(color: background ?? mutedBackground)
+
+Callers always pass one — there is no "no image" mode for EntityCard.
+
+
+================================================================================
+6. PER-CARD WIDGET TREES
+================================================================================
+
+Each card is a thin wrapper over EntityCard. The wrapper:
+  - watches authStateProvider to pick Admin*Actions vs User*Actions
+  - resolves the entity's title / caption / body content
+  - composes the leading image (network → initials → placeholder fallback)
+  - forwards onTap
+
+
+--------------------------------------------------------------------------------
+6.1 UserCard
+--------------------------------------------------------------------------------
+
+    UserCard(username, onTap, onReview)
+     └─ AdminUserActions(            // host: owns mutation state, gates on
+          username, onReview,        //   admin role internally, calls
+          builder: (ctx, actions) => //   clUsersMasterProvider directly.
+            EntityCard(
+              image:    user.avatarUrl != null
+                          ? EntityImage.network(user.avatarUrl!)
+                          : EntityImage.initials(_initials(user)),
+              title:    user.displayName,
+              caption:  "<role(s)> · <status>",        (plain text, no chip)
+              body:     UserMetaLine(user)             (role badges, etc.)
+              trailingActions: actions,   // List<ActionItem>; primary inline
+                                          // + ⋮ for the rest (null if empty)
+              onTap:    onTap,
+              muted:    user.status == blocked || left,
+            ),
+        )
+
+AdminUserActions resolves by user.status (empty for coaches / non-admins —
+they only get the row tap-through). Whole-user edit / block live on the
+profile, reached via the row tap or Review:
+
+┌──────────┬──────────────────────────────────────────────────────────────┐
+│ status   │ actions                                                      │
+├──────────┼──────────────────────────────────────────────────────────────┤
+│ active   │ (none)                                                       │
+│ pending  │ [Review]   (opens the profile / review surface)              │
+│ blocked  │ [Unblock, ⋮ Delete]                                          │
+│ left     │ [Reactivate, ⋮ Delete]                                       │
+└──────────┴──────────────────────────────────────────────────────────────┘
+
+Unblock / Reactivate / Delete run on `clUsersMasterProvider` (Delete behind
+a ConfirmDialog), with a single `_running` flag gating concurrent presses.
+There is no separate member-lens resolver — a member never sees another
+member's UserCard with actions.
+
+
+--------------------------------------------------------------------------------
+6.2 GroupCard
+--------------------------------------------------------------------------------
+
+    GroupCard(groupId, username, onTap, onEdit, onManageMembers, trailing)
+     └─ <resolver host>(             // AdminGroupActions (username == null) or
+          ...resolver inputs...,     //   UserGroupActions (member lens).
+          builder: (ctx, actions) => //   The host owns mutation state and
+            EntityCard(              //   hands GroupCard a typed action list.
+              image:    EntityImage.placeholder(),
+              title:    group.name,
+              caption:  group.description,            (single-line, ellipsised)
+              body:     GroupMetaLine(group, memberCount)
+                          ├─ Icon(cake) + DOB range text               (if any)
+                          ├─ Icon(users) + "$count members"
+                          └─ StatusBadge(label: group.kind.label) (BORDERED, no
+                                                                    colour)
+              trailingActions: actions,   // List<ActionItem>; primary inline
+                                          // + ⋮ for the rest (null if empty)
+              onTap:    onTap,
+            ),
+        )
+
+The optional `trailing: List<ActionItem>?` parameter overrides the resolved
+set — used by bespoke admin surfaces (Remove on the user profile; Approve /
+Reject on the pending-join-requests section). It flows through the same
+`trailingActions:` slot, so those rows reflow on mobile too. GroupCard hoists
+its `ref.watch` calls (group resolution, caption) into its own build; the
+builder closure only consumes the captured locals plus the action list.
+
+AdminGroupActions:
+
+┌──────────────────┬──────────────────────────────────────────────────────┐
+│ group state      │ actions                                              │
+├──────────────────┼──────────────────────────────────────────────────────┤
+│ active, manual/  │ [Edit, ⋮ Manage Members, Delete]                     │
+│ semi-auto        │                                                      │
+│ active, auto     │ [Edit, ⋮ Delete]  (Manage Members hidden)            │
+│ deleted          │ [Restore]                                            │
+└──────────────────┴──────────────────────────────────────────────────────┘
+(Manage Members renders only when `onManageMembers` is wired.)
+
+UserGroupActions:
+
+┌──────────────────────────────────┬──────────────────────────────────────┐
+│ membership / request state       │ actions                              │
+├──────────────────────────────────┼──────────────────────────────────────┤
+│ not member, joinable, no request │ [Request to Join]                    │
+│ not member, request pending      │ [Cancel Request]                     │
+│ member, group allows leave       │ [Leave Group]  (BLOCKED on #196)     │
+│ all other states (filtered up)   │ (none)                               │
+└──────────────────────────────────┴──────────────────────────────────────┘
+
+
+--------------------------------------------------------------------------------
+6.3 EventCard
+--------------------------------------------------------------------------------
+
+    EventCard(eventId, username, onTap, onEnrollments)
+     └─ <resolver host>(             // AdminEventActions (admin lens) or
+          ...resolver inputs...,     //   UserEventActions (member lens).
+          builder: (ctx, actions) => //   The host owns mutation state and
+            EntityCard(              //   hands EventCard a typed action list.
+              image:    EntityImage.placeholder(),
+              title:    event.title,
+              caption:  "<enrollment status>  or  <temporal status>",
+              body:     Column(
+                          EventScheduleLines(event),
+                          EventVenueLine(venueId: event.venueId),
+                        )
+              trailingActions: actions,   // List<ActionItem>; primary inline
+                                          // + ⋮ for the rest (null if empty)
+              onTap:    onTap,
+            ),
+        )
+
+The resolver no longer *is* a Widget that builds an ActionGroup; it is a
+host that resolves a `List<ActionItem>` and invokes `builder` to wrap them
+into the EntityCard via `trailingActions:`. EventCard hoists every
+`ref.watch` (caption, event resolution) into its own build and captures the
+results; the builder closure only consumes them plus the actions list.
+
+AdminEventActions:
+
+┌──────────────────────────────────┬──────────────────────────────────────┐
+│ branch                           │ actions                              │
+├──────────────────────────────────┼──────────────────────────────────────┤
+│ canManageAttendance + onEnroll-  │ [Enrollments]                        │
+│ ments wired                      │                                      │
+│ otherwise                        │ []  (Edit/Delete live on the detail  │
+│                                  │      screen)                         │
+└──────────────────────────────────┴──────────────────────────────────────┘
+
+UserEventActions:  enrollment-status driven — [Request to Join] / [Accept,
+                   ⋮ Decline] / [Cancel Request] / [Cancel Withdraw] /
+                   [Withdraw]; [] for terminal statuses.
+
+
+--------------------------------------------------------------------------------
+6.4 VenueCard
+--------------------------------------------------------------------------------
+
+    VenueCard(venue, onTap)
+     └─ EntityCard(
+          image:    venue.photoUrl != null
+                      ? EntityImage.network(venue.photoUrl!)
+                      : EntityImage.placeholder(),
+          title:    venue.name,
+          caption:  venue.address,
+          body:     VenueMetaLine(venue)
+                      ├─ capacity / facilities text
+                      └─ StatusBadge("Default")  (only when venue.isDefault;
+                                                  BORDERED, no colour)
+          trailingAction: actingUser.canManageVenues
+                      ? AdminVenueActions(venue)
+                      : UserVenueActions(venue),
+          onTap:    onTap,
+        )
+
+AdminVenueActions:
+
+┌──────────────────┬──────────────────────────────────────────────────────┐
+│ venue state      │ actions                                              │
+├──────────────────┼──────────────────────────────────────────────────────┤
+│ default          │ [Edit, ⋮ Delete]                                     │
+│ not default      │ [Edit, ⋮ Set Default, Delete]                        │
+└──────────────────┴──────────────────────────────────────────────────────┘
+
+UserVenueActions:  always returns [] (venues are reference data).
+
+
+--------------------------------------------------------------------------------
+6.5 OccurrenceCard
+--------------------------------------------------------------------------------
+
+OccurrenceCard supports a dense variant (calendar contexts) and a muted-
+terminal variant (dashboard contexts, where past/cancelled rows dim). For
+the one case where the trailing is not actions — the My Calendar past-day
+attendance badge — it resolves the badge internally and passes it through
+the bespoke `trailingAction:` slot; every other branch
+routes a typed `List<ActionItem>` through `trailingActions:`.
+
+    OccurrenceCard(
+      eventId, occurrenceTime, range,
+      username, onTap, onMarkAttendance,
+      dense: false,                  // true for calendar surfaces
+      muteTerminal: true,            // false for calendar surfaces
+      showRecurrence: false,         // dashboard public-events surfaces
+      showVenue: false,              // dashboard public-events surfaces
+    )
+     // The card hoists every ref.watch (occurrence/event/caption) into its
+     // own build, then chooses one of three trailing shapes:
+     //
+     //  admin lens                 → AdminOccurrenceActions host
+     //                               (builder → trailingActions)
+     //  member, past + attendance  → EntityCard(trailingAction: AttendanceBadge)
+     //  member, otherwise          → UserOccurrenceActions host
+     //                               (builder → trailingActions)
+     //
+     └─ EntityCard(
+          image:    EntityImage.placeholder(),
+          title:    event.title  ?? "Event #${occurrence.eventId}",
+          caption:  statusText(occurrence)  // "Cancelled", "Completed", ""
+          body:     Column(
+                      TimeRangeLine(occurrence),
+                      RecurrenceLine(event)        (if showRecurrence)
+                      EventVenueLine(venueId)      (if showVenue)
+                    )
+          trailingActions: actions,    // typed list (admin / member resolver),
+                                       // OR ─
+          trailingAction:  AttendanceBadge(...),  // member past-day badge only
+          onTap:    onTap,
+          dense:    dense,
+          muted:    muteTerminal && (occurrence.isPast || isTerminal),
+        )
+
+AdminOccurrenceActions:
+
+┌──────────────────────────────────┬──────────────────────────────────────┐
+│ branch                           │ actions                              │
+├──────────────────────────────────┼──────────────────────────────────────┤
+│ past + canManageAttendance       │ [Attendance]                         │
+│ future, scheduled                │ [Cancel(popover),                    │
+│                                  │  ⋮ Reschedule, Manage Requests]      │
+│ future, cancelled                │ [Undo Cancel]                        │
+│ future, rescheduled / completed  │ (none)                               │
+└──────────────────────────────────┴──────────────────────────────────────┘
+
+UserOccurrenceActions:
+
+┌──────────────────────────────────────┬──────────────────────────────────┐
+│ enrollment / attendance state        │ actions                          │
+├──────────────────────────────────────┼──────────────────────────────────┤
+│ not enrolled                         │ [Enroll]                         │
+│ requested                            │ [Cancel Request]                 │
+│ active, attendance null              │ [Apply Leave, Withdraw]          │
+│ active, attendance onLeaveRequested  │ [Cancel Leave Request, Withdraw] │
+│ active, attendance onLeave           │ [Cancel Leave, Withdraw]         │
+│ terminal (rejected / withdrawn)      │ (filtered upstream — no row)     │
+└──────────────────────────────────────┴──────────────────────────────────┘
+
+AttendanceBadge (only used via trailingOverride on My Calendar past days):
+
+    AttendanceBadge(status)
+     └─ Container(border: muted, radius: 3)
+         └─ Text(  P | A | L | OL | LR  )
+
+
+================================================================================
+7. WHAT GETS DELETED IN THIS REFACTOR
+================================================================================
+
+┌────────────────────────────────────────────┬────────────────────────────┐
+│ File                                       │ Replaced by                │
+├────────────────────────────────────────────┼────────────────────────────┤
+│ cl_member_zone/.../my_group_row.dart       │ unified GroupCard          │
+│ cl_member_zone/.../leave_action_area.dart  │ UserOccurrenceActions      │
+│ cl_member_zone/.../public_event_action.drt │ UserOccurrenceActions      │
+│ cl_club_events/.../buttons/                │ UserOccurrenceActions      │
+│       member_action_buttons.dart           │                            │
+│ cl_club_events/.../admin_calendar_         │ OccurrenceCard +           │
+│       occurrence_tile.dart                 │   AdminOccurrenceActions   │
+│ cl_club_events/.../my_calendar_            │ OccurrenceCard +           │
+│       occurrence_tile.dart                 │   UserOccurrenceActions    │
+│   + AdminScheduledOccurrenceActions        │   (folded into             │
+│   + AdminOccurrenceOverflowMenu            │    ActionGroup)            │
+│ cl_club_events/.../event_card/             │ EventCard (no more leading │
+│       event_type_icon_tile.dart            │   type icons)              │
+│ cl_member_zone/.../status_badge.dart       │ ui_lib StatusBadge         │
+│       (legacy coloured version)            │   (bordered, no colour)    │
+└────────────────────────────────────────────┴────────────────────────────┘
+
+
+================================================================================
+8. UMBRELLA + SUB-ISSUE MAP
+================================================================================
+
+┌─────┬──────────────────────────────────────────────────────────────────┐
+│ #   │ Scope                                                            │
+├─────┼──────────────────────────────────────────────────────────────────┤
+│ 189 │ Umbrella — list-row card consistency                             │
+│ 191 │ Foundation: EntityCard + ActionGroup + EntityImage in ui_lib     │
+│     │   + StatusBadge rewrite (bordered)                               │
+│ 190 │ OccurrenceCard refactor + delete two calendar tiles +            │
+│     │   delete LeaveActionArea / PublicEventAction +                   │
+│     │   rename MemberActionButtons → UserOccurrenceActions             │
+│ 192 │ GroupCard refactor + delete MyGroupRow                           │
+│ 193 │ UserCard refactor (drop callback-soup API)                       │
+│ 194 │ EventCard refactor (drop primaryAction/extra; drop mobile reflow)│
+│ 195 │ VenueCard refactor (swap Container chrome for ShadCard)          │
+│ 196 │ (Server) member-self leave-group endpoint — blocks UserGroup     │
+│     │   Actions' Leave-Group branch only                               │
+└─────┴──────────────────────────────────────────────────────────────────┘
+
+Dependency: #191 lands first; #190 / #192 / #193 / #194 / #195 all branch
+from it and merge after #191 reaches dev.
+
+
+================================================================================
+END
+================================================================================

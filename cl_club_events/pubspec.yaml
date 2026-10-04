@@ -1,0 +1,63 @@
+name: cl_club_events
+description: Event management widgets and providers for the club app — calendar view, event CRUD, and forms.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.10.0"
+
+dependencies:
+  cl_calendar:
+    git:
+      url: https://github.com/cloudonlanapps/cl_calendar.git
+      ref: 2b0b93e1647d8efa132ecc68f188ea1e57d343bf   # IHM_RELEASE_0_4
+  cl_club_credits:
+    path: ../cl_club_credits
+  cl_club_evaluation:
+    path: ../cl_club_evaluation
+  cl_club_venues:
+    path: ../cl_club_venues
+  cl_gallery_viewer:
+    git:
+      url: https://github.com/cloudonlanapps/cl_gallery_viewer.git
+      ref: 500db1a19fa953d73a3d9d4cfa04f48c5047b86d   # request headers (#12)
+  cl_member_auth:
+    path: ../cl_member_auth
+  cl_remote_store:
+    path: ../cl_remote_store
+  cl_server_config:
+    path: ../cl_server_config
+  club_sdk_2:
+    git:
+      url: https://github.com/cloudonlanapps/club_sdk.git
+      ref: d6c62856c965ad5175eb71ea8f16cdabd3988d47
+  collection: 1.19.1
+  flutter:
+    sdk: flutter
+  flutter_riverpod: 2.6.1
+  http: 1.6.0
+  meta: 1.19.0
+  shadcn_ui: 0.56.1
+  ui_lib:
+    path: ../ui_lib
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  url_launcher_platform_interface: 2.3.2
+  very_good_analysis: 10.3.0
+
+flutter:
+  assets:
+    - assets/pages/
+
+# Local development against the workspace checkouts. Uncomment to build
+# against the working trees; it must stay commented in a commit.
+#dependency_overrides:
+#  cl_gallery_viewer:
+#    path: ../../packages/cl_gallery_viewer
+#  cl_calendar:
+#    path: ../../packages/cl_calendar
+#  club_sdk_2:
+#    path: ../../packages/club_sdk

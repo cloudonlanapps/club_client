@@ -1,0 +1,98 @@
+name: Bug report
+description: Report something that is broken or behaving incorrectly.
+title: "[Bug]: "
+labels: ["type:bug", "status:triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Please fill in the sections below so we can reproduce and fix the issue quickly.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A clear, concise description of the bug.
+      placeholder: When I do X, Y happens instead of Z.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Minimal, ordered steps that reliably trigger the bug.
+      placeholder: |
+        1. Navigate to ...
+        2. Tap on ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: I expected the screen to show ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include full error messages, stack traces, or relevant logs.
+      render: shell
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Affected module
+      description: Which module is affected?
+      options:
+        - app
+        - club_sdk_2
+        - cl_server_config
+        - cl_member_auth
+        - cl_club_members
+        - cl_member_zone
+        - club_website
+        - ui_lib
+        - cl_gallery_viewer
+        - cl_calendar
+        - Other / unsure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: Git commit SHA, tag, or branch where the bug was observed.
+      placeholder: e.g. dev @ d302db7
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Flutter/Dart version, target platform, device.
+      placeholder: |
+        - OS:
+        - Flutter:
+        - Dart:
+        - Target platform (web / iOS / Android):
+        - Device:
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context
+      description: Anything else that might help — screenshots, related issues, suspected cause.
+    validations:
+      required: false

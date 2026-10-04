@@ -1,0 +1,12 @@
+{
+  "fullName": "Example Club",
+  "shortName": "EXC",
+  "themeColorName": "blue",
+  "heroSurface": "primary",
+  "apiBaseUrl": "http://localhost:8000/v1",
+  "eventTypes": [
+    "camp",
+    "programme",
+    "oneOff"
+  ]
+}

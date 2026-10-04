@@ -1,0 +1,12 @@
+{
+  "fullName": "Example Club",
+  "shortName": "EXC",
+  "themeColorName": "blue",
+  "heroSurface": "primary",
+  "apiBaseUrl": "http://localhost:8000/v1",
+  "map": {
+    "title": "Example Venue",
+    "embedUrl": "https://www.openstreetmap.org/export/embed.html?bbox=-0.1300%2C51.5000%2C-0.1200%2C51.5100&layer=mapnik",
+    "linkUrl": "https://www.openstreetmap.org/#map=16/51.5050/-0.1250"
+  }
+}

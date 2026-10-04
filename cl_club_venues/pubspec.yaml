@@ -1,0 +1,36 @@
+name: cl_club_venues
+description: Venue management widgets and providers for the club app.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.10.0"
+
+dependencies:
+  cl_member_auth:
+    path: ../cl_member_auth
+  cl_remote_store:
+    path: ../cl_remote_store
+  cl_server_config:
+    path: ../cl_server_config
+  club_sdk_2:
+    git:
+      url: https://github.com/cloudonlanapps/club_sdk.git
+      ref: d6c62856c965ad5175eb71ea8f16cdabd3988d47
+  flutter:
+    sdk: flutter
+  flutter_riverpod: 2.6.1
+  pointer_interceptor: 0.10.1+2
+  shadcn_ui: 0.56.1
+  ui_lib:
+    path: ../ui_lib
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: 10.3.0
+
+#dependency_overrides:
+#  club_sdk_2:
+#    path: ../../packages/club_sdk

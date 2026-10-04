@@ -1,0 +1,102 @@
+{
+  "ctaTemplates": {
+    "available": {
+      "title": "Ready to Join?",
+      "description": "Register before {deadline} to confirm your spot",
+      "primaryButtonText": "Register Now",
+      "secondaryButtonText": "View Other Camps",
+      "primaryRoute": "/auth/signup",
+      "secondaryRoute": "/public/events"
+    },
+    "closed": {
+      "title": "Registration Closed",
+      "description": "The registration deadline has passed. Contact us for inquiries.",
+      "primaryButtonText": "Contact Us",
+      "secondaryButtonText": "View Other Camps",
+      "primaryRoute": "/public/contact-us",
+      "secondaryRoute": "/public/events"
+    },
+    "completed": {
+      "title": "This Camp Has Ended",
+      "description": "Thank you to all participants! Check out our upcoming camps.",
+      "primaryButtonText": "View Upcoming Camps",
+      "secondaryButtonText": "",
+      "primaryRoute": "/public/events",
+      "secondaryRoute": null
+    }
+  },
+  "pageDataDefaults": {
+    "activeSection": {
+      "badge": "",
+      "title": "",
+      "description": ""
+    },
+    "emptyState": {
+      "iconName": "calendar",
+      "title": "No Content",
+      "description": "Camp details unavailable.",
+      "buttonText": "Contact Us"
+    }
+  },
+  "labels": {
+    "hero": {
+      "datesLabel": "Dates",
+      "timingsLabel": "Timings",
+      "venueLabel": "Venue",
+      "eligibilityLabel": "Eligibility"
+    },
+    "highlights": {
+      "titleActive": "Highlights",
+      "titlePast": "Highlights"
+    },
+    "coach": {
+      "labelActive": "Special Coach",
+      "labelPast": "Special Coach"
+    },
+    "fees": {
+      "title": "Camp Fees",
+      "includesLabel": "Includes:"
+    },
+    "feeStructure": {
+      "title": "Fee Structure",
+      "feeTypeHeader": "Fee Type",
+      "periodHeader": "Period",
+      "amountHeader": "Amount"
+    },
+    "batchTimings": {
+      "title": "Batch Timings",
+      "batchHeader": "BATCH",
+      "timeHeader": "TIME",
+      "sessionHeader": "SESSION",
+      "detailsHeader": "DETAILS"
+    },
+    "facilities": {
+      "title": "Additional Facilities"
+    },
+    "packages": {
+      "title": "Save More with Packages",
+      "subtitle": "Choose a longer commitment and save big!"
+    },
+    "offers": {
+      "title": "Special Offers",
+      "validUntilPrefix": "Valid until: "
+    },
+    "eligibility": {
+      "title": "Eligibility"
+    },
+    "gallery": {
+      "title": "Gallery",
+      "subtitle": "Photos and documents"
+    },
+    "navigation": {
+      "viewAllRoute": "/public/events",
+      "viewOthersButtonText": "View Other Camps"
+    }
+  },
+  "cardLabels": {
+    "viewDetails": "View Details",
+    "actionButton": "Register Now",
+    "viewGallery": "View Gallery",
+    "whatsIncluded": "What's Included:"
+  }
+}

@@ -1,0 +1,31 @@
+name: cl_remote_store
+description: Centralized data source providers with cross-invalidation for all domain resources.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.10.0"
+
+dependencies:
+  cl_server_config:
+    path: ../cl_server_config
+  club_sdk_2:
+    git:
+      url: https://github.com/cloudonlanapps/club_sdk.git
+      ref: d6c62856c965ad5175eb71ea8f16cdabd3988d47
+  flutter:
+    sdk: flutter
+  flutter_riverpod: 2.6.1
+  meta: 1.19.0
+  ui_lib:
+    path: ../ui_lib
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: 10.3.0
+
+#dependency_overrides:
+#  club_sdk_2:
+#    path: ../../packages/club_sdk

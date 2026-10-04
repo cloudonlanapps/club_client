@@ -370,7 +370,9 @@ just app-test-one <conf> <file>    # one UI integration file against one conf
 ### Isolated test server
 
 Every server-backed test recipe spins up its **own** fully isolated stack:
-`background_server.sh` (native_deploy, on PATH) (a uv script) picks free ports, starts a fresh
+`background_server.sh` (native_deploy, cloned by the recipe from
+`cloudonlanapps/native_deploy` into the gitignored `.native_deploy/` and pulled
+on every run) picks free ports, starts a fresh
 postgres + API server in a tmux session, prints its connection JSON, and the
 recipe tears it down on exit (`background_server.sh … cleanup`). There is **no shared
 default stack to collide on**, so these recipes are safe to run concurrently

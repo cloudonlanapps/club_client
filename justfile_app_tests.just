@@ -1,9 +1,11 @@
 # UI integration suite — cl_club_app/example on the Linux desktop, against a
 # fresh isolated club_server stack per server conf.
 #
-# The stack is started by native_deploy's background_server.sh (expected on
-# PATH) from a conf at this repo's root; each conf clones club_server's main
-# branch from git:
+# The stack is started by native_deploy's background_server.sh from a conf at
+# this repo's root. native_deploy is cloned from git into .native_deploy/
+# (gitignored), pulled on every run and run from there, so the stacks' run
+# directories (.native_deploy/deployed/) stay inside this checkout too. Each
+# conf clones club_server's main branch from git:
 #   app_test_server1.conf  modules off, identity verification on
 #   app_test_server2.conf  as p52club deploys: modules on, identity verification off
 # Tests decide what to expect from GET /v1/capabilities, never from the club.
@@ -11,22 +13,52 @@
 APP_EXAMPLE_DIR := "cl_club_app/example"
 APP_TEST_FILE_TIMEOUT := "600"
 APP_TEST_CONFS := "app_test_server1.conf app_test_server2.conf"
+NATIVE_DEPLOY_URL := env("NATIVE_DEPLOY_URL", "https://github.com/cloudonlanapps/native_deploy.git")
+NATIVE_DEPLOY_REF := env("NATIVE_DEPLOY_REF", "main")
+NATIVE_DEPLOY_DIR := justfile_directory() / ".native_deploy"
+BACKGROUND_SERVER := NATIVE_DEPLOY_DIR / "background_server.sh"
+
+# Internal: clone native_deploy into .native_deploy/ on first use, then bring
+# it to NATIVE_DEPLOY_REF (a branch is taken at its remote head, so every run
+# pulls). Says what it did on stderr only: start-app-test-server's stdout is
+# its JSON.
+_native-deploy:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    dir="{{NATIVE_DEPLOY_DIR}}"
+    if [ ! -d "$dir/.git" ]; then
+        # Clone beside the target and rename, so concurrent runs never see a
+        # half-written clone; the loser of the rename drops its copy.
+        tmp=$(mktemp -d "$dir.XXXXXX")
+        trap 'rm -rf "$tmp"' EXIT
+        echo "==> cloning {{NATIVE_DEPLOY_URL}} into $dir" >&2
+        git clone --quiet "{{NATIVE_DEPLOY_URL}}" "$tmp/clone" >&2
+        mv -T "$tmp/clone" "$dir" 2>/dev/null || [ -d "$dir/.git" ]
+    fi
+    git -C "$dir" remote set-url origin "{{NATIVE_DEPLOY_URL}}"
+    git -C "$dir" fetch --quiet --prune origin >&2
+    want=$(git -C "$dir" rev-parse --verify --quiet "origin/{{NATIVE_DEPLOY_REF}}^{commit}") \
+        || want=$(git -C "$dir" rev-parse --verify "{{NATIVE_DEPLOY_REF}}^{commit}")
+    if [ "$(git -C "$dir" rev-parse HEAD)" != "$want" ]; then
+        git -C "$dir" checkout --quiet --detach "$want" >&2
+        echo "==> native_deploy at $(git -C "$dir" rev-parse --short HEAD) ({{NATIVE_DEPLOY_REF}})" >&2
+    fi
+    [ -x "{{BACKGROUND_SERVER}}" ] || { echo "ERROR: {{BACKGROUND_SERVER}} is missing." >&2; exit 1; }
 
 # Internal: start a fresh stack from CONF, run each file matching TARGET
 # (a glob under cl_club_app/example/) with `flutter test -d linux`, and tear
 # the stack down on exit (unless `keep` is non-empty).
-_app-test CONF TARGET keep="":
+_app-test CONF TARGET keep="": _native-deploy
     #!/usr/bin/env bash
     set -uo pipefail
-    command -v background_server.sh >/dev/null 2>&1 || { echo "ERROR: background_server.sh (native_deploy) is not on PATH." >&2; exit 1; }
-    json=$(background_server.sh {{CONF}} start --auto-ports) || exit 1
+    json=$("{{BACKGROUND_SERVER}}" {{CONF}} start --auto-ports) || exit 1
     base=$(printf '%s' "$json" | jq -r .base_url)
     port=$(printf '%s' "$json" | jq -r .server_port)
     db_port=$(printf '%s' "$json" | jq -r .db_port)
     if [ -n "{{keep}}" ]; then
         trap 'echo "==> keeping server $base (stop: just stop-app-test-server $port $db_port {{CONF}})" >&2' EXIT
     else
-        trap 'background_server.sh {{CONF}} cleanup port=$port db_port=$db_port' EXIT
+        trap '"{{BACKGROUND_SERVER}}" {{CONF}} cleanup port=$port db_port=$db_port' EXIT
     fi
     echo "==> UI integration (linux) against $base ({{CONF}})"
     # A subshell keeps this shell at the repo root, where the trap's conf path resolves.
@@ -99,11 +131,11 @@ app-test-one CONF FILE keep="": (_app-test (CONF) ("integration_test/" + FILE) k
 # tmux_session, server_log). Watch logs: tmux attach -t <tmux_session>
 # Start a fresh isolated test server from a conf.
 [group('app integration')]
-start-app-test-server CONF="app_test_server1.conf":
-    background_server.sh {{CONF}} start --auto-ports
+start-app-test-server CONF="app_test_server1.conf": _native-deploy
+    "{{BACKGROUND_SERVER}}" {{CONF}} start --auto-ports
 
 # Pass the server_port and db_port that `start-app-test-server` printed.
 # Stop an isolated test server and remove its run directory.
 [group('app integration')]
-stop-app-test-server PORT DB_PORT CONF="app_test_server1.conf":
-    background_server.sh {{CONF}} cleanup port={{PORT}} db_port={{DB_PORT}}
+stop-app-test-server PORT DB_PORT CONF="app_test_server1.conf": _native-deploy
+    "{{BACKGROUND_SERVER}}" {{CONF}} cleanup port={{PORT}} db_port={{DB_PORT}}

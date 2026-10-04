@@ -16,7 +16,7 @@ dependencies:
   cl_calendar:
     git:
       url: https://github.com/cloudonlanapps/cl_calendar.git
-      ref: 2b0b93e1647d8efa132ecc68f188ea1e57d343bf   # IHM_RELEASE_0_4
+      ref: 630cffb47201f1c736a77b751cdb3d76ae51dd7a
   cl_gallery_viewer:
     git:
       url: https://github.com/cloudonlanapps/cl_gallery_viewer.git

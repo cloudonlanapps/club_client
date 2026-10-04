@@ -77,8 +77,8 @@ packages:
     dependency: transitive
     description:
       path: "."
-      ref: "2b0b93e1647d8efa132ecc68f188ea1e57d343bf"
-      resolved-ref: "2b0b93e1647d8efa132ecc68f188ea1e57d343bf"
+      ref: "630cffb47201f1c736a77b751cdb3d76ae51dd7a"
+      resolved-ref: "630cffb47201f1c736a77b751cdb3d76ae51dd7a"
       url: "https://github.com/cloudonlanapps/cl_calendar.git"
     source: git
     version: "0.0.1"

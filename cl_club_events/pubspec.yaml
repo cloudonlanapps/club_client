@@ -11,7 +11,7 @@ dependencies:
   cl_calendar:
     git:
       url: https://github.com/cloudonlanapps/cl_calendar.git
-      ref: 2b0b93e1647d8efa132ecc68f188ea1e57d343bf   # IHM_RELEASE_0_4
+      ref: 630cffb47201f1c736a77b751cdb3d76ae51dd7a
   cl_club_credits:
     path: ../cl_club_credits
   cl_club_evaluation:
@@ -31,7 +31,7 @@ dependencies:
   club_sdk_2:
     git:
       url: https://github.com/cloudonlanapps/club_sdk.git
-      ref: bbe579d8ac4dca1dcec8a0f8f595ea0b07517b17
+      ref: 5f3155efe7c9ca8973b44ea08bd0a2e3cd6ffae6
   collection: 1.19.1
   flutter:
     sdk: flutter

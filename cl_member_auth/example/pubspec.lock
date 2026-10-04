@@ -69,8 +69,8 @@ packages:
     dependency: transitive
     description:
       path: "."
-      ref: "2b0b93e1647d8efa132ecc68f188ea1e57d343bf"
-      resolved-ref: "2b0b93e1647d8efa132ecc68f188ea1e57d343bf"
+      ref: "630cffb47201f1c736a77b751cdb3d76ae51dd7a"
+      resolved-ref: "630cffb47201f1c736a77b751cdb3d76ae51dd7a"
       url: "https://github.com/cloudonlanapps/cl_calendar.git"
     source: git
     version: "0.0.1"
@@ -123,8 +123,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: bbe579d8ac4dca1dcec8a0f8f595ea0b07517b17
-      resolved-ref: bbe579d8ac4dca1dcec8a0f8f595ea0b07517b17
+      ref: "5f3155efe7c9ca8973b44ea08bd0a2e3cd6ffae6"
+      resolved-ref: "5f3155efe7c9ca8973b44ea08bd0a2e3cd6ffae6"
       url: "https://github.com/cloudonlanapps/club_sdk.git"
     source: git
     version: "0.8.0"

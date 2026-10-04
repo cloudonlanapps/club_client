@@ -6,6 +6,8 @@ enrollment_demo/**
 .claude/**
 !.claude/agents/
 !.claude/agents/**
+!.claude/memory/
+!.claude/memory/**
 
 # FVM Version Cache
 .fvm/

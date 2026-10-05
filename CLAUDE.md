@@ -77,7 +77,7 @@ commit and only brand files cross versions. Web only for now.
 
 ```bash
 just generate app <brand> <out> --api-url <url> [--website-url <url>]
-just generate website <brand> <out> --api-url <url> [--app-url <url>]
+just generate website <brand> <out> --api-url <url> [--app-url <url>] [--website-url <url>]
 just generator-test               # the generator's own tests
 just generator-build-example      # both targets from example_brand, built for the web
 ```
@@ -87,6 +87,11 @@ Rules:
 - **URLs are input, never derived.** `--api-url`, `--app-url` and
   `--website-url` are whole http(s) URLs written into `club.json` as given; the
   generator assumes no host or prefix.
+- **`robots.txt` and `sitemap.xml` need the website's own URL.** Given
+  `--website-url`, the website target writes both under `web/`: the sitemap
+  lists the fixed public pages and the listing of each event type in
+  `club.json`'s `eventTypes` (`sitemapRoutes`, checked against the site's
+  router by the generator's tests). Without it neither file is written (#29).
 - **`club.json` must tolerate both directions.** One brand file is built against
   several club_core branches, so its readers (`ClubConfig`, `SiteConfig`)
   ignore unknown keys, and a key added later must be optional with a default.

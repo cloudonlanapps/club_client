@@ -19,7 +19,12 @@ Future<void> main(List<String> args) async {
     ..addOption('out', mandatory: true, help: 'the project to create')
     ..addOption('api-url', mandatory: true)
     ..addOption('app-url', help: "the member app's URL (website target)")
-    ..addOption('website-url', help: "the website's URL (app target)")
+    ..addOption(
+      'website-url',
+      help:
+          "the website's URL: the app's link to it, and the base of the "
+          "website's robots.txt and sitemap.xml",
+    )
     ..addOption(
       'club-core',
       help: 'the club_core checkout (default: the one holding this tool)',

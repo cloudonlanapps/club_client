@@ -71,3 +71,26 @@ String xmlEscape(String text) => text
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&apos;');
+
+/// The key of the About page's opening paragraph in the website's ARB.
+const storyKey = 'clubHistoryParagraph1';
+
+/// The longest description a search result shows in full.
+const descriptionMaxLength = 160;
+
+/// The website's description for search results: the opening of the About
+/// story in the brand's [arb], as one plain line no longer than
+/// [descriptionMaxLength]. Null when the brand has no story.
+String? searchDescription(Map<String, dynamic> arb) {
+  final story = arb[storyKey];
+  if (story is! String) return null;
+  final line = story
+      .replaceAll('**', '')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
+  if (line.isEmpty) return null;
+  if (line.length <= descriptionMaxLength) return line;
+  final cut = line.substring(0, descriptionMaxLength);
+  final lastSpace = cut.lastIndexOf(' ');
+  return '${cut.substring(0, lastSpace > 0 ? lastSpace : cut.length - 1)}…';
+}

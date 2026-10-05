@@ -29,18 +29,22 @@ class WebNames {
 
 /// Fills the `@@TOKEN@@`s of the index.html template. Fails on any token
 /// left over, so a template change cannot ship a page with a raw token in it.
+///
+/// [description] is the page's description; without one it is the club's
+/// name and what the target is.
 String renderIndexHtml({
   required String template,
   required Target target,
   required WebNames names,
   required WebColors colors,
+  String? description,
 }) {
   const escape = HtmlEscape();
   final values = {
     'FULL_NAME': escape.convert(names.fullName),
     'SHORT_NAME': escape.convert(names.shortName),
     'DESCRIPTION': escape.convert(
-      '${names.fullName} - ${target.descriptionSuffix}',
+      description ?? defaultDescription(target, names),
     ),
     'BACKGROUND_LIGHT': colors.backgroundLight,
     'BACKGROUND_DARK': colors.backgroundDark,
@@ -56,11 +60,16 @@ String renderIndexHtml({
   return out;
 }
 
-/// The web app manifest.
+/// The description of a page that is given none: `<fullName> - <suffix>`.
+String defaultDescription(Target target, WebNames names) =>
+    '${names.fullName} - ${target.descriptionSuffix}';
+
+/// The web app manifest, described as [renderIndexHtml] describes the page.
 String renderManifest({
   required Target target,
   required WebNames names,
   required WebColors colors,
+  String? description,
 }) {
   Map<String, String> icon(String file, int size, {bool maskable = false}) => {
     'src': 'icons/$file',
@@ -76,7 +85,7 @@ String renderManifest({
     'display': 'standalone',
     'background_color': colors.backgroundLight,
     'theme_color': colors.backgroundLight,
-    'description': '${names.fullName} - ${target.descriptionSuffix}',
+    'description': description ?? defaultDescription(target, names),
     'orientation': 'portrait-primary',
     'prefer_related_applications': false,
     'icons': [

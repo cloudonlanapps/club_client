@@ -115,6 +115,29 @@ void main() {
     );
   });
 
+  test('Issue 29: the website describes itself with its About story', () async {
+    final story =
+        readJson(
+              p.join(exampleBrand, 'website/app_en.arb'),
+            )['clubHistoryParagraph1']
+            as String;
+    final website = await run(Target.website);
+    expect(
+      File(p.join(website, 'web/index.html')).readAsStringSync(),
+      contains('<meta name="description" content="$story">'),
+    );
+    expect(
+      readJson(p.join(website, 'web/manifest.json'))['description'],
+      story,
+    );
+
+    final app = await run(Target.app);
+    expect(
+      File(p.join(app, 'web/index.html')).readAsStringSync(),
+      contains('content="Example Club - Official App"'),
+    );
+  });
+
   group('Issue 29: robots.txt and sitemap.xml', () {
     const searchFiles = ['web/robots.txt', 'web/sitemap.xml'];
 

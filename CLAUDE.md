@@ -92,6 +92,11 @@ Rules:
   lists the fixed public pages and the listing of each event type in
   `club.json`'s `eventTypes` (`sitemapRoutes`, checked against the site's
   router by the generator's tests). Without it neither file is written (#29).
+- **The website describes itself with its About story.** The description in
+  the website's `index.html` and `manifest.json` is the opening paragraph of
+  the brand's About copy (`clubHistoryParagraph1` in `website/app_en.arb`), as
+  one plain line of at most 160 characters; a brand without one keeps
+  `<fullName> - Official Website` (#29).
 - **`club.json` must tolerate both directions.** One brand file is built against
   several club_core branches, so its readers (`ClubConfig`, `SiteConfig`)
   ignore unknown keys, and a key added later must be optional with a default.

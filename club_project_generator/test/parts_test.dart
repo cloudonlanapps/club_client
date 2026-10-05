@@ -253,6 +253,54 @@ void main() {
     });
   });
 
+  group('Issue 29: search description', () {
+    test('is the About story of the brand, as one plain line', () {
+      expect(
+        searchDescription({
+          'clubHistoryParagraph1': 'A club for **everyone**,\n  of all ages.',
+        }),
+        'A club for everyone, of all ages.',
+      );
+    });
+
+    test('is cut at a word when it runs long', () {
+      final long = List.filled(60, 'skating').join(' ');
+      final description = searchDescription({'clubHistoryParagraph1': long})!;
+      expect(description.length, lessThanOrEqualTo(160));
+      expect(description, endsWith('skating…'));
+    });
+
+    test('is absent when the brand has no story', () {
+      expect(searchDescription({}), isNull);
+      expect(searchDescription({'clubHistoryParagraph1': '  '}), isNull);
+      expect(searchDescription({'clubHistoryParagraph1': 3}), isNull);
+    });
+
+    const names = WebNames(fullName: 'Example Club', shortName: 'EXC');
+
+    test('index.html and the manifest carry it, escaped in the page', () {
+      final html = renderIndexHtml(
+        template: '<meta name="description" content="@@DESCRIPTION@@">',
+        target: Target.website,
+        names: names,
+        colors: WebColors.neutral,
+        description: 'Skating & hockey for "all"',
+      );
+      expect(html, contains('content="Skating &amp; hockey for &quot;all'));
+      final manifest =
+          json.decode(
+                renderManifest(
+                  target: Target.website,
+                  names: names,
+                  colors: WebColors.neutral,
+                  description: 'Skating & hockey',
+                ),
+              )
+              as Map<String, dynamic>;
+      expect(manifest['description'], 'Skating & hockey');
+    });
+  });
+
   test('Issue 186: relative path dependencies become absolute', () {
     const pubspec = '''
 dependencies:

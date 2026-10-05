@@ -133,6 +133,9 @@ Future<void> generate(GenerateOptions o, {void Function(String)? log}) async {
   say('==> web/');
   final names = WebNames.fromClubJson(clubJson);
   final colors = WebColors.fromClubJson(clubJson);
+  final description = o.target == Target.website
+      ? searchDescription(_readJson(p.join(o.brand, 'website/app_en.arb')))
+      : null;
   _write(
     p.join(o.out, 'web/index.html'),
     renderIndexHtml(
@@ -142,11 +145,17 @@ Future<void> generate(GenerateOptions o, {void Function(String)? log}) async {
       target: o.target,
       names: names,
       colors: colors,
+      description: description,
     ),
   );
   _write(
     p.join(o.out, 'web/manifest.json'),
-    renderManifest(target: o.target, names: names, colors: colors),
+    renderManifest(
+      target: o.target,
+      names: names,
+      colors: colors,
+      description: description,
+    ),
   );
   final icons = renderIcons(
     File(p.join(o.brand, 'icon_1024.png')).readAsBytesSync(),

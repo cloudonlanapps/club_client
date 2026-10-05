@@ -166,6 +166,141 @@ void main() {
     });
   });
 
+  group('Issue 29: search files', () {
+    test('sitemap routes cover the event types the club runs', () {
+      expect(sitemapRoutes({}), [
+        '/',
+        '/public/about-us',
+        '/public/events',
+        '/public/coaches',
+        '/public/rinks',
+        '/public/contact-us',
+      ]);
+      expect(
+        sitemapRoutes({
+          'eventTypes': ['programme', 'oneOff'],
+        }),
+        [
+          '/',
+          '/public/about-us',
+          '/public/programs',
+          '/public/one-off',
+          '/public/coaches',
+          '/public/rinks',
+          '/public/contact-us',
+        ],
+      );
+    });
+
+    test('sitemap routes refuse a malformed eventTypes', () {
+      for (final bad in <Object>[
+        'camp',
+        <String>[],
+        ['tournament'],
+      ]) {
+        expect(
+          () => sitemapRoutes({'eventTypes': bad}),
+          throwsA(isA<GeneratorException>()),
+          reason: '$bad',
+        );
+      }
+    });
+
+    test('sitemap.xml lists each route as an absolute URL', () {
+      final xml = renderSitemapXml(
+        websiteUrl: 'https://example.org/',
+        routes: ['/', '/public/coaches'],
+      );
+      expect(xml, startsWith('<?xml version="1.0" encoding="UTF-8"?>\n'));
+      expect(
+        xml,
+        contains(
+          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        ),
+      );
+      expect(xml, contains('<url><loc>https://example.org/</loc></url>'));
+      expect(
+        xml,
+        contains('<url><loc>https://example.org/public/coaches</loc></url>'),
+      );
+      expect('<url>'.allMatches(xml), hasLength(2));
+    });
+
+    test('sitemap.xml keeps a path prefix and escapes the URL', () {
+      final xml = renderSitemapXml(
+        websiteUrl: 'http://203.0.113.10:8081/site?a=1&b=2',
+        routes: ['/public/rinks'],
+      );
+      expect(xml, contains('&amp;'));
+      expect(xml, isNot(contains('&b')));
+      expect(
+        renderSitemapXml(
+          websiteUrl: 'https://example.org/club',
+          routes: ['/public/rinks'],
+        ),
+        contains('<loc>https://example.org/club/public/rinks</loc>'),
+      );
+    });
+
+    test('robots.txt allows everything and names the sitemap', () {
+      expect(
+        renderRobotsTxt(websiteUrl: 'https://example.org/'),
+        'User-agent: *\n'
+        'Allow: /\n'
+        '\n'
+        'Sitemap: https://example.org/sitemap.xml\n',
+      );
+    });
+  });
+
+  group('Issue 29: search description', () {
+    test('is the About story of the brand, as one plain line', () {
+      expect(
+        searchDescription({
+          'clubHistoryParagraph1': 'A club for **everyone**,\n  of all ages.',
+        }),
+        'A club for everyone, of all ages.',
+      );
+    });
+
+    test('is cut at a word when it runs long', () {
+      final long = List.filled(60, 'skating').join(' ');
+      final description = searchDescription({'clubHistoryParagraph1': long})!;
+      expect(description.length, lessThanOrEqualTo(160));
+      expect(description, endsWith('skating…'));
+    });
+
+    test('is absent when the brand has no story', () {
+      expect(searchDescription({}), isNull);
+      expect(searchDescription({'clubHistoryParagraph1': '  '}), isNull);
+      expect(searchDescription({'clubHistoryParagraph1': 3}), isNull);
+    });
+
+    const names = WebNames(fullName: 'Example Club', shortName: 'EXC');
+
+    test('index.html and the manifest carry it, escaped in the page', () {
+      final html = renderIndexHtml(
+        template: '<meta name="description" content="@@DESCRIPTION@@">',
+        target: Target.website,
+        names: names,
+        colors: WebColors.neutral,
+        description: 'Skating & hockey for "all"',
+      );
+      expect(html, contains('content="Skating &amp; hockey for &quot;all'));
+      final manifest =
+          json.decode(
+                renderManifest(
+                  target: Target.website,
+                  names: names,
+                  colors: WebColors.neutral,
+                  description: 'Skating & hockey',
+                ),
+              )
+              as Map<String, dynamic>;
+      expect(manifest['description'], 'Skating & hockey');
+    });
+  });
+
   test('Issue 186: relative path dependencies become absolute', () {
     const pubspec = '''
 dependencies:

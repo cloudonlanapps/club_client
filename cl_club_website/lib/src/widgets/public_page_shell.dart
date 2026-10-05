@@ -7,6 +7,7 @@ import '../l10n/site_strings.dart';
 import '../models/site_config.dart';
 import '../providers/contact_fab_visibility.dart';
 import '../providers/navbar_visibility.dart';
+import 'page_meta_publisher.dart';
 import 'route_labels.dart';
 import 'scroll_direction_detector.dart';
 
@@ -26,12 +27,21 @@ class PublicPageShell extends ConsumerStatefulWidget {
     required this.child,
     super.key,
     this.pageTitle,
+    this.description,
+    this.publishMeta = true,
     this.showContactFab = true,
   });
   final Widget child;
 
   /// Optional title for the current page (used in breadcrumb for detail pages)
   final String? pageTitle;
+
+  /// What the page is about, for search engines; see [PageMetaPublisher].
+  final String? description;
+
+  /// Whether this shell names the page to the browser. Off for a shell that
+  /// only stands in while the page's data loads.
+  final bool publishMeta;
 
   /// Whether to show the contact FAB (default: true)
   final bool showContactFab;
@@ -57,7 +67,19 @@ class _PublicPageShellState extends ConsumerState<PublicPageShell> {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isMobile = screenWidth < 768;
 
-    return isMobile ? _buildMobileLayout() : _buildDesktopLayout();
+    final layout = isMobile ? _buildMobileLayout() : _buildDesktopLayout();
+    if (!widget.publishMeta) return layout;
+
+    // A listing is named by its nav label, from the site's copy; a detail
+    // page, whose last segment is an id, by the title its screen gives.
+    final segment = GoRouterState.of(context).matchedLocation.split('/').last;
+    return PageMetaPublisher(
+      pageName:
+          routeLabel(SiteStrings.of(context), segment)?.replaceAll('\n', ' ') ??
+          widget.pageTitle,
+      description: widget.description,
+      child: layout,
+    );
   }
 
   Widget _buildMobileLayout() {

@@ -29,6 +29,6 @@ generator-build-example:
     brand="{{justfile_directory()}}/club_project_generator/example_brand"
     just generate app "$brand" "$tmp/app" --api-url http://localhost:8000/v1 --website-url http://localhost:8081
     (cd "$tmp/app" && flutter build web --release)
-    just generate website "$brand" "$tmp/website" --api-url http://localhost:8000/v1 --app-url http://localhost:8080
+    just generate website "$brand" "$tmp/website" --api-url http://localhost:8000/v1 --app-url http://localhost:8080 --website-url http://localhost:8081
     (cd "$tmp/website" && flutter build web --release)
     echo "==> both built"

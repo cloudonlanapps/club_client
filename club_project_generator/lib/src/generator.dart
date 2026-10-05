@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 
 import 'club_json.dart';
 import 'pubspec_paths.dart';
+import 'search_files.dart';
 import 'target.dart';
 import 'urls.dart';
 import 'web_colors.dart';
@@ -77,7 +78,8 @@ class GenerateOptions {
   /// The member app's URL, for the website's link to it.
   final String? appUrl;
 
-  /// The website's URL, for the app's link to it.
+  /// The website's URL: the app's link to it, and where the website's own
+  /// `robots.txt` and `sitemap.xml` say its pages are.
   final String? websiteUrl;
 
   /// Run `flutter pub get` and the template's brand-file test on the result.
@@ -131,6 +133,9 @@ Future<void> generate(GenerateOptions o, {void Function(String)? log}) async {
   say('==> web/');
   final names = WebNames.fromClubJson(clubJson);
   final colors = WebColors.fromClubJson(clubJson);
+  final description = o.target == Target.website
+      ? searchDescription(_readJson(p.join(o.brand, 'website/app_en.arb')))
+      : null;
   _write(
     p.join(o.out, 'web/index.html'),
     renderIndexHtml(
@@ -140,11 +145,17 @@ Future<void> generate(GenerateOptions o, {void Function(String)? log}) async {
       target: o.target,
       names: names,
       colors: colors,
+      description: description,
     ),
   );
   _write(
     p.join(o.out, 'web/manifest.json'),
-    renderManifest(target: o.target, names: names, colors: colors),
+    renderManifest(
+      target: o.target,
+      names: names,
+      colors: colors,
+      description: description,
+    ),
   );
   final icons = renderIcons(
     File(p.join(o.brand, 'icon_1024.png')).readAsBytesSync(),
@@ -153,6 +164,18 @@ Future<void> generate(GenerateOptions o, {void Function(String)? log}) async {
     File(p.join(o.out, 'web', path))
       ..createSync(recursive: true)
       ..writeAsBytesSync(bytes);
+  }
+
+  final websiteUrl = o.websiteUrl;
+  if (o.target == Target.website && websiteUrl != null) {
+    _write(
+      p.join(o.out, 'web/robots.txt'),
+      renderRobotsTxt(websiteUrl: websiteUrl),
+    );
+    _write(
+      p.join(o.out, 'web/sitemap.xml'),
+      renderSitemapXml(websiteUrl: websiteUrl, routes: sitemapRoutes(clubJson)),
+    );
   }
 
   if (!o.check) return;

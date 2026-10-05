@@ -115,6 +115,90 @@ void main() {
     );
   });
 
+  test('Issue 29: the website describes itself with its About story', () async {
+    final story =
+        readJson(
+              p.join(exampleBrand, 'website/app_en.arb'),
+            )['clubHistoryParagraph1']
+            as String;
+    final website = await run(Target.website);
+    expect(
+      File(p.join(website, 'web/index.html')).readAsStringSync(),
+      contains('<meta name="description" content="$story">'),
+    );
+    expect(
+      readJson(p.join(website, 'web/manifest.json'))['description'],
+      story,
+    );
+
+    final app = await run(Target.app);
+    expect(
+      File(p.join(app, 'web/index.html')).readAsStringSync(),
+      contains('content="Example Club - Official App"'),
+    );
+  });
+
+  group('Issue 29: robots.txt and sitemap.xml', () {
+    const searchFiles = ['web/robots.txt', 'web/sitemap.xml'];
+
+    test('the website writes both under its own URL', () async {
+      final out = await run(Target.website, websiteUrl: 'https://example.org');
+      expect(
+        File(p.join(out, 'web/robots.txt')).readAsStringSync(),
+        contains('Sitemap: https://example.org/sitemap.xml'),
+      );
+      final sitemap = File(p.join(out, 'web/sitemap.xml')).readAsStringSync();
+      // example_brand runs every event type.
+      for (final route in [
+        '/',
+        '/public/about-us',
+        '/public/programs',
+        '/public/events',
+        '/public/one-off',
+        '/public/coaches',
+        '/public/rinks',
+        '/public/contact-us',
+      ]) {
+        expect(
+          sitemap,
+          contains('<loc>https://example.org$route</loc>'),
+          reason: route,
+        );
+      }
+      // The website's own URL is not one of its links.
+      expect(
+        readJson(p.join(out, 'assets/club.json')).containsKey('websiteUrl'),
+        isFalse,
+      );
+    });
+
+    test('the website writes neither without its URL', () async {
+      final out = await run(Target.website);
+      for (final f in searchFiles) {
+        expect(File(p.join(out, f)).existsSync(), isFalse, reason: f);
+      }
+    });
+
+    test('the app writes neither', () async {
+      final out = await run(Target.app, websiteUrl: 'https://example.org');
+      for (final f in searchFiles) {
+        expect(File(p.join(out, f)).existsSync(), isFalse, reason: f);
+      }
+    });
+
+    test('every sitemap route is a route of the website', () {
+      final router = File(
+        p.join(clubCore, 'cl_club_website/lib/src/site/router.dart'),
+      ).readAsStringSync();
+      final routes = sitemapRoutes({
+        'eventTypes': ['camp', 'programme', 'oneOff'],
+      });
+      for (final route in routes) {
+        expect(router, contains("path: '$route',"), reason: route);
+      }
+    });
+  });
+
   group('Issue 186: refusals', () {
     Future<Directory> brandCopy() async {
       final dir = Directory(p.join(tmp.path, 'brand'));

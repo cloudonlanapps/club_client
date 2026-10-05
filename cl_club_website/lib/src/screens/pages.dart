@@ -50,6 +50,7 @@ class LearningCampsPage extends ConsumerWidget {
 
     return PublicPageShell(
       pageTitle: 'Learn to Play',
+      description: SiteStrings.of(context).campsHeroDescription,
       child: PageDataScaffold(
         pageType: PageType.learningCamps,
         activeContent: campsDataAsync.when(
@@ -95,6 +96,7 @@ class TrainingSessionsPage extends ConsumerWidget {
 
     return PublicPageShell(
       pageTitle: 'Training Sessions',
+      description: SiteStrings.of(context).programsHeroDescription,
       child: PageDataScaffold(
         pageType: PageType.trainingSessions,
         activeContent: programsAsync.when(
@@ -135,6 +137,7 @@ class ClubEventsPage extends ConsumerWidget {
 
     return PublicPageShell(
       pageTitle: 'Club Events',
+      description: SiteStrings.of(context).oneOffHeroDescription,
       child: PageDataScaffold(
         pageType: PageType.clubEvents,
         activeContent: eventsDataAsync.when(
@@ -173,8 +176,13 @@ class IceMastersPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final coachesAsync = ref.watch(clPublicStaffProvider);
 
+    // Described by who coaches here, once the list has loaded.
+    final names = coachesAsync.valueOrNull?.map((c) => c.displayName) ?? [];
+    final intro = SiteStrings.of(context).coachesHeroDescription;
+
     return PublicPageShell(
       pageTitle: 'Ice Masters',
+      description: names.isEmpty ? intro : '$intro: ${names.join(', ')}',
       child: PageDataScaffold(
         pageType: PageType.iceMasters,
         activeContent: coachesAsync.when(
@@ -201,6 +209,7 @@ class TheRinksPage extends ConsumerWidget {
 
     return PublicPageShell(
       pageTitle: 'The Rinks',
+      description: SiteStrings.of(context).rinksHeroDescription,
       child: PageDataScaffold(
         pageType: PageType.theRinks,
         activeContent: venuesAsync.when(
@@ -233,6 +242,7 @@ class TheClubPage extends ConsumerWidget {
     );
     return PublicPageShell(
       pageTitle: 'About Us',
+      description: clubInfo.history.paragraphs.firstOrNull,
       child: PageDataScaffold(
         pageType: PageType.theClub,
         activeContent: ClubContentSection(clubInfo: clubInfo),
@@ -255,6 +265,7 @@ class ContactUsPage extends ConsumerWidget {
 
     return PublicPageShell(
       pageTitle: 'Contact Us',
+      description: copy.strings.contactHeroDescription,
       child: PageDataContent(
         pageData: copy.pageData(PageType.contactUs),
         activeContent: ContactContentSection(
@@ -303,6 +314,7 @@ class EventDetailPage extends ConsumerWidget {
 
         return PublicPageShell(
           pageTitle: event.title,
+          description: event.tagline,
           child: PageDataContent(
             pageData: detailData.pageData,
             heroLeftAlign: isProgram,
@@ -318,6 +330,7 @@ class EventDetailPage extends ConsumerWidget {
       },
       loading: () => const PublicPageShell(
         pageTitle: 'Loading...',
+        publishMeta: false,
         child: Center(child: CircularProgressIndicator()),
       ),
       error: (e, _) => NotFoundPage(notFoundKey: notFoundKey),
@@ -339,6 +352,7 @@ class VenuePage extends ConsumerWidget {
     return venueAsync.when(
       loading: () => const PublicPageShell(
         pageTitle: 'Loading...',
+        publishMeta: false,
         child: Center(child: CircularProgressIndicator()),
       ),
       error: (_, _) => const NotFoundPage(notFoundKey: 'venue'),
@@ -362,6 +376,7 @@ class VenuePage extends ConsumerWidget {
 
         return PublicPageShell(
           pageTitle: venue.name,
+          description: venue.address,
           child: PageDataContent(
             pageData: pageData,
             heroIcon: LucideIcons.mapPin,

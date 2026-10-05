@@ -47,6 +47,7 @@ dependencies:
     path: ../ui_lib
   url_launcher: 6.3.2
   visibility_detector: 0.4.0+2
+  web: 1.1.1
 
 dev_dependencies:
   flutter_test:

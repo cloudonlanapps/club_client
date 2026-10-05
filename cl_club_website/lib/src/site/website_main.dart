@@ -6,6 +6,7 @@ import 'package:cl_server_config/cl_server_config.dart'
     show ServerConfig, serverConfigProvider;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:media_kit/media_kit.dart';
@@ -29,6 +30,9 @@ Future<void> websiteMain() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
   usePathUrlStrategy();
+  // The pages are painted, not written: the semantics tree is what puts
+  // their text in the document for a search engine or a screen reader.
+  if (kIsWeb) SemanticsBinding.instance.ensureSemantics();
 
   final (config, contact, themeMode) = await (
     SiteConfig.load(),

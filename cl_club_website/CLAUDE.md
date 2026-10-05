@@ -36,6 +36,20 @@ the SDK returned. Nothing builds those URLs any more — the site's own visuals
 are bundled assets and server media is fetched by uuid — so it only labels the
 footer now.
 
+## Page title and description (#29)
+
+Each page names itself to the browser and to search engines through
+`PageMetaPublisher` (`pageMetaProvider`): `App` sets the browser title to
+`<page name> | <club name>` and writes the description into the document's
+`<meta name="description">`. `PublicPageShell` publishes for every page under
+it: a listing is named by its nav label, a detail page by its `pageTitle`, and
+the screen passes `description:` (hero copy, the About story, the coaches'
+names, an event's tagline, a venue's address). A shell shown only while data
+loads passes `publishMeta: false`. The home page keeps the description the site
+was built with, which the generator takes from the brand's About story.
+`websiteMain()` turns the semantics tree on for the web, so the page text is
+in the document.
+
 ## Architecture
 
 ### Package Structure

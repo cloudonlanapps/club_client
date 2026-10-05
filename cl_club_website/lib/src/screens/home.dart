@@ -11,6 +11,7 @@ import '../providers/navbar_visibility.dart';
 import '../providers/scroll_direction.dart';
 import '../widgets/hero_section.dart';
 import '../widgets/landing_events_section.dart';
+import '../widgets/page_meta_publisher.dart';
 import '../widgets/public_page_shell.dart';
 import '../widgets/scroll_animated_section.dart';
 
@@ -149,71 +150,75 @@ class LandingPageState extends ConsumerState<LandingPage> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.sizeOf(context).height;
 
-    return Stack(
-      children: [
-        // Scrollable content
-        SingleChildScrollView(
-          controller: _scrollController,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Hero section (full screen)
-              SizedBox(
-                height: screenHeight,
-                child: HeroSection(
-                  showText: _showHeroText,
-                  scrollProgress: _heroScrollProgress,
-                  onScrollTap: scrollToFirstSection,
-                ),
-              ),
-              // Camps section - animates when 50% visible
-              AutoScrollTag(
-                key: const ValueKey(0),
-                controller: _scrollController,
-                index: 0,
-                child: ScrollAnimatedSection(
-                  scrollController: _scrollController,
-                  builder: ({required isVisible}) => LandingEventsSection(
-                    type: EventType.camp,
-                    visible: isVisible,
+    // The home page: titled with the club's name, and described as the site
+    // was built.
+    return PageMetaPublisher(
+      child: Stack(
+        children: [
+          // Scrollable content
+          SingleChildScrollView(
+            controller: _scrollController,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Hero section (full screen)
+                SizedBox(
+                  height: screenHeight,
+                  child: HeroSection(
+                    showText: _showHeroText,
+                    scrollProgress: _heroScrollProgress,
+                    onScrollTap: scrollToFirstSection,
                   ),
                 ),
-              ),
-              // Programs section - animates when 50% visible
-              AutoScrollTag(
-                key: const ValueKey(1),
-                controller: _scrollController,
-                index: 1,
-                child: ScrollAnimatedSection(
-                  scrollController: _scrollController,
-                  builder: ({required isVisible}) => LandingEventsSection(
-                    type: EventType.programme,
-                    visible: isVisible,
+                // Camps section - animates when 50% visible
+                AutoScrollTag(
+                  key: const ValueKey(0),
+                  controller: _scrollController,
+                  index: 0,
+                  child: ScrollAnimatedSection(
+                    scrollController: _scrollController,
+                    builder: ({required isVisible}) => LandingEventsSection(
+                      type: EventType.camp,
+                      visible: isVisible,
+                    ),
                   ),
                 ),
-              ),
-              // One-off events section - animates when 50% visible
-              AutoScrollTag(
-                key: const ValueKey(2),
-                controller: _scrollController,
-                index: 2,
-                child: ScrollAnimatedSection(
-                  scrollController: _scrollController,
-                  builder: ({required isVisible}) => LandingEventsSection(
-                    type: EventType.oneOff,
-                    visible: isVisible,
+                // Programs section - animates when 50% visible
+                AutoScrollTag(
+                  key: const ValueKey(1),
+                  controller: _scrollController,
+                  index: 1,
+                  child: ScrollAnimatedSection(
+                    scrollController: _scrollController,
+                    builder: ({required isVisible}) => LandingEventsSection(
+                      type: EventType.programme,
+                      visible: isVisible,
+                    ),
                   ),
                 ),
-              ),
-              // Footer
-              const PublicFooter(),
-            ],
+                // One-off events section - animates when 50% visible
+                AutoScrollTag(
+                  key: const ValueKey(2),
+                  controller: _scrollController,
+                  index: 2,
+                  child: ScrollAnimatedSection(
+                    scrollController: _scrollController,
+                    builder: ({required isVisible}) => LandingEventsSection(
+                      type: EventType.oneOff,
+                      visible: isVisible,
+                    ),
+                  ),
+                ),
+                // Footer
+                const PublicFooter(),
+              ],
+            ),
           ),
-        ),
-        // Contact FAB - visible from the start: a page with no events is too
-        // short to scroll past the hero (club_core#180).
-        const Positioned(right: 16, bottom: 16, child: ContactFab()),
-      ],
+          // Contact FAB - visible from the start: a page with no events is too
+          // short to scroll past the hero (club_core#180).
+          const Positioned(right: 16, bottom: 16, child: ContactFab()),
+        ],
+      ),
     );
   }
 }

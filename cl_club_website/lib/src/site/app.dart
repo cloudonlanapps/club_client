@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show darkCustomColors, lightCustomColors;
 
+import '../providers/page_meta.dart';
 import 'router.dart';
 import 'theme/theme_config.dart';
 import 'theme/theme_config_provider.dart';
@@ -33,6 +34,15 @@ class App extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final themeConfigAsync = ref.watch(themeConfigProvider);
 
+    // The page on screen names itself (PageMetaPublisher): its title is the
+    // browser's, and its description goes where a search engine reads it.
+    final pageMeta = ref.watch(pageMetaProvider);
+    ref.listen(pageMetaProvider, (previous, next) {
+      if (previous?.description != next?.description) {
+        ref.read(pageDescriptionWriterProvider)(next?.description);
+      }
+    });
+
     // Use the loaded config when available; fall back to the default while
     // the async asset is still loading or if it errored out. The router stays
     // mounted across both states so deep links are preserved.
@@ -56,7 +66,7 @@ class App extends ConsumerWidget {
       navbarBuilder: (context) => const PublicNavbar(),
       child: ShadApp.router(
         routerConfig: router,
-        title: ref.watch(siteConfigProvider).fullName,
+        title: pageMeta?.title ?? ref.watch(siteConfigProvider).fullName,
         themeMode: themeMode,
         // Every page waits for the site's copy (siteStringsProvider) and
         // reads it from the scope this puts above the navigator.

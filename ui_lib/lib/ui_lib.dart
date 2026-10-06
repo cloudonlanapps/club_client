@@ -38,6 +38,7 @@ export 'src/models/evaluation_template_create_value.dart'
 export 'src/models/event_timetable_value.dart' show EventTimetableValue;
 export 'src/models/form_translated_text.dart' show FormTranslatedText;
 export 'src/models/one_off_schedule_data.dart' show OneOffScheduleData;
+export 'src/models/one_off_schedule_value.dart' show OneOffScheduleValue;
 export 'src/models/programme_schedule_data.dart' show ProgrammeScheduleData;
 export 'src/models/session_input.dart' show SessionInput;
 export 'src/models/timetable_schedule_option.dart' show TimetableScheduleOption;
@@ -222,8 +223,14 @@ export 'src/widgets/event_schedule/event_timetable_form.dart'
     show EventTimetableForm, EventTimetableFormState;
 export 'src/widgets/event_schedule/event_timetable_form_validators.dart'
     show EventTimetableFormValidators;
+export 'src/widgets/event_schedule/event_venue_select_field.dart'
+    show EventVenueSelectField;
 export 'src/widgets/event_schedule/one_off_schedule_fields.dart'
     show OneOffScheduleFormField;
+export 'src/widgets/event_schedule/one_off_schedule_form.dart'
+    show OneOffScheduleForm, OneOffScheduleFormState;
+export 'src/widgets/event_schedule/one_off_schedule_form_validators.dart'
+    show OneOffScheduleFormValidators;
 export 'src/widgets/event_schedule/programme_schedule_fields.dart'
     show ProgrammeScheduleFormField;
 // Event schedule shared layout

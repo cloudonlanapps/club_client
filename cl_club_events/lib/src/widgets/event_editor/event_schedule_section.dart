@@ -5,6 +5,7 @@ import '../../models/camp_schedule_form_helpers.dart'
     show campRescheduleLockReason, campStartedMessage, isCampTimetableOnly;
 import 'camp_schedule_section.dart';
 import 'event_timetable_section.dart';
+import 'one_off_schedule_section.dart';
 
 /// The schedule section of an event detail page, by event type:
 ///
@@ -12,8 +13,10 @@ import 'event_timetable_section.dart';
 ///   sessions — in [CampScheduleSection] (a cancelled camp shows it locked);
 /// - a camp that has started keeps its dates, and only its timetable can be
 ///   corrected, in [EventTimetableSection] (club_core#85);
-/// - a programme or one-off corrects its timetable in
-///   [EventTimetableSection].
+/// - a one-off that can still be moved edits its date, times, venue and
+///   sessions in [OneOffScheduleSection]; once it has started or is called
+///   off it shows them locked and corrects its timetable (club_client#37);
+/// - a programme corrects its timetable in [EventTimetableSection].
 class EventScheduleSection extends StatelessWidget {
   const EventScheduleSection({
     required this.event,
@@ -29,6 +32,9 @@ class EventScheduleSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (event.type == EventType.oneOff) {
+      return OneOffScheduleSection(event: event, canEdit: canEdit);
+    }
     if (event.type != EventType.camp) {
       return EventTimetableSection(event: event, canEdit: canEdit);
     }

@@ -96,6 +96,28 @@ class SessionSplitField extends StatefulWidget {
     return '${whole}h ${fraction}m';
   }
 
+  /// [sessions] with the same names and lengths, laid end to end from
+  /// [start]: the split of an occurrence whose start time moved.
+  static List<SessionInput> walkedFrom(
+    List<SessionInput> sessions,
+    ShadTimeOfDay start,
+  ) {
+    final result = <SessionInput>[];
+    var cursor = start.hour * 60 + start.minute;
+    for (final session in sessions) {
+      final end = cursor + sessionMinutes(session);
+      result.add(
+        SessionInput(
+          name: session.name,
+          startTime: formatHM(cursor),
+          endTime: formatHM(end),
+        ),
+      );
+      cursor = end;
+    }
+    return result;
+  }
+
   @override
   State<SessionSplitField> createState() => SessionSplitFieldState();
 }

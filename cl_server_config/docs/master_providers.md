@@ -86,6 +86,7 @@ These mirror the admin masters but for the currently-logged-in member.
 | `creditSystemProvider` | `capabilities.dart` | `capabilitiesProvider` (`creditSystem`; null while unknown) |
 | `clMemberCreditTotalProvider(username)` | `member_credit_total.dart` | `clCreditAccountsMasterProvider` (sum of usable balances) |
 | `evaluationsProvider` | `capabilities.dart` | `capabilitiesProvider` (`evaluations`; null while unknown) |
+| `defaultCountryCodeProvider` | `capabilities.dart` | `capabilitiesProvider` (`defaultCountryCode`, digits only; `fallbackCountryCode` (`91`) when the server reports none or has not answered; works on the website too, so a form that saves with it starts the read when it appears) |
 | `clMemberEvaluationsProvider(username)` | `member_evaluations.dart` | `MyEvaluationsSource` (the member's published `EvaluationMemberView`s, all pages; autoDispose; empty with no call unless `evaluationsProvider` is true; refetched on `evaluationsVersion`) |
 | `clMemberEvaluationMediaProvider((username, evaluationId))` | `member_evaluation_media.dart` | `MyEvaluationsSource` (`EvaluationMemberMedia`: the stored `member_copy` PDF and evidence by item id; autoDispose; null with no call unless `evaluationsProvider` is true; refetched on `evaluationsVersion`) |
 | `clEvaluationMediaProvider(evaluationId)` | `evaluation_media.dart` | `EvaluationMediaSource.listGrouped` (the owner's view: `EvaluationMemberMedia` with evidence on every item, private included, and the member copy; autoDispose; null with no call unless `evaluationsProvider` is true; refetched on `evaluationsVersion`) |
@@ -102,6 +103,14 @@ them too; club_core#53). Each read goes through `readPublic`
 (`utils/public_read.dart`): it watches `networkStatusProvider` and
 `clManualRefreshProvider`, calls `markOnline()` on success and `checkNow()`
 on failure.
+
+`GET /capabilities` needs no token either but is not under `/public`.
+`capabilitiesProvider` serves it to both hosts: through `secureClientProvider`
+in an app, and, where the host gave none (the website; the provider then
+throws `SecureClientNotProvided`), through `clSessionlessClientProvider`
+(`sessionless_client.dart`, internal: a logged-out SDK client built from
+`apiBaseUrlProvider`, which holds no session and sends nothing until asked;
+club_core#31).
 
 | Provider | File | State Shape |
 |----------|------|-------------|

@@ -48,6 +48,7 @@ export 'src/theme/text_theme_extensions.dart';
 // Opening media outside the app
 export 'src/utils/evaluation_closing_run.dart' show EvaluationClosingRun;
 export 'src/utils/open_pdf_download.dart' show openPdfDownload;
+export 'src/utils/phone_number.dart' show PhoneNumber;
 export 'src/widgets/action_button.dart';
 export 'src/widgets/action_icon.dart';
 export 'src/widgets/admin_user_review/admin_user_review_form.dart'

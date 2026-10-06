@@ -1,10 +1,11 @@
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clPublicInquiryProvider;
+    show clPublicInquiryProvider, defaultCountryCodeProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../models/inquiry_form_helpers.dart';
 import '../page_content/site_copy.dart';
 
 /// One extra question a form asks beyond name, email, phone and message.
@@ -103,6 +104,9 @@ class _InquiryFormState extends ConsumerState<InquiryForm> {
     // A failed token fetch must not surface as an unhandled error; the
     // submit path reports it, and only if someone actually submits.
     _token.ignore();
+    // Likewise the club's country code (#31): asked for now, so the server
+    // has answered by the time the phone is saved.
+    ref.read(defaultCountryCodeProvider);
   }
 
   @override
@@ -140,18 +144,18 @@ class _InquiryFormState extends ConsumerState<InquiryForm> {
 
     try {
       final token = await _token;
-      await ref
-          .read(clPublicInquiryProvider.notifier)
-          .submit(
-            kind: widget.kind,
-            name: name,
-            email: email,
-            message: message,
-            token: token,
-            phone: _phone.text.trim().isEmpty ? null : _phone.text.trim(),
-            extra: _answers.isEmpty ? null : Map.of(_answers),
-            website: _honeypot.text.isEmpty ? null : _honeypot.text,
-          );
+      await InquiryFormSubmit.create(
+        notifier: ref.read(clPublicInquiryProvider.notifier),
+        defaultCountryCode: ref.read(defaultCountryCodeProvider),
+        kind: widget.kind,
+        name: name,
+        email: email,
+        message: message,
+        token: token,
+        phone: _phone.text,
+        answers: _answers,
+        honeypot: _honeypot.text,
+      );
       if (mounted) setState(() => _state = _FormState.sent);
     } on ServerException catch (e) {
       if (!mounted) return;

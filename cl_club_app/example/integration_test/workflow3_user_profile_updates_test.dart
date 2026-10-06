@@ -57,7 +57,8 @@ import 'package:cl_club_members/src/widgets/user_contact_info_card.dart';
 import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clUserPrivateProvider, imagePickerProvider;
-import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate, UserStatus;
+import 'package:club_sdk_2/club_sdk_2.dart'
+    show Capabilities, UserPrivate, UserStatus;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -113,6 +114,10 @@ const _kEditedMiddleName = 'Wf3Middle';
 const _kEditedLastName = 'Wf3Last';
 const _kEditedNickname = 'Wf3Nick';
 const _kEditedEmail = 'workflow3_user_updated@example.com';
+// Phones are typed as people type them (a space, a leading 0) and stored in
+// international format (#31): `_kEdited*Phone` is the national number the
+// stored value must end in, behind the stack's country code.
+const _kEditedPhoneTyped = '98765 43299';
 const _kEditedPhone = '9876543299';
 const _kEditedAddrLine1 = 'Wf3 Line1';
 const _kEditedAddrLine2 = 'Wf3 Line2';
@@ -121,6 +126,7 @@ const _kEditedState = 'Karnataka';
 const _kEditedPincode = '560001';
 const _kEditedEmergencyName = 'Wf3 EC Name';
 const _kEditedEmergencyRelation = 'Parent';
+const _kEditedEmergencyPhoneTyped = '09876543298';
 const _kEditedEmergencyPhone = '9876543298';
 const _kEditedMedicalInfo = 'Wf3 medical notes';
 
@@ -168,11 +174,12 @@ void main() {
       // Identity verification decides the onboarding path: with it on, a
       // new member uploads a document before submitting for review; with it
       // off, sign-up lands them straight in `pending`.
-      final verification = (await stackCapabilities(
+      final caps = await stackCapabilities(
         baseUrl: _kApiBaseUrl,
         username: _kSudoUsername,
         password: _kSudoPassword,
-      )).identityVerification;
+      );
+      final verification = caps.identityVerification;
 
       // ─── Phase 1: sudo creates workflow3_admin and grants Admin role ───
       await _loginViaUi(tester, _kSudoUsername, _kSudoPassword);
@@ -222,6 +229,13 @@ void main() {
             'a new member must authenticate (not be rejected) under '
             'the onboarding-routing model',
       );
+      expect(
+        (_currentUser(tester)! as UserPrivate).phone,
+        storedPhone(caps, _kMemberPhone),
+        reason:
+            'Issue 31: a phone typed without a country code at sign-up is '
+            'stored with the country code of the stack',
+      );
       if (verification) {
         await _assertRoutedToOnboardingWelcome(tester);
         await _submitDocumentsViaUi(tester);
@@ -265,8 +279,10 @@ void main() {
       );
       expect(
         afterReapply.phone,
-        _kReapplyPhone,
-        reason: 'reapply must persist the edited phone',
+        storedPhone(caps, _kReapplyPhone),
+        reason:
+            'Issue 31: reapply must persist the edited phone, in '
+            'international format',
       );
 
       // Resubmit documents → back to `pending` for the approval phase.
@@ -308,7 +324,7 @@ void main() {
       await _editSelfContactViaUi(tester, username: _kMemberUsername);
 
       fresh = await _refreshSelf(tester);
-      _expectMemberSelfEditedFields(fresh);
+      _expectMemberSelfEditedFields(fresh, caps);
 
       // ─── Phase 7: logout / login round-trip — values still there ──────
       await _logout(tester);
@@ -316,7 +332,7 @@ void main() {
       fresh = await _refreshSelf(tester);
       expect(fresh.bio, _kBioMarkdown);
       expect(fresh.achievements, _kAchievementsMarkdown);
-      _expectMemberSelfEditedFields(fresh);
+      _expectMemberSelfEditedFields(fresh, caps);
       await _logout(tester);
 
       // ─── Phase 8: admin verifies + edits non-DOB fields ────────────────
@@ -337,7 +353,7 @@ void main() {
         _kAchievementsMarkdown,
         reason: 'admin must see member achievements after self-edit',
       );
-      _expectMemberSelfEditedFields(asAdmin);
+      _expectMemberSelfEditedFields(asAdmin, caps);
 
       // DOB is read-only for a plain admin — verify in the personal editor,
       // then close it without changes.
@@ -1492,9 +1508,13 @@ Future<void> _editSelfContactViaUi(
   // ── Contact ──
   await _openSectionEditor(tester, UserContactInfoCard, 'email');
   await _enterTextById(tester, 'email', _kEditedEmail);
-  await _enterTextById(tester, 'phone', _kEditedPhone);
+  await _enterTextById(tester, 'phone', _kEditedPhoneTyped);
   await _enterTextById(tester, 'emergencyContactName', _kEditedEmergencyName);
-  await _enterTextById(tester, 'emergencyContactPhone', _kEditedEmergencyPhone);
+  await _enterTextById(
+    tester,
+    'emergencyContactPhone',
+    _kEditedEmergencyPhoneTyped,
+  );
   await _enterTextById(tester, 'medicalInfo', _kEditedMedicalInfo);
   _setShadFormValues(tester, {
     'emergencyContactRelation': _kEditedEmergencyRelation,
@@ -1662,13 +1682,17 @@ Future<void> _softDeleteUserViaUi(
 // Field-by-field assertions
 // ---------------------------------------------------------------------------
 
-void _expectMemberSelfEditedFields(UserPrivate u) {
+void _expectMemberSelfEditedFields(UserPrivate u, Capabilities caps) {
   expect(u.firstName, _kEditedFirstName, reason: 'firstName');
   expect(u.middleName, _kEditedMiddleName, reason: 'middleName');
   expect(u.lastName, _kEditedLastName, reason: 'lastName');
   expect(u.nickname, _kEditedNickname, reason: 'nickname');
   expect(u.email, _kEditedEmail, reason: 'email');
-  expect(u.phone, _kEditedPhone, reason: 'phone');
+  expect(
+    u.phone,
+    storedPhone(caps, _kEditedPhone),
+    reason: 'Issue 31: phone, in international format',
+  );
   expect(u.address?.addrLine1, _kEditedAddrLine1, reason: 'addrLine1');
   expect(u.address?.addrLine2, _kEditedAddrLine2, reason: 'addrLine2');
   expect(u.address?.city, _kEditedCity, reason: 'city');
@@ -1691,8 +1715,10 @@ void _expectMemberSelfEditedFields(UserPrivate u) {
   );
   expect(
     ec,
-    contains(_kEditedEmergencyPhone),
-    reason: 'emergency contact must include phone',
+    endsWith(storedPhone(caps, _kEditedEmergencyPhone)),
+    reason:
+        'Issue 31: emergency contact must include the phone, in '
+        'international format',
   );
 }
 

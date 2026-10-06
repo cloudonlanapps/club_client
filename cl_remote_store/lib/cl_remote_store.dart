@@ -20,6 +20,8 @@ export 'src/models/member_evaluation_key.dart' show MemberEvaluationKey;
 export 'src/models/occurrence_key.dart';
 export 'src/models/occurrences_key.dart';
 export 'src/models/resource_version_state.dart';
+export 'src/models/secure_client_not_provided.dart'
+    show SecureClientNotProvided;
 export 'src/models/site_media_asset.dart' show SiteMediaAsset;
 export 'src/models/site_media_slot.dart' show SiteMediaSlot;
 export 'src/providers/attendances_master.dart';
@@ -31,7 +33,9 @@ export 'src/providers/capabilities.dart'
     show
         capabilitiesProvider,
         creditSystemProvider,
+        defaultCountryCodeProvider,
         evaluationsProvider,
+        fallbackCountryCode,
         identityVerificationProvider;
 export 'src/providers/client.dart' show secureClientProvider;
 export 'src/providers/club_event_types.dart' show clubEventTypesProvider;

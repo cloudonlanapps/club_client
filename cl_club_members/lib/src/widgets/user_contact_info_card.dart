@@ -2,6 +2,8 @@ import 'package:cl_club_members/src/models/user_form_helpers.dart'
     show UserFormSubmit, buildUserFormInitialValues;
 import 'package:cl_club_members/src/utils/apply_user_update.dart';
 import 'package:cl_club_members/src/utils/profile_detail_rows.dart';
+import 'package:cl_remote_store/cl_remote_store.dart'
+    show defaultCountryCodeProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -72,6 +74,7 @@ class UserContactInfoCardState extends ConsumerState<UserContactInfoCard> {
           values: values,
           username: user.username,
           notifier: notifier,
+          defaultCountryCode: ref.read(defaultCountryCodeProvider),
         ),
         successMessage: 'Contact updated.',
       ),

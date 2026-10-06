@@ -28,13 +28,14 @@ stacks, so there is nothing to ask permission about. Runs are Linux desktop
 
 At the club_core root, one per real deployment shape, named without the club:
 
-| Conf | Credits, evaluations, event marketing | Identity verification |
-|---|---|---|
-| `app_test_server1.conf` | off | on |
-| `app_test_server2.conf` | on | off |
+| Conf | Credits, evaluations, event marketing | Identity verification | Default country code |
+|---|---|---|---|
+| `app_test_server1.conf` | off | on | `44` |
+| `app_test_server2.conf` | on | off | unset (the apps fall back to `91`) |
 
-Between them the two confs cover both settings of every optional module; keep
-them in step with the deployments they stand for. Both clone club_server's `main` from git. To test against a
+Between them the two confs cover both settings of every optional module, and a
+server that reports a default country code and one that reports none (#31);
+keep them in step with the deployments they stand for. Both clone club_server's `main` from git. To test against a
 local server checkout, set `source` to its path, relative to the conf.
 
 The example's `club.json` runs camps, programmes and one-off events
@@ -52,6 +53,9 @@ asserting anything:
 if (skipUnless(enabled: caps.creditSystem, feature: 'credit system')) return;
 if (skipIf(enabled: caps.identityVerification, feature: 'identity verification')) return;
 ```
+
+A phone typed without a country code is stored with the stack's: expect
+`storedPhone(caps, '9876543210')`, never a literal `+91…` (#31).
 
 A known, open failure skips at the point it would fail, citing its issue,
 with `skipKnownFailure(issue: N, what: …)`. Remove the skip with the fix.

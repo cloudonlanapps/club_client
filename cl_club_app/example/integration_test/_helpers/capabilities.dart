@@ -3,7 +3,8 @@
 //
 // The suite runs once per server conf (app_test_server1.conf,
 // app_test_server2.conf at the club_core root), and the confs differ in the
-// optional modules and in identity verification. A test decides what to
+// optional modules, in identity verification and in whether a default country
+// code is set. A test decides what to
 // expect from `GET /v1/capabilities`, never from which club is running, and
 // a case that does not apply to this stack reports as skipped with a reason,
 // not as a pass that asserted nothing.
@@ -12,9 +13,9 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter_test/flutter_test.dart';
 
-/// Reads the stack's capabilities as [username]. `GET /capabilities` needs an
-/// authenticated caller, so pass the sudo credentials a test already has.
-/// Call once, from `setUpAll`.
+/// Reads the stack's capabilities as [username]. `GET /capabilities` answers
+/// without a login too; the sudo credentials a test already has are used so
+/// the read is the one a logged-in app makes. Call once, from `setUpAll`.
 Future<Capabilities> stackCapabilities({
   required String baseUrl,
   required String username,
@@ -28,6 +29,17 @@ Future<Capabilities> stackCapabilities({
     await client.auth.logout();
   }
 }
+
+/// The country calling code the app completes a phone with on a stack that
+/// reports none (club_core#31).
+const fallbackCountryCode = '91';
+
+/// How the app stores [nationalNumber] (digits only, no leading 0) typed
+/// without a country code on this stack: in international format, with the
+/// stack's `defaultCountryCode`, or [fallbackCountryCode] when it reports
+/// none (club_core#31).
+String storedPhone(Capabilities caps, String nationalNumber) =>
+    '+${caps.defaultCountryCode ?? fallbackCountryCode}$nationalNumber';
 
 /// Marks the running test skipped and returns true when [enabled] is false,
 /// so a body can open with:

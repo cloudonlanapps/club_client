@@ -14,8 +14,10 @@ import 'package:ui_lib/ui_lib.dart' show PickerUser, UserSelectionDialogContent;
 /// member who cannot be funded — no usable general or programme credit
 /// for an ordinary enrollment, or no trial credit for a trial (R35, R53) —
 /// is dimmed and not selectable, with an add-credit chip beside them. The
-/// chip opens their credit view with Add credit already open for this
-/// programme; once funded, the member turns selectable in place.
+/// chip opens Add credit alone, over the picker, pre-filled with this
+/// programme (club_client#41); once funded, the member turns selectable in
+/// place. A member who can be funded shows the credit usable here, on a
+/// chip that opens their credit view.
 ///
 /// Elsewhere (credit off or unknown, not a programme) it is the plain
 /// picker.
@@ -47,30 +49,37 @@ class FundedUserSelectionDialog extends ConsumerWidget {
     final accounts = gated
         ? ref.watch(clUsableCreditAccountsProvider).valueOrNull
         : null;
-    final blocked = accounts == null
-        ? const <String>{}
+    // Each member's credit usable on this enrollment; empty when not gated.
+    final usable = accounts == null
+        ? const <String, int>{}
         : {
             for (final u in users)
-              if (usableCreditsFor(
-                    accounts[u.username] ?? const <CreditAccount>[],
-                    eventId: eventId,
-                    trial: trial,
-                  ) <
-                  1)
-                u.username,
+              u.username: usableCreditsFor(
+                accounts[u.username] ?? const <CreditAccount>[],
+                eventId: eventId,
+                trial: trial,
+              ),
           };
+    final blocked = {
+      for (final entry in usable.entries)
+        if (entry.value < 1) entry.key,
+    };
     return UserSelectionDialogContent(
       title: title,
       users: users,
       showRoleFilter: false,
       singleSelect: singleSelect,
       blockedUsernames: blocked,
-      trailingBuilder: (username) => blocked.contains(username)
-          ? CreditChip.add(
-              username: username,
-              grantPrefill: (programmeId: eventId, trial: trial),
-            )
-          : null,
+      trailingBuilder: (username) {
+        final credits = usable[username];
+        if (credits == null) return null;
+        return blocked.contains(username)
+            ? CreditChip.add(
+                username: username,
+                grantPrefill: (programmeId: eventId, trial: trial),
+              )
+            : CreditChip(username: username, credits: credits);
+      },
     );
   }
 }

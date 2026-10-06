@@ -34,6 +34,63 @@ class StubAccounts extends ClCreditAccountsMasterNotifier {
     opened.add('$username $credits $eventId $isTrial $reason');
     return account('NEW00001', membername: username, balance: credits);
   }
+
+  /// The package actions made, as `<action> <accountId> <reason>`.
+  final List<String> actions = [];
+
+  @override
+  Future<CreditAccount> extendValidity(
+    String accountId, {
+    required DateTime validUntilUtc,
+    required String reason,
+  }) async {
+    actions.add('extend $accountId $reason');
+    return account(accountId, membername: username, balance: 1);
+  }
+
+  @override
+  Future<CreditAccount> reverseGrant(
+    String accountId, {
+    required int credits,
+    required String reason,
+  }) async {
+    actions.add('reverse $accountId $reason');
+    return account(accountId, membername: username, balance: 0);
+  }
+
+  @override
+  Future<CreditTransferResult> transfer(
+    String accountId, {
+    required int penalty,
+    required DateTime validFromUtc,
+    required DateTime validUntilUtc,
+    required String reason,
+  }) async {
+    actions.add('transfer $accountId $reason');
+    return CreditTransferResult(
+      source: account(accountId, membername: username, balance: 0),
+    );
+  }
+}
+
+/// Counts the routes on the navigator above the home route: every dialog
+/// and sheet is one.
+class RouteStack extends NavigatorObserver {
+  /// Modal routes currently open.
+  int depth = 0;
+
+  /// Modal routes ever pushed.
+  int pushed = 0;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (previousRoute == null) return;
+    depth++;
+    pushed++;
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) => depth--;
 }
 
 class StubEntries extends ClCreditEntriesMasterNotifier {
@@ -105,6 +162,7 @@ Widget creditScope({
   Map<String, List<CreditEntry>> entries = const {},
   Map<String, UserInfo> users = const {},
   StubAccounts Function()? accountsNotifier,
+  RouteStack? routes,
 }) {
   return ProviderScope(
     overrides: [
@@ -118,6 +176,9 @@ Widget creditScope({
       clMyEventsMasterProvider.overrideWith(StubMyEvents.new),
       clEventsMasterProvider.overrideWith(StubEvents.new),
     ],
-    child: ShadApp(home: Scaffold(body: child)),
+    child: ShadApp(
+      navigatorObservers: [?routes],
+      home: Scaffold(body: child),
+    ),
   );
 }

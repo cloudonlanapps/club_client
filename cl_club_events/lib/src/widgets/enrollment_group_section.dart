@@ -18,6 +18,7 @@ class EnrollmentGroupSection extends StatefulWidget {
     required this.displayNameResolver,
     required this.canManage,
     this.withdrawalReasons = const {},
+    this.ineligibleUsernames = const {},
     this.currentUser,
     this.onOpenReview,
     super.key,
@@ -34,6 +35,10 @@ class EnrollmentGroupSection extends StatefulWidget {
 
   /// Withdrawal reasons by username, from the full enrollment records.
   final Map<String, String?> withdrawalReasons;
+
+  /// Members the full enrollment records report as no longer eligible
+  /// (club_client#42); their rows are marked.
+  final Set<String> ineligibleUsernames;
 
   /// The viewer, for the rows' **Add Review** (club_core#174).
   final UserPrivate? currentUser;
@@ -153,6 +158,7 @@ class EnrollmentGroupSectionState extends State<EnrollmentGroupSection> {
                 displayName: widget.displayNameResolver(entry.key),
                 canManage: widget.canManage,
                 withdrawalReason: widget.withdrawalReasons[entry.key],
+                eligible: !widget.ineligibleUsernames.contains(entry.key),
                 currentUser: widget.currentUser,
                 onOpenReview: widget.onOpenReview,
               ),

@@ -135,6 +135,7 @@ class _Media extends Fake implements MediaSource {
     double? start,
     List<String>? accessRoles,
     bool encrypt = false,
+    String? ownerUsername,
   }) async => throw _timeout;
 }
 

@@ -10,8 +10,9 @@ class GroupFormFields {
   static const String nameId = 'name';
   static const String descriptionId = 'description';
   static const String modeId = 'mode';
-  static const String dobOnOrAfterId = 'dobOnOrAfterUtc';
-  static const String dobOnOrBeforeId = 'dobOnOrBeforeUtc';
+
+  /// Gender criterion. The age band's inputs are the shared cluster's
+  /// (`AgeEligibilityFormFields`).
   static const String genderId = 'gender';
 
   /// Create-only: "Add me into the group" switch. When true, the caller
@@ -37,7 +38,7 @@ enum GroupMode {
     GroupMode.auto => 'Auto',
   };
 
-  /// Whether this mode is driven by eligibility criteria (DOB / gender).
+  /// Whether this mode is driven by eligibility criteria (age / gender).
   bool get usesCriteria => this != GroupMode.manual;
 }
 

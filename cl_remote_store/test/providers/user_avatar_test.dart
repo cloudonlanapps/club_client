@@ -70,6 +70,7 @@ class _FakeMedia extends Fake implements MediaSource {
     double? start,
     List<String>? accessRoles,
     bool encrypt = false,
+    String? ownerUsername,
   }) async {
     uploadedAccessRoles = accessRoles;
     final media = _media(id: 200, uuid: 'new', accessRoles: accessRoles!);

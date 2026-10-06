@@ -168,6 +168,7 @@ export 'src/providers/user_avatar.dart'
         avatarVisibilityProvider,
         kUserAvatarTag;
 export 'src/providers/user_groups.dart';
+export 'src/providers/user_ineligible_group_ids.dart';
 export 'src/providers/user_info.dart' show clUserInfoProvider;
 export 'src/providers/user_private.dart';
 export 'src/providers/user_stats.dart';
@@ -183,6 +184,7 @@ export 'src/providers/venue_media.dart'
         venueMediaMutationProvider;
 export 'src/providers/venues.dart';
 export 'src/providers/venues_master.dart';
+export 'src/utils/age_form_adapter.dart' show formAgeFromSdk, sdkAgeFromForm;
 export 'src/utils/club_content_from_server.dart' show defaultClubValueIconName;
 export 'src/utils/contact_info_from_server.dart' show contactInfoFromServer;
 export 'src/utils/credit_funding.dart' show usableCreditsFor;

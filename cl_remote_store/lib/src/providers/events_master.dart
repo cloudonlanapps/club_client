@@ -87,8 +87,9 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
     List<String>? coachNames,
     String? rrule,
     Gender? gender,
-    DateTime? dobOnOrAfterUtc,
-    DateTime? dobOnOrBeforeUtc,
+    Age? minAge,
+    Age? maxAge,
+    bool? strictAge,
     bool isFeatured = false,
     List<String>? galleryUris,
     List<EventSession>? sessions,
@@ -107,8 +108,9 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
         coachNames: coachNames,
         rrule: rrule,
         gender: gender,
-        dobOnOrAfterUtc: dobOnOrAfterUtc,
-        dobOnOrBeforeUtc: dobOnOrBeforeUtc,
+        minAge: minAge,
+        maxAge: maxAge,
+        strictAge: strictAge,
         isFeatured: isFeatured,
         galleryUris: galleryUris,
         sessions: sessions,
@@ -137,6 +139,11 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
   /// it, an omitted getter leaves it alone. The window (venue, start, end,
   /// rrule) moves through [rescheduleEvent].
   ///
+  /// [minAge], [maxAge] and [strictAge] are the age band: a getter
+  /// returning `null` clears that bound, an omitted one leaves it alone, and
+  /// [strictAge] left `null` is unchanged. The server works out the window
+  /// of birth dates and reports it on the event.
+  ///
   /// A stale [version] reloads the event before it is rethrown
   /// ([reloadOnStale]).
   Future<Event> updateEvent(
@@ -148,8 +155,9 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
     String? organizerName,
     List<String>? Function()? coachNames,
     Gender? Function()? gender,
-    DateTime? Function()? dobOnOrAfterUtc,
-    DateTime? Function()? dobOnOrBeforeUtc,
+    Age? Function()? minAge,
+    Age? Function()? maxAge,
+    bool? strictAge,
     bool? isFeatured,
     List<String>? Function()? galleryUris,
     List<EventSession>? Function()? sessions,
@@ -168,8 +176,9 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
           organizerName: organizerName,
           coachNames: coachNames,
           gender: gender,
-          dobOnOrAfterUtc: dobOnOrAfterUtc,
-          dobOnOrBeforeUtc: dobOnOrBeforeUtc,
+          minAge: minAge,
+          maxAge: maxAge,
+          strictAge: strictAge,
           isFeatured: isFeatured,
           galleryUris: galleryUris,
           sessions: sessions,
@@ -257,8 +266,9 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
     String? description,
     Visibility? visibility,
     Gender? Function()? gender,
-    DateTime? Function()? dobOnOrAfterUtc,
-    DateTime? Function()? dobOnOrBeforeUtc,
+    Age? Function()? minAge,
+    Age? Function()? maxAge,
+    bool? strictAge,
     bool? isFeatured,
     List<String>? Function()? galleryUris,
     List<EventSession>? Function()? sessions,
@@ -276,8 +286,9 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
           description: description,
           visibility: visibility,
           gender: gender,
-          dobOnOrAfterUtc: dobOnOrAfterUtc,
-          dobOnOrBeforeUtc: dobOnOrBeforeUtc,
+          minAge: minAge,
+          maxAge: maxAge,
+          strictAge: strictAge,
           isFeatured: isFeatured,
           galleryUris: galleryUris,
           sessions: sessions,

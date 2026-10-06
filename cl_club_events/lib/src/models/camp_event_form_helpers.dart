@@ -1,7 +1,9 @@
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show ClEventsMasterNotifier;
-import 'package:club_sdk_2/club_sdk_2.dart' show Event, Gender, Visibility;
-import 'package:ui_lib/ui_lib.dart' show EventFormFields, EventGender;
+    show ClEventsMasterNotifier, formAgeFromSdk, sdkAgeFromForm;
+import 'package:club_sdk_2/club_sdk_2.dart'
+    show Age, Event, EventType, Gender, Visibility;
+import 'package:ui_lib/ui_lib.dart'
+    show AgeEligibilityFormValues, EventFormFields, EventGender;
 
 /// SDK ↔ form adapter for the camp-event section editors — the one place that
 /// bridges the forms' flat `Map<String, dynamic>` (keyed by [EventFormFields],
@@ -30,11 +32,6 @@ EventGender? _genderToForm(Gender? g) => switch (g) {
   null => null,
 };
 
-DateTime? _floorToUtcMidnight(DateTime? d) {
-  if (d == null) return null;
-  return DateTime.utc(d.year, d.month, d.day);
-}
-
 /// Builds initial form values from an existing [Event] (null = create
 /// defaults). Text fields normalize `null` → `''` and list fields → `const []`
 /// so each form's `isDirty` comparison works cleanly.
@@ -43,6 +40,7 @@ Map<String, dynamic> buildEventFormInitialValues(Event? event) {
     return {
       EventFormFields.titleId: '',
       EventFormFields.descriptionId: '',
+      ...AgeEligibilityFormValues.initial(),
       EventFormFields.organizerNameId: '',
       EventFormFields.coachNamesId: const <String>[],
     };
@@ -51,8 +49,11 @@ Map<String, dynamic> buildEventFormInitialValues(Event? event) {
     EventFormFields.titleId: event.title,
     EventFormFields.descriptionId: event.description,
     EventFormFields.genderId: _genderToForm(event.gender),
-    EventFormFields.dobOnOrAfterId: event.dobOnOrAfterUtc,
-    EventFormFields.dobOnOrBeforeId: event.dobOnOrBeforeUtc,
+    ...AgeEligibilityFormValues.initial(
+      minAge: formAgeFromSdk(event.minAge),
+      maxAge: formAgeFromSdk(event.maxAge),
+      strictAge: event.strictAge,
+    ),
     EventFormFields.organizerNameId: event.organizerName ?? '',
     EventFormFields.coachNamesId:
         event.coachNames ??
@@ -86,22 +87,38 @@ class EventFormSubmit {
     return notifier.updateEvent(eventId, description: description.trim());
   }
 
-  /// Eligibility section — gender + DOB window, all clearable via ValueGetter.
+  /// Eligibility section — gender and the age band (`minAge`, `maxAge`,
+  /// `strictAge`); no dates are sent, the server works the window out. An
+  /// emptied age clears that bound.
+  ///
+  /// A programme's eligibility is a correction (`correctionOnEvent`); a
+  /// camp's or one-off's goes through `updateEvent`. The server refuses the
+  /// other verb for each type.
   static Future<Event> updateEligibility({
-    required int eventId,
+    required Event event,
     required Map<String, dynamic> values,
     required ClEventsMasterNotifier notifier,
   }) {
+    Gender? gender() =>
+        _genderToSdk(values[EventFormFields.genderId] as EventGender?);
+    Age? minAge() => sdkAgeFromForm(AgeEligibilityFormValues.minAge(values));
+    Age? maxAge() => sdkAgeFromForm(AgeEligibilityFormValues.maxAge(values));
+    final strictAge = AgeEligibilityFormValues.strictAge(values);
+    if (event.type == EventType.programme) {
+      return notifier.correctionOnEvent(
+        event.id,
+        gender: gender,
+        minAge: minAge,
+        maxAge: maxAge,
+        strictAge: strictAge,
+      );
+    }
     return notifier.updateEvent(
-      eventId,
-      gender: () =>
-          _genderToSdk(values[EventFormFields.genderId] as EventGender?),
-      dobOnOrAfterUtc: () => _floorToUtcMidnight(
-        values[EventFormFields.dobOnOrAfterId] as DateTime?,
-      ),
-      dobOnOrBeforeUtc: () => _floorToUtcMidnight(
-        values[EventFormFields.dobOnOrBeforeId] as DateTime?,
-      ),
+      event.id,
+      gender: gender,
+      minAge: minAge,
+      maxAge: maxAge,
+      strictAge: strictAge,
     );
   }
 

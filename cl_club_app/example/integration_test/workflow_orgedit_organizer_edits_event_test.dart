@@ -26,14 +26,19 @@ import 'package:cl_club_events/src/widgets/events_preview/cl_event_gallery.dart'
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart'
-    show Event, EventType, Gender, Role, Visibility;
+    show Age, Event, EventType, Gender, Role, Visibility;
 import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
-    show EntityCard, EventFormFields, EventGender, SectionEditButton;
+    show
+        AgeEligibilityFormFields,
+        EntityCard,
+        EventFormFields,
+        EventGender,
+        SectionEditButton;
 
 import '_helpers/auth.dart';
 import '_helpers/editors.dart';
@@ -68,6 +73,10 @@ const _kEditedDescription =
 const _kEditDescriptionTooltip = 'Edit Description';
 const _kManagementTitle = 'Event Management';
 const _kEligibilityTitle = 'Eligibility';
+
+// The age band the organizer sets on the camp (club_client#33).
+const _kMinAgeYears = 5;
+const _kMaxAgeYears = 18;
 
 /// A day a month ahead, at midnight UTC: well inside the server's 52-week
 /// scheduling horizon, which a fixed future date would one day leave.
@@ -156,15 +165,26 @@ void main() {
       );
 
       await tapSectionPencil(tester, _sectionCard(_kEligibilityTitle));
-      setShadFormValues(tester, {
-        EventFormFields.genderId: EventGender.female,
-        EventFormFields.dobOnOrAfterId: DateTime.utc(2010),
-        EventFormFields.dobOnOrBeforeId: DateTime.utc(2014),
-      });
+      setShadFormValues(tester, {EventFormFields.genderId: EventGender.female});
+      await enterTextById(
+        tester,
+        AgeEligibilityFormFields.minAgeYearsId,
+        '$_kMinAgeYears',
+      );
+      await enterTextById(
+        tester,
+        AgeEligibilityFormFields.maxAgeYearsId,
+        '$_kMaxAgeYears',
+      );
       await saveInlineEditor(tester);
       await waitFor(
         tester,
-        () => _event(tester, eventId).gender == Gender.female,
+        () {
+          final e = _event(tester, eventId);
+          return e.gender == Gender.female &&
+              e.minAge == const Age(years: _kMinAgeYears) &&
+              e.maxAge == const Age(years: _kMaxAgeYears);
+        },
         description: 'organizer eligibility edit to round-trip',
       );
       await logout(tester);

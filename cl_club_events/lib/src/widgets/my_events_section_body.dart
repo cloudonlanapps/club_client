@@ -14,12 +14,24 @@ class MyEventsSectionBody extends StatelessWidget {
     required this.username,
     required this.events,
     this.onEventTap,
+    this.ineligibleEventIds = const {},
     super.key,
   });
 
   final String username;
   final List<Event> events;
   final void Function(Event event)? onEventTap;
+
+  /// Ids of the events the member no longer matches (club_client#43). They
+  /// are marked, listed first under a line that counts them, and left out of
+  /// the groups by type below. Empty shows the section as it always was.
+  final Set<int> ineligibleEventIds;
+
+  /// How many of the member's events the member no longer matches, as the
+  /// line above them reads.
+  static String ineligibleCountText(int count) => count == 1
+      ? '1 event no longer matches this member'
+      : '$count events no longer match this member';
 
   @override
   Widget build(BuildContext context) {
@@ -52,8 +64,12 @@ class MyEventsSectionBody extends StatelessWidget {
       );
     }
 
+    final ineligible = activeEvents
+        .where((e) => ineligibleEventIds.contains(e.id))
+        .toList();
     final grouped = <EventType, List<Event>>{};
     for (final event in activeEvents) {
+      if (ineligibleEventIds.contains(event.id)) continue;
       grouped.putIfAbsent(event.type, () => []).add(event);
     }
 
@@ -64,6 +80,26 @@ class MyEventsSectionBody extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 12),
           child: Text('Events', style: theme.textTheme.h4),
         ),
+        if (ineligible.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              ineligibleCountText(ineligible.length),
+              style: theme.textTheme.small,
+            ),
+          ),
+          for (final event in ineligible)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: EventCard(
+                key: ValueKey(event.id),
+                eventId: event.id,
+                username: username,
+                memberEligible: false,
+                onTap: onEventTap == null ? null : () => onEventTap!(event),
+              ),
+            ),
+        ],
         for (final entry in grouped.entries) ...[
           Padding(
             padding: const EdgeInsets.only(top: 8, bottom: 4),

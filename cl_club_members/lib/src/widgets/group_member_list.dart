@@ -4,12 +4,16 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton;
+
+import 'group_member_row.dart';
 
 /// Displays the member list for a group.
 ///
 /// For manual or semi-auto groups + admin: shows a remove button per member.
 /// For auto groups: read-only with explanatory text.
+///
+/// A semi-auto member the server reports as no longer eligible is marked in
+/// its row ([GroupMemberRow]), and the list says how many there are.
 ///
 /// When [maxHeight] is set, the list is bounded and scrolls internally.
 /// When [onOpenAll] is provided, an "open full list" icon is shown next to
@@ -36,6 +40,12 @@ class GroupMemberList extends ConsumerWidget {
   /// Optional case-insensitive substring filter applied to each member's
   /// display name and username. When null or empty, no filtering happens.
   final String? searchTerm;
+
+  /// How many of the group's members no longer meet its criteria, as the
+  /// line above the list reads.
+  static String ineligibleCountText(int count) => count == 1
+      ? '1 member no longer eligible'
+      : '$count members no longer eligible';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -100,52 +110,36 @@ class GroupMemberList extends ConsumerWidget {
                 style: theme.textTheme.muted,
               );
             }
-            final list = Column(
+            final ineligibleCount = members.where((m) => !m.eligible).length;
+            final rows = Column(
               mainAxisSize: MainAxisSize.min,
-              children: filtered.map((member) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: onMemberTap != null
-                              ? () => onMemberTap!(member)
-                              : null,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  member.displayName,
-                                  style: theme.textTheme.p,
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '@${member.membername}',
-                                  style: theme.textTheme.muted.copyWith(
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (isAdmin && kind != GroupKind.auto)
-                        ActionButton(
-                          label: 'Remove',
-                          onPressed: () =>
-                              removeMember(context, ref, member.membername),
-                        ),
-                    ],
+              children: [
+                for (final member in filtered)
+                  GroupMemberRow(
+                    member: member,
+                    onTap: onMemberTap != null
+                        ? () => onMemberTap!(member)
+                        : null,
+                    onRemove: isAdmin && kind != GroupKind.auto
+                        ? () => removeMember(context, ref, member.membername)
+                        : null,
                   ),
-                );
-              }).toList(),
+              ],
             );
+            final list = ineligibleCount == 0
+                ? rows
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: 8,
+                    children: [
+                      Text(
+                        ineligibleCountText(ineligibleCount),
+                        style: theme.textTheme.muted,
+                      ),
+                      rows,
+                    ],
+                  );
             if (maxHeight == null) return list;
             return ConstrainedBox(
               constraints: BoxConstraints(maxHeight: maxHeight!),

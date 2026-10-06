@@ -8,7 +8,6 @@ import 'package:cl_remote_store/cl_remote_store.dart'
         eventCoverImageProvider,
         eventMediaMutationProvider,
         imagePickerProvider;
-import 'package:cl_server_config/cl_server_config.dart' show DateTimeFormat;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,8 +18,6 @@ import 'package:ui_lib/ui_lib.dart'
         ConfirmImagePicker,
         EditableMarkdown,
         EditableSectionCard,
-        EventEligibilityForm,
-        EventEligibilityFormState,
         EventFormValidators,
         ImageUploadAffordance,
         OrganizerCoachesEditor,
@@ -33,8 +30,7 @@ import 'package:ui_lib/ui_lib.dart'
         pickImageReportingErrors,
         showUserSelectionDialog;
 
-import '../../models/camp_event_form_helpers.dart'
-    show EventFormSubmit, buildEventFormInitialValues;
+import '../../models/camp_event_form_helpers.dart' show EventFormSubmit;
 import '../../utils/event_save_error.dart';
 import '../events_preview/cl_event_audit_info.dart';
 import '../events_preview/cl_event_enrolments_summary.dart';
@@ -42,6 +38,7 @@ import '../events_preview/cl_event_gallery.dart';
 import '../events_preview/cl_event_hero.dart';
 import '../events_preview/cl_event_pending_requests.dart';
 import '../events_preview/cl_event_venue_detail.dart';
+import 'event_eligibility_card.dart';
 import 'event_schedule_section.dart';
 
 /// Editable body for an event detail page, shown to whoever may manage the
@@ -208,78 +205,6 @@ class EventOverviewCard extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Eligibility section — gender + DOB window, edited in place.
-class EventEligibilityCard extends ConsumerStatefulWidget {
-  const EventEligibilityCard({required this.event, super.key});
-
-  final Event event;
-
-  @override
-  ConsumerState<EventEligibilityCard> createState() =>
-      EventEligibilityCardState();
-}
-
-class EventEligibilityCardState extends ConsumerState<EventEligibilityCard> {
-  final _formKey = GlobalKey<EventEligibilityFormState>();
-
-  Future<bool> _save(Map<String, dynamic> values) async {
-    try {
-      await EventFormSubmit.updateEligibility(
-        eventId: widget.event.id,
-        values: values,
-        notifier: ref.read(clEventsMasterProvider.notifier),
-      );
-      if (!mounted) return true;
-      ShadToaster.of(context).show(
-        const ShadToast(description: Text('Eligibility updated.')),
-      );
-      return true;
-    } on Object catch (e, st) {
-      if (!mounted) return false;
-      ShadToaster.of(context).show(
-        ShadToast.destructive(
-          description: Text(
-            eventSaveErrorMessage(
-              e,
-              stackTrace: st,
-              fallback: 'Could not update eligibility. Please try again.',
-            ),
-          ),
-        ),
-      );
-      return false;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
-    final lines = eligibilitySentences(widget.event);
-    return EditableSectionCard<Map<String, dynamic>>(
-      title: 'Eligibility',
-      leadingIcon: LucideIcons.userCheck,
-      canEdit: true,
-      editMaxWidth: 420,
-      read: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (var i = 0; i < lines.length; i++) ...[
-            if (i > 0) const SizedBox(height: 8),
-            Text(lines[i], style: theme.textTheme.p),
-          ],
-        ],
-      ),
-      editBuilder: () => EventEligibilityForm(
-        key: _formKey,
-        initialValues: buildEventFormInitialValues(widget.event),
-      ),
-      onValidate: () => _formKey.currentState?.validate(),
-      isDirty: () => _formKey.currentState?.isDirty ?? false,
-      onSave: _save,
     );
   }
 }
@@ -851,45 +776,4 @@ Future<String?> _showEventRenameDialog(
       );
     },
   );
-}
-
-/// Human-readable eligibility sentences for an event — gender constraint and
-/// the DOB window. Mirrors `ClEligibilityPreview` / `GroupEligibilitySection`.
-List<String> eligibilitySentences(Event event) {
-  final lines = <String>[];
-  final gender = _genderSentence(event.gender);
-  if (gender != null) lines.add(gender);
-  final dob = _dobSentence(event.dobOnOrAfterUtc, event.dobOnOrBeforeUtc);
-  if (dob != null) lines.add(dob);
-  if (lines.isEmpty) lines.add('This event is open to all.');
-  return lines;
-}
-
-String? _genderSentence(Gender? gender) {
-  switch (gender) {
-    case Gender.male:
-      return 'This event is only for Boys.';
-    case Gender.female:
-      return 'This event is only for Girls.';
-    case Gender.other:
-      return 'This event is only for members who identify as Other.';
-    case Gender.preferNotToSay:
-    case null:
-      return null;
-  }
-}
-
-String? _dobSentence(DateTime? onOrAfter, DateTime? onOrBefore) {
-  if (onOrAfter == null && onOrBefore == null) return null;
-  if (onOrAfter != null && onOrBefore != null) {
-    return 'This event uses age-based eligibility, and permits only those who '
-        'were born between ${onOrAfter.toLocalDateMedium()} and '
-        '${onOrBefore.toLocalDateMedium()} (both dates inclusive).';
-  }
-  if (onOrAfter != null) {
-    return 'This event uses age-based eligibility, and permits only those who '
-        'were born on or after ${onOrAfter.toLocalDateMedium()}.';
-  }
-  return 'This event uses age-based eligibility, and permits only those who '
-      'were born on or before ${onOrBefore!.toLocalDateMedium()}.';
 }

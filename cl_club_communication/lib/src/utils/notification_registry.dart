@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import 'notification_kinds_evaluation.dart';
+import 'notification_kinds_group.dart';
 import 'notification_kinds_inquiry.dart';
 import 'notification_kinds_programme.dart';
 import 'notification_payload.dart';
@@ -947,6 +948,7 @@ final List<NotificationKind> kNotificationKinds = <NotificationKind>[
   // --- Evaluation and inquiry families (club_core#32) -----------------------
   ...kEvaluationNotificationKinds,
   ...kInquiryNotificationKinds,
+  ...kGroupEligibilityNotificationKinds,
 
   // --- Broadcast ------------------------------------------------------------
   // The server stamps notification rows with `broadcast.message` regardless

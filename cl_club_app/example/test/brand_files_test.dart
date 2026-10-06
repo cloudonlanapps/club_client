@@ -14,7 +14,9 @@ Map<String, dynamic> readJson(String path) =>
 
 void main() {
   test('Issue 186: club.json reads as a ClubConfig', () {
-    final config = ClubConfig.fromJson(File(kClubConfigAsset).readAsStringSync());
+    final config = ClubConfig.fromJson(
+      File(kClubConfigAsset).readAsStringSync(),
+    );
     expect(config.fullName, isNotEmpty);
     expect(config.shortName, isNotEmpty);
     expect(Uri.parse(config.apiBaseUrl).hasScheme, isTrue);

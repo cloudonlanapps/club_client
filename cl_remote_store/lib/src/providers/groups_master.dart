@@ -50,12 +50,15 @@ class ClGroupsMasterNotifier extends AsyncNotifier<Map<int, Group>> {
 
   // -- Create / Update / Delete -----------------------------------------------
 
-  /// Create a new group.
+  /// Create a new group. [minAge], [maxAge] and [strictAge] are its age
+  /// band; the server works out the window of birth dates and reports it on
+  /// the group.
   Future<Group> createGroup({
     required String name,
     String? description,
-    DateTime? dobOnOrAfterUtc,
-    DateTime? dobOnOrBeforeUtc,
+    Age? minAge,
+    Age? maxAge,
+    bool? strictAge,
     Gender? gender,
     bool? semiAuto,
   }) {
@@ -64,8 +67,9 @@ class ClGroupsMasterNotifier extends AsyncNotifier<Map<int, Group>> {
       final created = await client.groups.createGroup(
         name: name,
         description: description,
-        dobOnOrAfterUtc: dobOnOrAfterUtc,
-        dobOnOrBeforeUtc: dobOnOrBeforeUtc,
+        minAge: minAge,
+        maxAge: maxAge,
+        strictAge: strictAge,
         gender: gender,
         semiAuto: semiAuto,
       );
@@ -75,13 +79,16 @@ class ClGroupsMasterNotifier extends AsyncNotifier<Map<int, Group>> {
     }, refetch: ref.invalidateSelf);
   }
 
-  /// Update a group. Uses ValueGetter pattern for nullable fields.
+  /// Update a group. Uses ValueGetter pattern for nullable fields: a
+  /// [minAge] or [maxAge] getter returning `null` clears that bound, an
+  /// omitted one leaves it alone. [strictAge] left `null` is unchanged.
   Future<Group> updateGroup(
     int id, {
     String? name,
     String? Function()? description,
-    DateTime? Function()? dobOnOrAfterUtc,
-    DateTime? Function()? dobOnOrBeforeUtc,
+    Age? Function()? minAge,
+    Age? Function()? maxAge,
+    bool? strictAge,
     Gender? Function()? gender,
     bool? semiAuto,
   }) {
@@ -91,8 +98,9 @@ class ClGroupsMasterNotifier extends AsyncNotifier<Map<int, Group>> {
         id,
         name: name,
         description: description,
-        dobOnOrAfterUtc: dobOnOrAfterUtc,
-        dobOnOrBeforeUtc: dobOnOrBeforeUtc,
+        minAge: minAge,
+        maxAge: maxAge,
+        strictAge: strictAge,
         gender: gender,
         semiAuto: semiAuto,
       );

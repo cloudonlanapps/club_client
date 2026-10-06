@@ -1,22 +1,26 @@
 import 'package:cl_club_members/src/models/group_form_helpers.dart'
     show GroupFormSubmit, buildGroupFormInitialValues;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clGroupMembersProvider, clGroupsMasterProvider;
-import 'package:cl_server_config/cl_server_config.dart' show DateTimeFormat;
+    show clGroupMembersProvider, clGroupsMasterProvider, formAgeFromSdk;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
-    show EditableSectionCard, GroupEligibilityForm, GroupEligibilityFormState;
+    show
+        AgeEligibilitySummary,
+        EditableSectionCard,
+        GroupEligibilityForm,
+        GroupEligibilityFormState;
 
 /// Human-readable eligibility section for a group, edited in place.
 ///
-/// Read mode renders prose explaining the membership rules (kind, gender,
-/// age window). When [canEdit] is true, the section flips into an inline
-/// [GroupEligibilityForm]; criteria are locked while the group has members so
-/// an edit can't strand existing members. With [canEdit] false it is a plain
-/// read-only card (e.g. a member viewing their own group).
+/// Read mode renders prose explaining the membership rules (kind, gender),
+/// then the age sentence with the server's dates and reference day beneath
+/// ([AgeEligibilitySummary]). When [canEdit] is true, the section flips into
+/// an inline [GroupEligibilityForm]; criteria are locked while the group has
+/// members so an edit can't strand existing members. With [canEdit] false it
+/// is a plain read-only card (e.g. a member viewing their own group).
 class GroupEligibilitySection extends ConsumerStatefulWidget {
   const GroupEligibilitySection({
     required this.group,
@@ -50,6 +54,8 @@ class _GroupEligibilitySectionState
         (ref.watch(clGroupMembersProvider(group.id)).valueOrNull?.isNotEmpty ??
             false);
 
+    final initialValues = buildGroupFormInitialValues(group);
+
     return EditableSectionCard<Map<String, dynamic>>(
       title: 'Eligibility',
       canEdit: widget.canEdit,
@@ -61,16 +67,36 @@ class _GroupEligibilitySectionState
             if (i > 0) const SizedBox(height: 8),
             Text(lines[i], style: theme.textTheme.p),
           ],
+          if (group.minAge != null || group.maxAge != null) ...[
+            const SizedBox(height: 8),
+            AgeEligibilitySummary(
+              minAge: formAgeFromSdk(group.minAge),
+              maxAge: formAgeFromSdk(group.maxAge),
+              dobOnOrAfter: group.dobOnOrAfterUtc,
+              dobOnOrBefore: group.dobOnOrBeforeUtc,
+              referenceDay: group.eligibilityReferenceDayUtc,
+            ),
+          ],
         ],
       ),
       editBuilder: () => GroupEligibilityForm(
         key: _formKey,
-        initialValues: buildGroupFormInitialValues(group),
+        initialValues: initialValues,
         criteriaLocked: hasMembers,
+        // The card's Reset shows only while the form holds a value.
+        onChanged: () => setState(() {}),
       ),
       onValidate: () => _formKey.currentState?.validate(),
       isDirty: () => _formKey.currentState?.isDirty ?? false,
       onSave: _save,
+      onReset: () => _formKey.currentState?.reset(),
+      // Never while the mode is locked. Before the form is mounted (the
+      // frame the editor opens on), what it is about to be seeded with
+      // answers.
+      canReset: () =>
+          !hasMembers &&
+          (_formKey.currentState?.hasValue ??
+              GroupEligibilityForm.holdsValue(initialValues)),
     );
   }
 
@@ -125,8 +151,6 @@ class _GroupEligibilitySectionState
     final lines = <String>[_kindSentence(group.kind)];
     final genderLine = _genderSentence(group.gender);
     if (genderLine != null) lines.add(genderLine);
-    final dobLine = _dobSentence(group.dobOnOrAfterUtc, group.dobOnOrBeforeUtc);
-    if (dobLine != null) lines.add(dobLine);
     return lines;
   }
 
@@ -155,20 +179,5 @@ class _GroupEligibilitySectionState
       case Gender.preferNotToSay:
         return null;
     }
-  }
-
-  static String? _dobSentence(DateTime? onOrAfter, DateTime? onOrBefore) {
-    if (onOrAfter == null && onOrBefore == null) return null;
-    if (onOrAfter != null && onOrBefore != null) {
-      return 'This group uses age-based eligibility, and permits only those '
-          'who were born between ${onOrAfter.toLocalDateMedium()} and '
-          '${onOrBefore.toLocalDateMedium()} (both dates inclusive).';
-    }
-    if (onOrAfter != null) {
-      return 'This group uses age-based eligibility, and permits only those '
-          'who were born on or after ${onOrAfter.toLocalDateMedium()}.';
-    }
-    return 'This group uses age-based eligibility, and permits only those '
-        'who were born on or before ${onOrBefore!.toLocalDateMedium()}.';
   }
 }

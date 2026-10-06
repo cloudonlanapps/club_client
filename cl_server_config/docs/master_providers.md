@@ -64,6 +64,7 @@ These mirror the admin masters but for the currently-logged-in member.
 | `clUserPrivateProvider(username)` | `user_private.dart` | `clUsersMasterProvider` + `getUserPrivate()` for detail cache |
 | `clUserStatsProvider` | `user_stats.dart` | `clUsersMasterProvider` |
 | `clUserGroupsProvider(username)` | `user_groups.dart` | `clGroupsMasterProvider` |
+| `clUserIneligibleGroupIdsProvider(username)` | `user_ineligible_group_ids.dart` | `clUserGroupsProvider` + `clGroupMembersProvider` of the semi-auto groups that count an ineligible member (staff only) |
 | `clGroupsProvider` | `groups.dart` | `clGroupsMasterProvider` |
 | `clGroupMembersProvider(groupId)` | `group_members.dart` | `clGroupsMasterProvider` |
 | `clEligibleUsersProvider(eventId)` | `eligible_users.dart` | `clUsersMasterProvider` + event filter |

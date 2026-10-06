@@ -44,13 +44,18 @@ class EventEnrolmentsView extends ConsumerWidget {
     final theme = ShadTheme.of(context);
     final enrollmentsAsync = ref.watch(clEnrollmentsMasterProvider(eventId));
     // Full records carry the withdrawal reason, which tells an ended trial
-    // from an ordinary removal (club_core#98).
+    // from an ordinary removal (club_core#98), and whether an enrolled
+    // member still meets the event's criteria (club_client#42).
     final records = ref
         .watch(clEnrollmentRecordsMasterProvider(eventId))
         .valueOrNull;
     final withdrawalReasons = {
       for (final entry in (records ?? const <String, Enrollment>{}).entries)
         entry.key: entry.value.withdrawalReason,
+    };
+    final ineligibleUsernames = {
+      for (final entry in (records ?? const <String, Enrollment>{}).entries)
+        if (!entry.value.eligible) entry.key,
     };
     final eventMasterAsync = ref.watch(clEventsMasterProvider);
     final userListAsync = ref.watch(clUsersMasterProvider);
@@ -165,6 +170,7 @@ class EventEnrolmentsView extends ConsumerWidget {
                           displayNameResolver: resolveDisplayName,
                           canManage: canManage,
                           withdrawalReasons: withdrawalReasons,
+                          ineligibleUsernames: ineligibleUsernames,
                           currentUser: currentUser,
                           onOpenReview: onOpenReview,
                         ),

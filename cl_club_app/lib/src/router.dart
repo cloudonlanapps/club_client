@@ -754,6 +754,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   eventsSection: (u) => MyEventsSection(
                     username: u,
                     enrolledOnly: true,
+                    markIneligible: true,
                     onEventTap: (event) => GoRouter.of(
                       context,
                     ).push('/memberzone/my-events/$u/${event.id}'),

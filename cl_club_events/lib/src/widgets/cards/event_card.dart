@@ -35,6 +35,7 @@ class EventCard extends ConsumerWidget {
     this.username,
     this.onTap,
     this.onEnrollments,
+    this.memberEligible = true,
     super.key,
   });
 
@@ -48,6 +49,11 @@ class EventCard extends ConsumerWidget {
   /// Admin perspective only — navigation to the event's enrollments
   /// screen. `null` hides the action.
   final VoidCallback? onEnrollments;
+
+  /// False when the row stands for one member's place in the event and the
+  /// server reports that member's enrolment as no longer eligible: the body
+  /// then carries the shared mark (club_client#43).
+  final bool memberEligible;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -70,7 +76,7 @@ class EventCard extends ConsumerWidget {
       image: image,
       title: event.title,
       caption: caption,
-      body: EventBody(event: event),
+      body: EventBody(event: event, memberEligible: memberEligible),
       trailingActions: actions.isEmpty ? null : actions,
       onTap: onTap,
     );
@@ -145,9 +151,16 @@ class EventCard extends ConsumerWidget {
 }
 
 class EventBody extends StatelessWidget {
-  const EventBody({required this.event, super.key});
+  const EventBody({
+    required this.event,
+    this.memberEligible = true,
+    super.key,
+  });
 
   final Event event;
+
+  /// False adds the shared no-longer-eligible mark beneath the venue.
+  final bool memberEligible;
 
   @override
   Widget build(BuildContext context) {
@@ -158,6 +171,10 @@ class EventBody extends StatelessWidget {
         EventScheduleLines(event: event, wrap: true),
         const SizedBox(height: 4),
         EventVenueLine(venueId: event.venueId),
+        if (!memberEligible) ...[
+          const SizedBox(height: 4),
+          const NoLongerEligibleLabel(),
+        ],
       ],
     );
   }

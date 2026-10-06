@@ -26,6 +26,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  url_launcher_platform_interface: 2.3.2
   very_good_analysis: 10.3.0
 
 #dependency_overrides:

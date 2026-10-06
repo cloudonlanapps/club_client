@@ -21,6 +21,19 @@ abstract final class PhoneNumber {
   /// brackets.
   static final RegExp grouping = RegExp(r'[\s\-.()\[\]]');
 
+  /// Anything that is not a digit.
+  static final RegExp nonDigit = RegExp('[^0-9]');
+
+  /// A number once its [grouping] is removed: digits, with an optional
+  /// leading [internationalPrefix].
+  static final RegExp dialable = RegExp(r'^\+?[0-9]+$');
+
+  /// Whether [value] is a number that can be called: digits, optionally
+  /// grouped and optionally starting with [internationalPrefix], and
+  /// nothing else.
+  static bool isDialable(String value) =>
+      dialable.hasMatch(value.replaceAll(grouping, ''));
+
   /// [typed] in international format, completed with [defaultCountryCode]
   /// (digits only, as the server reports it: `91`) when it carries no
   /// country code of its own.

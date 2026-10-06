@@ -16,7 +16,8 @@ dependencies:
   shadcn_ui: 0.56.1
   shared_preferences: 2.5.5
   simple_speed_dial: 0.1.7
-  url_launcher: 6.3.2
+  ui_lib:
+    path: ../ui_lib
 
 dev_dependencies:
   club_sdk_2:

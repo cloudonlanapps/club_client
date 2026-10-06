@@ -1,18 +1,26 @@
 import 'package:cl_club_members/src/utils/admin_user_actions.dart';
 import 'package:cl_club_members/src/widgets/add_to_group_dialog.dart';
-import 'package:cl_club_members/src/widgets/cards/group_card.dart';
+import 'package:cl_club_members/src/widgets/user_groups_list.dart';
 import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clGroupsMasterProvider, clUserGroupsProvider, clUserPrivateProvider;
+    show
+        clGroupsMasterProvider,
+        clUserGroupsProvider,
+        clUserIneligibleGroupIdsProvider,
+        clUserPrivateProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton, ActionItem;
+import 'package:ui_lib/ui_lib.dart' show ActionButton;
 
 /// Displays group memberships for a given user.
 ///
 /// Admin can add to manual groups and remove from manual groups.
+///
+/// For staff, a group the server reports the user as no longer meeting the
+/// criteria of is marked in its row, such rows come first, and the section
+/// says how many there are (club_client#43).
 class UserGroupsSection extends ConsumerStatefulWidget {
   const UserGroupsSection({
     required this.username,
@@ -87,6 +95,14 @@ class UserGroupsSectionState extends ConsumerState<UserGroupsSection> {
         .valueOrNull;
     final canAdd = isAdmin && targetUser != null && canMutateUser(targetUser);
     final groupsAsync = ref.watch(clUserGroupsProvider(widget.username));
+    // A group's member list, which carries the flag, is a staff read.
+    final isStaff = auth?.isCoachOrAdmin ?? false;
+    final ineligibleIds = isStaff
+        ? ref
+                  .watch(clUserIneligibleGroupIdsProvider(widget.username))
+                  .valueOrNull ??
+              const <int>{}
+        : const <int>{};
 
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,29 +143,13 @@ class UserGroupsSectionState extends ConsumerState<UserGroupsSection> {
                 style: theme.textTheme.muted,
               );
             }
-            return Column(
-              children: groups.map((group) {
-                final canRemove = isAdmin && group.allowsManualMembership;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: GroupCard(
-                    groupId: group.id,
-                    onTap: widget.onGroupTap != null
-                        ? () => widget.onGroupTap!(group)
-                        : null,
-                    trailing: canRemove
-                        ? [
-                            ActionItem(
-                              label: 'Remove',
-                              onPressed: isSubmitting
-                                  ? null
-                                  : () => removeFromGroup(group),
-                            ),
-                          ]
-                        : null,
-                  ),
-                );
-              }).toList(),
+            return UserGroupsList(
+              groups: groups,
+              ineligibleIds: ineligibleIds,
+              onGroupTap: widget.onGroupTap,
+              canRemove: isAdmin,
+              removeEnabled: !isSubmitting,
+              onRemove: removeFromGroup,
             );
           },
         ),

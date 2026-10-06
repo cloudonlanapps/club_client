@@ -1,6 +1,7 @@
 import 'package:club_sdk_2/club_sdk_2.dart' show NotificationType;
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 
+import 'notification_member_link.dart';
 import 'notification_payload.dart';
 import 'notification_payload_key.dart';
 import 'notification_registry.dart';
@@ -27,13 +28,13 @@ final List<NotificationKind> kProgrammeNotificationKinds = <NotificationKind>[
   // `enrollment.member_ineligible` (club_client#42, club_server#19): the
   // server's daily scan sends one to every admin, once, when an enrolled
   // member of a running programme stops meeting its criteria. Nobody is
-  // removed, so a tap opens the staff view of the programme, whose
-  // enrolments mark the member.
+  // removed. It is about one member, so a tap opens that member's profile,
+  // whose Events card marks the programme (club_client#43).
   const NotificationKind(
     type: NotificationType.enrollmentMemberIneligible,
     typeLabel: 'Member no longer eligible',
     format: formatEnrollmentMemberIneligible,
-    deepLink: staffProgrammeLink,
+    deepLink: memberProfileLink,
   ),
 ];
 
@@ -51,15 +52,6 @@ NotificationDisplay formatEnrollmentMemberIneligible(
     body: '$who no longer meets the eligibility criteria of $where.',
     icon: LucideIcons.userX,
   );
-}
-
-/// The staff view of the payload's programme, or `null` when the payload
-/// names none.
-NotificationDeepLink? staffProgrammeLink(NotificationLinkContext ctx) {
-  final id = payloadInt(ctx.data[NotificationPayloadKey.eventId]);
-  return id == null
-      ? null
-      : NotifEventLink(id, sourceNotificationId: ctx.sourceNotificationId);
 }
 
 /// `event.terminated`: the programme, its last day and the reason.

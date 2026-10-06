@@ -36,6 +36,7 @@ class GroupCard extends ConsumerWidget {
     this.onTap,
     this.onManageMembers,
     this.trailing,
+    this.memberEligible = true,
     super.key,
   });
 
@@ -56,6 +57,11 @@ class GroupCard extends ConsumerWidget {
   /// approve / reject on pending join requests). Flows through
   /// [EntityCard.trailingActions], so it gets the same mobile reflow.
   final List<ActionItem>? trailing;
+
+  /// False when the row stands for one member's place in the group and the
+  /// server reports that member as no longer meeting the group's criteria:
+  /// the meta line then carries the shared mark (club_client#43).
+  final bool memberEligible;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -78,7 +84,7 @@ class GroupCard extends ConsumerWidget {
       image: image,
       title: group.name,
       caption: caption,
-      body: GroupMetaLine(group: group),
+      body: GroupMetaLine(group: group, memberEligible: memberEligible),
       trailingActions: actions.isEmpty ? null : actions,
       onTap: onTap,
     );
@@ -151,12 +157,19 @@ class GroupCard extends ConsumerWidget {
   }
 }
 
-/// The card's meta line: the group's age sentence (when it has an age band)
-/// and its kind.
+/// The card's meta line: the group's age sentence (when it has an age band),
+/// its kind and, for a member who no longer matches it, the shared mark.
 class GroupMetaLine extends StatelessWidget {
-  const GroupMetaLine({required this.group, super.key});
+  const GroupMetaLine({
+    required this.group,
+    this.memberEligible = true,
+    super.key,
+  });
 
   final Group group;
+
+  /// False adds the shared no-longer-eligible mark to the line.
+  final bool memberEligible;
 
   @override
   Widget build(BuildContext context) {
@@ -182,6 +195,7 @@ class GroupMetaLine extends StatelessWidget {
             style: style,
           ),
         StatusBadge(label: group.kind.label),
+        if (!memberEligible) const NoLongerEligibleLabel(),
       ],
     );
   }

@@ -74,6 +74,8 @@ export 'src/widgets/age_eligibility/age_eligibility_summary.dart'
 export 'src/widgets/age_eligibility/age_eligibility_text.dart'
     show AgeEligibilityText;
 export 'src/widgets/age_eligibility/form_age.dart' show FormAge;
+export 'src/widgets/age_eligibility/no_longer_eligible_label.dart'
+    show NoLongerEligibleLabel;
 export 'src/widgets/avatar_circle_variant.dart';
 export 'src/widgets/bordered_menu_list.dart'
     show BorderedMenuItem, BorderedMenuList;

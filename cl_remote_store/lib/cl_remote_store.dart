@@ -168,6 +168,7 @@ export 'src/providers/user_avatar.dart'
         avatarVisibilityProvider,
         kUserAvatarTag;
 export 'src/providers/user_groups.dart';
+export 'src/providers/user_ineligible_group_ids.dart';
 export 'src/providers/user_info.dart' show clUserInfoProvider;
 export 'src/providers/user_private.dart';
 export 'src/providers/user_stats.dart';

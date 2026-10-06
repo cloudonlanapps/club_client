@@ -57,24 +57,54 @@ void main() {
       );
     });
 
+    // Was "opens that programme in the staff view" (NotifEventLink): the
+    // notification is about one member, so it opens the member (#43).
     test('Issue 42: opens that programme in the staff view', () {
       final link = resolveDeepLink(
         _make(_data),
         currentUsername: 'notif_admin',
       );
-      expect(link, isA<NotifEventLink>());
-      final eventLink = link! as NotifEventLink;
-      expect(eventLink.eventId, 9);
-      expect(eventLink.sourceNotificationId, 23);
+      expect(link, isNot(isA<NotifEventLink>()));
+      expect(link, isA<NotifAdminUserLink>());
     });
 
+    test("Issue 43: opens that member's profile", () {
+      final link = resolveDeepLink(
+        _make(_data),
+        currentUsername: 'notif_admin',
+      );
+      expect(link, isA<NotifAdminUserLink>());
+      final userLink = link! as NotifAdminUserLink;
+      expect(userLink.username, 'workflow_member');
+      expect(userLink.sourceNotificationId, 23);
+    });
+
+    // Was keyed on the programme; the link is now keyed on the member (#43).
     test('Issue 42: with no programme in the payload there is nothing to '
         'open', () {
+      final link = resolveDeepLink(
+        _make(const {'eventId': 9, 'eventTitle': 'Skating'}),
+        currentUsername: 'notif_admin',
+      );
+      expect(link, isNull);
+    });
+
+    test('Issue 43: with no member in the payload there is nothing to '
+        'open', () {
+      final link = resolveDeepLink(
+        _make(const {'eventId': 9, 'eventTitle': 'Skating'}),
+        currentUsername: 'notif_admin',
+      );
+      expect(link, isNull);
+    });
+
+    test('Issue 43: a payload naming the member but no programme still '
+        'opens the member', () {
       final link = resolveDeepLink(
         _make(const {'membername': 'workflow_member'}),
         currentUsername: 'notif_admin',
       );
-      expect(link, isNull);
+      expect((link! as NotifAdminUserLink).username, 'workflow_member');
     });
   });
 }

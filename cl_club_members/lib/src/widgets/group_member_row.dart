@@ -1,11 +1,11 @@
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton, AgeEligibilityText;
+import 'package:ui_lib/ui_lib.dart' show ActionButton, NoLongerEligibleLabel;
 
 /// One member of a group's member list: display name, username, and, for a
 /// semi-auto member the server reports as no longer meeting the group's
-/// criteria (`GroupMember.eligible` false), a plain-text mark beneath.
+/// criteria (`GroupMember.eligible` false), the shared outlined mark beneath.
 /// Nobody is removed automatically; the admin decides.
 class GroupMemberRow extends StatelessWidget {
   const GroupMemberRow({
@@ -23,7 +23,7 @@ class GroupMemberRow extends StatelessWidget {
 
   static const String removeLabel = 'Remove';
 
-  /// Font size of the username and the eligibility mark.
+  /// Font size of the username.
   static const double detailFontSize = 12;
 
   @override
@@ -49,11 +49,7 @@ class GroupMemberRow extends StatelessWidget {
                   children: [
                     Text(member.displayName, style: theme.textTheme.p),
                     Text('@${member.membername}', style: detailStyle),
-                    if (!member.eligible)
-                      Text(
-                        AgeEligibilityText.noLongerEligible,
-                        style: detailStyle,
-                      ),
+                    if (!member.eligible) const NoLongerEligibleLabel(),
                   ],
                 ),
               ),

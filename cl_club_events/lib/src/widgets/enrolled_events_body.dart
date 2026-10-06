@@ -17,12 +17,17 @@ class EnrolledEventsBody extends ConsumerWidget {
     required this.username,
     required this.allEvents,
     this.onEventTap,
+    this.markIneligible = false,
     super.key,
   });
 
   final String username;
   final List<Event> allEvents;
   final void Function(Event event)? onEventTap;
+
+  /// Marks the events whose enrolment is reported as no longer eligible.
+  /// Read from the enrolments this widget already loads to filter the list.
+  final bool markIneligible;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -64,10 +69,18 @@ class EnrolledEventsBody extends ConsumerWidget {
         if (enrollmentAsyncs[i].valueOrNull != null) allEvents[i],
     ];
 
+    final ineligibleEventIds = <int>{
+      if (markIneligible)
+        for (var i = 0; i < allEvents.length; i++)
+          if (enrollmentAsyncs[i].valueOrNull?.eligible == false)
+            allEvents[i].id,
+    };
+
     return MyEventsSectionBody(
       username: username,
       events: enrolled,
       onEventTap: onEventTap,
+      ineligibleEventIds: ineligibleEventIds,
     );
   }
 }

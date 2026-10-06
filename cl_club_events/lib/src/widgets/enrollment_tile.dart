@@ -9,6 +9,7 @@ import '../models/enrollment_category.dart';
 import '../models/withdrawal_reasons.dart';
 import 'cards/actions/admin_enrollment_actions.dart';
 import 'cards/actions/enrollment_review_action.dart';
+import 'enrollment_member_lines.dart';
 
 /// One member on an event's enrollment list: who, their status when not
 /// active, and the admin's actions (resolved by [AdminEnrollmentActions],
@@ -17,7 +18,9 @@ import 'cards/actions/enrollment_review_action.dart';
 /// badge (club_core#98). The actions show only when [canManage]: an
 /// assigned coach reads the list but may not change it (club_core#136).
 /// A coach [currentUser] also gets **Add Review** while evaluations are on,
-/// whether or not they manage the list (club_core#174).
+/// whether or not they manage the list (club_core#174). A member who no
+/// longer meets the event's criteria ([eligible] false) is marked beneath
+/// their username (club_client#42).
 class EnrollmentTile extends ConsumerWidget {
   const EnrollmentTile({
     required this.username,
@@ -28,6 +31,7 @@ class EnrollmentTile extends ConsumerWidget {
     this.withdrawalReason,
     this.currentUser,
     this.onOpenReview,
+    this.eligible = true,
     super.key,
   });
 
@@ -49,6 +53,9 @@ class EnrollmentTile extends ConsumerWidget {
 
   /// Opens an evaluation started from this row.
   final ValueChanged<int>? onOpenReview;
+
+  /// The enrollment's `eligible`, as the server reports it.
+  final bool eligible;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -86,21 +93,10 @@ class EnrollmentTile extends ConsumerWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  displayName,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  username,
-                  style: theme.textTheme.muted.copyWith(fontSize: 11),
-                ),
-              ],
+            child: EnrollmentMemberLines(
+              displayName: displayName,
+              username: username,
+              eligible: eligible,
             ),
           ),
           if (trialEnded) ...[

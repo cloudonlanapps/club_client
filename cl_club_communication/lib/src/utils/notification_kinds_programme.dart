@@ -5,10 +5,12 @@ import 'notification_payload.dart';
 import 'notification_payload_key.dart';
 import 'notification_registry.dart';
 
-/// Registry rows for a programme's end moving: `event.terminated` and
-/// `event.extended` (club_core#32). The server sends both to the event's
-/// enrollees, coaches and organiser, so they open the member's own view of
-/// the event, like the rest of the event family.
+/// Registry rows for the kinds only a programme sends.
+///
+/// `event.terminated` and `event.extended` (club_core#32) tell of its end
+/// moving. The server sends both to the event's enrollees, coaches and
+/// organiser, so they open the member's own view of the event, like the rest
+/// of the event family.
 final List<NotificationKind> kProgrammeNotificationKinds = <NotificationKind>[
   const NotificationKind(
     type: NotificationType.eventTerminated,
@@ -22,7 +24,43 @@ final List<NotificationKind> kProgrammeNotificationKinds = <NotificationKind>[
     format: formatEventExtended,
     deepLink: myEventLink,
   ),
+  // `enrollment.member_ineligible` (club_client#42, club_server#19): the
+  // server's daily scan sends one to every admin, once, when an enrolled
+  // member of a running programme stops meeting its criteria. Nobody is
+  // removed, so a tap opens the staff view of the programme, whose
+  // enrolments mark the member.
+  const NotificationKind(
+    type: NotificationType.enrollmentMemberIneligible,
+    typeLabel: 'Member no longer eligible',
+    format: formatEnrollmentMemberIneligible,
+    deepLink: staffProgrammeLink,
+  ),
 ];
+
+/// `enrollment.member_ineligible`: the programme and the member who stopped
+/// matching.
+NotificationDisplay formatEnrollmentMemberIneligible(
+  Map<String, dynamic> data,
+) {
+  final title = payloadString(data[NotificationPayloadKey.eventTitle]);
+  final membername = payloadString(data[NotificationPayloadKey.membername]);
+  final who = membername.isNotEmpty ? '@$membername' : 'A member';
+  final where = title.isNotEmpty ? title : 'the programme';
+  return NotificationDisplay(
+    title: title.isNotEmpty ? title : 'Programme',
+    body: '$who no longer meets the eligibility criteria of $where.',
+    icon: LucideIcons.userX,
+  );
+}
+
+/// The staff view of the payload's programme, or `null` when the payload
+/// names none.
+NotificationDeepLink? staffProgrammeLink(NotificationLinkContext ctx) {
+  final id = payloadInt(ctx.data[NotificationPayloadKey.eventId]);
+  return id == null
+      ? null
+      : NotifEventLink(id, sourceNotificationId: ctx.sourceNotificationId);
+}
 
 /// `event.terminated`: the programme, its last day and the reason.
 NotificationDisplay formatEventTerminated(Map<String, dynamic> data) {

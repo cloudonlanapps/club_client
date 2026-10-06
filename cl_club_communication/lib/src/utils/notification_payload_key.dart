@@ -40,6 +40,7 @@ abstract final class NotificationPayloadKey {
   /// A group's name.
   static const groupName = 'groupName';
 
-  /// The username of a group member.
+  /// The username of a group member, or of an enrolled member
+  /// (`enrollment.member_ineligible`).
   static const membername = 'membername';
 }

@@ -106,6 +106,7 @@ void main() {
       fake = _FakeEvents(seed);
       container = ProviderContainer(
         overrides: [
+          currentUserProvider.overrideWithValue(null),
           secureClientProvider.overrideWith(
             (ref) async => fakeSecureClient(events: fake),
           ),

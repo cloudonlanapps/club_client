@@ -5,6 +5,7 @@
 //   0. Sudo creates an admin, a coach, and a member.
 //   1. Admin opens the member's profile: sections present and editable; the
 //      empty Address section is shown (with the add affordance) to the admin.
+//      The phone typed at creation is stored in international format (#31).
 //   2. Coach opens the member's profile: read-only (no pencils, no markdown
 //      editors) and the empty Address section is hidden entirely.
 //   3. Member opens their own profile: sections present and self-editable.
@@ -26,6 +27,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
 import '_helpers/auth.dart';
+import '_helpers/capabilities.dart';
 import '_helpers/editors.dart';
 import '_helpers/forms.dart';
 import '_helpers/pump.dart';
@@ -47,6 +49,12 @@ const _kMember = 'workflow_edituser_member';
 const _kPwd = 'WfEditUserPwd!2024';
 
 const _kEditedFirstName = 'WfEdited';
+
+// Phones as typed, and the national number each must be stored under once
+// the app has put it in international format (#31): one typed bare at
+// creation, one typed with a space and a leading 0 in the Contact section.
+const _kCreatedPhone = '9876500010';
+const _kEditedPhoneTyped = '098765 00011';
 const _kEditedPhone = '9876500011';
 const _kEditedAddrLine1 = 'WfEdited line 1';
 const _kEditedBio = 'workflow_edituser bio: edited by admin.';
@@ -70,6 +78,16 @@ void main() {
       await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
       await ensureLoggedOut(tester);
 
+      // The country code a phone typed without one is completed with is the
+      // stack's, so what is stored is expected from its capabilities (#31).
+      final caps = await stackCapabilities(
+        baseUrl: _kApiBaseUrl,
+        username: _kSudoUsername,
+        password: _kSudoPassword,
+      );
+      final createdPhone = storedPhone(caps, _kCreatedPhone);
+      final editedPhone = storedPhone(caps, _kEditedPhone);
+
       // ─── Phase 0: sudo creates the three actors ────────────────────────
       await loginViaUi(tester, _kSudoUsername, _kSudoPassword);
       await createUserViaUi(tester, username: _kAdmin, password: _kPwd);
@@ -84,7 +102,12 @@ void main() {
         username: _kCoach,
         roles: {Role.coach},
       );
-      await createUserViaUi(tester, username: _kMember, password: _kPwd);
+      await createUserViaUi(
+        tester,
+        username: _kMember,
+        password: _kPwd,
+        phone: _kCreatedPhone,
+      );
       await logout(tester);
 
       // ─── Phase 1: admin sees editable sections (empty Address shown) ───
@@ -99,6 +122,13 @@ void main() {
       );
       expectSectionEditable(tester, find.byType(PersonalDetailsCard));
       expect(find.byTooltip('Edit Bio'), findsOneWidget);
+      expect(
+        _member(tester).phone,
+        createdPhone,
+        reason:
+            'Issue 31: a phone typed without a country code at user '
+            'creation is stored with the country code of the stack',
+      );
       await logout(tester);
 
       // ─── Phase 2: coach view is read-only; empty Address is hidden ─────
@@ -146,17 +176,18 @@ void main() {
         description: 'first name to round-trip to the server',
       );
 
-      // Contact — phone (shown verbatim in the card on save).
+      // Contact — phone, typed with a space and a leading 0: stored, and
+      // shown in the card on save, in international format (#31).
       await tapSectionPencil(tester, find.byType(UserContactInfoCard));
-      await enterTextById(tester, 'phone', _kEditedPhone);
+      await enterTextById(tester, 'phone', _kEditedPhoneTyped);
       await saveInlineEditor(tester);
       await waitFor(
         tester,
-        () => _member(tester).phone == _kEditedPhone,
-        description: 'phone to round-trip to the server',
+        () => _member(tester).phone == editedPhone,
+        description: 'phone to reach the server as $editedPhone',
       );
       expect(
-        find.text(_kEditedPhone),
+        find.text(editedPhone),
         findsOneWidget,
         reason: 'updated phone must show in the Contact card after save',
       );
@@ -189,7 +220,7 @@ void main() {
       await go(tester, '/memberzone/profile');
       await waitFor(
         tester,
-        () => find.text(_kEditedPhone).evaluate().isNotEmpty,
+        () => find.text(editedPhone).evaluate().isNotEmpty,
         description: 'updated phone visible on the self profile',
       );
       final self = container(tester).read(authStateProvider).valueOrNull!;

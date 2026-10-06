@@ -1,12 +1,10 @@
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show identityVerificationProvider;
-import 'package:club_sdk_2/club_sdk_2.dart'
-    show Gender, SdkErrorCode, ServerException;
+    show defaultCountryCodeProvider, identityVerificationProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show SignupForm, SignupGender, SignupSubmitResult;
+import 'package:ui_lib/ui_lib.dart' show SignupForm;
 
+import '../models/signup_form_helpers.dart';
 import '../providers/client.dart';
 import '../providers/username_availability.dart';
 
@@ -68,27 +66,19 @@ class SignupView extends ConsumerWidget {
                     lastName,
                   }) async {
                     final client = await ref.read(clientProvider.future);
-                    try {
-                      await client.auth.register(
-                        username: username!,
-                        email: email,
-                        password: password!,
-                        phone: phone,
-                        dateOfBirthUtc: dateOfBirthUtc,
-                        gender: gender.toSdkGender(),
-                        firstName: firstName,
-                        middleName: middleName,
-                        lastName: lastName,
-                      );
-                      return const SignupSubmitResult();
-                    } on ServerException catch (e) {
-                      return resultFor(e.code);
-                    } on Object catch (_) {
-                      return const SignupSubmitResult(
-                        formError:
-                            'Could not create account. Please try again.',
-                      );
-                    }
+                    return SignupFormSubmit.create(
+                      auth: client.auth,
+                      defaultCountryCode: ref.read(defaultCountryCodeProvider),
+                      username: username!,
+                      password: password!,
+                      email: email,
+                      phone: phone,
+                      dateOfBirthUtc: dateOfBirthUtc,
+                      gender: gender,
+                      firstName: firstName,
+                      middleName: middleName,
+                      lastName: lastName,
+                    );
                   },
               onSubmitSuccess: onSignupSuccess,
             ),
@@ -96,32 +86,5 @@ class SignupView extends ConsumerWidget {
         ),
       ),
     );
-  }
-}
-
-SignupSubmitResult resultFor(String? code) {
-  if (code == SdkErrorCode.duplicateUsername) {
-    return const SignupSubmitResult(
-      fieldErrors: {'username': 'That username is already taken.'},
-    );
-  }
-  if (code == SdkErrorCode.duplicateEmail) {
-    return const SignupSubmitResult(
-      fieldErrors: {'email': 'That email is already registered.'},
-    );
-  }
-  return const SignupSubmitResult(
-    formError: 'Could not create account. Please try again.',
-  );
-}
-
-extension on SignupGender {
-  Gender toSdkGender() {
-    return switch (this) {
-      SignupGender.male => Gender.male,
-      SignupGender.female => Gender.female,
-      SignupGender.other => Gender.other,
-      SignupGender.preferNotToSay => Gender.preferNotToSay,
-    };
   }
 }

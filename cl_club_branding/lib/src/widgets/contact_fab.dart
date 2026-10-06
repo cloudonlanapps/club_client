@@ -5,8 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:simple_speed_dial/simple_speed_dial.dart';
-
-import '../utils/launch_contact_url.dart';
+import 'package:ui_lib/ui_lib.dart' show launchContactUrl;
 
 /// The contact button — WhatsApp, call, email — for the apps' auth and
 /// onboarding shells and the website alike (club_core#53).

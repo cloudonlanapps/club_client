@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ui_lib/ui_lib.dart' show isMobileWidth;
 
 import '../models/onboarding_write_messages.dart';
+import '../models/reapply_form_helpers.dart';
 
 class ReapplyVariant extends ConsumerStatefulWidget {
   const ReapplyVariant({
@@ -53,17 +54,19 @@ class ReapplyVariantState extends ConsumerState<ReapplyVariant> {
                     lastName,
                   }) async {
                     try {
-                      final updated = await ref
-                          .read(clUsersMasterProvider.notifier)
-                          .reapplyForSelf(
-                            email: email,
-                            phone: phone,
-                            dateOfBirthUtc: dateOfBirthUtc,
-                            gender: toSdkGender(gender),
-                            firstName: firstName,
-                            middleName: middleName,
-                            lastName: lastName,
-                          );
+                      final updated = await ReapplyFormSubmit.reapply(
+                        notifier: ref.read(clUsersMasterProvider.notifier),
+                        defaultCountryCode: ref.read(
+                          defaultCountryCodeProvider,
+                        ),
+                        email: email,
+                        phone: phone,
+                        dateOfBirthUtc: dateOfBirthUtc,
+                        gender: gender,
+                        firstName: firstName,
+                        middleName: middleName,
+                        lastName: lastName,
+                      );
                       captured = updated;
                       return const SignupSubmitResult();
                     } on Object catch (e) {
@@ -108,14 +111,5 @@ SignupGender toSignupGender(Gender g) {
     Gender.female => SignupGender.female,
     Gender.other => SignupGender.other,
     Gender.preferNotToSay => SignupGender.preferNotToSay,
-  };
-}
-
-Gender toSdkGender(SignupGender g) {
-  return switch (g) {
-    SignupGender.male => Gender.male,
-    SignupGender.female => Gender.female,
-    SignupGender.other => Gender.other,
-    SignupGender.preferNotToSay => Gender.preferNotToSay,
   };
 }

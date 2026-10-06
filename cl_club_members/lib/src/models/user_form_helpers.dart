@@ -2,7 +2,7 @@ import 'package:cl_remote_store/cl_remote_store.dart'
     show ClUsersMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart' show Address, Gender, UserPrivate;
 import 'package:ui_lib/ui_lib.dart'
-    show FormAddress, SignupGender, UserFormAssembly;
+    show FormAddress, PhoneNumber, SignupGender, UserFormAssembly;
 
 /// Default password applied when an admin creates a user with the
 /// "Use default password" toggle on. Admins are expected to know this
@@ -94,9 +94,14 @@ class UserFormSubmit {
   /// assigned — empty when everything succeeded. The user record is always
   /// created regardless of role-assignment outcome; failed roles can be
   /// retried from the profile screen.
+  ///
+  /// The phone and the emergency contact's phone are stored in international
+  /// format, completed with [defaultCountryCode] when typed without a
+  /// country code (#31).
   static Future<List<String>> create({
     required Map<String, dynamic> values,
     required ClUsersMasterNotifier notifier,
+    required String defaultCountryCode,
   }) async {
     await notifier.createUser(
       username: (values['username'] as String).trim(),
@@ -104,7 +109,10 @@ class UserFormSubmit {
       passwordHash: (values['useDefaultPassword'] as bool? ?? true)
           ? defaultUserPassword
           : values['password'] as String,
-      phone: (values['phone'] as String).trim(),
+      phone: PhoneNumber.toInternational(
+        values['phone'] as String,
+        defaultCountryCode: defaultCountryCode,
+      ),
       dateOfBirthUtc: UserFormAssembly.floorToUtcMidnight(
         values['dateOfBirthUtc'] as DateTime?,
       )!,
@@ -115,7 +123,10 @@ class UserFormSubmit {
       emergencyContact: UserFormAssembly.mergeEmergencyContact(
         name: UserFormAssembly.maybe('emergencyContactName', values),
         relation: values['emergencyContactRelation'] as String?,
-        phone: UserFormAssembly.maybe('emergencyContactPhone', values),
+        phone: PhoneNumber.toInternationalOrNull(
+          values['emergencyContactPhone'] as String?,
+          defaultCountryCode: defaultCountryCode,
+        ),
       ),
       medicalNotes: UserFormAssembly.maybe('medicalInfo', values),
       address: assembleSdkAddress(values),
@@ -182,19 +193,30 @@ class UserFormSubmit {
 
   /// Partial update of the contact section (email, phone, emergency contact,
   /// medical notes).
+  ///
+  /// The phone and the emergency contact's phone are stored in international
+  /// format, completed with [defaultCountryCode] when typed without a
+  /// country code (#31).
   static Future<void> updateContact({
     required Map<String, dynamic> values,
     required String username,
     required ClUsersMasterNotifier notifier,
+    required String defaultCountryCode,
   }) {
     return notifier.updateUser(
       username,
       email: (values['email'] as String?)?.trim(),
-      phone: () => UserFormAssembly.maybe('phone', values),
+      phone: () => PhoneNumber.toInternationalOrNull(
+        values['phone'] as String?,
+        defaultCountryCode: defaultCountryCode,
+      ),
       emergencyContact: () => UserFormAssembly.mergeEmergencyContact(
         name: UserFormAssembly.maybe('emergencyContactName', values),
         relation: values['emergencyContactRelation'] as String?,
-        phone: UserFormAssembly.maybe('emergencyContactPhone', values),
+        phone: PhoneNumber.toInternationalOrNull(
+          values['emergencyContactPhone'] as String?,
+          defaultCountryCode: defaultCountryCode,
+        ),
       ),
       medicalNotes: () => UserFormAssembly.maybe('medicalInfo', values),
     );

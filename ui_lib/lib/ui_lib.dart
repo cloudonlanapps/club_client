@@ -45,9 +45,15 @@ export 'src/models/timetable_schedule_option.dart' show TimetableScheduleOption;
 export 'src/theme/custom_colors.dart';
 export 'src/theme/semantic_colors.dart';
 export 'src/theme/text_theme_extensions.dart';
+// Reaching a person (pure UI, no SDK / no Riverpod, #32): the links, the
+// launcher (`launchContactUrl`), and a phone number or an email address
+// with its actions (`PhoneContact`, `EmailContact`).
+export 'src/utils/contact_urls.dart' show ContactUrls;
 // Opening media outside the app
 export 'src/utils/evaluation_closing_run.dart' show EvaluationClosingRun;
+export 'src/utils/launch_contact_url.dart' show launchContactUrl;
 export 'src/utils/open_pdf_download.dart' show openPdfDownload;
+export 'src/utils/phone_number.dart' show PhoneNumber;
 export 'src/widgets/action_button.dart';
 export 'src/widgets/action_icon.dart';
 export 'src/widgets/admin_user_review/admin_user_review_form.dart'
@@ -99,6 +105,8 @@ export 'src/widgets/club_identity_form/club_identity_form_validators.dart'
     show ClubIdentityFormValidators;
 export 'src/widgets/common_form_validators.dart' show CommonFormValidators;
 export 'src/widgets/confirm_dialog.dart';
+export 'src/widgets/contact/email_contact.dart' show EmailContact;
+export 'src/widgets/contact/phone_contact.dart' show PhoneContact;
 // Content page hero
 export 'src/widgets/content_page_hero_section.dart';
 export 'src/widgets/credentialed_network_image.dart'

@@ -1,17 +1,21 @@
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clInquiriesMasterProvider;
+    show clInquiriesMasterProvider, defaultCountryCodeProvider;
 import 'package:cl_server_config/cl_server_config.dart' show DateTimeFormat;
 import 'package:club_sdk_2/club_sdk_2.dart' show Inquiry;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ConfirmDialog;
+import 'package:ui_lib/ui_lib.dart'
+    show ConfirmDialog, EmailContact, PhoneContact;
 
 import '../models/inquiry_filter_options.dart';
+import '../models/inquiry_reply.dart';
+import 'labeled_content.dart';
 import 'labeled_value.dart';
 
 /// One inquiry in full — the whole message and whatever else the form sent
-/// (`extra`) — with Mark handled / Mark open and Delete.
+/// (`extra`) — with Mark handled / Mark open and Delete. The sender's email
+/// and phone carry the buttons that reach them (#32).
 ///
 /// Lives in the sheet the inbox opens; Delete closes that sheet once the
 /// inquiry is gone. Every action goes through `clInquiriesMasterProvider`.
@@ -25,6 +29,9 @@ class InquiryDetail extends ConsumerStatefulWidget {
 }
 
 class InquiryDetailState extends ConsumerState<InquiryDetail> {
+  /// Label of the button that starts an email to the sender.
+  static const String replyLabel = 'Reply with Email';
+
   late Inquiry inquiry = widget.inquiry;
   bool busy = false;
 
@@ -101,9 +108,22 @@ class InquiryDetailState extends ConsumerState<InquiryDetail> {
         children: [
           Text(inquiry.name, style: theme.textTheme.h4),
           LabeledValue(label: 'Kind', value: inquiryKindLabel(inquiry.kind)),
-          LabeledValue(label: 'Email', value: inquiry.email),
+          LabeledContent(
+            label: 'Email',
+            child: EmailContact(
+              address: inquiry.email,
+              actionLabel: replyLabel,
+              subject: InquiryReply.subject(inquiry),
+            ),
+          ),
           if (phone != null && phone.isNotEmpty)
-            LabeledValue(label: 'Phone', value: phone),
+            LabeledContent(
+              label: 'Phone',
+              child: PhoneContact(
+                number: phone,
+                defaultCountryCode: ref.watch(defaultCountryCodeProvider),
+              ),
+            ),
           LabeledValue(
             label: 'Received',
             value: inquiry.createdAtUtc.toLocalDateTimeMedium(),

@@ -11,6 +11,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// `secureClientProvider`: the website holds no session, and an app's public
 /// reads do not wait on one.
 ///
+/// The one token-free read outside `/public`, `GET /capabilities`, is not
+/// here: `capabilitiesProvider` serves it to the website through
+/// `clSessionlessClientProvider` (club_core#31).
+///
 /// Internal: every public read goes through a provider in this package
 /// (`clPublicEventsProvider`, `clPublicClubInfoProvider`, …). Tests override
 /// it with a fake source.

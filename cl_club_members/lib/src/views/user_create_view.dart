@@ -3,7 +3,7 @@ import 'package:cl_club_members/src/widgets/default_password_dialog.dart';
 import 'package:cl_member_auth/cl_member_auth.dart'
     show UsernameAvailability, authStateProvider, usernameAvailabilityProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clUsersMasterProvider, writeFailureMessage;
+    show clUsersMasterProvider, defaultCountryCodeProvider, writeFailureMessage;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,6 +45,7 @@ class UserCreateViewState extends ConsumerState<UserCreateView> {
       failedRoles = await UserFormSubmit.create(
         values: values,
         notifier: ref.read(clUsersMasterProvider.notifier),
+        defaultCountryCode: ref.read(defaultCountryCodeProvider),
       );
       success = true;
     } on ServerException catch (e) {

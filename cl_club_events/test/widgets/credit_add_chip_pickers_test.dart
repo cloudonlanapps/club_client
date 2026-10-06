@@ -100,10 +100,14 @@ class RouteStack extends NavigatorObserver {
 }
 
 /// Opens [picker] in a dialog, as the enrollment action bar does.
-Future<RouteStack> _openPicker(WidgetTester tester, Widget picker) async {
+Future<RouteStack> _openPicker(
+  WidgetTester tester,
+  Widget picker, {
+  Size surface = const Size(900, 1400),
+}) async {
   final ledger = Ledger();
   final routes = RouteStack();
-  await tester.binding.setSurfaceSize(const Size(900, 1400));
+  await tester.binding.setSurfaceSize(surface);
   addTearDown(() => tester.binding.setSurfaceSize(null));
   await tester.pumpWidget(
     ProviderScope(
@@ -160,6 +164,32 @@ Future<void> _saveCredit(WidgetTester tester, int credits) async {
   await enter(CreditFormFields.reasonId, 'picker credit');
   await tester.tap(find.widgetWithText(ShadButton, 'Save'));
   await tester.pumpAndSettle();
+}
+
+/// A narrow phone.
+const Size _phone = Size(320, 640);
+
+/// An unfunded member shows the zero chip and "+", side by side; the zero
+/// chip opens the credit sheet, as any number chip does.
+Future<void> _expectZeroChipBesidePlus(
+  WidgetTester tester,
+  RouteStack routes,
+) async {
+  final zero = find.bySemanticsLabel('Credit 0');
+  final plus = find.bySemanticsLabel('Add credit');
+  expect(zero, findsOneWidget);
+  expect(plus, findsOneWidget);
+  expect(
+    tester.getCenter(zero).dy,
+    moreOrLessEquals(tester.getCenter(plus).dy, epsilon: 1),
+  );
+  expect(tester.getTopRight(zero).dx, lessThan(tester.getTopLeft(plus).dx));
+
+  await tester.tap(zero);
+  await tester.pumpAndSettle();
+  expect(routes.depth, 2);
+  expect(find.byType(CreditView), findsOneWidget);
+  expect(find.byType(CreditGrantForm), findsNothing);
 }
 
 Map<String, dynamic> _grantValues(WidgetTester tester) =>
@@ -230,6 +260,43 @@ void main() {
     });
   });
 
+  for (final (name, picker) in <(String, Widget)>[
+    (
+      'Assign Users',
+      const FundedUserSelectionDialog(
+        title: 'Assign Users',
+        users: _users,
+        eventId: programmeId,
+      ),
+    ),
+    (
+      'Assign Trial',
+      const AssignTrialDialogContent(
+        eventId: programmeId,
+        currentEnrollments: {},
+      ),
+    ),
+  ]) {
+    group('Issue 41: a member with no usable credit in $name', () {
+      testWidgets('Issue 41: $name shows a zero chip beside "+", and the '
+          'zero chip opens the credit sheet', (tester) async {
+        final routes = await _openPicker(tester, picker);
+        await _expectZeroChipBesidePlus(tester, routes);
+      });
+
+      testWidgets('Issue 41: $name fits both chips at phone width', (
+        tester,
+      ) async {
+        await _openPicker(tester, picker, surface: _phone);
+
+        expect(tester.takeException(), isNull);
+        expect(find.bySemanticsLabel('Credit 0'), findsOneWidget);
+        final plus = find.bySemanticsLabel('Add credit');
+        expect(tester.getTopRight(plus).dx, lessThanOrEqualTo(_phone.width));
+      });
+    });
+  }
+
   group('Issue 41: the "+" chip in Assign Trial', () {
     const picker = AssignTrialDialogContent(
       eventId: programmeId,
@@ -259,6 +326,7 @@ void main() {
 
       expect(routes.depth, 1, reason: 'back in the trial picker');
       expect(find.bySemanticsLabel('Add credit'), findsNothing);
+      expect(find.bySemanticsLabel('Credit 0'), findsNothing);
       expect(find.bySemanticsLabel('Credit 1'), findsOneWidget);
 
       // Picking the member closes the picker with them as the result.

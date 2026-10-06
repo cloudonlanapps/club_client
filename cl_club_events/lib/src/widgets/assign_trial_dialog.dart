@@ -20,7 +20,8 @@ class AssignTrialResult {
 /// reaches the dialog for a wrong-typed event is caught in debug builds.
 ///
 /// On a programme with credit on, a member without usable trial credit is
-/// not selectable and shows an add-credit chip that opens Add credit alone,
+/// not selectable and shows a zero credit chip (it opens their credit view)
+/// beside an add-credit chip that opens Add credit alone,
 /// over this dialog, with trial credit for this programme pre-filled
 /// (club_core#105, club_client#41); once funded, the member becomes
 /// selectable in place and shows that trial credit, on a chip that opens
@@ -135,9 +136,15 @@ class AssignTrialDialogContentState
                             mainAxisSize: MainAxisSize.min,
                             spacing: 4,
                             children: [
-                              Opacity(
-                                opacity: 0.5,
-                                child: buildUserTile(context, user, null),
+                              Flexible(
+                                child: Opacity(
+                                  opacity: 0.5,
+                                  child: buildUserTile(context, user, null),
+                                ),
+                              ),
+                              CreditChip(
+                                username: user.username,
+                                credits: trialCredits[user.username],
                               ),
                               CreditChip.add(
                                 username: user.username,
@@ -153,11 +160,13 @@ class AssignTrialDialogContentState
                             mainAxisSize: MainAxisSize.min,
                             spacing: 4,
                             children: [
-                              buildUserTile(
-                                context,
-                                user,
-                                () => Navigator.of(context).pop(
-                                  AssignTrialResult(username: user.username),
+                              Flexible(
+                                child: buildUserTile(
+                                  context,
+                                  user,
+                                  () => Navigator.of(context).pop(
+                                    AssignTrialResult(username: user.username),
+                                  ),
                                 ),
                               ),
                               if (trialCredits[user.username] != null)

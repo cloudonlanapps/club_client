@@ -172,5 +172,44 @@ void main() {
       expect(find.byType(CreditView), findsOneWidget);
       expect(find.byType(CreditActionDialog), findsNothing);
     });
+
+    testWidgets('Issue 41: a chip that shows zero opens the credit sheet, '
+        'and "+" beside it opens Add credit alone', (tester) async {
+      final routes = RouteStack();
+      await tester.binding.setSurfaceSize(const Size(900, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        creditScope(
+          user: viewer('an_admin', admin: true),
+          routes: routes,
+          child: const Row(
+            children: [
+              CreditChip(username: _member, credits: 0),
+              CreditChip.add(
+                username: _member,
+                grantPrefill: (programmeId: programme, trial: false),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsLabel('Credit 0'), findsOneWidget);
+      expect(find.bySemanticsLabel('Add credit'), findsOneWidget);
+
+      await tester.tap(find.bySemanticsLabel('Credit 0'));
+      await tester.pumpAndSettle();
+      expect(routes.depth, 1);
+      expect(find.byType(CreditView), findsOneWidget);
+      expect(find.byType(CreditActionDialog), findsNothing);
+      Navigator.of(tester.element(find.byType(CreditView))).pop();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsLabel('Add credit'));
+      await tester.pumpAndSettle();
+      expect(routes.depth, 1);
+      expect(find.byType(CreditActionDialog), findsOneWidget);
+      expect(find.byType(CreditView), findsNothing);
+    });
   });
 }

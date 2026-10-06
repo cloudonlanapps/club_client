@@ -270,7 +270,12 @@ class UserSelectionDialogContentState
     return Row(
       mainAxisSize: MainAxisSize.min,
       spacing: 4,
-      children: [tile, trailing],
+      // The tile gives way first, so a wide trailing (two credit chips) does
+      // not overflow a phone-width dialog.
+      children: [
+        Flexible(child: tile),
+        trailing,
+      ],
     );
   }
 

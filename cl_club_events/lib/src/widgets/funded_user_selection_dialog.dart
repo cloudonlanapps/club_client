@@ -13,7 +13,8 @@ import 'package:ui_lib/ui_lib.dart' show PickerUser, UserSelectionDialogContent;
 /// The Assign picker on a programme with credit on (club_core#105): a
 /// member who cannot be funded — no usable general or programme credit
 /// for an ordinary enrollment, or no trial credit for a trial (R35, R53) —
-/// is dimmed and not selectable, with an add-credit chip beside them. The
+/// is dimmed and not selectable, with a zero credit chip (it opens their
+/// credit view) and an add-credit chip beside them. The add-credit
 /// chip opens Add credit alone, over the picker, pre-filled with this
 /// programme (club_client#41); once funded, the member turns selectable in
 /// place. A member who can be funded shows the credit usable here, on a
@@ -73,12 +74,19 @@ class FundedUserSelectionDialog extends ConsumerWidget {
       trailingBuilder: (username) {
         final credits = usable[username];
         if (credits == null) return null;
-        return blocked.contains(username)
-            ? CreditChip.add(
-                username: username,
-                grantPrefill: (programmeId: eventId, trial: trial),
-              )
-            : CreditChip(username: username, credits: credits);
+        final chip = CreditChip(username: username, credits: credits);
+        if (!blocked.contains(username)) return chip;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 4,
+          children: [
+            chip,
+            CreditChip.add(
+              username: username,
+              grantPrefill: (programmeId: eventId, trial: trial),
+            ),
+          ],
+        );
       },
     );
   }

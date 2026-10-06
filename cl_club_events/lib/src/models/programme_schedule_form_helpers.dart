@@ -6,13 +6,15 @@ import 'package:shadcn_ui/shadcn_ui.dart' show ShadTimeOfDay;
 import 'package:ui_lib/ui_lib.dart'
     show ProgrammeScheduleAdjustValue, ProgrammeScheduleData;
 
+import '../utils/programme_end_date.dart';
 import '../utils/programme_schedule_sessions.dart';
 import '../utils/session_inputs.dart';
 
 /// SDK ↔ form adapter for the actions of a programme's Schedule block:
 /// **Adjust Schedule** ([buildProgrammeScheduleAdjustInitialValues],
 /// [programmeAdjustFromOptions],
-/// [ProgrammeScheduleFormSubmit.adjustSchedule]).
+/// [ProgrammeScheduleFormSubmit.adjustSchedule]) and **Adjust end date**
+/// ([ProgrammeScheduleFormSubmit.adjustEndDate]).
 
 /// How many upcoming sessions the From picker offers.
 const int programmeAdjustFromOptionCount = 12;
@@ -150,6 +152,55 @@ class ProgrammeScheduleFormSubmit {
       sessions: sessionsChanged
           ? () => sessions.isEmpty ? null : sessions
           : null,
+    );
+  }
+
+  /// Sets, moves or clears the end date of the programme [event] via the
+  /// master [notifier].
+  ///
+  /// [lastDay] is the last local day the programme runs on; the cutoff sent
+  /// is the first session start of the current schedule after the end of
+  /// that day ([programmeEndCutoff]), from which sessions no longer occur.
+  /// A programme with no end is given one with `terminate`, which needs
+  /// [reason]; one whose end is ahead has it moved with `extend`, where a
+  /// blank [reason] is left out. A `null` [lastDay] removes the end with
+  /// `extendIndefinitely`.
+  ///
+  /// Returns [event] untouched, with no call, when the cutoff is the one it
+  /// has. Throws [SdkError] before any call when the schedule has no
+  /// session after [lastDay], and `ServerException` on the server's guards
+  /// (`EFFECTIVE_TIME_NOT_SESSION_BOUNDARY`, `CUTOFF_TOO_SOON`, and
+  /// `INVALID_STATE` once the end has passed).
+  static Future<Event> adjustEndDate({
+    required Event event,
+    required DateTime? lastDay,
+    required String reason,
+    required ClEventsMasterNotifier notifier,
+    List<EventSchedule>? schedules,
+  }) async {
+    final why = reason.trim();
+    if (lastDay == null) {
+      return notifier.extendIndefinitely(
+        event.id,
+        reason: why.isEmpty ? null : why,
+      );
+    }
+    final cutoff = programmeEndCutoff(event, lastDay, schedules: schedules);
+    if (cutoff == null) {
+      throw const SdkError(
+        programmeEndDateNoSessionMessage,
+        code: SdkErrorCode.effectiveTimeNotSessionBoundary,
+      );
+    }
+    final current = event.untilTimeUtc;
+    if (current == null) {
+      return notifier.terminate(event.id, reason: why, cutoffTimeUtc: cutoff);
+    }
+    if (current.isAtSameMomentAs(cutoff)) return event;
+    return notifier.extend(
+      event.id,
+      cutoffTimeUtc: cutoff,
+      reason: why.isEmpty ? null : why,
     );
   }
 }

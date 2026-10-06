@@ -127,6 +127,35 @@ class RecordingScheduleEvents extends ClEventsMasterNotifier {
   }
 
   @override
+  Future<Event> terminate(
+    int eventId, {
+    required String reason,
+    required DateTime cutoffTimeUtc,
+  }) async {
+    endDateCalls.add('terminate($cutoffTimeUtc, $reason)');
+    if (error != null) throw error!;
+    return event;
+  }
+
+  @override
+  Future<Event> extend(
+    int eventId, {
+    required DateTime cutoffTimeUtc,
+    String? reason,
+  }) async {
+    endDateCalls.add('extend($cutoffTimeUtc, $reason)');
+    if (error != null) throw error!;
+    return event;
+  }
+
+  @override
+  Future<Event> extendIndefinitely(int eventId, {String? reason}) async {
+    endDateCalls.add('extendIndefinitely($reason)');
+    if (error != null) throw error!;
+    return event;
+  }
+
+  @override
   Future<Event> updateEvent(
     int eventId, {
     int? version,

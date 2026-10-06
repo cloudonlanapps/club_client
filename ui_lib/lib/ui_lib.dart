@@ -39,6 +39,7 @@ export 'src/models/event_timetable_value.dart' show EventTimetableValue;
 export 'src/models/form_translated_text.dart' show FormTranslatedText;
 export 'src/models/one_off_schedule_data.dart' show OneOffScheduleData;
 export 'src/models/one_off_schedule_value.dart' show OneOffScheduleValue;
+export 'src/models/programme_end_date_value.dart' show ProgrammeEndDateValue;
 export 'src/models/programme_schedule_adjust_value.dart'
     show ProgrammeScheduleAdjustValue;
 export 'src/models/programme_schedule_data.dart' show ProgrammeScheduleData;
@@ -233,6 +234,10 @@ export 'src/widgets/event_schedule/one_off_schedule_form.dart'
     show OneOffScheduleForm, OneOffScheduleFormState;
 export 'src/widgets/event_schedule/one_off_schedule_form_validators.dart'
     show OneOffScheduleFormValidators;
+export 'src/widgets/event_schedule/programme_end_date_form.dart'
+    show ProgrammeEndDateForm, ProgrammeEndDateFormState;
+export 'src/widgets/event_schedule/programme_end_date_form_validators.dart'
+    show ProgrammeEndDateFormValidators;
 export 'src/widgets/event_schedule/programme_schedule_adjust_form.dart'
     show ProgrammeScheduleAdjustForm, ProgrammeScheduleAdjustFormState;
 export 'src/widgets/event_schedule/programme_schedule_adjust_form_validators.dart'

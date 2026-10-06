@@ -1,6 +1,7 @@
 import 'package:cl_remote_store/src/providers/client.dart';
 import 'package:cl_remote_store/src/providers/club_event_types.dart';
 import 'package:cl_remote_store/src/providers/current_user.dart';
+import 'package:cl_remote_store/src/providers/events_master_end_date.dart';
 import 'package:cl_remote_store/src/providers/events_master_lifecycle.dart';
 import 'package:cl_remote_store/src/providers/events_master_occurrences.dart';
 import 'package:cl_remote_store/src/providers/manual_refresh.dart';
@@ -28,7 +29,10 @@ clEventsMasterProvider =
 
 /// Notifier managing event state and mutations.
 class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
-    with ClEventsOccurrenceMutations, ClEventsLifecycleMutations {
+    with
+        ClEventsOccurrenceMutations,
+        ClEventsLifecycleMutations,
+        ClEventsEndDateMutations {
   @override
   Future<Map<int, Event>> build() async {
     ref.watch(clManualRefreshProvider);

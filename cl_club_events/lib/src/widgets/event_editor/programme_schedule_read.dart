@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../utils/programme_end_date.dart';
 import '../../utils/programme_schedule_sessions.dart';
 import '../events_preview/cl_event_schedule.dart'
     show ClEventScheduleBody, ScheduleLine;
@@ -15,8 +16,9 @@ String programmeNextScheduleLine(DateTime fromUtc) =>
     'New schedule from ${formatDate(fromUtc.toLocal())}';
 
 /// A programme's schedule as its Schedule block reads: the terms its
-/// sessions follow now and, when an adjustment is pending, the day the next
-/// terms start.
+/// sessions follow now, the day the next terms start when an adjustment is
+/// pending, and its end date (the day of its last session) or "No end
+/// date".
 ///
 /// The event itself describes its latest schedule, which a pending
 /// adjustment has not reached yet; the present terms are then read from the
@@ -34,14 +36,16 @@ class ProgrammeScheduleRead extends ConsumerWidget {
     final present = pending == null
         ? null
         : presentProgrammeSchedule(schedules);
-    final shown = present == null
-        ? event
-        : event.copyWith(
-            startTimeUtc: present.startTimeUtc,
-            endTimeUtc: present.endTimeUtc,
-            rrule: () => present.rrule,
-            sessions: () => present.sessions,
-          );
+    // The end reads as the day of the last session, in its own line below:
+    // the cutoff itself is the first session that does not occur.
+    final shown = event.copyWith(
+      startTimeUtc: present?.startTimeUtc,
+      endTimeUtc: present?.endTimeUtc,
+      rrule: present == null ? null : () => present.rrule,
+      sessions: present == null ? null : () => present.sessions,
+      untilTimeUtc: () => null,
+    );
+    final muted = theme.colorScheme.mutedForeground;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -53,9 +57,16 @@ class ProgrammeScheduleRead extends ConsumerWidget {
             icon: LucideIcons.calendarPlus,
             text: programmeNextScheduleLine(pending.effectiveFromUtc),
             style: theme.textTheme.p,
-            iconColor: theme.colorScheme.mutedForeground,
+            iconColor: muted,
           ),
         ],
+        const SizedBox(height: 8),
+        ScheduleLine(
+          icon: LucideIcons.calendarOff,
+          text: programmeEndDateLine(event, schedules: schedules),
+          style: theme.textTheme.p,
+          iconColor: muted,
+        ),
       ],
     );
   }

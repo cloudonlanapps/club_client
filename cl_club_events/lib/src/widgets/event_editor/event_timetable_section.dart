@@ -46,10 +46,18 @@ class EventTimetableSection extends ConsumerStatefulWidget {
     required this.event,
     required this.canEdit,
     this.note,
+    this.read,
+    this.actions,
     super.key,
   });
 
   final Event event;
+
+  /// The schedule as shown in read mode; [ClEventScheduleBody] when `null`.
+  final Widget? read;
+
+  /// Further actions on the schedule, shown under it in read mode.
+  final Widget? actions;
 
   /// Whether the viewer may correct the timetable (an admin).
   final bool canEdit;
@@ -141,6 +149,7 @@ class EventTimetableSectionState extends ConsumerState<EventTimetableSection> {
   Widget build(BuildContext context) {
     final event = widget.event;
     final note = widget.note;
+    final actions = widget.actions;
     final schedules = isProgramme
         ? ref.watch(clEventSchedulesProvider(event.id)).valueOrNull
         : null;
@@ -153,11 +162,12 @@ class EventTimetableSectionState extends ConsumerState<EventTimetableSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          ClEventScheduleBody(event: event),
+          widget.read ?? ClEventScheduleBody(event: event),
           if (widget.canEdit && note != null) ...[
             const SizedBox(height: 12),
             ScheduleNote(text: note),
           ],
+          if (actions != null) ...[const SizedBox(height: 16), actions],
         ],
       ),
       editBuilder: () => EventTimetableForm(

@@ -319,6 +319,8 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
 
   /// Split a programme's timetable at [effectiveDateTimeUtc]
   /// (club_core#16): the same event returns with its new current schedule.
+  /// A stale [version] reloads the event before it is rethrown
+  /// ([reloadOnStale]).
   Future<Event> updateEventForAllFuture(
     int eventId, {
     required DateTime effectiveDateTimeUtc,
@@ -333,17 +335,21 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
   }) {
     return refetchIfWriteUncertain(() async {
       final client = await ref.read(secureClientProvider.future);
-      final newEvent = await client.events.updateEventForAllFuture(
+      final sent = await currentVersionOf(eventId, version);
+      final newEvent = await reloadOnStale(
         eventId,
-        version: await currentVersionOf(eventId, version),
-        effectiveDateTimeUtc: effectiveDateTimeUtc,
-        venueId: venueId,
-        organizerName: organizerName,
-        coachNames: coachNames,
-        startTimeUtc: startTimeUtc,
-        endTimeUtc: endTimeUtc,
-        rrule: rrule,
-        sessions: sessions,
+        () => client.events.updateEventForAllFuture(
+          eventId,
+          version: sent,
+          effectiveDateTimeUtc: effectiveDateTimeUtc,
+          venueId: venueId,
+          organizerName: organizerName,
+          coachNames: coachNames,
+          startTimeUtc: startTimeUtc,
+          endTimeUtc: endTimeUtc,
+          rrule: rrule,
+          sessions: sessions,
+        ),
       );
 
       replaceLocally(newEvent);

@@ -26,6 +26,12 @@ String scheduleSaveErrorMessage(Object error, {required String fallback}) {
       // A one-off's only override is its being called off.
       SdkErrorCode.occurrenceOverridesPresent =>
         'This event is called off. Put it back on before moving it.',
+      SdkErrorCode.timeConflict => programmeClashMessage(error),
+      SdkErrorCode.effectiveTimeNotSessionBoundary =>
+        'That session is no longer part of the schedule. Close this, check '
+            'the schedule and try again.',
+      SdkErrorCode.cutoffTooSoon =>
+        'That session starts in under 30 minutes. Pick a later one.',
       SdkErrorCode.venueNotFound =>
         'That venue no longer exists. Pick another.',
       _ => null,
@@ -33,4 +39,23 @@ String scheduleSaveErrorMessage(Object error, {required String fallback}) {
     if (message != null) return message;
   }
   return eventSaveErrorMessage(error, fallback: fallback);
+}
+
+/// The message for a schedule the server refused because it clashes with
+/// another programme at the venue or for the organizer (409 with the
+/// conflict report): names the programmes it clashes with, when the report
+/// does.
+String programmeClashMessage(ServerException error) {
+  final titles = <String>{};
+  for (final key in const ['venueConflicts', 'userConflicts']) {
+    final items = error.details?[key];
+    if (items is! List) continue;
+    for (final item in items) {
+      final title = item is Map ? item['eventTitle'] : null;
+      if (title is String && title.isNotEmpty) titles.add(title);
+    }
+  }
+  final named = titles.isEmpty ? '' : ' (${titles.join(', ')})';
+  return 'This schedule clashes with another programme$named at the venue '
+      'or for the organizer. Change the days, times or venue.';
 }

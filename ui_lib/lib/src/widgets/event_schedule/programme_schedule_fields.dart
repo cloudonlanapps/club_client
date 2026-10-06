@@ -41,8 +41,12 @@ class ProgrammeScheduleFormField
     super.onSaved,
     super.autovalidateMode,
     super.forceErrorText,
+    bool showDateRange = true,
   }) : super(
-         builder: (state) => ProgrammeScheduleFormFieldBody(state: state),
+         builder: (state) => ProgrammeScheduleFormFieldBody(
+           state: state,
+           showDateRange: showDateRange,
+         ),
        );
 
   /// Aggregate validator surfaced on `saveAndValidate()`.
@@ -78,9 +82,17 @@ class ProgrammeScheduleFormField
 
 /// Body for [ProgrammeScheduleFormField]. Public per project guideline.
 class ProgrammeScheduleFormFieldBody extends StatefulWidget {
-  const ProgrammeScheduleFormFieldBody({required this.state, super.key});
+  const ProgrammeScheduleFormFieldBody({
+    required this.state,
+    this.showDateRange = true,
+    super.key,
+  });
 
   final FormFieldState<ProgrammeScheduleData> state;
+
+  /// Whether the Start Date and End Date inputs are shown. Hidden when the
+  /// host decides when the schedule begins (an adjustment from a session).
+  final bool showDateRange;
 
   @override
   State<ProgrammeScheduleFormFieldBody> createState() =>
@@ -137,15 +149,8 @@ class ProgrammeScheduleFormFieldBodyState
     super.dispose();
   }
 
-  String formatDuration(int minutes) {
-    final hours = minutes / 60;
-    if (hours == hours.truncateToDouble()) return '${hours.toInt()}h';
-    if (hours < 1) return '${minutes}m';
-    final whole = hours.truncate();
-    final fraction = minutes - whole * 60;
-    if (fraction == 30) return '${whole}h 30m';
-    return '${whole}h ${fraction}m';
-  }
+  String formatDuration(int minutes) =>
+      SessionSplitField.formatDuration(minutes);
 
   int? parseDuration(String rawText) {
     final text = rawText.trim().toLowerCase();
@@ -275,62 +280,63 @@ class ProgrammeScheduleFormFieldBodyState
             ),
           ),
         ),
-        TwoColumnGrid(
-          children: [
-            LabeledFormRow(
-              label: 'Start Date',
-              required: true,
-              field: CLDatePickerFormField(
-                initialValue: selectedStartDate,
-                enabled: enabled,
-                validator: (date) =>
-                    date == null ? 'Start date is required' : null,
-                onChanged: (date) {
-                  setState(() => selectedStartDate = date);
-                  emit();
-                },
+        if (widget.showDateRange)
+          TwoColumnGrid(
+            children: [
+              LabeledFormRow(
+                label: 'Start Date',
+                required: true,
+                field: CLDatePickerFormField(
+                  initialValue: selectedStartDate,
+                  enabled: enabled,
+                  validator: (date) =>
+                      date == null ? 'Start date is required' : null,
+                  onChanged: (date) {
+                    setState(() => selectedStartDate = date);
+                    emit();
+                  },
+                ),
               ),
-            ),
-            LabeledFormRow(
-              labelChild: Row(
-                children: [
-                  Text(
-                    'End Date',
-                    style: theme.textTheme.small.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (selectedEndDate != null)
-                    ShadButton.ghost(
-                      size: ShadButtonSize.sm,
-                      onPressed: enabled ? clearEndDate : null,
-                      child: Text(
-                        'Clear',
-                        style: theme.textTheme.small.copyWith(
-                          color: theme.colorScheme.primary,
-                        ),
+              LabeledFormRow(
+                labelChild: Row(
+                  children: [
+                    Text(
+                      'End Date',
+                      style: theme.textTheme.small.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                ],
+                    const Spacer(),
+                    if (selectedEndDate != null)
+                      ShadButton.ghost(
+                        size: ShadButtonSize.sm,
+                        onPressed: enabled ? clearEndDate : null,
+                        child: Text(
+                          'Clear',
+                          style: theme.textTheme.small.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                field: CLDatePickerFormField(
+                  key: ValueKey('endDate_$endDateResetCounter'),
+                  initialValue: selectedEndDate,
+                  enabled: enabled,
+                  placeholder: const Text('Ongoing'),
+                  validator: validateEndDate,
+                  onChanged: (date) {
+                    setState(() {
+                      selectedEndDate = date;
+                      hasNoEndDate = date == null;
+                    });
+                    emit();
+                  },
+                ),
               ),
-              field: CLDatePickerFormField(
-                key: ValueKey('endDate_$endDateResetCounter'),
-                initialValue: selectedEndDate,
-                enabled: enabled,
-                placeholder: const Text('Ongoing'),
-                validator: validateEndDate,
-                onChanged: (date) {
-                  setState(() {
-                    selectedEndDate = date;
-                    hasNoEndDate = date == null;
-                  });
-                  emit();
-                },
-              ),
-            ),
-          ],
-        ),
+            ],
+          ),
         TwoColumnGrid(
           children: [
             LabeledFormRow(

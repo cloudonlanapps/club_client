@@ -39,6 +39,9 @@ class EventDetailsScreen extends ConsumerWidget {
   /// Leaves this page when the event no longer exists. Wired from the router.
   final VoidCallback onDismissed;
   final VoidCallback? onEdit;
+
+  /// Leaves this page once the event has been deleted from Event
+  /// Management. Wired from the router.
   final VoidCallback? onDeleted;
   final ValueChanged<int>? onManageEnrolments;
   final ValueChanged<String>? onMemberTap;
@@ -94,6 +97,7 @@ class EventDetailsScreen extends ConsumerWidget {
           onPublicProfileTap: onPublicProfileTap,
           onBack: onBack,
           onHistory: onHistory,
+          onDeleted: onDeleted,
         );
       },
     );

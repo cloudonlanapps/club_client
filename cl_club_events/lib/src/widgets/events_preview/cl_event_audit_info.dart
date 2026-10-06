@@ -11,9 +11,9 @@ import '../../providers/event_display_status.dart';
 /// and GroupInfoSection (group detail).
 ///
 /// Visible only to admins and coaches. Shows organizer, display status,
-/// created/updated timestamps, and a deleted row when the event has been
-/// soft-deleted. An event keeps one id across splits (club_core#16), so its
-/// own timestamps cover its whole life.
+/// created/updated timestamps, and an Archived row when the event has been
+/// archived (soft-deleted). An event keeps one id across splits
+/// (club_core#16), so its own timestamps cover its whole life.
 class ClEventAuditInfo extends ConsumerWidget {
   const ClEventAuditInfo({
     required this.event,
@@ -64,7 +64,7 @@ class ClEventAuditInfo extends ConsumerWidget {
           if (event.deletedAtUtc != null) ...[
             const SizedBox(height: 8),
             AuditField(
-              label: 'Deleted',
+              label: 'Archived',
               value: event.deletedAtUtc!.toLocalDateTimeMedium(),
             ),
           ],

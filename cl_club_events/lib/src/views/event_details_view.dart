@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ui_lib/ui_lib.dart' show LoadingView, TitleRow;
 
+import '../widgets/event_editor/archived_event_body.dart';
 import '../widgets/event_editor/editable_event_body.dart';
 import '../widgets/events_preview/cl_event_preview.dart';
 
@@ -13,6 +14,9 @@ import '../widgets/events_preview/cl_event_preview.dart';
 /// organizer ([canManageEvent], as the server's `require_organizer_or_admin`)
 /// — gets the inline section editors ([EditableEventBody]); every other
 /// coach gets the read-only [ClEventPreview] (club_core#150).
+///
+/// An archived event, which only an admin can load, is read-only apart from
+/// its Event Management card ([ArchivedEventBody], club_client#36).
 class EventDetailsView extends ConsumerWidget {
   const EventDetailsView({
     required this.currentUser,
@@ -23,6 +27,7 @@ class EventDetailsView extends ConsumerWidget {
     this.onPublicProfileTap,
     this.onBack,
     this.onHistory,
+    this.onDeleted,
     super.key,
   });
 
@@ -40,6 +45,9 @@ class EventDetailsView extends ConsumerWidget {
   /// Opens the event's audit history. The title-row affordance is shown only
   /// to admins (issue #207).
   final VoidCallback? onHistory;
+
+  /// Leaves the page once the event has been deleted from Event Management.
+  final VoidCallback? onDeleted;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -67,7 +75,16 @@ class EventDetailsView extends ConsumerWidget {
             const Divider(height: 1),
             Expanded(
               child: SingleChildScrollView(
-                child: canManageEvent(event, currentUser)
+                child: !event.isActive
+                    ? ArchivedEventBody(
+                        event: event,
+                        currentUser: currentUser,
+                        venue: venue,
+                        onVenueTap: onVenueTap,
+                        onPublicProfileTap: onPublicProfileTap,
+                        onDeleted: onDeleted,
+                      )
+                    : canManageEvent(event, currentUser)
                     ? EditableEventBody(
                         event: event,
                         currentUser: currentUser,
@@ -76,6 +93,7 @@ class EventDetailsView extends ConsumerWidget {
                         onManageEnrolments: onManageEnrolments,
                         onMemberTap: onMemberTap,
                         onPublicProfileTap: onPublicProfileTap,
+                        onDeleted: onDeleted,
                       )
                     : ClEventPreview(
                         event: event,

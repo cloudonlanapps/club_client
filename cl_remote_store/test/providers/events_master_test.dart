@@ -146,6 +146,7 @@ ProviderContainer _makeContainer(
 }) {
   return ProviderContainer(
     overrides: [
+      currentUserProvider.overrideWithValue(null),
       secureClientProvider.overrideWith(
         (ref) async => _buildClient(events, occurrences),
       ),

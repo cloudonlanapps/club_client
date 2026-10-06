@@ -31,15 +31,17 @@ class EventListNotifier
   Future<List<Event>> build(EventListFilter arg) async {
     final master = await ref.watch(clEventsMasterProvider.future);
 
-    // Exclude soft-deleted events. The master map can hold an event with
-    // deletedAtUtc set right after a soft-delete (the notifier stores the
-    // server's echoed entity instead of dropping the id), so active
-    // listings must filter it out. There is no deleted-events view for
-    // events, so the exclusion is unconditional.
+    // Archived (soft-deleted) events are listed only when the filter asks
+    // for them (club_client#36). The master map holds them for an admin,
+    // and holds an event with deletedAtUtc set right after it is archived
+    // (the notifier stores the server's echoed entity instead of dropping
+    // the id), so a listing without them must filter them out.
     //
-    // An event keeps one id across splits (club_core#16), so every active
-    // event is listed once.
-    var events = master.values.where((e) => e.isActive).toList();
+    // An event keeps one id across splits (club_core#16), so every event is
+    // listed once.
+    var events = master.values
+        .where((e) => e.isActive || filter.showArchived)
+        .toList();
 
     if (filter.eventType != null) {
       events = events.where((e) => e.type == filter.eventType).toList();

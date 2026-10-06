@@ -121,6 +121,7 @@ class _FakeEvents extends Fake implements EventSource {
 ProviderContainer _makeContainer(EventSource events) {
   return ProviderContainer(
     overrides: [
+      currentUserProvider.overrideWithValue(null),
       secureClientProvider.overrideWith(
         (ref) async => fakeSecureClient(events: events),
       ),

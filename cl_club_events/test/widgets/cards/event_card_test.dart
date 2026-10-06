@@ -123,6 +123,43 @@ Future<void> _pumpCard(
 }
 
 void main() {
+  group('Issue 36: EventCard of an archived event', () {
+    testWidgets('Issue 36: an archived event reads Archived, not its status', (
+      tester,
+    ) async {
+      await _pumpCard(
+        tester,
+        event: _event(type: EventType.camp).copyWith(
+          deletedAtUtc: () => DateTime.utc(2026, 3),
+        ),
+        status: EventDisplayStatus.ongoing,
+      );
+      expect(find.text('Archived'), findsOneWidget);
+      expect(find.text('Ongoing'), findsNothing);
+    });
+
+    testWidgets('Issue 36: an archived event offers no Enrollments action', (
+      tester,
+    ) async {
+      await _pumpCard(
+        tester,
+        event: _event(type: EventType.camp).copyWith(
+          deletedAtUtc: () => DateTime.utc(2026, 3),
+        ),
+        actingUser: _adminUser(),
+        onEnrollments: () {},
+      );
+      expect(find.text('Enrollments'), findsNothing);
+    });
+
+    testWidgets('Issue 36: a live event is not marked Archived', (
+      tester,
+    ) async {
+      await _pumpCard(tester, event: _event(type: EventType.camp));
+      expect(find.text('Archived'), findsNothing);
+    });
+  });
+
   group('Issue 295: EventCard temporal status caption', () {
     testWidgets('Issue 295: admin lens — ongoing shows Ongoing', (
       tester,

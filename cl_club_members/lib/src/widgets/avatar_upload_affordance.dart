@@ -13,7 +13,8 @@ import '../utils/member_write_messages.dart';
 /// cancels. Production callers should not override this; tests can.
 typedef AvatarImagePicker = Future<PickedImage?> Function();
 
-/// Pencil overlay that lets the signed-in user replace their own avatar.
+/// Pencil overlay that lets the signed-in user replace their own avatar, or
+/// an admin replace a member's ([onBehalf], club_client#35).
 ///
 /// Renders a small circular pencil button (bottom-right by default in the
 /// parent stack). On tap:
@@ -23,16 +24,24 @@ typedef AvatarImagePicker = Future<PickedImage?> Function();
 ///    to see my photo" checkbox;
 /// 3. on confirm, dispatches `avatarMutationProvider(username).upload(...)`.
 ///
+/// With [onBehalf] the preview has no checkbox and the confirm dispatches
+/// `uploadOnBehalf(...)`: the photo is stored private in the member's name,
+/// and making it public stays the member's choice.
+///
 /// The pencil is disabled for the whole pick→preview→upload flow (not just
 /// the upload) so the user can't fire a second file browser mid-flight.
 class AvatarUploadAffordance extends ConsumerStatefulWidget {
   const AvatarUploadAffordance({
     required this.username,
+    this.onBehalf = false,
     this.picker,
     super.key,
   });
 
   final String username;
+
+  /// True when an admin is changing another member's photo.
+  final bool onBehalf;
 
   /// Overrides the image picker. When null the shared [imagePickerProvider] is
   /// used — tests inject one; production passes nothing.
@@ -71,30 +80,40 @@ class AvatarUploadAffordanceState
     // pre-ticked when they're upgrading an already-public avatar. The
     // .future read awaits the FutureProvider so the dialog opens with
     // the resolved value rather than racing on cache state.
-    bool initialAllowOthersToSee;
-    try {
-      initialAllowOthersToSee = await ref.read(
-        avatarVisibilityProvider(widget.username).future,
-      );
-    } on Object {
-      initialAllowOthersToSee = false;
+    var initialAllowOthersToSee = false;
+    if (!widget.onBehalf) {
+      try {
+        initialAllowOthersToSee = await ref.read(
+          avatarVisibilityProvider(widget.username).future,
+        );
+      } on Object {
+        initialAllowOthersToSee = false;
+      }
     }
     if (!mounted) return;
     final decision = await showPreviewDialog(
       context,
       picked,
       initialAllowOthersToSee: initialAllowOthersToSee,
+      showVisibilityChoice: !widget.onBehalf,
     );
     if (!mounted || decision == null) return;
+    final notifier = ref.read(avatarMutationProvider(widget.username).notifier);
     try {
-      await ref
-          .read(avatarMutationProvider(widget.username).notifier)
-          .upload(
-            bytes: picked.bytes,
-            filename: picked.filename,
-            contentType: picked.mimeType,
-            allowOthersToSee: decision.allowOthersToSee,
-          );
+      if (widget.onBehalf) {
+        await notifier.uploadOnBehalf(
+          bytes: picked.bytes,
+          filename: picked.filename,
+          contentType: picked.mimeType,
+        );
+      } else {
+        await notifier.upload(
+          bytes: picked.bytes,
+          filename: picked.filename,
+          contentType: picked.mimeType,
+          allowOthersToSee: decision.allowOthersToSee,
+        );
+      }
     } on Object catch (e) {
       if (!mounted) return;
       ShadToaster.of(context).show(
@@ -160,12 +179,14 @@ Future<PreviewDecision?> showPreviewDialog(
   BuildContext context,
   PickedImage picked, {
   required bool initialAllowOthersToSee,
+  bool showVisibilityChoice = true,
 }) {
   return showShadDialog<PreviewDecision>(
     context: context,
     builder: (_) => AvatarPreviewDialog(
       picked: picked,
       initialAllowOthersToSee: initialAllowOthersToSee,
+      showVisibilityChoice: showVisibilityChoice,
     ),
   );
 }
@@ -174,10 +195,15 @@ class AvatarPreviewDialog extends StatefulWidget {
   const AvatarPreviewDialog({
     required this.picked,
     required this.initialAllowOthersToSee,
+    this.showVisibilityChoice = true,
     super.key,
   });
   final PickedImage picked;
   final bool initialAllowOthersToSee;
+
+  /// Whether the "Allow others to see my photo" checkbox is offered. False
+  /// for an admin changing a member's photo (club_client#35).
+  final bool showVisibilityChoice;
 
   @override
   State<AvatarPreviewDialog> createState() => AvatarPreviewDialogState();
@@ -209,15 +235,17 @@ class AvatarPreviewDialogState extends State<AvatarPreviewDialog> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            ShadCheckbox(
-              value: allowOthersToSee,
-              onChanged: (v) => setState(() => allowOthersToSee = v),
-              label: Text(
-                'Allow others to see my photo',
-                style: theme.textTheme.small,
+            if (widget.showVisibilityChoice) ...[
+              const SizedBox(height: 16),
+              ShadCheckbox(
+                value: allowOthersToSee,
+                onChanged: (v) => setState(() => allowOthersToSee = v),
+                label: Text(
+                  MemberWriteMessages.allowOthersToSeePhoto,
+                  style: theme.textTheme.small,
+                ),
               ),
-            ),
+            ],
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,

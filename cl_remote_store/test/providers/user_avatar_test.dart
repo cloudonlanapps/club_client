@@ -57,8 +57,14 @@ class _FakeMedia extends Fake implements MediaSource {
 
   final List<Media> files;
 
+  /// Files owned by someone other than the caller: absent from
+  /// `listMyFiles`, present in the staff `list`.
+  final List<Media> othersFiles = [];
+
   List<String>? uploadedAccessRoles;
+  String? uploadedOwnerUsername;
   final List<int> softDeleted = [];
+  final Map<int, List<String>> patched = {};
 
   @override
   Future<Media> upload({
@@ -73,6 +79,7 @@ class _FakeMedia extends Fake implements MediaSource {
     String? ownerUsername,
   }) async {
     uploadedAccessRoles = accessRoles;
+    uploadedOwnerUsername = ownerUsername;
     final media = _media(id: 200, uuid: 'new', accessRoles: accessRoles!);
     files.add(media);
     return media;
@@ -92,9 +99,40 @@ class _FakeMedia extends Fake implements MediaSource {
   );
 
   @override
+  Future<PaginatedList<Media>> list({
+    int offset = 0,
+    int limit = 50,
+    String? mediaType,
+    String? conversionStatus,
+    bool includeDeleted = false,
+  }) async {
+    final all = [...files, ...othersFiles];
+    return PaginatedList<Media>(
+      items: all.skip(offset).take(limit).toList(),
+      total: all.length,
+      limit: limit,
+      offset: offset,
+    );
+  }
+
+  @override
+  Future<Media> patch(int id, {required List<String> accessRoles}) async {
+    patched[id] = accessRoles;
+    final index = files.indexWhere((m) => m.id == id);
+    final updated = _media(
+      id: id,
+      uuid: files[index].uuid,
+      accessRoles: accessRoles,
+    );
+    files[index] = updated;
+    return updated;
+  }
+
+  @override
   Future<void> softDelete(int id) async {
     softDeleted.add(id);
     files.removeWhere((m) => m.id == id);
+    othersFiles.removeWhere((m) => m.id == id);
   }
 }
 
@@ -237,6 +275,154 @@ void main() {
       );
 
       expect(await container.read(avatarImageProvider('alice').future), isNull);
+    },
+  );
+
+  test(
+    "Issue 35: uploadOnBehalf uploads in the member's name, private, and "
+    'soft-deletes the prior avatar the member owns',
+    () async {
+      final userMedia = _FakeUserMedia([
+        _link('old', kUserAvatarTag, 'image'),
+      ]);
+      // The admin's own files do not include the member's prior avatar.
+      final media = _FakeMedia([])
+        ..othersFiles.add(
+          _media(id: 100, uuid: 'old', accessRoles: const ['public']),
+        );
+      final container = _makeContainer(media: media, userMedia: userMedia);
+
+      await container
+          .read(avatarMutationProvider('alice').notifier)
+          .uploadOnBehalf(
+            bytes: const [1, 2, 3],
+            filename: 'alice.png',
+            contentType: 'image/png',
+          );
+
+      expect(media.uploadedOwnerUsername, 'alice');
+      expect(media.uploadedAccessRoles, const ['self', 'admin', 'coach']);
+      expect(userMedia.attachedTag, kUserAvatarTag);
+      expect(userMedia.attachedUuid, 'new');
+      expect(userMedia.detached, const ['old']);
+      expect(media.softDeleted, const [100]);
+    },
+  );
+
+  test(
+    'Issue 35: uploadOnBehalf finds a prior avatar beyond the first page of '
+    'the staff media listing',
+    () async {
+      final userMedia = _FakeUserMedia([
+        _link('old', kUserAvatarTag, 'image'),
+      ]);
+      final media = _FakeMedia([]);
+      for (var i = 0; i < 150; i++) {
+        media.othersFiles.add(
+          _media(id: 1000 + i, uuid: 'other-$i', accessRoles: const ['self']),
+        );
+      }
+      media.othersFiles.add(
+        _media(id: 100, uuid: 'old', accessRoles: const ['public']),
+      );
+      final container = _makeContainer(media: media, userMedia: userMedia);
+
+      await container
+          .read(avatarMutationProvider('alice').notifier)
+          .uploadOnBehalf(
+            bytes: const [1],
+            filename: 'alice.png',
+            contentType: 'image/png',
+          );
+
+      expect(media.softDeleted, const [100]);
+    },
+  );
+
+  test(
+    "Issue 35: the member's own upload names no owner",
+    () async {
+      final media = _FakeMedia([]);
+      final container = _makeContainer(
+        media: media,
+        userMedia: _FakeUserMedia([]),
+      );
+
+      await container
+          .read(avatarMutationProvider('alice').notifier)
+          .upload(
+            bytes: const [1],
+            filename: 'me.png',
+            contentType: 'image/png',
+            allowOthersToSee: false,
+          );
+
+      expect(media.uploadedOwnerUsername, isNull);
+    },
+  );
+
+  test(
+    'Issue 35: setVisibility makes the current avatar public without a new '
+    'upload, and private again',
+    () async {
+      final userMedia = _FakeUserMedia([
+        _link('older', kUserAvatarTag, 'image'),
+        _link('current', kUserAvatarTag, 'image', day: 5),
+      ]);
+      final media = _FakeMedia([
+        _media(id: 100, uuid: 'older', accessRoles: const ['self']),
+        _media(
+          id: 101,
+          uuid: 'current',
+          accessRoles: const ['self', 'admin', 'coach'],
+        ),
+      ]);
+      final container = _makeContainer(media: media, userMedia: userMedia);
+      final notifier = container.read(avatarMutationProvider('alice').notifier);
+
+      expect(
+        await container.read(avatarVisibilityProvider('alice').future),
+        isFalse,
+      );
+
+      await notifier.setVisibility(allowOthersToSee: true);
+
+      expect(media.patched, {
+        101: const ['public'],
+      });
+      expect(media.uploadedAccessRoles, isNull, reason: 'no upload');
+      expect(userMedia.attachedUuid, isNull);
+      expect(
+        await container.read(avatarVisibilityProvider('alice').future),
+        isTrue,
+      );
+
+      await notifier.setVisibility(allowOthersToSee: false);
+
+      expect(media.patched[101], const ['self', 'admin', 'coach']);
+      expect(
+        await container.read(avatarVisibilityProvider('alice').future),
+        isFalse,
+      );
+    },
+  );
+
+  test(
+    'Issue 35: setVisibility fails when the user has no avatar',
+    () async {
+      final media = _FakeMedia([]);
+      final container = _makeContainer(
+        media: media,
+        userMedia: _FakeUserMedia([]),
+      );
+
+      await expectLater(
+        container
+            .read(avatarMutationProvider('alice').notifier)
+            .setVisibility(allowOthersToSee: true),
+        throwsStateError,
+      );
+      expect(media.patched, isEmpty);
     },
   );
 }

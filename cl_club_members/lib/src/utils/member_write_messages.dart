@@ -15,6 +15,13 @@ abstract final class MemberWriteMessages {
   /// Replacing a profile photo.
   static const photoFailed = "Couldn't update the photo. Try again.";
 
+  /// Making the current profile photo public or private.
+  static const photoVisibilityFailed =
+      "Couldn't change who can see the photo. Try again.";
+
+  /// Label of the tick that makes a member's profile photo public.
+  static const allowOthersToSeePhoto = 'Allow others to see my photo';
+
   /// Approving a group join request.
   static const approveRequestFailed = 'Could not approve the request.';
 

@@ -202,9 +202,11 @@ void main() {
   );
 
   testWidgets("Issue 85: a one-off's sessions can be edited", (tester) async {
+    // A started one-off: before it starts its whole schedule is edited
+    // (club_client#37), and the timetable correction is what remains after.
     final events = await _pump(
       tester,
-      _event(EventType.oneOff, startUtc: _hoursFromNow(48)),
+      _event(EventType.oneOff, startUtc: _hoursFromNow(-1)),
     );
 
     await _openEditor(tester);
@@ -271,7 +273,7 @@ void main() {
   ) async {
     final events = await _pump(
       tester,
-      _event(EventType.oneOff, startUtc: _hoursFromNow(48)),
+      _event(EventType.oneOff, startUtc: _hoursFromNow(-1)),
     );
     events.error = StaleVersionException(
       message: 'stale',

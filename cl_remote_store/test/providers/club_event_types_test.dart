@@ -72,6 +72,7 @@ ProviderContainer _container({
   Set<EventType>? types,
 }) => ProviderContainer(
   overrides: [
+    currentUserProvider.overrideWithValue(null),
     secureClientProvider.overrideWith(
       (ref) async => fakeSecureClient(events: events, occurrences: occurrences),
     ),

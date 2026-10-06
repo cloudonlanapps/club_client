@@ -114,7 +114,7 @@ void main() {
       expect(find.text('Ongoing'), findsOneWidget);
       expect(find.text('Created'), findsOneWidget);
       expect(find.text('Last updated'), findsOneWidget);
-      expect(find.text('Deleted'), findsNothing);
+      expect(find.text('Archived'), findsNothing);
     },
   );
 
@@ -153,7 +153,7 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.text('Deleted'), findsOneWidget);
+      expect(find.text('Archived'), findsOneWidget);
     },
   );
 

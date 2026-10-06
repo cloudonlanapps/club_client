@@ -38,6 +38,10 @@ export 'src/models/evaluation_template_create_value.dart'
 export 'src/models/event_timetable_value.dart' show EventTimetableValue;
 export 'src/models/form_translated_text.dart' show FormTranslatedText;
 export 'src/models/one_off_schedule_data.dart' show OneOffScheduleData;
+export 'src/models/one_off_schedule_value.dart' show OneOffScheduleValue;
+export 'src/models/programme_end_date_value.dart' show ProgrammeEndDateValue;
+export 'src/models/programme_schedule_adjust_value.dart'
+    show ProgrammeScheduleAdjustValue;
 export 'src/models/programme_schedule_data.dart' show ProgrammeScheduleData;
 export 'src/models/session_input.dart' show SessionInput;
 export 'src/models/timetable_schedule_option.dart' show TimetableScheduleOption;
@@ -172,6 +176,16 @@ export 'src/widgets/evaluation/template/evaluation_template_create_form_fields.d
     show EvaluationTemplateCreateFormFields;
 export 'src/widgets/evaluation/template/evaluation_template_form_validators.dart'
     show EvaluationTemplateFormValidators;
+// Calling an event off: a reason and, for a camp, the session to cancel
+// from (pure UI, no SDK / no Riverpod).
+export 'src/widgets/event_cancellation/event_cancellation_form.dart'
+    show EventCancellationForm, EventCancellationFormState;
+export 'src/widgets/event_cancellation/event_cancellation_form_fields.dart'
+    show EventCancellationFormFields;
+export 'src/widgets/event_cancellation/event_cancellation_form_validators.dart'
+    show EventCancellationFormValidators;
+export 'src/widgets/event_cancellation/event_cancellation_session.dart'
+    show EventCancellationSession;
 // Event create form (pure UI, no SDK / no Riverpod). Form-local types; the
 // host adapter maps to the SDK create call at the boundary.
 export 'src/widgets/event_create/event_create_form.dart'
@@ -212,8 +226,22 @@ export 'src/widgets/event_schedule/event_timetable_form.dart'
     show EventTimetableForm, EventTimetableFormState;
 export 'src/widgets/event_schedule/event_timetable_form_validators.dart'
     show EventTimetableFormValidators;
+export 'src/widgets/event_schedule/event_venue_select_field.dart'
+    show EventVenueSelectField;
 export 'src/widgets/event_schedule/one_off_schedule_fields.dart'
     show OneOffScheduleFormField;
+export 'src/widgets/event_schedule/one_off_schedule_form.dart'
+    show OneOffScheduleForm, OneOffScheduleFormState;
+export 'src/widgets/event_schedule/one_off_schedule_form_validators.dart'
+    show OneOffScheduleFormValidators;
+export 'src/widgets/event_schedule/programme_end_date_form.dart'
+    show ProgrammeEndDateForm, ProgrammeEndDateFormState;
+export 'src/widgets/event_schedule/programme_end_date_form_validators.dart'
+    show ProgrammeEndDateFormValidators;
+export 'src/widgets/event_schedule/programme_schedule_adjust_form.dart'
+    show ProgrammeScheduleAdjustForm, ProgrammeScheduleAdjustFormState;
+export 'src/widgets/event_schedule/programme_schedule_adjust_form_validators.dart'
+    show ProgrammeScheduleAdjustFormValidators;
 export 'src/widgets/event_schedule/programme_schedule_fields.dart'
     show ProgrammeScheduleFormField;
 // Event schedule shared layout

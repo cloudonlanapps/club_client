@@ -1,5 +1,7 @@
 import 'package:cl_remote_store/src/providers/client.dart';
 import 'package:cl_remote_store/src/providers/club_event_types.dart';
+import 'package:cl_remote_store/src/providers/current_user.dart';
+import 'package:cl_remote_store/src/providers/events_master_end_date.dart';
 import 'package:cl_remote_store/src/providers/events_master_lifecycle.dart';
 import 'package:cl_remote_store/src/providers/events_master_occurrences.dart';
 import 'package:cl_remote_store/src/providers/manual_refresh.dart';
@@ -13,7 +15,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Master provider for the club's events (staff view).
 ///
 /// Holds the canonical `Map<int, Event>` of the event types the club runs
-/// ([clubEventTypesProvider]; camps alone unless configured). All event
+/// ([clubEventTypesProvider]; camps alone unless configured). For an admin
+/// the map also holds the archived (soft-deleted) events of those types
+/// (club_client#36); listings filter on `Event.isActive`. All event
 /// mutations and their occurrence mutations go through this notifier.
 /// Occurrence mutations bump `occurrencesVersion` on
 /// [clResourceVersionProvider].
@@ -25,12 +29,18 @@ clEventsMasterProvider =
 
 /// Notifier managing event state and mutations.
 class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
-    with ClEventsOccurrenceMutations, ClEventsLifecycleMutations {
+    with
+        ClEventsOccurrenceMutations,
+        ClEventsLifecycleMutations,
+        ClEventsEndDateMutations {
   @override
   Future<Map<int, Event>> build() async {
     ref.watch(clManualRefreshProvider);
     final types = ref.watch(clubEventTypesProvider);
     final client = await ref.watch(secureClientProvider.future);
+    // Watched (not read) so the build re-runs when the role lands, as in
+    // `ClGroupsMasterNotifier`.
+    final isAdmin = ref.watch(currentUserProvider)?.isAdmin ?? false;
     final items = await fetchForEventTypes(
       types,
       (type) => fetchAllPages(
@@ -41,7 +51,16 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
         ),
       ),
     );
-    return {for (final e in items) e.id: e};
+    // `GET /events/deleted` is admin-only and takes no type, so the club's
+    // types are picked here. Everyone else gets the live events alone.
+    final archived = isAdmin
+        ? await fetchAllPages(client.events.listDeletedEvents)
+        : const <Event>[];
+    return {
+      for (final e in items) e.id: e,
+      for (final e in archived)
+        if (types.contains(e.type)) e.id: e,
+    };
   }
 
   // -- Event Reads ------------------------------------------------------------
@@ -304,6 +323,8 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
 
   /// Split a programme's timetable at [effectiveDateTimeUtc]
   /// (club_core#16): the same event returns with its new current schedule.
+  /// A stale [version] reloads the event before it is rethrown
+  /// ([reloadOnStale]).
   Future<Event> updateEventForAllFuture(
     int eventId, {
     required DateTime effectiveDateTimeUtc,
@@ -318,17 +339,21 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
   }) {
     return refetchIfWriteUncertain(() async {
       final client = await ref.read(secureClientProvider.future);
-      final newEvent = await client.events.updateEventForAllFuture(
+      final sent = await currentVersionOf(eventId, version);
+      final newEvent = await reloadOnStale(
         eventId,
-        version: await currentVersionOf(eventId, version),
-        effectiveDateTimeUtc: effectiveDateTimeUtc,
-        venueId: venueId,
-        organizerName: organizerName,
-        coachNames: coachNames,
-        startTimeUtc: startTimeUtc,
-        endTimeUtc: endTimeUtc,
-        rrule: rrule,
-        sessions: sessions,
+        () => client.events.updateEventForAllFuture(
+          eventId,
+          version: sent,
+          effectiveDateTimeUtc: effectiveDateTimeUtc,
+          venueId: venueId,
+          organizerName: organizerName,
+          coachNames: coachNames,
+          startTimeUtc: startTimeUtc,
+          endTimeUtc: endTimeUtc,
+          rrule: rrule,
+          sessions: sessions,
+        ),
       );
 
       replaceLocally(newEvent);

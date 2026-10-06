@@ -14,17 +14,25 @@ import '../models/event_filter.dart';
 ///
 /// Set [filterByVisibility] to `true` to expose the visibility selector
 /// (admin / coach contexts). When `false`, only the include-past switch
-/// is shown.
+/// is shown. Set [showArchivedToggle] to `true` to add the Show archived
+/// switch (admin event lists, club_client#36).
 class EventFilterPopover extends StatefulWidget {
   const EventFilterPopover({
     required this.initial,
     required this.onChanged,
     this.filterByVisibility = false,
+    this.showArchivedToggle = false,
     super.key,
   });
 
+  /// Label of the switch that adds archived events to the list.
+  static const String showArchivedLabel = 'Show archived';
+
   final EventFilter initial;
   final bool filterByVisibility;
+
+  /// Whether the Show archived switch is offered.
+  final bool showArchivedToggle;
   final ValueChanged<EventFilter> onChanged;
 
   @override
@@ -58,6 +66,7 @@ class EventFilterPopoverState extends State<EventFilterPopover> {
     var count = 0;
     if (widget.filterByVisibility && filter.visibility != null) count++;
     if (!filter.includePast) count++;
+    if (widget.showArchivedToggle && filter.showArchived) count++;
     return count;
   }
 
@@ -130,6 +139,23 @@ class EventFilterPopoverState extends State<EventFilterPopover> {
                   ),
                 ],
               ),
+              if (widget.showArchivedToggle) ...[
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      EventFilterPopover.showArchivedLabel,
+                      style: theme.textTheme.small,
+                    ),
+                    ShadSwitch(
+                      value: filter.showArchived,
+                      onChanged: (value) =>
+                          update(filter.copyWith(showArchived: value)),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),

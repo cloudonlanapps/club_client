@@ -118,6 +118,7 @@ ProviderContainer _container({
   final container = ProviderContainer(
     overrides: [
       clubEventTypesProvider.overrideWithValue(EventType.values.toSet()),
+      currentUserProvider.overrideWithValue(null),
       secureClientProvider.overrideWith(
         (ref) async => fakeSecureClient(
           capabilities: FakeCapabilities(creditSystem: creditSystem),

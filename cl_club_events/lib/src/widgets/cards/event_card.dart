@@ -21,7 +21,8 @@ import 'event_schedule_lines.dart';
 /// otherwise the temporal status — Ongoing / Coming Soon / Ended /
 /// Cancelled / Rescheduled), and mounts the right action resolver.
 /// Status wording matches the event-details audit card via
-/// [eventDisplayStatusLabel].
+/// [eventDisplayStatusLabel]. An archived event reads [archivedCaption]
+/// and offers no actions (club_client#36).
 ///
 /// Data sourcing:
 ///   * `username == null` → admin lens. Event from `clEventsMasterProvider`.
@@ -38,6 +39,9 @@ class EventCard extends ConsumerWidget {
     this.memberEligible = true,
     super.key,
   });
+
+  /// Caption of an archived (soft-deleted) event.
+  static const String archivedCaption = 'Archived';
 
   final int eventId;
 
@@ -66,7 +70,7 @@ class EventCard extends ConsumerWidget {
       );
     }
 
-    final caption = _captionFor(ref, event);
+    final caption = event.isActive ? _captionFor(ref, event) : archivedCaption;
     final coverUrl = ref.watch(eventCoverImageProvider(event.id)).value;
     final headers = ref.watch(imageAuthHeadersProvider).value ?? const {};
     final image = coverUrl != null
@@ -81,6 +85,7 @@ class EventCard extends ConsumerWidget {
       onTap: onTap,
     );
 
+    if (!event.isActive) return card(const []);
     if (username == null) {
       if (onEnrollments == null) return card(const []);
       return AdminEventActions(

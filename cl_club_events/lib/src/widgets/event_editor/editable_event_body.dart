@@ -14,19 +14,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
     show
-        ActionButton,
         ConfirmImagePicker,
         EditableMarkdown,
         EditableSectionCard,
-        EventFormValidators,
         ImageUploadAffordance,
         OrganizerCoachesEditor,
         OrganizerCoachesEditorState,
         PickedImage,
         PickerUser,
-        RenameForm,
-        RenameFormState,
-        TwoColumnGrid,
         pickImageReportingErrors,
         showUserSelectionDialog;
 
@@ -39,13 +34,15 @@ import '../events_preview/cl_event_hero.dart';
 import '../events_preview/cl_event_pending_requests.dart';
 import '../events_preview/cl_event_venue_detail.dart';
 import 'event_eligibility_card.dart';
+import 'event_management_section.dart';
 import 'event_schedule_section.dart';
 
 /// Editable body for an event detail page, shown to whoever may manage the
 /// event (an admin or its organizer, `canManageEvent`), mirroring
 /// `VenueProfileView`: cover image (avatar-style media upload on the hero),
 /// description (markdown), eligibility / organizer (section editors), gallery
-/// (media-link tiles), flags (live toggles), and rename (management section).
+/// (media-link tiles), flags (live toggles), and the management actions
+/// ([EventManagementSection]).
 /// Cover & gallery use the v2 media-link flow; the legacy `galleryUris`
 /// field is no longer read. The schedule section depends on the event type
 /// ([EventScheduleSection]); the venue stays read-only here.
@@ -58,6 +55,7 @@ class EditableEventBody extends ConsumerWidget {
     this.onManageEnrolments,
     this.onMemberTap,
     this.onPublicProfileTap,
+    this.onDeleted,
     super.key,
   });
 
@@ -70,6 +68,9 @@ class EditableEventBody extends ConsumerWidget {
 
   /// Opens a coach's public profile by `publicId` (opted-in coaches only).
   final ValueChanged<String>? onPublicProfileTap;
+
+  /// Leaves the page once the event has been deleted (Event Management).
+  final VoidCallback? onDeleted;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -101,7 +102,11 @@ class EditableEventBody extends ConsumerWidget {
             onVenueTap: onVenueTap,
           ),
           const SizedBox(height: 16),
-          EventManagementSection(event: event),
+          EventManagementSection(
+            event: event,
+            currentUser: currentUser,
+            onDeleted: onDeleted,
+          ),
           const SizedBox(height: 16),
           ClEventPendingRequests(
             eventId: event.id,
@@ -654,126 +659,4 @@ class EventFlagsCardState extends ConsumerState<EventFlagsCard> {
       ),
     );
   }
-}
-
-/// Management actions — Rename, via the shared [RenameForm] in a dialog.
-class EventManagementSection extends ConsumerStatefulWidget {
-  const EventManagementSection({required this.event, super.key});
-
-  final Event event;
-
-  @override
-  ConsumerState<EventManagementSection> createState() =>
-      EventManagementSectionState();
-}
-
-class EventManagementSectionState
-    extends ConsumerState<EventManagementSection> {
-  bool isBusy = false;
-
-  Future<void> handleRename() async {
-    final newName = await _showEventRenameDialog(context, widget.event.title);
-    if (newName == null || !mounted) return;
-    setState(() => isBusy = true);
-    try {
-      await EventFormSubmit.updateTitle(
-        eventId: widget.event.id,
-        title: newName,
-        notifier: ref.read(clEventsMasterProvider.notifier),
-      );
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        const ShadToast(description: Text('Event renamed.')),
-      );
-    } on Object catch (e, st) {
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        ShadToast.destructive(
-          description: Text(
-            eventSaveErrorMessage(
-              e,
-              stackTrace: st,
-              fallback: 'Could not rename event. Please try again.',
-            ),
-          ),
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => isBusy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
-    final buttons = <Widget>[
-      ActionButton(label: 'Rename', onPressed: isBusy ? null : handleRename),
-    ];
-    while (buttons.length < 4) {
-      buttons.add(
-        const IgnorePointer(
-          child: Opacity(opacity: 0, child: ActionButton(label: '')),
-        ),
-      );
-    }
-    return ShadCard(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Event Management', style: theme.textTheme.h4),
-          const SizedBox(height: 12),
-          TwoColumnGrid(
-            spacing: 8,
-            runSpacing: 8,
-            singleColumnBreakpoint: 0,
-            children: buttons,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Hosts the shared [RenameForm] in a dialog. Resolves to the trimmed new
-/// title, or `null` on Cancel / dismiss / no-op (title unchanged).
-Future<String?> _showEventRenameDialog(
-  BuildContext context,
-  String initialTitle,
-) {
-  final formKey = GlobalKey<RenameFormState>();
-  return showShadDialog<String?>(
-    context: context,
-    builder: (dialogContext) {
-      void save() {
-        final value = formKey.currentState?.validate();
-        if (value == null) return;
-        Navigator.of(
-          dialogContext,
-        ).pop(value == initialTitle.trim() ? null : value);
-      }
-
-      return ShadDialog(
-        title: const Text('Rename event'),
-        actions: [
-          ShadButton.outline(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          ShadButton(onPressed: save, child: const Text('Save')),
-        ],
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: RenameForm(
-            key: formKey,
-            initialValue: initialTitle,
-            label: 'Event name',
-            placeholder: 'e.g., Summer Skating Camp',
-            validator: EventFormValidators.title,
-            onSubmitted: save,
-          ),
-        ),
-      );
-    },
-  );
 }

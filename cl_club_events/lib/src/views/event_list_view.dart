@@ -83,12 +83,16 @@ class EventListViewState extends ConsumerState<EventListView> {
   }
 
   bool get hasActiveFilters =>
-      searchTerm.isNotEmpty || !filter.includePast || filter.visibility != null;
+      searchTerm.isNotEmpty ||
+      !filter.includePast ||
+      filter.visibility != null ||
+      filter.showArchived;
 
   EventListFilter buildFilter() => EventListFilter(
     eventType: widget.eventType,
     visibility: filter.visibility,
     includePast: filter.includePast,
+    showArchived: filter.showArchived,
     searchTerm: searchTerm.isEmpty ? null : searchTerm,
   );
 
@@ -99,8 +103,8 @@ class EventListViewState extends ConsumerState<EventListView> {
 
     final listFilter = buildFilter();
     final eventList = ref.watch(eventListProvider(listFilter));
-    final canCreate =
-        ref.watch(authStateProvider).valueOrNull?.isCoachOrAdmin ?? false;
+    final viewer = ref.watch(authStateProvider).valueOrNull;
+    final canCreate = viewer?.isCoachOrAdmin ?? false;
     final showCreate = canCreate && widget.onCreateNew != null;
 
     return Column(
@@ -128,6 +132,7 @@ class EventListViewState extends ConsumerState<EventListView> {
                   EventFilterPopover(
                     initial: filter,
                     filterByVisibility: true,
+                    showArchivedToggle: viewer?.isAdmin ?? false,
                     onChanged: (next) => setState(() => filter = next),
                   ),
                   if (showCreate) ...[

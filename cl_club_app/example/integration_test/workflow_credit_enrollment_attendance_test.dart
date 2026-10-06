@@ -21,8 +21,10 @@
 //  5. m2 accepts. Admin then reverses m2's credit (↶) so m2 is on the
 //     register with no credit and no record (for #99 below).
 //  5a/6. Assign Trial: m3 (1 general credit only) is blocked; the
-//     add-credit chip opens m3's credit view with trial credit pre-filled;
-//     once saved m3 is selectable and is assigned a trial (#105, #114).
+//     add-credit chip opens Add credit alone over the picker, with trial
+//     credit pre-filled and no sheet (club_client#41); once saved the
+//     picker shows m3's trial credit, m3 is selectable and is assigned a
+//     trial (#105, #114).
 //  5b. m4 (no credit) sees Request to Join greyed (#97); funded, m4 asks;
 //     admin reverses it, so Approve is greyed with 🪙 0 (#105); funded
 //     again from the chip, Approve goes through.
@@ -47,7 +49,6 @@
 import 'package:cl_club_communication/src/views/notifications_list_view.dart'
     show NotificationsListView;
 import 'package:cl_club_credits/src/views/credit_view.dart' show CreditView;
-import 'package:cl_club_credits/src/widgets/credit_chip.dart' show CreditChip;
 import 'package:cl_club_events/src/models/enrollment_category.dart'
     show EnrollmentCategory, categoryFor;
 import 'package:cl_club_events/src/views/event_enrolments_view.dart'
@@ -322,25 +323,32 @@ void main() {
         () => addChip.evaluate().isNotEmpty,
         description: 'm3 blocked for a trial: general credit does not fund it',
       );
-      // Every unfunded member shows one; take m3's.
-      final m3Chip = find.descendant(
-        of: find.byWidgetPredicate(
-          (w) => w is CreditChip && w.username == _kM3,
-        ),
-        matching: find.byType(CreditCountChip),
+      // Every unfunded member shows one; m3's opens Add credit alone, over
+      // the picker, pre-filled with this programme as a trial
+      // (club_client#41).
+      await addCreditFromAddChip(
+        tester,
+        username: _kM3,
+        within: find.byType(AssignTrialDialogContent),
+        credits: 1,
+        programmeId: _programmeId,
+        trial: true,
       );
-      tester.widget<CreditCountChip>(m3Chip).onTap!();
-      await settle(tester);
-      // Add credit opens pre-filled with this programme, as a trial.
-      await addCreditInSheet(tester, credits: 1);
-      await closeCreditSheet(tester);
+      expect(
+        find.byType(AssignTrialDialogContent),
+        findsOneWidget,
+        reason: 'back in the trial picker once the credit is saved',
+      );
       await waitFor(
         tester,
-        () => find
-            .byWidgetPredicate((w) => w is CreditChip && w.username == _kM3)
-            .evaluate()
-            .isEmpty,
-        description: 'm3 selectable once trial credit is added',
+        () =>
+            chipCredits(
+              tester,
+              _kM3,
+              within: find.byType(AssignTrialDialogContent),
+            ) ==
+            1,
+        description: 'the picker to show the trial credit m3 was given',
       );
       await tester.tap(
         find.descendant(

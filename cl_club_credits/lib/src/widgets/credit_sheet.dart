@@ -3,35 +3,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../models/credit_grant_prefill.dart';
 import '../views/credit_view.dart';
 
 /// The widest the credit sheet grows on a large screen.
 const double creditSheetMaxWidth = 520;
 
 /// Opens [username]'s credit view in a full-height sheet (club_core#102):
-/// the one place a `CreditChip` leads. A modal the chip itself opens, so no
-/// route is involved, it works over a dialog, and closing it returns to the
-/// same screen, already refreshed through `creditsVersion`.
-Future<void> showCreditSheet(
-  BuildContext context, {
-  required String username,
-  CreditGrantPrefill? grantPrefill,
-}) {
+/// where a `CreditChip` showing a number leads. A modal the chip itself
+/// opens, so no route is involved, it works over a dialog, and closing it
+/// returns to the same screen, already refreshed through `creditsVersion`.
+/// The view's actions open inside it, so it is the top of the stack
+/// (club_client#41).
+Future<void> showCreditSheet(BuildContext context, {required String username}) {
   return showShadSheet<void>(
     context: context,
     side: ShadSheetSide.right,
-    builder: (context) =>
-        CreditSheet(username: username, grantPrefill: grantPrefill),
+    builder: (context) => CreditSheet(username: username),
   );
 }
 
 /// The sheet [showCreditSheet] opens: the viewer from auth, and the view.
 class CreditSheet extends ConsumerWidget {
-  const CreditSheet({required this.username, this.grantPrefill, super.key});
+  const CreditSheet({required this.username, super.key});
 
   final String username;
-  final CreditGrantPrefill? grantPrefill;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,11 +44,7 @@ class CreditSheet extends ConsumerWidget {
         height: size.height,
         child: viewer == null
             ? const Center(child: CircularProgressIndicator())
-            : CreditView(
-                currentUser: viewer,
-                username: username,
-                grantPrefill: grantPrefill,
-              ),
+            : CreditView(currentUser: viewer, username: username),
       ),
     );
   }

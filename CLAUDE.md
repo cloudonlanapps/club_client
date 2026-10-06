@@ -130,11 +130,26 @@ Credit has exactly two UI pieces (#101, #102):
   renders nothing unless `creditSystemProvider` is `true` (never guess; no
   credit call otherwise). Tapping it opens the member's `CreditView` in a
   full-height `ShadSheet` (`showCreditSheet`): a modal the chip opens, so no
-  route plumbing, and it works over dialogs. `CreditChip.add` opens it with
-  Add credit pre-filled (the pickers).
+  route plumbing, and it works over dialogs. `CreditChip.add`, the "+" chip
+  of a member a picker cannot fund, does **not** open the sheet: it opens Add
+  credit alone in a dialog over the picker (`showCreditGrantDialog`),
+  pre-filled with the programme and trial flag (club_client#41). In the
+  pickers (Assign Users, Assign Trial) a member with no usable credit shows
+  two chips side by side: the coin and `0` (a number chip, so it opens the
+  sheet) and then "+". A funded member shows the number chip only; once "+"
+  is saved the row turns into that form.
 - **`CreditView`** — usable total, packages, statement (server `totalAfter`,
   never recomputed), and admin-only actions. `/memberzone/credit/:username`
   (`CreditScreen`) mounts it only for the `credit.released` deep link.
+
+Credit actions open in place (club_client#41): Add credit, Extend, Reverse and
+Transfer show their form inside the view (`CreditActionForm.inPlace` in a
+`CreditActionPanel`, with Cancel and Save) in place of the packages and the
+statement, which return when the form closes. The view pushes no dialog and
+opens nothing when it mounts, so from a chip inside a dialog the deepest stack
+is that dialog and the sheet. `CreditActionForm` is the one connected host of
+the four `ui_lib` forms; `CreditActionDialog` hosts Add credit for the "+"
+chip only.
 
 Rules: actions credit forbids are greyed out up front — `ActionItem.reason`
 carries the chip beside the disabled action — never tried and then shown as

@@ -11,10 +11,10 @@ import 'package:club_sdk_2/club_sdk_2.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/credit_grant_prefill.dart';
+import '../models/credit_action_kind.dart';
 import '../widgets/credit_account_menu.dart';
 import '../widgets/credit_account_row.dart';
-import '../widgets/credit_action_launchers.dart';
+import '../widgets/credit_action_form.dart';
 import '../widgets/credit_entry_row.dart';
 import '../widgets/credit_header.dart';
 
@@ -23,13 +23,14 @@ import '../widgets/credit_header.dart';
 ///
 /// Readable by the member (their own) and by staff (anyone). Only an admin
 /// sees actions: Add credit, and per package Extend, Reverse and Transfer.
-/// Every action refreshes the whole view, the member's chips and the
-/// programme rosters through `creditsVersion`.
+/// An action's form shows in place of the packages and the statement, with
+/// Cancel and Save, and they return when it closes: nothing is pushed over
+/// the view (club_client#41). Every action refreshes the whole view, the
+/// member's chips and the programme rosters through `creditsVersion`.
 class CreditView extends ConsumerStatefulWidget {
   const CreditView({
     required this.currentUser,
     required this.username,
-    this.grantPrefill,
     super.key,
   });
 
@@ -37,10 +38,6 @@ class CreditView extends ConsumerStatefulWidget {
 
   /// The member whose credit this is.
   final String username;
-
-  /// Opens Add credit at once, pre-filled, when an admin arrives to fund
-  /// the member (club_core#105).
-  final CreditGrantPrefill? grantPrefill;
 
   @override
   ConsumerState<CreditView> createState() => CreditViewState();
@@ -52,36 +49,31 @@ class CreditViewState extends ConsumerState<CreditView> {
 
   bool get isAdmin => widget.currentUser.isAdmin;
 
-  @override
-  void initState() {
-    super.initState();
-    final prefill = widget.grantPrefill;
-    if (prefill != null && isAdmin) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        unawaited(
-          showCreditGrantDialog(
-            context,
-            ref,
-            username: widget.username,
-            programmeId: prefill.programmeId,
-            trial: prefill.trial,
-          ),
-        );
+  /// The action whose form is showing in place; null shows the packages
+  /// and the statement.
+  CreditActionKind? openAction;
+
+  /// The package [openAction] acts on; null for Add credit.
+  CreditAccount? openAccount;
+
+  void openActionForm(CreditActionKind kind, [CreditAccount? account]) =>
+      setState(() {
+        openAction = kind;
+        openAccount = account;
       });
-    }
-  }
+
+  void closeActionForm() => setState(() {
+    openAction = null;
+    openAccount = null;
+  });
 
   CreditAccountMenu? menuFor(CreditAccount account) {
     if (!isAdmin || !CreditAccountMenu.hasActions(account)) return null;
     return CreditAccountMenu(
       account: account,
-      onExtend: () =>
-          unawaited(showCreditExtendDialog(context, ref, account: account)),
-      onReverse: () =>
-          unawaited(showCreditReverseDialog(context, ref, account: account)),
-      onTransfer: () =>
-          unawaited(showCreditTransferDialog(context, ref, account: account)),
+      onExtend: () => openActionForm(CreditActionKind.extend, account),
+      onReverse: () => openActionForm(CreditActionKind.reverse, account),
+      onTransfer: () => openActionForm(CreditActionKind.transfer, account),
     );
   }
 
@@ -93,6 +85,27 @@ class CreditViewState extends ConsumerState<CreditView> {
       'CreditView for ${widget.username} opened by '
       '${widget.currentUser.username}, who is neither the member nor staff.',
     );
+    final action = openAction;
+    if (action != null && isAdmin) {
+      return ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: CreditHeader(
+              currentUser: widget.currentUser,
+              username: widget.username,
+            ),
+          ),
+          CreditActionForm.inPlace(
+            kind: action,
+            username: widget.username,
+            account: openAccount,
+            onClose: closeActionForm,
+          ),
+        ],
+      );
+    }
     final accounts =
         ref
             .watch(clCreditAccountsMasterProvider(widget.username))
@@ -137,13 +150,7 @@ class CreditViewState extends ConsumerState<CreditView> {
               currentUser: widget.currentUser,
               username: widget.username,
               onAddCredit: isAdmin
-                  ? () => unawaited(
-                      showCreditGrantDialog(
-                        context,
-                        ref,
-                        username: widget.username,
-                      ),
-                    )
+                  ? () => openActionForm(CreditActionKind.grant)
                   : null,
             ),
           );

@@ -20,9 +20,12 @@ class AssignTrialResult {
 /// reaches the dialog for a wrong-typed event is caught in debug builds.
 ///
 /// On a programme with credit on, a member without usable trial credit is
-/// not selectable and shows an add-credit chip that opens their credit view
-/// with trial credit for this programme pre-filled (club_core#105); once
-/// funded, the member becomes selectable in place.
+/// not selectable and shows a zero credit chip (it opens their credit view)
+/// beside an add-credit chip that opens Add credit alone,
+/// over this dialog, with trial credit for this programme pre-filled
+/// (club_core#105, club_client#41); once funded, the member becomes
+/// selectable in place and shows that trial credit, on a chip that opens
+/// their credit view.
 Future<AssignTrialResult?> showAssignTrialDialog(
   BuildContext context, {
   required int eventId,
@@ -69,7 +72,7 @@ class AssignTrialDialogContentState
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
     final userListAsync = ref.watch(clUsersMasterProvider);
-    final blocked = unfundedForTrial();
+    final trialCredits = usableTrialCredits();
 
     return ShadDialog(
       title: const Text('Assign Trial'),
@@ -128,14 +131,20 @@ class AssignTrialDialogContentState
                     runSpacing: 8,
                     children: [
                       for (final user in available)
-                        if (blocked.contains(user.username))
+                        if ((trialCredits[user.username] ?? 1) < 1)
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             spacing: 4,
                             children: [
-                              Opacity(
-                                opacity: 0.5,
-                                child: buildUserTile(context, user, null),
+                              Flexible(
+                                child: Opacity(
+                                  opacity: 0.5,
+                                  child: buildUserTile(context, user, null),
+                                ),
+                              ),
+                              CreditChip(
+                                username: user.username,
+                                credits: trialCredits[user.username],
                               ),
                               CreditChip.add(
                                 username: user.username,
@@ -147,12 +156,25 @@ class AssignTrialDialogContentState
                             ],
                           )
                         else
-                          buildUserTile(
-                            context,
-                            user,
-                            () => Navigator.of(context).pop(
-                              AssignTrialResult(username: user.username),
-                            ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            spacing: 4,
+                            children: [
+                              Flexible(
+                                child: buildUserTile(
+                                  context,
+                                  user,
+                                  () => Navigator.of(context).pop(
+                                    AssignTrialResult(username: user.username),
+                                  ),
+                                ),
+                              ),
+                              if (trialCredits[user.username] != null)
+                                CreditChip(
+                                  username: user.username,
+                                  credits: trialCredits[user.username],
+                                ),
+                            ],
                           ),
                     ],
                   ),
@@ -165,22 +187,21 @@ class AssignTrialDialogContentState
     );
   }
 
-  /// Members with no usable trial credit for this programme, when credit
-  /// is on; empty otherwise, so nothing is blocked (club_core#105, R53).
-  Set<String> unfundedForTrial() {
+  /// Each member's usable trial credit for this programme, when credit is
+  /// on; empty otherwise, so nothing is blocked (club_core#105, R53). A
+  /// member with none cannot be given a trial.
+  Map<String, int> usableTrialCredits() {
     if (ref.watch(creditSystemProvider) != true) return const {};
     final accounts = ref.watch(clUsableCreditAccountsProvider).valueOrNull;
     if (accounts == null) return const {};
     final users = ref.watch(clUsersMasterProvider).valueOrNull ?? const {};
     return {
       for (final username in users.keys)
-        if (usableCreditsFor(
-              accounts[username] ?? const <CreditAccount>[],
-              eventId: widget.eventId,
-              trial: true,
-            ) <
-            1)
-          username,
+        username: usableCreditsFor(
+          accounts[username] ?? const <CreditAccount>[],
+          eventId: widget.eventId,
+          trial: true,
+        ),
     };
   }
 

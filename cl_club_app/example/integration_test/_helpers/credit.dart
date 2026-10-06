@@ -6,8 +6,10 @@
 //     CreditChip after the name; lands on the CreditView sheet.
 //   * closeCreditSheet — dismiss the sheet (modal pop).
 //   * sheetTotal / statementTotals — read what the sheet shows.
-//   * addCreditInSheet / transferInSheet / reverseInSheet — drive the
-//     admin actions and their dialogs.
+//   * addCreditInSheet / packageActionInSheet — drive the admin actions,
+//     whose forms open in place inside the sheet (club_client#41).
+//   * addCreditFromAddChip — tap a picker's "+" chip and save the Add
+//     credit dialog it opens alone, with no sheet (club_client#41).
 //   * chipCredits — the number on a CreditChip for a member, if shown.
 //   * pickerTile — a picker tile (Assign / Assign Trial) by username.
 
@@ -18,6 +20,8 @@ import 'package:cl_club_credits/src/widgets/credit_account_row.dart'
     show CreditAccountRow;
 import 'package:cl_club_credits/src/widgets/credit_action_dialog.dart'
     show CreditActionDialog;
+import 'package:cl_club_credits/src/widgets/credit_action_panel.dart'
+    show CreditActionPanel;
 import 'package:cl_club_credits/src/widgets/credit_chip.dart' show CreditChip;
 import 'package:cl_club_credits/src/widgets/credit_entry_row.dart'
     show CreditEntryRow;
@@ -28,7 +32,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
-    show CreditCountChip, CreditFormFields, UserSelectionTile;
+    show CreditCountChip, CreditFormFields, CreditGrantForm, UserSelectionTile;
 
 import 'auth.dart';
 import 'forms.dart';
@@ -110,9 +114,8 @@ List<int> statementAmounts(WidgetTester tester) => [
     row.entry.amount,
 ];
 
-/// Opens Add credit in the sheet (or uses a dialog already open, e.g. a
-/// pre-filled one), fills it and saves. [programmeId] null keeps what the
-/// form holds (General unless pre-filled).
+/// Opens Add credit in the sheet, fills the form it shows in place and
+/// saves. [programmeId] null keeps what the form holds (General).
 Future<void> addCreditInSheet(
   WidgetTester tester, {
   required int credits,
@@ -120,16 +123,19 @@ Future<void> addCreditInSheet(
   bool? trial,
   String reason = 'workflow credit',
 }) async {
-  if (find.byType(CreditActionDialog).evaluate().isEmpty) {
-    invokeShadButton(
-      tester,
-      find.widgetWithText(ShadButton, 'Add credit'),
-      reason: 'Add credit',
-    );
-    await settle(tester);
-  }
-  await fillCreditDialog(
+  invokeShadButton(
     tester,
+    find.descendant(
+      of: find.byType(CreditView),
+      matching: find.widgetWithText(ShadButton, 'Add credit'),
+    ),
+    reason: 'Add credit',
+  );
+  await settle(tester);
+  expectNoCreditDialogOverSheet();
+  await fillCreditForm(
+    tester,
+    host: find.byType(CreditActionPanel),
     text: {
       CreditFormFields.creditsId: '$credits',
       CreditFormFields.reasonId: reason,
@@ -141,8 +147,65 @@ Future<void> addCreditInSheet(
   );
 }
 
+/// Taps the "+" chip of [username] under [within] (a picker) and saves the
+/// Add credit dialog it opens: alone over the picker, with no credit sheet,
+/// pre-filled with [programmeId] and [trial] (club_client#41).
+Future<void> addCreditFromAddChip(
+  WidgetTester tester, {
+  required String username,
+  required Finder within,
+  required int credits,
+  required int programmeId,
+  required bool trial,
+  String reason = 'workflow credit',
+}) async {
+  final chip = find.descendant(
+    of: find.descendant(
+      of: within,
+      matching: find.byWidgetPredicate(
+        (w) => w is CreditChip && w.username == username,
+      ),
+    ),
+    matching: find.byWidgetPredicate((w) => w is CreditCountChip && w.add),
+  );
+  await waitFor(
+    tester,
+    () => chip.evaluate().isNotEmpty,
+    description: 'the add-credit chip of $username',
+  );
+  tester.widget<CreditCountChip>(chip).onTap!();
+  await settle(tester);
+  final dialog = find.byType(CreditActionDialog);
+  await waitFor(
+    tester,
+    () => dialog.evaluate().isNotEmpty,
+    description: 'Add credit to open for $username',
+  );
+  expect(
+    find.byType(CreditView),
+    findsNothing,
+    reason: 'the "+" chip opens Add credit alone, with no sheet behind it',
+  );
+  final prefilled = tester
+      .widget<CreditGrantForm>(
+        find.descendant(of: dialog, matching: find.byType(CreditGrantForm)),
+      )
+      .initialValues;
+  expect(prefilled[CreditFormFields.programmeId], programmeId);
+  expect(prefilled[CreditFormFields.trialId], trial);
+  await fillCreditForm(
+    tester,
+    host: dialog,
+    text: {
+      CreditFormFields.creditsId: '$credits',
+      CreditFormFields.reasonId: reason,
+    },
+  );
+}
+
 /// Opens [action] ("Extend", "Reverse", "Transfer") on the sheet's package
-/// matching [where], fills it with [text] and saves.
+/// matching [where], fills the form it shows in place with [text] and
+/// saves.
 Future<void> packageActionInSheet(
   WidgetTester tester, {
   required bool Function(CreditAccount account) where,
@@ -173,25 +236,39 @@ Future<void> packageActionInSheet(
     reason: action,
   );
   await settle(tester);
-  await fillCreditDialog(tester, text: text);
+  expectNoCreditDialogOverSheet();
+  await fillCreditForm(
+    tester,
+    host: find.byType(CreditActionPanel),
+    text: text,
+  );
 }
 
-/// Fills the open credit dialog's text fields [text] and form [values],
-/// then saves and waits for it to close.
-Future<void> fillCreditDialog(
+/// A credit action opened in the sheet pushes no dialog over it
+/// (club_client#41).
+void expectNoCreditDialogOverSheet() => expect(
+  find.byType(CreditActionDialog),
+  findsNothing,
+  reason: 'credit actions open inside the sheet, not in a dialog over it',
+);
+
+/// Fills the credit form shown in [host] (the in-place panel of the sheet,
+/// or the Add credit dialog): its text fields [text] and form [values].
+/// Then saves and waits for the form to close.
+Future<void> fillCreditForm(
   WidgetTester tester, {
+  required Finder host,
   Map<String, String> text = const {},
   Map<String, dynamic> values = const {},
 }) async {
-  final dialog = find.byType(CreditActionDialog);
   await waitFor(
     tester,
-    () => dialog.evaluate().isNotEmpty,
-    description: 'a credit dialog to open',
+    () => host.evaluate().isNotEmpty,
+    description: 'a credit form to open',
   );
   for (final entry in text.entries) {
     final field = find.descendant(
-      of: dialog,
+      of: host,
       matching: find.byWidgetPredicate(
         (w) => w is ShadInputFormField && w.id == entry.key,
       ),
@@ -201,7 +278,7 @@ Future<void> fillCreditDialog(
   if (values.isNotEmpty) {
     tester
         .state<ShadFormState>(
-          find.descendant(of: dialog, matching: find.byType(ShadForm)),
+          find.descendant(of: host, matching: find.byType(ShadForm)),
         )
         .setValue(values);
   }
@@ -209,10 +286,10 @@ Future<void> fillCreditDialog(
   invokeShadButton(
     tester,
     find.descendant(
-      of: dialog,
+      of: host,
       matching: find.widgetWithText(ShadButton, 'Save'),
     ),
-    reason: 'credit dialog Save',
+    reason: 'credit form Save',
   );
   await settle(tester);
   await waitFor(
@@ -220,9 +297,9 @@ Future<void> fillCreditDialog(
     () {
       final toast = firstErrorToastMessage(tester);
       if (toast != null) throw TestFailure('credit action refused: $toast');
-      return dialog.evaluate().isEmpty;
+      return host.evaluate().isEmpty;
     },
-    description: 'the credit dialog to close after saving',
+    description: 'the credit form to close after saving',
   );
 }
 

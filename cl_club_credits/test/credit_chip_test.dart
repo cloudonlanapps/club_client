@@ -1,6 +1,10 @@
 import 'package:cl_club_credits/cl_club_credits.dart';
+import 'package:cl_club_credits/src/widgets/credit_action_dialog.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show CreditCountChip;
+import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart'
+    show CreditCountChip, CreditFormFields, CreditGrantForm;
 
 import 'support/credit_test_scope.dart';
 
@@ -77,6 +81,135 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(CreditView), findsOneWidget);
+    });
+  });
+
+  group('Issue 41: the "+" chip opens Add credit alone', () {
+    const programme = 9;
+
+    Future<RouteStack> pumpAddChip(
+      WidgetTester tester, {
+      required bool trial,
+      StubAccounts Function()? accountsNotifier,
+    }) async {
+      final routes = RouteStack();
+      await tester.binding.setSurfaceSize(const Size(900, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        creditScope(
+          user: viewer('an_admin', admin: true),
+          routes: routes,
+          accountsNotifier: accountsNotifier,
+          child: CreditChip.add(
+            username: _member,
+            grantPrefill: (programmeId: programme, trial: trial),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(CreditCountChip));
+      await tester.pumpAndSettle();
+      return routes;
+    }
+
+    for (final trial in [false, true]) {
+      testWidgets('Issue 41: Add credit opens in a dialog with no sheet '
+          'behind it, pre-filled (trial: $trial)', (tester) async {
+        final routes = await pumpAddChip(tester, trial: trial);
+
+        expect(routes.depth, 1);
+        expect(find.byType(CreditView), findsNothing);
+        expect(find.byType(ShadSheet), findsNothing);
+        expect(find.byType(CreditActionDialog), findsOneWidget);
+        final values = tester
+            .widget<CreditGrantForm>(find.byType(CreditGrantForm))
+            .initialValues;
+        expect(values[CreditFormFields.programmeId], programme);
+        expect(values[CreditFormFields.trialId], trial);
+      });
+    }
+
+    testWidgets('Issue 41: Save adds the pre-filled credit and closes the '
+        'dialog', (tester) async {
+      late StubAccounts stub;
+      final routes = await pumpAddChip(
+        tester,
+        trial: true,
+        accountsNotifier: () => stub = StubAccounts(const {}),
+      );
+
+      Future<void> enter(String id, String text) => tester.enterText(
+        find.byWidgetPredicate((w) => w is ShadInputFormField && w.id == id),
+        text,
+      );
+      await enter(CreditFormFields.creditsId, '2');
+      await enter(CreditFormFields.reasonId, 'trial');
+      await tester.tap(find.widgetWithText(ShadButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      expect(stub.opened, ['$_member 2 $programme true trial']);
+      expect(routes.depth, 0);
+      expect(find.byType(CreditActionDialog), findsNothing);
+    });
+
+    testWidgets('Issue 41: a chip that shows a number opens the credit '
+        'sheet', (tester) async {
+      final routes = RouteStack();
+      await tester.pumpWidget(
+        creditScope(
+          user: viewer(_member),
+          routes: routes,
+          child: const CreditChip(username: _member, credits: 3),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(CreditCountChip));
+      await tester.pumpAndSettle();
+
+      expect(routes.depth, 1);
+      expect(find.byType(ShadSheet), findsOneWidget);
+      expect(find.byType(CreditView), findsOneWidget);
+      expect(find.byType(CreditActionDialog), findsNothing);
+    });
+
+    testWidgets('Issue 41: a chip that shows zero opens the credit sheet, '
+        'and "+" beside it opens Add credit alone', (tester) async {
+      final routes = RouteStack();
+      await tester.binding.setSurfaceSize(const Size(900, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        creditScope(
+          user: viewer('an_admin', admin: true),
+          routes: routes,
+          child: const Row(
+            children: [
+              CreditChip(username: _member, credits: 0),
+              CreditChip.add(
+                username: _member,
+                grantPrefill: (programmeId: programme, trial: false),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsLabel('Credit 0'), findsOneWidget);
+      expect(find.bySemanticsLabel('Add credit'), findsOneWidget);
+
+      await tester.tap(find.bySemanticsLabel('Credit 0'));
+      await tester.pumpAndSettle();
+      expect(routes.depth, 1);
+      expect(find.byType(CreditView), findsOneWidget);
+      expect(find.byType(CreditActionDialog), findsNothing);
+      Navigator.of(tester.element(find.byType(CreditView))).pop();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsLabel('Add credit'));
+      await tester.pumpAndSettle();
+      expect(routes.depth, 1);
+      expect(find.byType(CreditActionDialog), findsOneWidget);
+      expect(find.byType(CreditView), findsNothing);
     });
   });
 }

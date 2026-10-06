@@ -5,12 +5,10 @@ import 'package:cl_club_members/src/models/user_form_helpers.dart'
 import 'package:cl_club_members/src/utils/admin_user_actions.dart';
 import 'package:cl_club_members/src/utils/apply_user_update.dart';
 import 'package:cl_club_members/src/utils/profile_detail_rows.dart';
-import 'package:cl_club_members/src/widgets/avatar_upload_affordance.dart';
 import 'package:cl_club_members/src/widgets/pending_join_requests_section.dart';
+import 'package:cl_club_members/src/widgets/profile_avatar_area.dart';
 import 'package:cl_club_members/src/widgets/profile_credit_line.dart';
 import 'package:cl_club_members/src/widgets/profile_review_section.dart';
-import 'package:cl_club_members/src/widgets/profile_role_stamps.dart';
-import 'package:cl_club_members/src/widgets/user_avatar.dart';
 import 'package:cl_club_members/src/widgets/user_contact_info_card.dart';
 import 'package:cl_club_members/src/widgets/user_groups_section.dart';
 import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
@@ -477,24 +475,7 @@ class ProfileCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ShadTheme.of(context);
-    final viewer = ref.watch(authStateProvider).valueOrNull;
-    final isSelf = viewer != null && viewer.username == user.username;
-    final avatarWidget = Stack(
-      children: [
-        Positioned.fill(child: UserAvatar(user: user)),
-        Positioned(
-          right: 12,
-          bottom: 12,
-          child: ProfileRoleStamps(user: user),
-        ),
-        if (isSelf)
-          Positioned(
-            top: 12,
-            right: 12,
-            child: AvatarUploadAffordance(username: user.username),
-          ),
-      ],
-    );
+    final avatarWidget = ProfileAvatarArea(user: user);
     final contentWidget = ProfileContentArea(
       user: user,
       onBioSave: onBioSave,

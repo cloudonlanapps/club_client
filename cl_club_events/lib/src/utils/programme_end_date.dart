@@ -111,3 +111,17 @@ DateTime? programmeEndDay(Event event, {List<EventSchedule>? schedules}) {
   final local = last.toLocal();
   return DateTime(local.year, local.month, local.day);
 }
+
+/// The Adjust Schedule dialog's warning for a programme that has an end
+/// date, or `null` when it has none: the server opens the new schedule with
+/// no end, so the end date has to be set again afterwards.
+String? programmeEndClearedWarning(
+  Event event, {
+  List<EventSchedule>? schedules,
+}) {
+  final day = programmeEndDay(event, schedules: schedules);
+  if (day == null) return null;
+  return 'This programme ends on ${programmeEndDayFormat.format(day)}. '
+      'Adjusting the schedule clears that end date; set it again with '
+      'Adjust end date.';
+}

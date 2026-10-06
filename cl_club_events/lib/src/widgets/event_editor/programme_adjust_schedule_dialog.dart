@@ -12,6 +12,7 @@ import 'package:ui_lib/ui_lib.dart'
 
 import '../../models/programme_schedule_form_helpers.dart';
 import '../../models/stale_version_message.dart';
+import '../../utils/programme_end_date.dart';
 import '../../utils/schedule_save_error.dart';
 
 /// Shown when a programme's schedule has been adjusted.
@@ -47,6 +48,9 @@ class ProgrammeAdjustScheduleDialog extends ConsumerStatefulWidget {
 
   /// The widest the dialog's form grows.
   static const double maxFormWidth = 560;
+
+  /// The gap between the end-date warning and the form.
+  static const double warningGap = 12;
 
   @override
   ConsumerState<ProgrammeAdjustScheduleDialog> createState() =>
@@ -104,6 +108,7 @@ class ProgrammeAdjustScheduleDialogState
   @override
   Widget build(BuildContext context) {
     final event = widget.event;
+    final endWarning = programmeEndClearedWarning(event);
     final venues = ref
         .watch(clVenuesProvider((includeDeleted: false, searchTerm: null)))
         .valueOrNull;
@@ -125,18 +130,27 @@ class ProgrammeAdjustScheduleDialogState
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
-          child: ProgrammeScheduleAdjustForm(
-            key: formKey,
-            initialValue: buildProgrammeScheduleAdjustInitialValues(
-              event,
-              fromOptions: widget.fromOptions,
-            ),
-            fromOptions: widget.fromOptions,
-            venues: [
-              for (final venue in venues ?? const <Venue>[])
-                EventVenueOption(id: venue.id, name: venue.name),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: ProgrammeAdjustScheduleDialog.warningGap,
+            children: [
+              if (endWarning != null)
+                Text(endWarning, style: ShadTheme.of(context).textTheme.small),
+              ProgrammeScheduleAdjustForm(
+                key: formKey,
+                initialValue: buildProgrammeScheduleAdjustInitialValues(
+                  event,
+                  fromOptions: widget.fromOptions,
+                ),
+                fromOptions: widget.fromOptions,
+                venues: [
+                  for (final venue in venues ?? const <Venue>[])
+                    EventVenueOption(id: venue.id, name: venue.name),
+                ],
+                enabled: !saving,
+              ),
             ],
-            enabled: !saving,
           ),
         ),
       ),

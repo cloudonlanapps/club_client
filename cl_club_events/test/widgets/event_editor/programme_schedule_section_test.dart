@@ -1,4 +1,5 @@
 import 'package:cl_club_events/src/models/programme_schedule_form_helpers.dart';
+import 'package:cl_club_events/src/utils/programme_end_date.dart';
 import 'package:cl_club_events/src/widgets/event_editor/event_schedule_section.dart';
 import 'package:cl_club_events/src/widgets/event_editor/programme_adjust_schedule_dialog.dart';
 import 'package:cl_club_events/src/widgets/event_editor/programme_schedule_actions.dart';
@@ -298,4 +299,36 @@ void main() {
       findsNothing,
     );
   });
+
+  testWidgets(
+    'Issue 38: a programme with an end date is warned that adjusting the '
+    'schedule clears it',
+    (tester) async {
+      final event = programmeFixture(untilTimeUtc: localNoon(40).toUtc());
+      await _pump(tester, event);
+
+      await _openAdjust(tester);
+
+      final warning = programmeEndClearedWarning(event);
+      expect(warning, isNotNull);
+      expect(
+        warning,
+        contains(programmeEndDayFormat.format(programmeEndDay(event)!)),
+      );
+      expect(find.text(warning!), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Issue 38: a programme with no end date gets no end-date warning',
+    (tester) async {
+      final event = programmeFixture();
+      await _pump(tester, event);
+
+      await _openAdjust(tester);
+
+      expect(programmeEndClearedWarning(event), isNull);
+      expect(find.textContaining('clears that end date'), findsNothing);
+    },
+  );
 }

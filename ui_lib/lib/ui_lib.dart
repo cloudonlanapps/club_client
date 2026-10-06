@@ -172,6 +172,16 @@ export 'src/widgets/evaluation/template/evaluation_template_create_form_fields.d
     show EvaluationTemplateCreateFormFields;
 export 'src/widgets/evaluation/template/evaluation_template_form_validators.dart'
     show EvaluationTemplateFormValidators;
+// Calling an event off: a reason and, for a camp, the session to cancel
+// from (pure UI, no SDK / no Riverpod).
+export 'src/widgets/event_cancellation/event_cancellation_form.dart'
+    show EventCancellationForm, EventCancellationFormState;
+export 'src/widgets/event_cancellation/event_cancellation_form_fields.dart'
+    show EventCancellationFormFields;
+export 'src/widgets/event_cancellation/event_cancellation_form_validators.dart'
+    show EventCancellationFormValidators;
+export 'src/widgets/event_cancellation/event_cancellation_session.dart'
+    show EventCancellationSession;
 // Event create form (pure UI, no SDK / no Riverpod). Form-local types; the
 // host adapter maps to the SDK create call at the boundary.
 export 'src/widgets/event_create/event_create_form.dart'

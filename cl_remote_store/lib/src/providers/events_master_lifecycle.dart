@@ -4,7 +4,8 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// The lifecycle mutations of `ClEventsMasterNotifier`: cancel and undo a
-/// series, soft-delete, restore and hard-delete an event.
+/// camp series, call off (drop) and reinstate a one-off, soft-delete,
+/// restore and hard-delete an event.
 ///
 /// Each reloads the events and occurrence feeds when it fails in a way that
 /// may have reached the server (club_core#138).
@@ -53,6 +54,51 @@ mixin ClEventsLifecycleMutations on AsyncNotifier<Map<int, Event>> {
       replaceLocally(updated);
       bumpOccurrencesVersion();
       return updated;
+    }, refetch: refetchAfterUncertainWrite);
+  }
+
+  /// Call off a one-off (`POST …/drop`, club_client#40): its single
+  /// occurrence is cancelled, with [reason].
+  ///
+  /// [version] is the version of that occurrence as last loaded, which is
+  /// what the server asks for. A stale one is refused with
+  /// [StaleVersionException]; the occurrence feeds are then reloaded before
+  /// it is rethrown.
+  Future<Event> drop(
+    int eventId, {
+    required int version,
+    required String reason,
+  }) {
+    return changeOneOffOccurrence(
+      (client) => client.events.drop(eventId, version: version, reason: reason),
+    );
+  }
+
+  /// Reinstate a called-off one-off (`POST …/reinstate`, club_client#40),
+  /// restoring its occurrence. [version] is the occurrence's, as for [drop].
+  Future<Event> reinstate(int eventId, {required int version}) {
+    return changeOneOffOccurrence(
+      (client) => client.events.reinstate(eventId, version: version),
+    );
+  }
+
+  /// Runs [change], a write to a one-off's single occurrence that answers
+  /// with the event; stores the event and reloads the occurrence feeds, also
+  /// when the write is refused as stale.
+  Future<Event> changeOneOffOccurrence(
+    Future<Event> Function(SecureClient client) change,
+  ) {
+    return refetchIfWriteUncertain(() async {
+      final client = await ref.read(secureClientProvider.future);
+      try {
+        final updated = await change(client);
+        replaceLocally(updated);
+        bumpOccurrencesVersion();
+        return updated;
+      } on StaleVersionException {
+        bumpOccurrencesVersion();
+        rethrow;
+      }
     }, refetch: refetchAfterUncertainWrite);
   }
 

@@ -4,12 +4,14 @@ import 'package:club_sdk_2/club_sdk_2.dart' show Event, UserPrivate;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show ActionButton, ConfirmDialog, TwoColumnGrid;
+import 'package:ui_lib/ui_lib.dart' show ConfirmDialog;
 
 import '../../models/camp_event_form_helpers.dart' show EventFormSubmit;
+import '../../models/event_management_action.dart';
 import '../../models/event_management_messages.dart';
 import '../../utils/event_management_error.dart';
+import 'event_cancellation_actions.dart';
+import 'event_management_card.dart';
 import 'event_rename_dialog.dart';
 
 /// Management actions of an event, on its detail page.
@@ -25,6 +27,9 @@ import 'event_rename_dialog.dart';
 /// its hard delete, which it accepts only for an archived event
 /// (club_client#36). Archive and Delete ask for confirmation. After a
 /// Delete the page is left through [onDeleted].
+///
+/// Between Rename and Archive come the actions that call the event off and
+/// take that back, by type ([EventCancellationActions], club_client#40).
 class EventManagementSection extends ConsumerStatefulWidget {
   const EventManagementSection({
     required this.event,
@@ -32,10 +37,6 @@ class EventManagementSection extends ConsumerStatefulWidget {
     this.onDeleted,
     super.key,
   });
-
-  /// Buttons per row pair: the grid is padded to this many cells so a lone
-  /// action keeps its size.
-  static const int minimumCells = 4;
 
   final Event event;
 
@@ -145,46 +146,23 @@ class EventManagementSectionState
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
     final user = widget.currentUser;
     final archived = !widget.event.isActive;
-    final actions = <(String, VoidCallback)>[
-      if (!archived) (EventManagementMessages.rename, handleRename),
-      if (!archived && user.isAdmin)
-        (EventManagementMessages.archive, handleArchive),
-      if (archived && user.isAdmin)
-        (EventManagementMessages.unarchive, handleUnarchive),
-      if (archived && user.isSuperAdmin)
-        (EventManagementMessages.delete, handleDelete),
-    ];
-    if (actions.isEmpty) return const SizedBox.shrink();
-    return ShadCard(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(EventManagementMessages.title, style: theme.textTheme.h4),
-          const SizedBox(height: 12),
-          TwoColumnGrid(
-            spacing: 8,
-            runSpacing: 8,
-            singleColumnBreakpoint: 0,
-            children: [
-              for (final (label, onPressed) in actions)
-                ActionButton(
-                  label: label,
-                  onPressed: isBusy ? null : onPressed,
-                ),
-              for (
-                var i = actions.length;
-                i < EventManagementSection.minimumCells;
-                i++
-              )
-                const IgnorePointer(
-                  child: Opacity(opacity: 0, child: ActionButton(label: '')),
-                ),
-            ],
-          ),
+    EventManagementAction action(String label, VoidCallback onPressed) =>
+        (label: label, onPressed: isBusy ? null : onPressed);
+    return EventCancellationActions(
+      event: widget.event,
+      currentUser: user,
+      builder: (context, cancellationActions) => EventManagementCard(
+        actions: [
+          if (!archived) action(EventManagementMessages.rename, handleRename),
+          ...cancellationActions,
+          if (!archived && user.isAdmin)
+            action(EventManagementMessages.archive, handleArchive),
+          if (archived && user.isAdmin)
+            action(EventManagementMessages.unarchive, handleUnarchive),
+          if (archived && user.isSuperAdmin)
+            action(EventManagementMessages.delete, handleDelete),
         ],
       ),
     );

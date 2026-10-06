@@ -18,8 +18,6 @@ import 'package:ui_lib/ui_lib.dart'
         ConfirmImagePicker,
         EditableMarkdown,
         EditableSectionCard,
-        EventEligibilityForm,
-        EventEligibilityFormState,
         EventFormValidators,
         ImageUploadAffordance,
         OrganizerCoachesEditor,
@@ -32,16 +30,15 @@ import 'package:ui_lib/ui_lib.dart'
         pickImageReportingErrors,
         showUserSelectionDialog;
 
-import '../../models/camp_event_form_helpers.dart'
-    show EventFormSubmit, buildEventFormInitialValues;
+import '../../models/camp_event_form_helpers.dart' show EventFormSubmit;
 import '../../utils/event_save_error.dart';
-import '../event_eligibility_read.dart';
 import '../events_preview/cl_event_audit_info.dart';
 import '../events_preview/cl_event_enrolments_summary.dart';
 import '../events_preview/cl_event_gallery.dart';
 import '../events_preview/cl_event_hero.dart';
 import '../events_preview/cl_event_pending_requests.dart';
 import '../events_preview/cl_event_venue_detail.dart';
+import 'event_eligibility_card.dart';
 import 'event_schedule_section.dart';
 
 /// Editable body for an event detail page, shown to whoever may manage the
@@ -208,68 +205,6 @@ class EventOverviewCard extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Eligibility section — gender and the age band, edited in place.
-class EventEligibilityCard extends ConsumerStatefulWidget {
-  const EventEligibilityCard({required this.event, super.key});
-
-  final Event event;
-
-  @override
-  ConsumerState<EventEligibilityCard> createState() =>
-      EventEligibilityCardState();
-}
-
-class EventEligibilityCardState extends ConsumerState<EventEligibilityCard> {
-  final _formKey = GlobalKey<EventEligibilityFormState>();
-
-  Future<bool> _save(Map<String, dynamic> values) async {
-    try {
-      await EventFormSubmit.updateEligibility(
-        event: widget.event,
-        values: values,
-        notifier: ref.read(clEventsMasterProvider.notifier),
-      );
-      if (!mounted) return true;
-      ShadToaster.of(context).show(
-        const ShadToast(description: Text('Eligibility updated.')),
-      );
-      return true;
-    } on Object catch (e, st) {
-      if (!mounted) return false;
-      ShadToaster.of(context).show(
-        ShadToast.destructive(
-          description: Text(
-            eventSaveErrorMessage(
-              e,
-              stackTrace: st,
-              fallback: 'Could not update eligibility. Please try again.',
-            ),
-          ),
-        ),
-      );
-      return false;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return EditableSectionCard<Map<String, dynamic>>(
-      title: 'Eligibility',
-      leadingIcon: LucideIcons.userCheck,
-      canEdit: true,
-      editMaxWidth: 420,
-      read: EventEligibilityRead(event: widget.event),
-      editBuilder: () => EventEligibilityForm(
-        key: _formKey,
-        initialValues: buildEventFormInitialValues(widget.event),
-      ),
-      onValidate: () => _formKey.currentState?.validate(),
-      isDirty: () => _formKey.currentState?.isDirty ?? false,
-      onSave: _save,
     );
   }
 }

@@ -54,6 +54,8 @@ class _GroupEligibilitySectionState
         (ref.watch(clGroupMembersProvider(group.id)).valueOrNull?.isNotEmpty ??
             false);
 
+    final initialValues = buildGroupFormInitialValues(group);
+
     return EditableSectionCard<Map<String, dynamic>>(
       title: 'Eligibility',
       canEdit: widget.canEdit,
@@ -79,12 +81,22 @@ class _GroupEligibilitySectionState
       ),
       editBuilder: () => GroupEligibilityForm(
         key: _formKey,
-        initialValues: buildGroupFormInitialValues(group),
+        initialValues: initialValues,
         criteriaLocked: hasMembers,
+        // The card's Reset shows only while the form holds a value.
+        onChanged: () => setState(() {}),
       ),
       onValidate: () => _formKey.currentState?.validate(),
       isDirty: () => _formKey.currentState?.isDirty ?? false,
       onSave: _save,
+      onReset: () => _formKey.currentState?.reset(),
+      // Never while the mode is locked. Before the form is mounted (the
+      // frame the editor opens on), what it is about to be seeded with
+      // answers.
+      canReset: () =>
+          !hasMembers &&
+          (_formKey.currentState?.hasValue ??
+              GroupEligibilityForm.holdsValue(initialValues)),
     );
   }
 

@@ -32,10 +32,13 @@ class AgeEligibilityFields extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
+    // The form's current value, not its initial one: the cluster is taken
+    // down and put back as a group's mode changes, and must come back as the
+    // form now holds it (emptied by a reset, say).
     final initialStrict =
         ShadForm.maybeOf(
               context,
-            )?.initialValue[AgeEligibilityFormFields.strictAgeId]
+            )?.getFieldValue(AgeEligibilityFormFields.strictAgeId)
             as bool? ??
         false;
     return Column(

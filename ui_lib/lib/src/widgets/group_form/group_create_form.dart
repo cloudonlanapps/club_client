@@ -62,6 +62,21 @@ class GroupCreateFormState extends State<GroupCreateForm> {
     });
   }
 
+  /// Whether the eligibility block holds criteria a [reset] would empty.
+  bool get hasValue {
+    final form = formKey.currentState;
+    return form != null && GroupEligibilityFields.holdsValue(form.value);
+  }
+
+  /// Empties the eligibility block and sets the mode to Manual; the name,
+  /// the description and the "add me" switch are left as they are.
+  void reset() {
+    final form = formKey.currentState;
+    if (form == null) return;
+    GroupEligibilityFields.reset(form);
+    if (_formError != null) setState(() => _formError = null);
+  }
+
   Future<void> handleSubmit() async {
     final form = formKey.currentState;
     if (form == null || !form.validate()) return;
@@ -86,6 +101,9 @@ class GroupCreateFormState extends State<GroupCreateForm> {
     return ShadForm(
       key: formKey,
       initialValue: _initial,
+      // Rebuilds the eligibility block, whose Reset shows only while it
+      // holds a value.
+      onChanged: () => setState(() {}),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -113,7 +131,7 @@ class GroupCreateFormState extends State<GroupCreateForm> {
             enabled: !widget.isSubmitting,
           ),
           const SizedBox(height: 16),
-          GroupEligibilityFields(initialMode: initialMode),
+          GroupEligibilityFields(initialMode: initialMode, showReset: true),
           const SizedBox(height: 16),
           ShadSwitchFormField(
             id: GroupFormFields.addMeId,

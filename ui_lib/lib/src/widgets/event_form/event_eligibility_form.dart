@@ -4,6 +4,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../age_eligibility/age_eligibility_fields.dart';
 import '../age_eligibility/age_eligibility_form_validators.dart';
+import '../age_eligibility/age_eligibility_form_values.dart';
 import 'event_form_fields.dart';
 
 /// Pure-UI editor for an event's eligibility — gender constraint plus the
@@ -15,12 +16,26 @@ import 'event_form_fields.dart';
 /// `GlobalKey<EventEligibilityFormState>`, calling
 /// [EventEligibilityFormState.validate] from the Save action.
 class EventEligibilityForm extends StatefulWidget {
-  const EventEligibilityForm({required this.initialValues, super.key});
+  const EventEligibilityForm({
+    required this.initialValues,
+    this.onChanged,
+    super.key,
+  });
 
   /// Form values: optional [EventGender] gender under
   /// [EventFormFields.genderId], and the age cluster's entries
   /// (`AgeEligibilityFormValues.initial`).
   final Map<String, dynamic> initialValues;
+
+  /// Called whenever a field's value changes, a reset included, so the host
+  /// can re-read [EventEligibilityFormState.hasValue].
+  final VoidCallback? onChanged;
+
+  /// Whether [values] hold any eligibility: a gender, an age or a ticked
+  /// Strict age check.
+  static bool holdsValue(Map<String, dynamic> values) =>
+      values[EventFormFields.genderId] != null ||
+      AgeEligibilityFormValues.holdsValue(values);
 
   @override
   State<EventEligibilityForm> createState() => EventEligibilityFormState();
@@ -46,6 +61,23 @@ class EventEligibilityFormState extends State<EventEligibilityForm> {
     return values;
   }
 
+  /// Whether the form holds any eligibility a [reset] would empty.
+  bool get hasValue {
+    final form = formKey.currentState;
+    return form != null && EventEligibilityForm.holdsValue(form.value);
+  }
+
+  /// Empties gender, both ages and the Strict age check. Nothing is stored:
+  /// the form is then changed, and the host's Save sends the empty
+  /// eligibility.
+  void reset() {
+    formKey.currentState?.setValue({
+      EventFormFields.genderId: null,
+      ...AgeEligibilityFormValues.initial(),
+    });
+    if (_formError != null) setState(() => _formError = null);
+  }
+
   /// Whether any field differs from the seeded initial values.
   bool get isDirty {
     final form = formKey.currentState;
@@ -59,6 +91,7 @@ class EventEligibilityFormState extends State<EventEligibilityForm> {
     return ShadForm(
       key: formKey,
       initialValue: widget.initialValues,
+      onChanged: widget.onChanged,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,

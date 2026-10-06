@@ -1,5 +1,4 @@
-import 'package:cl_club_events/src/widgets/event_editor/editable_event_body.dart'
-    show EventEligibilityCard;
+import 'package:cl_club_events/src/widgets/event_editor/event_eligibility_card.dart';
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier, clEventsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';

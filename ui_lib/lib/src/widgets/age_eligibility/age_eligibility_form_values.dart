@@ -46,6 +46,11 @@ class AgeEligibilityFormValues {
   static bool hasAgeBound(Map<String, dynamic> values) =>
       minAge(values) != null || maxAge(values) != null;
 
+  /// Whether the cluster holds anything a reset would empty: an age or a
+  /// ticked Strict age check.
+  static bool holdsValue(Map<String, dynamic> values) =>
+      hasAgeBound(values) || strictAge(values);
+
   /// The age held by the three inputs [ids] (years, months, days). All
   /// three empty is no bound; an empty part of a set age counts as zero.
   static FormAge? age(Map<String, dynamic> values, List<String> ids) {

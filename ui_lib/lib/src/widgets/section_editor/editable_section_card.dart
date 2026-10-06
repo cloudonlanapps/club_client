@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../theme/text_theme_extensions.dart';
 import 'section_edit_button.dart';
+import 'section_editor_actions.dart';
 
 /// A titled [ShadCard] section that edits **in place** — the canonical
 /// section-wise editor chrome.
@@ -40,6 +40,8 @@ class EditableSectionCard<T> extends StatefulWidget {
     this.isDirty,
     this.onBeforeEdit,
     this.editMaxWidth,
+    this.onReset,
+    this.canReset,
     super.key,
   });
 
@@ -91,6 +93,15 @@ class EditableSectionCard<T> extends StatefulWidget {
   /// Optional max width for the inline edit form (left-aligned). Keeps wide
   /// desktop layouts from stretching the form full width.
   final double? editMaxWidth;
+
+  /// Optional reset action, shown beside Cancel and Save in edit mode while
+  /// [canReset] returns true. Empties the host's form; nothing is stored
+  /// until Save.
+  final VoidCallback? onReset;
+
+  /// Whether the form holds a value to reset. The host rebuilds the card
+  /// when the answer may have changed.
+  final bool Function()? canReset;
 
   @override
   State<EditableSectionCard<T>> createState() => _EditableSectionCardState<T>();
@@ -195,7 +206,6 @@ class _EditableSectionCardState<T> extends State<EditableSectionCard<T>> {
   }
 
   Widget _buildEdit(BuildContext context) {
-    final theme = ShadTheme.of(context);
     final form = widget.editMaxWidth == null
         ? widget.editBuilder()
         : Align(
@@ -210,27 +220,11 @@ class _EditableSectionCardState<T> extends State<EditableSectionCard<T>> {
       children: [
         form,
         const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            ShadButton.outline(
-              enabled: !_saving,
-              onPressed: _saving ? null : _cancel,
-              child: const Text('Cancel'),
-            ),
-            const SizedBox(width: 8),
-            ShadButton(
-              enabled: !_saving,
-              onPressed: _saving ? null : _save,
-              child: _saving
-                  ? const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text('Save', style: theme.textTheme.buttonLabel),
-            ),
-          ],
+        SectionEditorActions(
+          saving: _saving,
+          onCancel: _cancel,
+          onSave: _save,
+          onReset: (widget.canReset?.call() ?? false) ? widget.onReset : null,
         ),
       ],
     );

@@ -1,3 +1,4 @@
+import 'package:cl_calendar/cl_calendar.dart' show CLDatePickerFormField;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -23,7 +24,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Mode'), findsOneWidget);
-    expect(find.text('DOB on or after'), findsNothing);
+    expect(find.text(AgeEligibilityFields.minAgeTitle), findsNothing);
     expect(find.text('Gender'), findsNothing);
   });
 
@@ -40,7 +41,7 @@ void main() {
     await tester.tap(find.text('Auto').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('DOB on or after'), findsOneWidget);
+    expect(find.text(AgeEligibilityFields.minAgeTitle), findsOneWidget);
     expect(find.text('Gender'), findsOneWidget);
   });
 
@@ -166,5 +167,138 @@ void main() {
       isTrue,
       reason: 'editing a field marks the form dirty (discard prompt)',
     );
+  });
+
+  Finder input(String id) => find.byWidgetPredicate(
+    (w) => w is ShadInputFormField && w.id == id,
+  );
+
+  testWidgets('Issue 33: a criteria mode shows minimum age, maximum age and '
+      'Strict age check, and no date pickers', (tester) async {
+    await _setSurface(tester);
+    await tester.pumpWidget(
+      _wrap(
+        GroupCreateForm(
+          initialValues: {
+            ...GroupCreateForm.emptyValues,
+            GroupFormFields.modeId: GroupMode.semiAuto,
+          },
+          onSubmit: (_) async {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(AgeEligibilityFields.minAgeTitle), findsOneWidget);
+    expect(find.text(AgeEligibilityFields.maxAgeTitle), findsOneWidget);
+    expect(find.text(AgeEligibilityFields.strictLabel), findsOneWidget);
+    expect(find.text('Gender'), findsOneWidget);
+    expect(find.textContaining('DOB'), findsNothing);
+    expect(find.byType(CLDatePickerFormField), findsNothing);
+  });
+
+  testWidgets('Issue 33: submits the ages and the Strict age check', (
+    tester,
+  ) async {
+    await _setSurface(tester);
+    final formKey = GlobalKey<GroupCreateFormState>();
+    Map<String, dynamic>? submitted;
+    await tester.pumpWidget(
+      _wrap(
+        GroupCreateForm(
+          key: formKey,
+          initialValues: {
+            ...GroupCreateForm.emptyValues,
+            GroupFormFields.nameId: 'Juniors',
+            GroupFormFields.modeId: GroupMode.semiAuto,
+            GroupFormFields.genderId: null,
+          },
+          onSubmit: (values) async => submitted = values,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(formKey.currentState!.isDirty, isFalse);
+
+    await tester.enterText(input(AgeEligibilityFormFields.minAgeYearsId), '5');
+    await tester.enterText(input(AgeEligibilityFormFields.maxAgeYearsId), '18');
+    await tester.tap(find.byType(ShadCheckbox));
+    await tester.pumpAndSettle();
+    await formKey.currentState!.handleSubmit();
+    await tester.pumpAndSettle();
+
+    expect(submitted, isNotNull);
+    expect(
+      AgeEligibilityFormValues.minAge(submitted!),
+      const FormAge(years: 5),
+    );
+    expect(
+      AgeEligibilityFormValues.maxAge(submitted!),
+      const FormAge(years: 18),
+    );
+    expect(AgeEligibilityFormValues.strictAge(submitted!), isTrue);
+  });
+
+  testWidgets('Issue 33: a minimum above the maximum shows the inline '
+      'message and does not submit', (tester) async {
+    await _setSurface(tester);
+    final formKey = GlobalKey<GroupCreateFormState>();
+    var submitCount = 0;
+    await tester.pumpWidget(
+      _wrap(
+        GroupCreateForm(
+          key: formKey,
+          initialValues: {
+            ...GroupCreateForm.emptyValues,
+            GroupFormFields.nameId: 'Juniors',
+            GroupFormFields.modeId: GroupMode.auto,
+          },
+          onSubmit: (_) async => submitCount++,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(input(AgeEligibilityFormFields.minAgeYearsId), '18');
+    await tester.enterText(input(AgeEligibilityFormFields.maxAgeYearsId), '5');
+    await tester.pumpAndSettle();
+    await formKey.currentState!.handleSubmit();
+    await tester.pumpAndSettle();
+
+    expect(submitCount, 0);
+    expect(find.text(AgeEligibilityFormValidators.bandMessage), findsOneWidget);
+  });
+
+  testWidgets('Issue 33: an age alone is a criterion for an auto group', (
+    tester,
+  ) async {
+    await _setSurface(tester);
+    final formKey = GlobalKey<GroupCreateFormState>();
+    var submitCount = 0;
+    await tester.pumpWidget(
+      _wrap(
+        GroupCreateForm(
+          key: formKey,
+          initialValues: {
+            ...GroupCreateForm.emptyValues,
+            GroupFormFields.nameId: 'Juniors',
+            GroupFormFields.modeId: GroupMode.auto,
+          },
+          onSubmit: (_) async => submitCount++,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await formKey.currentState!.handleSubmit();
+    await tester.pumpAndSettle();
+    expect(submitCount, 0);
+    expect(find.textContaining('at least one criterion'), findsOneWidget);
+
+    await tester.enterText(input(AgeEligibilityFormFields.maxAgeYearsId), '12');
+    await tester.pumpAndSettle();
+    await formKey.currentState!.handleSubmit();
+    await tester.pumpAndSettle();
+    expect(submitCount, 1);
   });
 }

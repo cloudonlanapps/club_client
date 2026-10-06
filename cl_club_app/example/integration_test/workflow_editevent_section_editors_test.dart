@@ -13,9 +13,10 @@
 //   2. Coach opens the camp — read-only: no pencils, flags disabled, no
 //      management section; content is still visible.
 //   3. Admin edits via the section editors — transfer the organizer + add a
-//      coach (one Save), then remove the coach (Save); eligibility (inline),
-//      description (markdown), the featured flag, and the title (rename
-//      dialog); each change round-trips to the server.
+//      coach (one Save), then remove the coach (Save); eligibility (inline:
+//      gender and the age band, club_client#33), description (markdown), the
+//      featured flag, and the title (rename dialog); each change round-trips
+//      to the server.
 //   4. Coach re-opens and sees the updated title.
 //   5. Cleanup: admin soft-deletes the camp (no delete UI in the editor, so via
 //      the master notifier); sudo soft-deletes the actors via the UI.
@@ -26,7 +27,7 @@ import 'package:cl_club_events/src/widgets/events_preview/cl_event_gallery.dart'
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider, clVenuesMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart'
-    show Event, EventType, Gender, Role, Visibility;
+    show Age, Event, EventType, Gender, Role, Visibility;
 import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -35,6 +36,9 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
     show
         ActionButton,
+        AgeEligibilityFormFields,
+        AgeEligibilityFormValidators,
+        AgeEligibilityText,
         EntityCard,
         EventFormFields,
         EventGender,
@@ -74,6 +78,10 @@ const String _kEditedOrganizer = _kCoach;
 const _kEditedDescription =
     '# workflow_editevent updated\n\nEdited inline by the admin.';
 const _kEditedTitle = 'workflow_editevent_camp_renamed';
+
+// The age band the admin sets on the camp (club_client#33).
+const _kMinAgeYears = 5;
+const _kMaxAgeYears = 18;
 
 /// A day a month ahead, at midnight UTC: well inside the server's 52-week
 /// scheduling horizon, which a fixed future date would one day leave.
@@ -225,18 +233,96 @@ void main() {
         description: 'coach removal to round-trip',
       );
 
-      // Eligibility — inline edit (gender select + DOB pickers via ShadForm).
+      // Eligibility — inline edit: the gender select, the minimum and
+      // maximum age and the Strict age check (club_client#33).
       await tapSectionPencil(tester, _sectionCard('Eligibility'));
+      expect(find.textContaining('DOB'), findsNothing);
       setShadFormValues(tester, {
         EventFormFields.genderId: EventGender.female,
-        EventFormFields.dobOnOrAfterId: DateTime.utc(2010),
-        EventFormFields.dobOnOrBeforeId: DateTime.utc(2014),
+        AgeEligibilityFormFields.strictAgeId: true,
       });
+      await enterTextById(
+        tester,
+        AgeEligibilityFormFields.minAgeYearsId,
+        '$_kMinAgeYears',
+      );
+      await enterTextById(
+        tester,
+        AgeEligibilityFormFields.maxAgeYearsId,
+        '$_kMaxAgeYears',
+      );
       await saveInlineEditor(tester);
       await waitFor(
         tester,
-        () => _event(tester, eventId).gender == Gender.female,
-        description: 'eligibility gender to round-trip to the server',
+        () {
+          final e = _event(tester, eventId);
+          return e.gender == Gender.female &&
+              e.minAge == const Age(years: _kMinAgeYears) &&
+              e.maxAge == const Age(years: _kMaxAgeYears) &&
+              e.strictAge;
+        },
+        description: 'eligibility gender and age band to round-trip',
+      );
+      // The read view: the age sentence, with the dates the server worked
+      // out and the day it counted them on beneath.
+      final banded = _event(tester, eventId);
+      expect(banded.dobOnOrAfterUtc, isNotNull);
+      expect(banded.dobOnOrBeforeUtc, isNotNull);
+      expect(banded.eligibilityReferenceDayUtc, isNotNull);
+      expect(
+        find.text('Open to members aged $_kMinAgeYears to $_kMaxAgeYears.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          AgeEligibilityText.window(
+            dobOnOrAfter: banded.dobOnOrAfterUtc,
+            dobOnOrBefore: banded.dobOnOrBeforeUtc,
+            referenceDay: banded.eligibilityReferenceDayUtc,
+          )!,
+        ),
+        findsOneWidget,
+      );
+
+      // A minimum above the maximum shows the inline message and saves
+      // nothing.
+      await tapSectionPencil(tester, _sectionCard('Eligibility'));
+      await enterTextById(
+        tester,
+        AgeEligibilityFormFields.minAgeYearsId,
+        '${_kMaxAgeYears + 1}',
+      );
+      invokeShadButton(
+        tester,
+        find.widgetWithText(ShadButton, 'Save'),
+        reason: 'inline section editor Save',
+      );
+      await settle(tester);
+      expect(
+        find.text(AgeEligibilityFormValidators.bandMessage),
+        findsOneWidget,
+      );
+      expect(
+        _event(tester, eventId).minAge,
+        const Age(years: _kMinAgeYears),
+        reason: 'an inverted band must not be saved',
+      );
+
+      // Emptying an age clears that bound.
+      await enterTextById(tester, AgeEligibilityFormFields.minAgeYearsId, '');
+      await saveInlineEditor(tester);
+      await waitFor(
+        tester,
+        () {
+          final e = _event(tester, eventId);
+          return e.minAge == null &&
+              e.maxAge == const Age(years: _kMaxAgeYears);
+        },
+        description: 'emptied minimum age to clear on the server',
+      );
+      expect(
+        find.text('Open to members aged up to $_kMaxAgeYears.'),
+        findsOneWidget,
       );
 
       // Description — markdown editor.

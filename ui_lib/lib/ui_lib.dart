@@ -59,6 +59,21 @@ export 'src/widgets/admin_user_review/admin_user_review_form_data.dart'
         AdminUserReviewFormData;
 export 'src/widgets/admin_user_review/admin_user_review_validators.dart'
     show AdminUserReviewFormValidators;
+// Age band of the eligibility editors (pure UI, no SDK / no Riverpod): the
+// shared input cluster, its values and validators, and the read view.
+export 'src/widgets/age_eligibility/age_eligibility_fields.dart'
+    show AgeEligibilityFields;
+export 'src/widgets/age_eligibility/age_eligibility_form_fields.dart'
+    show AgeEligibilityFormFields;
+export 'src/widgets/age_eligibility/age_eligibility_form_validators.dart'
+    show AgeEligibilityFormValidators;
+export 'src/widgets/age_eligibility/age_eligibility_form_values.dart'
+    show AgeEligibilityFormValues;
+export 'src/widgets/age_eligibility/age_eligibility_summary.dart'
+    show AgeEligibilitySummary;
+export 'src/widgets/age_eligibility/age_eligibility_text.dart'
+    show AgeEligibilityText;
+export 'src/widgets/age_eligibility/form_age.dart' show FormAge;
 export 'src/widgets/avatar_circle_variant.dart';
 export 'src/widgets/bordered_menu_list.dart'
     show BorderedMenuItem, BorderedMenuList;

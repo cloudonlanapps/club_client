@@ -151,6 +151,8 @@ class GroupCard extends ConsumerWidget {
   }
 }
 
+/// The card's meta line: the group's age sentence (when it has an age band)
+/// and its kind.
 class GroupMetaLine extends StatelessWidget {
   const GroupMetaLine({required this.group, super.key});
 
@@ -162,41 +164,26 @@ class GroupMetaLine extends StatelessWidget {
     final fg = theme.colorScheme.mutedForeground;
     final style = theme.textTheme.muted;
 
-    final after = group.dobOnOrAfterUtc;
-    final before = group.dobOnOrBeforeUtc;
-    final hasDob = after != null || before != null;
+    final ageSentence = AgeEligibilityText.sentence(
+      minAge: formAgeFromSdk(group.minAge),
+      maxAge: formAgeFromSdk(group.maxAge),
+    );
 
     return Wrap(
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: 12,
       runSpacing: 4,
       children: [
-        if (hasDob)
+        if (ageSentence != null)
           IconText(
             icon: LucideIcons.cake,
-            text: _dobRange(after, before),
+            text: ageSentence,
             color: fg,
             style: style,
           ),
         StatusBadge(label: group.kind.label),
       ],
     );
-  }
-
-  static String _dobRange(DateTime? after, DateTime? before) {
-    if (after != null && before != null) {
-      return 'DOB ${_fmt(after)}–${_fmt(before)}';
-    }
-    if (after != null) return 'DOB ≥ ${_fmt(after)}';
-    if (before != null) return 'DOB ≤ ${_fmt(before)}';
-    return '';
-  }
-
-  static String _fmt(DateTime d) {
-    final u = d.toUtc();
-    return '${u.year.toString().padLeft(4, '0')}-'
-        '${u.month.toString().padLeft(2, '0')}-'
-        '${u.day.toString().padLeft(2, '0')}';
   }
 }
 
@@ -221,7 +208,7 @@ class IconText extends StatelessWidget {
       children: [
         Icon(icon, size: 13, color: color),
         const SizedBox(width: 4),
-        Text(text, style: style),
+        Flexible(child: Text(text, style: style)),
       ],
     );
   }

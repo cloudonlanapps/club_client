@@ -183,6 +183,7 @@ export 'src/providers/venue_media.dart'
         venueMediaMutationProvider;
 export 'src/providers/venues.dart';
 export 'src/providers/venues_master.dart';
+export 'src/utils/age_form_adapter.dart' show formAgeFromSdk, sdkAgeFromForm;
 export 'src/utils/club_content_from_server.dart' show defaultClubValueIconName;
 export 'src/utils/contact_info_from_server.dart' show contactInfoFromServer;
 export 'src/utils/credit_funding.dart' show usableCreditsFor;

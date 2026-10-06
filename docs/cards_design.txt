@@ -350,7 +350,7 @@ member's UserCard with actions.
               title:    group.name,
               caption:  group.description,            (single-line, ellipsised)
               body:     GroupMetaLine(group, memberCount)
-                          ├─ Icon(cake) + DOB range text               (if any)
+                          ├─ Icon(cake) + age sentence                 (if any)
                           ├─ Icon(users) + "$count members"
                           └─ StatusBadge(label: group.kind.label) (BORDERED, no
                                                                     colour)

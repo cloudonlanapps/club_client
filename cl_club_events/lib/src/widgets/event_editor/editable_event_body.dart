@@ -8,7 +8,6 @@ import 'package:cl_remote_store/cl_remote_store.dart'
         eventCoverImageProvider,
         eventMediaMutationProvider,
         imagePickerProvider;
-import 'package:cl_server_config/cl_server_config.dart' show DateTimeFormat;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,6 +35,7 @@ import 'package:ui_lib/ui_lib.dart'
 import '../../models/camp_event_form_helpers.dart'
     show EventFormSubmit, buildEventFormInitialValues;
 import '../../utils/event_save_error.dart';
+import '../event_eligibility_read.dart';
 import '../events_preview/cl_event_audit_info.dart';
 import '../events_preview/cl_event_enrolments_summary.dart';
 import '../events_preview/cl_event_gallery.dart';
@@ -212,7 +212,7 @@ class EventOverviewCard extends ConsumerWidget {
   }
 }
 
-/// Eligibility section — gender + DOB window, edited in place.
+/// Eligibility section — gender and the age band, edited in place.
 class EventEligibilityCard extends ConsumerStatefulWidget {
   const EventEligibilityCard({required this.event, super.key});
 
@@ -229,7 +229,7 @@ class EventEligibilityCardState extends ConsumerState<EventEligibilityCard> {
   Future<bool> _save(Map<String, dynamic> values) async {
     try {
       await EventFormSubmit.updateEligibility(
-        eventId: widget.event.id,
+        event: widget.event,
         values: values,
         notifier: ref.read(clEventsMasterProvider.notifier),
       );
@@ -257,22 +257,12 @@ class EventEligibilityCardState extends ConsumerState<EventEligibilityCard> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
-    final lines = eligibilitySentences(widget.event);
     return EditableSectionCard<Map<String, dynamic>>(
       title: 'Eligibility',
       leadingIcon: LucideIcons.userCheck,
       canEdit: true,
       editMaxWidth: 420,
-      read: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (var i = 0; i < lines.length; i++) ...[
-            if (i > 0) const SizedBox(height: 8),
-            Text(lines[i], style: theme.textTheme.p),
-          ],
-        ],
-      ),
+      read: EventEligibilityRead(event: widget.event),
       editBuilder: () => EventEligibilityForm(
         key: _formKey,
         initialValues: buildEventFormInitialValues(widget.event),
@@ -851,45 +841,4 @@ Future<String?> _showEventRenameDialog(
       );
     },
   );
-}
-
-/// Human-readable eligibility sentences for an event — gender constraint and
-/// the DOB window. Mirrors `ClEligibilityPreview` / `GroupEligibilitySection`.
-List<String> eligibilitySentences(Event event) {
-  final lines = <String>[];
-  final gender = _genderSentence(event.gender);
-  if (gender != null) lines.add(gender);
-  final dob = _dobSentence(event.dobOnOrAfterUtc, event.dobOnOrBeforeUtc);
-  if (dob != null) lines.add(dob);
-  if (lines.isEmpty) lines.add('This event is open to all.');
-  return lines;
-}
-
-String? _genderSentence(Gender? gender) {
-  switch (gender) {
-    case Gender.male:
-      return 'This event is only for Boys.';
-    case Gender.female:
-      return 'This event is only for Girls.';
-    case Gender.other:
-      return 'This event is only for members who identify as Other.';
-    case Gender.preferNotToSay:
-    case null:
-      return null;
-  }
-}
-
-String? _dobSentence(DateTime? onOrAfter, DateTime? onOrBefore) {
-  if (onOrAfter == null && onOrBefore == null) return null;
-  if (onOrAfter != null && onOrBefore != null) {
-    return 'This event uses age-based eligibility, and permits only those who '
-        'were born between ${onOrAfter.toLocalDateMedium()} and '
-        '${onOrBefore.toLocalDateMedium()} (both dates inclusive).';
-  }
-  if (onOrAfter != null) {
-    return 'This event uses age-based eligibility, and permits only those who '
-        'were born on or after ${onOrAfter.toLocalDateMedium()}.';
-  }
-  return 'This event uses age-based eligibility, and permits only those who '
-      'were born on or before ${onOrBefore!.toLocalDateMedium()}.';
 }

@@ -1,5 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show GroupFormValidators, GroupMode;
+import 'package:ui_lib/ui_lib.dart'
+    show
+        AgeEligibilityFormFields,
+        AgeEligibilityFormValidators,
+        GroupFormValidators,
+        GroupMode;
 
 void main() {
   group('GroupFormValidators.name', () {
@@ -18,24 +23,35 @@ void main() {
     });
   });
 
-  group('GroupFormValidators.dobRange', () {
+  // The band's ordering rule moved with the age inputs to the shared
+  // AgeEligibilityFormValidators (club_client#33).
+  group('AgeEligibilityFormValidators.band', () {
+    Map<String, dynamic> band({String min = '', String max = ''}) => {
+      AgeEligibilityFormFields.minAgeYearsId: min,
+      AgeEligibilityFormFields.maxAgeYearsId: max,
+    };
+
     test('null when either bound is null', () {
-      expect(GroupFormValidators.dobRange(null, DateTime.utc(2016)), isNull);
-      expect(GroupFormValidators.dobRange(DateTime.utc(2010), null), isNull);
+      expect(AgeEligibilityFormValidators.band(band(max: '16')), isNull);
+      expect(AgeEligibilityFormValidators.band(band(min: '10')), isNull);
     });
 
-    test('rejects onOrAfter after onOrBefore', () {
+    test('rejects a minimum above the maximum', () {
       expect(
-        GroupFormValidators.dobRange(DateTime.utc(2016), DateTime.utc(2010)),
+        AgeEligibilityFormValidators.band(band(min: '16', max: '10')),
         isNotNull,
       );
     });
 
-    test('accepts onOrAfter <= onOrBefore', () {
-      final after = DateTime.utc(2010);
-      final before = DateTime.utc(2016, 12, 31);
-      expect(GroupFormValidators.dobRange(after, before), isNull);
-      expect(GroupFormValidators.dobRange(after, after), isNull);
+    test('accepts minimum <= maximum', () {
+      expect(
+        AgeEligibilityFormValidators.band(band(min: '10', max: '16')),
+        isNull,
+      );
+      expect(
+        AgeEligibilityFormValidators.band(band(min: '10', max: '10')),
+        isNull,
+      );
     });
   });
 

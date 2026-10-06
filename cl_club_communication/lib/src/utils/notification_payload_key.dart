@@ -33,4 +33,13 @@ abstract final class NotificationPayloadKey {
 
   /// The name the inquirer gave.
   static const name = 'name';
+
+  /// A group's id (`group.member_ineligible`).
+  static const groupId = 'groupId';
+
+  /// A group's name.
+  static const groupName = 'groupName';
+
+  /// The username of a group member.
+  static const membername = 'membername';
 }

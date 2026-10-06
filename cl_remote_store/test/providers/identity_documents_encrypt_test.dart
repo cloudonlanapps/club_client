@@ -21,6 +21,7 @@ class _FakeMedia extends Fake implements MediaSource {
     double? start,
     List<String>? accessRoles,
     bool encrypt = false,
+    String? ownerUsername,
   }) async {
     encryptArg = encrypt;
     accessRolesArg = accessRoles;

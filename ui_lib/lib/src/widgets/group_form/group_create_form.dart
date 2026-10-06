@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart' show mapEquals;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../age_eligibility/age_eligibility_form_validators.dart';
+import '../age_eligibility/age_eligibility_form_values.dart';
 import 'group_eligibility_fields.dart';
 import 'group_form_fields.dart';
 import 'group_form_validators.dart';
@@ -32,6 +34,7 @@ class GroupCreateForm extends StatefulWidget {
     GroupFormFields.descriptionId: '',
     GroupFormFields.modeId: GroupMode.manual,
     GroupFormFields.addMeId: false,
+    ...AgeEligibilityFormValues.initial(),
   };
 
   @override
@@ -139,14 +142,16 @@ class GroupCreateFormState extends State<GroupCreateForm> {
 
 /// Cross-field eligibility validation shared by the create form and the
 /// eligibility editor. Returns an error message, or `null` when valid.
+///
+/// A manual group has no criteria, so its hidden age inputs are not checked.
 String? groupEligibilityError(Map<String, dynamic> values) {
   final mode = values[GroupFormFields.modeId] as GroupMode? ?? GroupMode.manual;
-  final after = values[GroupFormFields.dobOnOrAfterId] as DateTime?;
-  final before = values[GroupFormFields.dobOnOrBeforeId] as DateTime?;
+  if (!mode.usesCriteria) return null;
   final gender = values[GroupFormFields.genderId] as GroupGender?;
-  return GroupFormValidators.dobRange(after, before) ??
+  return AgeEligibilityFormValidators.band(values) ??
       GroupFormValidators.criteriaForMode(
         mode,
-        hasAnyCriterion: after != null || before != null || gender != null,
+        hasAnyCriterion:
+            AgeEligibilityFormValues.hasAgeBound(values) || gender != null,
       );
 }

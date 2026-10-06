@@ -1,13 +1,14 @@
-import 'package:cl_calendar/cl_calendar.dart' show CLDatePickerFormField;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../age_eligibility/age_eligibility_fields.dart';
 import 'group_form_fields.dart';
 
-/// Shared eligibility field cluster — a [GroupMode] selector plus the DOB /
-/// gender criteria. **Internal to ui_lib** (not exported): it is the reusable
-/// body embedded by both `GroupCreateForm` and `GroupEligibilityForm`, each
-/// under its own `ShadForm`.
+/// Shared eligibility field cluster — a [GroupMode] selector plus the age
+/// band ([AgeEligibilityFields]) and gender criteria. **Internal to ui_lib**
+/// (not exported): it is the reusable body embedded by both
+/// `GroupCreateForm` and `GroupEligibilityForm`, each under its own
+/// `ShadForm`.
 ///
 /// The criteria fields appear only when the selected mode uses criteria
 /// (auto / semi-auto). When [criteriaLocked] is true — the group already has
@@ -68,19 +69,7 @@ class GroupEligibilityFieldsState extends State<GroupEligibilityFields> {
           const SizedBox(height: 16),
           Text('Eligibility criteria', style: theme.textTheme.small),
           const SizedBox(height: 8),
-          CLDatePickerFormField(
-            id: GroupFormFields.dobOnOrAfterId,
-            label: const Text('DOB on or after'),
-            placeholder: const Text('No lower bound'),
-            enabled: criteriaEnabled,
-          ),
-          const SizedBox(height: 12),
-          CLDatePickerFormField(
-            id: GroupFormFields.dobOnOrBeforeId,
-            label: const Text('DOB on or before'),
-            placeholder: const Text('No upper bound'),
-            enabled: criteriaEnabled,
-          ),
+          AgeEligibilityFields(enabled: criteriaEnabled),
           const SizedBox(height: 12),
           ShadSelectFormField<GroupGender>(
             id: GroupFormFields.genderId,

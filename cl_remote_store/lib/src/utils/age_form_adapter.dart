@@ -1,0 +1,15 @@
+import 'package:club_sdk_2/club_sdk_2.dart' show Age;
+import 'package:ui_lib/ui_lib.dart' show FormAge;
+
+/// SDK [Age] → the forms' [FormAge] (`null` = no bound).
+///
+/// The one bridge between the two: the event and the group form adapters
+/// and their read views all go through it.
+FormAge? formAgeFromSdk(Age? age) => age == null
+    ? null
+    : FormAge(years: age.years, months: age.months, days: age.days);
+
+/// The forms' [FormAge] → SDK [Age] (`null` = no bound).
+Age? sdkAgeFromForm(FormAge? age) => age == null
+    ? null
+    : Age(years: age.years, months: age.months, days: age.days);

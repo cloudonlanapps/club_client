@@ -37,7 +37,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
-    show ActionButton, GroupGender, GroupMode, UserSelectionDialogContent;
+    show
+        ActionButton,
+        AgeEligibilityFormFields,
+        AgeEligibilityText,
+        GroupGender,
+        GroupMode,
+        UserSelectionDialogContent;
 
 import '_helpers/audit_log.dart';
 import '_helpers/auth.dart';
@@ -67,11 +73,22 @@ const _kGroupAuto = 'workflow_grp_auto';
 const _kGroupSemi = 'workflow_grp_semiauto';
 const _kGroupManual = 'workflow_grp_manual';
 
-// Auto / Semi-auto criteria: DOB window 2010-01-01..2015-12-31, Male.
-final DateTime _kDobOnOrAfter = DateTime.utc(2010, 1, 1);
-final DateTime _kDobOnOrBefore = DateTime.utc(2015, 12, 31);
-final DateTime _kInsideDob = DateTime.utc(2012, 6, 15);
-final DateTime _kOutsideDob = DateTime.utc(2008, 1, 1);
+// Auto / Semi-auto criteria: aged 8 to 16, Male (club_client#33). A group
+// counts ages on today, so the fixtures' dates of birth are relative to now:
+// a fixed date would one day leave the band.
+const _kMinAgeYears = 8;
+const _kMaxAgeYears = 16;
+const _kInsideAgeYears = 12;
+const _kOutsideAgeYears = 30;
+const _kAgeSentence = 'Open to members aged $_kMinAgeYears to $_kMaxAgeYears';
+final DateTime _kInsideDob = _bornYearsAgo(_kInsideAgeYears);
+final DateTime _kOutsideDob = _bornYearsAgo(_kOutsideAgeYears);
+
+/// The date of birth of someone who turns [years] today, at midnight UTC.
+DateTime _bornYearsAgo(int years) {
+  final now = DateTime.now().toUtc();
+  return DateTime.utc(now.year - years, now.month, now.day);
+}
 
 Future<SecureClient> _sudoClient() async {
   final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
@@ -121,7 +138,8 @@ void main() {
       );
     }
 
-    // Member D — female, outside DOB window. Ineligible for auto/semi-auto.
+    // Member D — male like the others, but older than the age band, so the
+    // band alone makes D ineligible for auto/semi-auto.
     await client.users.createUser(
       username: _kMemberD,
       passwordHash: _kMemberPwd,
@@ -129,7 +147,7 @@ void main() {
       lastName: 'D',
       phone: '9876543210',
       email: '$_kMemberD@example.com',
-      gender: Gender.female,
+      gender: Gender.male,
       dateOfBirthUtc: _kOutsideDob,
     );
 
@@ -184,8 +202,8 @@ void main() {
       await _createGroupViaUi(
         tester,
         name: _kGroupAuto,
-        dobOnOrAfter: _kDobOnOrAfter,
-        dobOnOrBefore: _kDobOnOrBefore,
+        minAgeYears: _kMinAgeYears,
+        maxAgeYears: _kMaxAgeYears,
         gender: Gender.male,
         semiAuto: false,
       );
@@ -194,8 +212,8 @@ void main() {
       await _createGroupViaUi(
         tester,
         name: _kGroupSemi,
-        dobOnOrAfter: _kDobOnOrAfter,
-        dobOnOrBefore: _kDobOnOrBefore,
+        minAgeYears: _kMinAgeYears,
+        maxAgeYears: _kMaxAgeYears,
         gender: Gender.male,
         semiAuto: true,
       );
@@ -204,8 +222,8 @@ void main() {
       await _createGroupViaUi(
         tester,
         name: _kGroupManual,
-        dobOnOrAfter: null,
-        dobOnOrBefore: null,
+        minAgeYears: null,
+        maxAgeYears: null,
         gender: null,
         semiAuto: false,
       );
@@ -270,6 +288,69 @@ void main() {
             'Issue 156: Back from Group History to the '
             '"$_kGroupSemi" profile',
       );
+
+      // Issue 33: the Semi-auto group stores the age band, and its profile
+      // reads it as a sentence with the dates the server worked out, and
+      // the day it counted them on, beneath.
+      final semi = container(
+        tester,
+      ).read(clGroupsMasterProvider).valueOrNull![semiId]!;
+      expect(semi.minAge, const Age(years: _kMinAgeYears));
+      expect(semi.maxAge, const Age(years: _kMaxAgeYears));
+      expect(semi.strictAge, isFalse);
+      expect(semi.dobOnOrAfterUtc, isNotNull);
+      expect(semi.dobOnOrBeforeUtc, isNotNull);
+      expect(semi.eligibilityReferenceDayUtc, isNotNull);
+      expect(find.text('$_kAgeSentence.'), findsOneWidget);
+      expect(
+        find.text(
+          AgeEligibilityText.window(
+            dobOnOrAfter: semi.dobOnOrAfterUtc,
+            dobOnOrBefore: semi.dobOnOrBeforeUtc,
+            referenceDay: semi.eligibilityReferenceDayUtc,
+          )!,
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text(AgeEligibilityText.noLongerEligible),
+        findsNothing,
+        reason: 'A is inside the band',
+      );
+
+      // Issue 33: A's date of birth is corrected to one outside the band.
+      // A stays a member; the member list marks A and says how many no
+      // longer match. Corrected back, the mark goes.
+      final sudo = await _sudoClient();
+      await sudo.users.updateUser(
+        _kMemberA,
+        dateOfBirthUtc: () => _kOutsideDob,
+      );
+      await _backToGroupListAndOpen(tester, _kGroupSemi);
+      await waitFor(
+        tester,
+        () => find
+            .text(AgeEligibilityText.noLongerEligible)
+            .evaluate()
+            .isNotEmpty,
+        description: 'member A to be marked as no longer eligible',
+      );
+      expect(find.text(AgeEligibilityText.noLongerEligible), findsOneWidget);
+      expect(find.text('1 member no longer eligible'), findsOneWidget);
+      await sudo.users.updateUser(
+        _kMemberA,
+        dateOfBirthUtc: () => _kInsideDob,
+      );
+      await sudo.auth.logout();
+      await _backToGroupListAndOpen(tester, _kGroupSemi);
+      await waitFor(
+        tester,
+        () =>
+            find.text('@$_kMemberA').evaluate().isNotEmpty &&
+            find.text(AgeEligibilityText.noLongerEligible).evaluate().isEmpty,
+        description: 'member A to be listed without the mark again',
+      );
+      expect(find.textContaining('no longer eligible'), findsNothing);
 
       // Eligible check on Manual: all four present (no criteria).
       await _backToGroupListAndOpen(tester, _kGroupManual);
@@ -628,8 +709,8 @@ GroupGender? _toGroupGender(Gender? g) => switch (g) {
 Future<void> _createGroupViaUi(
   WidgetTester tester, {
   required String name,
-  required DateTime? dobOnOrAfter,
-  required DateTime? dobOnOrBefore,
+  required int? minAgeYears,
+  required int? maxAgeYears,
   required Gender? gender,
   required bool semiAuto,
 }) async {
@@ -658,22 +739,33 @@ Future<void> _createGroupViaUi(
   // Pick the membership mode. The eligibility criteria fields only render for
   // auto / semi-auto, so set the mode first and pump to mount them.
   final hasCriteria =
-      dobOnOrAfter != null || dobOnOrBefore != null || gender != null;
+      minAgeYears != null || maxAgeYears != null || gender != null;
   final mode = !hasCriteria
       ? GroupMode.manual
       : (semiAuto ? GroupMode.semiAuto : GroupMode.auto);
   setShadFormValues(tester, {'mode': mode});
   await tester.pump();
 
-  // ShadForm-integrated criteria fields: write straight into the value map
-  // (the CLDatePickerFormField popovers are awkward to drive in widget tests).
-  // Gender is the form-local GroupGender; the form is SDK-free.
+  // The age band is typed, one input per part (club_client#33); there are
+  // no date pickers. Gender is a select, written straight into the form's
+  // value map as the form-local GroupGender (the form is SDK-free).
   if (hasCriteria) {
-    setShadFormValues(tester, {
-      'dobOnOrAfterUtc': ?dobOnOrAfter,
-      'dobOnOrBeforeUtc': ?dobOnOrBefore,
-      'gender': ?_toGroupGender(gender),
-    });
+    expect(find.textContaining('DOB'), findsNothing);
+    if (minAgeYears != null) {
+      await enterTextById(
+        tester,
+        AgeEligibilityFormFields.minAgeYearsId,
+        '$minAgeYears',
+      );
+    }
+    if (maxAgeYears != null) {
+      await enterTextById(
+        tester,
+        AgeEligibilityFormFields.maxAgeYearsId,
+        '$maxAgeYears',
+      );
+    }
+    setShadFormValues(tester, {'gender': ?_toGroupGender(gender)});
     await tester.pump();
   }
 

@@ -10,10 +10,9 @@ class EventFormFields {
   static const String titleId = 'title';
   static const String descriptionId = 'description';
 
-  // Eligibility section.
+  // Eligibility section. The age band's inputs are the shared cluster's
+  // (`AgeEligibilityFormFields`).
   static const String genderId = 'gender';
-  static const String dobOnOrAfterId = 'dobOnOrAfterUtc';
-  static const String dobOnOrBeforeId = 'dobOnOrBeforeUtc';
 
   // Organizer & coaches section.
   static const String organizerNameId = 'organizerName';

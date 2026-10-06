@@ -1,8 +1,8 @@
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show ClGroupsMasterNotifier;
+    show ClGroupsMasterNotifier, formAgeFromSdk, sdkAgeFromForm;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:ui_lib/ui_lib.dart'
-    show GroupFormFields, GroupGender, GroupMode;
+    show AgeEligibilityFormValues, GroupFormFields, GroupGender, GroupMode;
 
 /// SDK adapter for the group forms — the one place that bridges the forms'
 /// flat `Map<String, dynamic>` (keyed by `GroupFormFields`, with form-local
@@ -40,26 +40,26 @@ String? _nullIfEmpty(Object? v) {
   return (s == null || s.isEmpty) ? null : s;
 }
 
-DateTime? _floorToUtcMidnight(DateTime? d) {
-  if (d == null) return null;
-  return DateTime.utc(d.year, d.month, d.day);
-}
-
 /// Resolved eligibility values for a submit, derived from the form's mode.
-/// In manual mode all criteria are cleared and `semiAuto` is left unset.
-({DateTime? after, DateTime? before, Gender? gender, bool? semiAuto})
+/// In manual mode all criteria are cleared (and the age check is relaxed
+/// again) and `semiAuto` is left unset. No dates are sent: the server works
+/// the window out from the ages.
+({Age? minAge, Age? maxAge, bool strictAge, Gender? gender, bool? semiAuto})
 _resolveCriteria(Map<String, dynamic> values) {
   final mode = values[GroupFormFields.modeId] as GroupMode? ?? GroupMode.manual;
   if (mode == GroupMode.manual) {
-    return (after: null, before: null, gender: null, semiAuto: null);
+    return (
+      minAge: null,
+      maxAge: null,
+      strictAge: false,
+      gender: null,
+      semiAuto: null,
+    );
   }
   return (
-    after: _floorToUtcMidnight(
-      values[GroupFormFields.dobOnOrAfterId] as DateTime?,
-    ),
-    before: _floorToUtcMidnight(
-      values[GroupFormFields.dobOnOrBeforeId] as DateTime?,
-    ),
+    minAge: sdkAgeFromForm(AgeEligibilityFormValues.minAge(values)),
+    maxAge: sdkAgeFromForm(AgeEligibilityFormValues.maxAge(values)),
+    strictAge: AgeEligibilityFormValues.strictAge(values),
     gender: _genderToSdk(values[GroupFormFields.genderId] as GroupGender?),
     semiAuto: mode == GroupMode.semiAuto,
   );
@@ -73,14 +73,18 @@ Map<String, dynamic> buildGroupFormInitialValues(Group? group) {
       GroupFormFields.descriptionId: '',
       GroupFormFields.modeId: GroupMode.manual,
       GroupFormFields.addMeId: false,
+      ...AgeEligibilityFormValues.initial(),
     };
   }
   return {
     GroupFormFields.nameId: group.name,
     GroupFormFields.descriptionId: group.description ?? '',
     GroupFormFields.modeId: _modeFromKind(group.kind),
-    GroupFormFields.dobOnOrAfterId: group.dobOnOrAfterUtc,
-    GroupFormFields.dobOnOrBeforeId: group.dobOnOrBeforeUtc,
+    ...AgeEligibilityFormValues.initial(
+      minAge: formAgeFromSdk(group.minAge),
+      maxAge: formAgeFromSdk(group.maxAge),
+      strictAge: group.strictAge,
+    ),
     GroupFormFields.genderId: _genderToForm(group.gender),
   };
 }
@@ -98,8 +102,9 @@ class GroupFormSubmit {
     return notifier.createGroup(
       name: (values[GroupFormFields.nameId] as String).trim(),
       description: _nullIfEmpty(values[GroupFormFields.descriptionId]),
-      dobOnOrAfterUtc: c.after,
-      dobOnOrBeforeUtc: c.before,
+      minAge: c.minAge,
+      maxAge: c.maxAge,
+      strictAge: c.strictAge,
       gender: c.gender,
       semiAuto: c.semiAuto,
     );
@@ -121,8 +126,9 @@ class GroupFormSubmit {
       description: hasDescription
           ? () => _nullIfEmpty(values[GroupFormFields.descriptionId])
           : null,
-      dobOnOrAfterUtc: () => c.after,
-      dobOnOrBeforeUtc: () => c.before,
+      minAge: () => c.minAge,
+      maxAge: () => c.maxAge,
+      strictAge: c.strictAge,
       gender: () => c.gender,
       semiAuto: c.semiAuto,
     );

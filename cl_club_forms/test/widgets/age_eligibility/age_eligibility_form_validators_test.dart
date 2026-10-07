@@ -162,4 +162,163 @@ void main() {
       expect(AgeEligibilityFormValues.strictAge(seeded), isFalse);
     });
   });
+
+  group('Issue 61: AgeEligibilityFormValidators.part', () {
+    const message = 'Out of range.';
+    String? part(Object? raw) =>
+        AgeEligibilityFormValidators.part(raw, max: 11, message: message);
+
+    test('Issue 61: an empty, blank or missing input is accepted', () {
+      expect(part(''), isNull);
+      expect(part('   '), isNull);
+      expect(part(null), isNull);
+    });
+
+    test('Issue 61: zero and the maximum are accepted', () {
+      expect(part('0'), isNull);
+      expect(part('11'), isNull);
+    });
+
+    test('Issue 61: one above the maximum is refused', () {
+      expect(part('12'), message);
+    });
+
+    test('Issue 61: a negative number is refused', () {
+      expect(part('-1'), message);
+    });
+
+    test('Issue 61: text that is not a whole number is refused', () {
+      expect(part('abc'), message);
+      expect(part('1.5'), message);
+      expect(part('1 1'), message);
+    });
+
+    test('Issue 61: blanks around a number are ignored', () {
+      expect(part(' 7 '), isNull);
+      expect(part(' 12 '), message);
+    });
+  });
+
+  group('Issue 61: AgeEligibilityFormValidators.band', () {
+    test("Issue 61: the limits are the server's and the messages name "
+        'them', () {
+      expect(AgeEligibilityFormValidators.maxYears, 150);
+      expect(AgeEligibilityFormValidators.maxMonths, 11);
+      expect(AgeEligibilityFormValidators.maxDays, 30);
+      expect(
+        AgeEligibilityFormValidators.yearsMessage,
+        'Years must be between 0 and 150.',
+      );
+      expect(
+        AgeEligibilityFormValidators.monthsMessage,
+        'Months must be between 0 and 11.',
+      );
+      expect(
+        AgeEligibilityFormValidators.daysMessage,
+        'Days must be between 0 and 30.',
+      );
+    });
+
+    test('Issue 61: every part at its limit, on both sides, is valid', () {
+      expect(
+        AgeEligibilityFormValidators.band(
+          _values(
+            minYears: '0',
+            minMonths: '0',
+            minDays: '0',
+            maxYears: '150',
+            maxMonths: '11',
+            maxDays: '30',
+          ),
+        ),
+        isNull,
+      );
+    });
+
+    test('Issue 61: each part is checked on each side', () {
+      expect(
+        AgeEligibilityFormValidators.band(_values(minYears: '151')),
+        AgeEligibilityFormValidators.yearsMessage,
+      );
+      expect(
+        AgeEligibilityFormValidators.band(_values(maxMonths: '12')),
+        AgeEligibilityFormValidators.monthsMessage,
+      );
+      expect(
+        AgeEligibilityFormValidators.band(_values(minDays: '31')),
+        AgeEligibilityFormValidators.daysMessage,
+      );
+    });
+
+    test('Issue 61: a part out of range is reported before an inverted '
+        'band', () {
+      expect(
+        AgeEligibilityFormValidators.band(
+          _values(minYears: '18', maxYears: '5', maxMonths: '12'),
+        ),
+        AgeEligibilityFormValidators.monthsMessage,
+      );
+    });
+
+    test('Issue 61: the minimum is reported before the maximum, years '
+        'before months before days', () {
+      expect(
+        AgeEligibilityFormValidators.band(
+          _values(minDays: '31', maxYears: '151'),
+        ),
+        AgeEligibilityFormValidators.daysMessage,
+      );
+      expect(
+        AgeEligibilityFormValidators.band(
+          _values(minYears: '151', minMonths: '12', minDays: '31'),
+        ),
+        AgeEligibilityFormValidators.yearsMessage,
+      );
+      expect(
+        AgeEligibilityFormValidators.band(
+          _values(minMonths: '12', minDays: '31'),
+        ),
+        AgeEligibilityFormValidators.monthsMessage,
+      );
+    });
+
+    test('Issue 61: a single day decides the band', () {
+      expect(
+        AgeEligibilityFormValidators.band(
+          _values(minYears: '5', minDays: '1', maxYears: '5'),
+        ),
+        AgeEligibilityFormValidators.bandMessage,
+      );
+      expect(
+        AgeEligibilityFormValidators.band(
+          _values(minYears: '5', maxYears: '5', maxDays: '1'),
+        ),
+        isNull,
+      );
+    });
+
+    test('Issue 61: a minimum of months alone is compared as zero years', () {
+      expect(
+        AgeEligibilityFormValidators.band(
+          _values(minMonths: '6', maxYears: '0', maxMonths: '5'),
+        ),
+        AgeEligibilityFormValidators.bandMessage,
+      );
+    });
+
+    test('Issue 61: blanks around the numbers are ignored', () {
+      expect(
+        AgeEligibilityFormValidators.band(
+          _values(minYears: ' 5 ', maxYears: ' 18 '),
+        ),
+        isNull,
+      );
+      expect(
+        AgeEligibilityFormValidators.band(
+          _values(minYears: ' 18 ', maxYears: ' 5 '),
+        ),
+        AgeEligibilityFormValidators.bandMessage,
+      );
+    });
+  });
 }

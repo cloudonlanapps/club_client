@@ -93,5 +93,126 @@ void main() {
       await tester.pumpAndSettle();
       expect(fired, isFalse);
     });
+
+    testWidgets('Issue 61: the chips of the selected days, and only those, '
+        'are marked selected', (tester) async {
+      await _pumpAndCaptureSelection(tester, initial: {2, 7});
+
+      final chips = tester
+          .widgetList<WeekdayChip>(find.byType(WeekdayChip))
+          .toList();
+      expect(
+        [for (final chip in chips) chip.selected],
+        [
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          true,
+        ],
+      );
+    });
+
+    testWidgets('Issue 61: each chip names its day in full, Monday first', (
+      tester,
+    ) async {
+      await _pumpAndCaptureSelection(tester);
+
+      expect(
+        [
+          for (final chip in tester.widgetList<WeekdayChip>(
+            find.byType(WeekdayChip),
+          ))
+            chip.tooltip,
+        ],
+        [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday',
+        ],
+      );
+      expect(find.byTooltip('Sunday'), findsOneWidget);
+    });
+
+    testWidgets('Issue 61: the last chip is day 7, Sunday', (tester) async {
+      Set<int>? captured;
+      await tester.pumpWidget(
+        ShadApp(
+          home: Scaffold(
+            body: WeekdaySelector(
+              selectedDays: const {1},
+              onChanged: (days) => captured = days,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byTooltip('Sunday'));
+      await tester.pumpAndSettle();
+      expect(captured, {1, 7});
+    });
+
+    testWidgets('Issue 61: a tap reports a new set and leaves the given one '
+        'as it was', (tester) async {
+      final given = {1, 3};
+      Set<int>? captured;
+      await tester.pumpWidget(
+        ShadApp(
+          home: Scaffold(
+            body: WeekdaySelector(
+              selectedDays: given,
+              onChanged: (days) => captured = days,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byTooltip('Wednesday'));
+      await tester.pumpAndSettle();
+      expect(captured, {1});
+      expect(given, {1, 3});
+    });
+
+    testWidgets('Issue 61: a disabled selector still shows what is selected', (
+      tester,
+    ) async {
+      var fired = false;
+      await tester.pumpWidget(
+        ShadApp(
+          home: Scaffold(
+            body: WeekdaySelector(
+              selectedDays: const {4},
+              enabled: false,
+              onChanged: (_) => fired = true,
+            ),
+          ),
+        ),
+      );
+      for (final day in ['Monday', 'Thursday']) {
+        await tester.tap(find.byTooltip(day));
+      }
+      await tester.pumpAndSettle();
+      expect(fired, isFalse);
+      expect(
+        tester.widget<WeekdayChip>(find.byType(WeekdayChip).at(3)).selected,
+        isTrue,
+      );
+    });
+
+    testWidgets('Issue 61: the seven chips fit a phone', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await _pumpAndCaptureSelection(tester, initial: {1, 2, 3, 4, 5, 6, 7});
+
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.getSize(find.byType(WeekdaySelector)).width,
+        lessThanOrEqualTo(390 - 32),
+      );
+    });
   });
 }

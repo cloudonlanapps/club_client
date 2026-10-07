@@ -2,6 +2,7 @@ import 'package:cl_club_forms/cl_club_forms.dart'
     show
         EventVenueOption,
         ProgrammeScheduleAdjustForm,
+        ProgrammeScheduleAdjustFormFields,
         ProgrammeScheduleAdjustFormState;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider, clVenuesProvider;
@@ -28,8 +29,9 @@ const String programmeScheduleAdjustFailedMessage =
 /// commits one split through [ProgrammeScheduleFormSubmit.adjustSchedule].
 ///
 /// Saving with no term changed closes it and sends nothing. A refusal the
-/// admin can act on (a clash with another programme, a From session no
-/// longer valid) stays in the dialog as an inline message; a stale version
+/// admin can act on stays in the dialog: on the field it is about (a From
+/// session no longer valid, a venue that is gone) or, for a clash with
+/// another programme, as an inline message. A stale version
 /// closes it on the reloaded programme and says who changed it.
 class ProgrammeAdjustScheduleDialog extends ConsumerStatefulWidget {
   const ProgrammeAdjustScheduleDialog({
@@ -65,8 +67,8 @@ class ProgrammeAdjustScheduleDialogState
   Future<void> save() async {
     final form = formKey.currentState;
     if (form == null || saving) return;
-    final value = form.validate();
-    if (value == null) return;
+    final values = form.validate();
+    if (values == null) return;
     final navigator = Navigator.of(context);
     if (!form.isDirty) {
       navigator.pop();
@@ -77,7 +79,7 @@ class ProgrammeAdjustScheduleDialogState
     try {
       await ProgrammeScheduleFormSubmit.adjustSchedule(
         event: widget.event,
-        value: value,
+        value: programmeScheduleAdjustValueOf(values),
         notifier: ref.read(clEventsMasterProvider.notifier),
       );
       navigator.pop();
@@ -96,13 +98,32 @@ class ProgrammeAdjustScheduleDialogState
     } on Object catch (e) {
       if (!mounted) return;
       setState(() => saving = false);
-      form.showFormError(
-        scheduleSaveErrorMessage(
-          e,
-          fallback: programmeScheduleAdjustFailedMessage,
-        ),
+      final message = scheduleSaveErrorMessage(
+        e,
+        fallback: programmeScheduleAdjustFailedMessage,
       );
+      final fieldId = refusedFieldId(e);
+      if (fieldId == null) {
+        form.showErrors(formError: message);
+      } else {
+        form.showErrors(fieldErrors: {fieldId: message});
+      }
     }
+  }
+
+  /// The id of the form's field the refusal [error] is about, or `null`
+  /// when it is about none of them (a clash, say), which shows inline.
+  String? refusedFieldId(Object error) {
+    if (error is! ServerException) return null;
+    return switch (error.code) {
+      SdkErrorCode.effectiveTimeNotSessionBoundary ||
+      SdkErrorCode.cutoffTooSoon => ProgrammeScheduleAdjustFormFields.fromId,
+      SdkErrorCode.invalidSessionsTotal ||
+      SdkErrorCode.beyondSchedulingHorizon =>
+        ProgrammeScheduleAdjustFormFields.scheduleId,
+      SdkErrorCode.venueNotFound => ProgrammeScheduleAdjustFormFields.venueId,
+      _ => null,
+    };
   }
 
   @override

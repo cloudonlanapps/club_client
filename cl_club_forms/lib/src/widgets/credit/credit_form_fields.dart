@@ -13,4 +13,7 @@ class CreditFormFields {
 
   /// The programme select's value for a general (unbound) account.
   static const int generalProgramme = 0;
+
+  /// The penalty a transfer starts with, and the least it may be.
+  static const int noPenalty = 0;
 }

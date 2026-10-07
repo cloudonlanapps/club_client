@@ -54,7 +54,7 @@ Future<void> _setSchedule(
   OneOffScheduleData schedule,
 ) async {
   state.formKey.currentState!.setFieldValue<OneOffScheduleData>(
-    OneOffScheduleForm.scheduleId,
+    OneOffScheduleFormFields.scheduleId,
     schedule,
   );
   await tester.pumpAndSettle();
@@ -67,7 +67,11 @@ void main() {
     final state = await _pump(tester, initial);
 
     expect(state.isDirty, isFalse);
-    expect(state.validate(), initial);
+    expect(state.validate(), {
+      OneOffScheduleFormFields.scheduleId: initial.schedule,
+      OneOffScheduleFormFields.venueId: initial.venueId,
+      OneOffScheduleFormFields.sessionsId: initial.sessions,
+    });
     expect(find.text('North Rink'), findsOneWidget);
   });
 
@@ -142,6 +146,24 @@ void main() {
     );
     expect(state.currentValue.sessions, isEmpty);
     expect(state.isDirty, isTrue);
+  });
+
+  testWidgets('Issue 54: a refusal shows on the field it is about, or '
+      'inline', (tester) async {
+    final state = await _pump(tester, _initial(sessions: _split));
+
+    state.showErrors(
+      fieldErrors: const {
+        OneOffScheduleFormFields.sessionsId: 'The sessions must add up.',
+        OneOffScheduleFormFields.venueId: 'That venue no longer exists.',
+      },
+      formError: 'A one-off can only be moved later.',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('The sessions must add up.'), findsOneWidget);
+    expect(find.text('That venue no longer exists.'), findsOneWidget);
+    expect(find.text('A one-off can only be moved later.'), findsOneWidget);
   });
 
   test('Issue 37: OneOffScheduleFormValidators.venue needs a venue', () {

@@ -1,9 +1,9 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
     show
         EventTimetableForm,
+        EventTimetableFormFields,
         EventTimetableFormState,
-        EventTimetableFormValidators,
-        EventTimetableValue;
+        EventTimetableFormValidators;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventSchedulesProvider, clEventsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -74,6 +74,9 @@ class EventTimetableSection extends ConsumerStatefulWidget {
 class EventTimetableSectionState extends ConsumerState<EventTimetableSection> {
   final formKey = GlobalKey<EventTimetableFormState>();
 
+  /// Whether a save is in flight: the form's fields are then off.
+  bool saving = false;
+
   bool get isProgramme => widget.event.type == EventType.programme;
 
   /// Loads a programme's schedules before the editor opens, so the picker
@@ -89,12 +92,24 @@ class EventTimetableSectionState extends ConsumerState<EventTimetableSection> {
     return true;
   }
 
-  Future<bool> save(EventTimetableValue value) async {
+  /// Saves the correction, with the form's fields off meanwhile.
+  Future<bool> save(Map<String, dynamic> values) async {
+    setState(() => saving = true);
+    try {
+      return await commit(values);
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
+  /// Sends the correction. True closes the editor; a refusal of the split
+  /// shows on the sessions field and keeps it open.
+  Future<bool> commit(Map<String, dynamic> values) async {
     final event = widget.event;
     try {
       await EventTimetableFormSubmit.updateTimetable(
         event: event,
-        value: value,
+        value: eventTimetableValueOf(values),
         notifier: ref.read(clEventsMasterProvider.notifier),
       );
       if (!mounted) return true;
@@ -111,8 +126,11 @@ class EventTimetableSectionState extends ConsumerState<EventTimetableSection> {
       return true;
     } on ServerException catch (e) {
       if (e.code == SdkErrorCode.invalidSessionsTotal) {
-        formKey.currentState?.showSessionsError(
-          EventTimetableFormValidators.totalMismatchMessage,
+        formKey.currentState?.showErrors(
+          fieldErrors: const {
+            EventTimetableFormFields.sessionsId:
+                EventTimetableFormValidators.totalMismatchMessage,
+          },
         );
         return false;
       }
@@ -153,7 +171,7 @@ class EventTimetableSectionState extends ConsumerState<EventTimetableSection> {
     final schedules = isProgramme
         ? ref.watch(clEventSchedulesProvider(event.id)).valueOrNull
         : null;
-    return EditableSectionCard<EventTimetableValue>(
+    return EditableSectionCard<Map<String, dynamic>>(
       title: 'Schedule',
       leadingIcon: LucideIcons.calendarClock,
       canEdit: widget.canEdit,
@@ -176,6 +194,7 @@ class EventTimetableSectionState extends ConsumerState<EventTimetableSection> {
         note: isProgramme
             ? programmeTimetableCorrectionNote
             : eventTimetableCorrectionNote,
+        enabled: !saving,
       ),
       onValidate: () => formKey.currentState?.validate(),
       isDirty: () => formKey.currentState?.isDirty ?? false,

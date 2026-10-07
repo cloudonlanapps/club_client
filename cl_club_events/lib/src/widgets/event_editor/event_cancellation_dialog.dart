@@ -1,6 +1,7 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
     show
         EventCancellationForm,
+        EventCancellationFormFields,
         EventCancellationFormState,
         EventCancellationSession;
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -20,9 +21,10 @@ import '../../utils/event_cancellation_error.dart';
 /// Hosts the SDK-free [EventCancellationForm]. For a camp it offers the
 /// camp's upcoming sessions, the next one preselected; for a one-off
 /// ([occurrenceVersion] given) the reason alone. Pops `true` once the
-/// server has accepted it. A refusal shows as a line under the form; a
-/// stale version closes the dialog with a toast, since the event has been
-/// reloaded.
+/// server has accepted it. A refusal shows in the form: on the session
+/// picked when it is about that session, else as a line under the fields.
+/// A stale version closes the dialog with a toast, since the event has
+/// been reloaded.
 class EventCancellationDialog extends ConsumerStatefulWidget {
   const EventCancellationDialog({
     required this.event,
@@ -46,7 +48,6 @@ class EventCancellationDialogState
     extends ConsumerState<EventCancellationDialog> {
   final formKey = GlobalKey<EventCancellationFormState>();
   bool isSubmitting = false;
-  String? error;
 
   /// When the dialog opened; the camp's sessions are read from here on.
   final DateTime openedAt = DateTime.now().toUtc();
@@ -64,10 +65,7 @@ class EventCancellationDialogState
   Future<void> submit() async {
     final values = formKey.currentState?.validate();
     if (values == null) return;
-    setState(() {
-      isSubmitting = true;
-      error = null;
-    });
+    setState(() => isSubmitting = true);
     final notifier = ref.read(clEventsMasterProvider.notifier);
     final version = widget.occurrenceVersion;
     try {
@@ -103,12 +101,25 @@ class EventCancellationDialogState
         Navigator.of(context).pop(false);
         return;
       }
-      setState(() {
-        isSubmitting = false;
-        error = message;
-      });
+      setState(() => isSubmitting = false);
+      if (isCamp && isAboutSession(e)) {
+        formKey.currentState?.showErrors(
+          fieldErrors: {EventCancellationFormFields.fromSessionId: message},
+        );
+      } else {
+        formKey.currentState?.showErrors(formError: message);
+      }
     }
   }
+
+  /// Whether the refusal [error] is about the session the cancellation
+  /// starts from: too close, already past, or no longer a session.
+  bool isAboutSession(Object error) =>
+      error is ServerException &&
+      error is! StaleVersionException &&
+      (error.code == SdkErrorCode.cancellationLeadTimeViolated ||
+          error.code == SdkErrorCode.effectiveTimeInPast ||
+          error.code == SdkErrorCode.effectiveTimeNotSessionBoundary);
 
   @override
   Widget build(BuildContext context) {
@@ -155,28 +166,13 @@ class EventCancellationDialogState
       ],
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: 12,
-          children: [
-            if (notice != null)
-              Text(notice, style: theme.textTheme.muted)
-            else
-              EventCancellationForm(
+        child: notice != null
+            ? Text(notice, style: theme.textTheme.muted)
+            : EventCancellationForm(
                 key: formKey,
                 sessions: offered ?? const [],
                 enabled: !isSubmitting,
               ),
-            if (error != null)
-              Text(
-                error!,
-                style: theme.textTheme.small.copyWith(
-                  color: theme.colorScheme.destructive,
-                ),
-              ),
-          ],
-        ),
       ),
     );
   }

@@ -30,6 +30,7 @@ import 'package:cl_club_forms/cl_club_forms.dart'
         EventTimetableForm,
         OneOffScheduleData,
         OneOffScheduleForm,
+        OneOffScheduleFormFields,
         OneOffScheduleFormState,
         SessionInput;
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -201,7 +202,7 @@ void main() {
             .formKey
             .currentState!
         ..setFieldValue<OneOffScheduleData>(
-          OneOffScheduleForm.scheduleId,
+          OneOffScheduleFormFields.scheduleId,
           OneOffScheduleData(
             date: DateTime(moved.year, moved.month, moved.day),
             startTime: const ShadTimeOfDay(
@@ -212,9 +213,9 @@ void main() {
             durationMinutes: _kLength.inMinutes,
           ),
         )
-        ..setFieldValue<int>(OneOffScheduleForm.venueId, _otherVenueId)
+        ..setFieldValue<int>(OneOffScheduleFormFields.venueId, _otherVenueId)
         ..setFieldValue<List<SessionInput>>(
-          OneOffScheduleForm.sessionsId,
+          OneOffScheduleFormFields.sessionsId,
           _kSplit,
         );
       await tester.pump();

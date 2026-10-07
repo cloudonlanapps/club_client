@@ -1,6 +1,6 @@
 import 'package:cl_club_events/src/models/event_timetable_form_helpers.dart';
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show EventTimetableValue, SessionInput;
+    show EventTimetableFormFields, EventTimetableValue, SessionInput;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -197,5 +197,19 @@ void main() {
       expect(options, hasLength(1));
       expect(options.single.id, isNull, reason: 'the latest schedule');
     });
+  });
+
+  test('Issue 54: eventTimetableValueOf reads the form values', () {
+    const sessions = [
+      SessionInput(name: 'Warm-up', startTime: '06:00', endTime: '06:30'),
+    ];
+
+    final value = eventTimetableValueOf(const {
+      EventTimetableFormFields.scheduleId: 11,
+      EventTimetableFormFields.sessionsId: sessions,
+    });
+
+    expect(value.scheduleId, 11);
+    expect(value.sessions, sessions);
   });
 }

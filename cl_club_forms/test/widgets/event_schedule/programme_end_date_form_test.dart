@@ -1,6 +1,4 @@
 import 'package:cl_club_forms/cl_club_forms.dart';
-import 'package:cl_club_forms/src/models/programme_end_date_value.dart'
-    show ProgrammeEndDateValue;
 import 'package:cl_club_forms/src/widgets/event_schedule/programme_end_date_form_validators.dart'
     show ProgrammeEndDateFormValidators;
 import 'package:flutter/material.dart';
@@ -39,13 +37,19 @@ Future<ProgrammeEndDateFormState> _pump(
   );
 }
 
+/// What the form returns for [lastDay] and [reason].
+Map<String, dynamic> _values(DateTime lastDay, {String reason = ''}) => {
+  ProgrammeEndDateFormFields.lastDayId: lastDay,
+  ProgrammeEndDateFormFields.reasonId: reason,
+};
+
 Future<void> _pick(
   WidgetTester tester,
   ProgrammeEndDateFormState state,
   DateTime day,
 ) async {
   state.formKey.currentState!.setFieldValue<DateTime?>(
-    ProgrammeEndDateForm.lastDayId,
+    ProgrammeEndDateFormFields.lastDayId,
     day,
   );
   await tester.pumpAndSettle();
@@ -77,7 +81,7 @@ void main() {
     await tester.pump();
     expect(
       state.validate(),
-      ProgrammeEndDateValue(lastDay: _day(9), reason: 'Season over'),
+      _values(_day(9), reason: 'Season over'),
     );
   });
 
@@ -90,11 +94,14 @@ void main() {
     );
 
     expect(state.isDirty, isFalse);
-    expect(state.validate(), ProgrammeEndDateValue(lastDay: _day(9)));
+    expect(state.validate(), _values(_day(9)));
 
     await _pick(tester, state, _day(4));
     expect(state.isDirty, isTrue);
-    expect(state.validate()?.lastDay, _day(4));
+    expect(
+      state.validate()?[ProgrammeEndDateFormFields.lastDayId],
+      _day(4),
+    );
   });
 
   testWidgets('Issue 39: a day before today cannot be chosen', (tester) async {
@@ -109,7 +116,32 @@ void main() {
     );
 
     await _pick(tester, state, _day(0));
-    expect(state.validate()?.lastDay, _day(0), reason: 'today is allowed');
+    expect(
+      state.validate()?[ProgrammeEndDateFormFields.lastDayId],
+      _day(0),
+      reason: 'today is allowed',
+    );
+  });
+
+  testWidgets('Issue 54: a refusal shows on the last day, or inline', (
+    tester,
+  ) async {
+    final state = await _pump(
+      tester,
+      reasonRequired: false,
+      initialDay: _day(9),
+    );
+
+    state.showErrors(
+      fieldErrors: const {
+        ProgrammeEndDateFormFields.lastDayId: 'No session on or before it.',
+      },
+      formError: 'The end date has changed.',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('No session on or before it.'), findsOneWidget);
+    expect(find.text('The end date has changed.'), findsOneWidget);
   });
 
   test('Issue 39: ProgrammeEndDateFormValidators', () {

@@ -74,18 +74,28 @@ export 'src/widgets/event_form/organizer_coaches_editor.dart'
 // values; the host translates to/from SDK types at the boundary.
 export 'src/widgets/event_schedule/camp_schedule_form.dart'
     show CampScheduleForm, CampScheduleFormState;
+export 'src/widgets/event_schedule/camp_schedule_form_fields.dart'
+    show CampScheduleFormFields;
 export 'src/widgets/event_schedule/event_timetable_form.dart'
     show EventTimetableForm, EventTimetableFormState;
+export 'src/widgets/event_schedule/event_timetable_form_fields.dart'
+    show EventTimetableFormFields;
 export 'src/widgets/event_schedule/event_timetable_form_validators.dart'
     show EventTimetableFormValidators;
 export 'src/widgets/event_schedule/one_off_schedule_form.dart'
     show OneOffScheduleForm, OneOffScheduleFormState;
+export 'src/widgets/event_schedule/one_off_schedule_form_fields.dart'
+    show OneOffScheduleFormFields;
 export 'src/widgets/event_schedule/one_off_schedule_form_validators.dart'
     show OneOffScheduleFormValidators;
 export 'src/widgets/event_schedule/programme_end_date_form.dart'
     show ProgrammeEndDateForm, ProgrammeEndDateFormState;
+export 'src/widgets/event_schedule/programme_end_date_form_fields.dart'
+    show ProgrammeEndDateFormFields;
 export 'src/widgets/event_schedule/programme_schedule_adjust_form.dart'
     show ProgrammeScheduleAdjustForm, ProgrammeScheduleAdjustFormState;
+export 'src/widgets/event_schedule/programme_schedule_adjust_form_fields.dart'
+    show ProgrammeScheduleAdjustFormFields;
 // A two-column layout that stacks on narrow surfaces
 export 'src/widgets/event_schedule/two_column_grid.dart' show TwoColumnGrid;
 export 'src/widgets/forgot_password_form.dart' show ForgotPasswordForm;

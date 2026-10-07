@@ -31,7 +31,7 @@ Future<GlobalKey<EventCreateFormState>> _pump(
   WidgetTester tester, {
   required EventFormType type,
   Map<String, dynamic>? initialValues,
-  Future<void> Function(Map<String, dynamic>)? onSubmit,
+  bool enabled = true,
 }) async {
   await _setSurface(tester);
   final key = GlobalKey<EventCreateFormState>();
@@ -42,7 +42,7 @@ Future<GlobalKey<EventCreateFormState>> _pump(
         eventType: type,
         venues: _venues,
         initialValues: initialValues,
-        onSubmit: onSubmit ?? (_) async {},
+        enabled: enabled,
       ),
     ),
   );
@@ -78,67 +78,126 @@ void main() {
 
   group('EventCreateForm validation', () {
     testWidgets('Issue 702: empty title blocks submit', (tester) async {
-      var submitted = false;
       final key = await _pump(
         tester,
         type: EventFormType.camp,
         initialValues: _withVenue(EventFormType.camp, 1),
-        onSubmit: (_) async => submitted = true,
       );
 
-      await key.currentState!.handleSubmit();
+      final values = key.currentState!.validate();
       await tester.pumpAndSettle();
 
-      expect(submitted, isFalse);
+      expect(values, isNull);
       expect(find.text('Title is required'), findsOneWidget);
     });
 
     testWidgets('Issue 702: missing venue surfaces an inline error and '
         'blocks submit', (tester) async {
-      var submitted = false;
       final initial = EventCreateForm.defaultValues(EventFormType.camp)
         ..[EventCreateFormFields.titleId] = 'Summer Camp';
       final key = await _pump(
         tester,
         type: EventFormType.camp,
         initialValues: initial,
-        onSubmit: (_) async => submitted = true,
       );
 
-      await key.currentState!.handleSubmit();
+      final values = key.currentState!.validate();
       await tester.pumpAndSettle();
 
-      expect(submitted, isFalse);
+      expect(values, isNull);
       expect(find.text('Please select a venue'), findsOneWidget);
     });
 
     testWidgets('Issue 702: a valid camp submits the flat form values', (
       tester,
     ) async {
-      Map<String, dynamic>? submitted;
       final initial = _withVenue(EventFormType.camp, 2)
         ..[EventCreateFormFields.titleId] = 'Summer Camp';
       final key = await _pump(
         tester,
         type: EventFormType.camp,
         initialValues: initial,
-        onSubmit: (values) async => submitted = values,
       );
 
-      await key.currentState!.handleSubmit();
+      final submitted = key.currentState!.validate();
       await tester.pumpAndSettle();
 
       expect(submitted, isNotNull);
       expect(submitted![EventCreateFormFields.titleId], 'Summer Camp');
-      expect(submitted![EventCreateFormFields.venueId], 2);
+      expect(submitted[EventCreateFormFields.venueId], 2);
       expect(
-        submitted![EventCreateFormFields.visibilityId],
+        submitted[EventCreateFormFields.visibilityId],
         EventFormVisibility.public,
       );
       expect(
-        submitted![EventCreateFormFields.scheduleId],
+        submitted[EventCreateFormFields.scheduleId],
         isA<CampScheduleData>(),
       );
+    });
+  });
+
+  group('Issue 54: EventCreateForm follows the form contract', () {
+    testWidgets("Issue 54: validate returns only the form's four fields", (
+      tester,
+    ) async {
+      final key = await _pump(
+        tester,
+        type: EventFormType.oneOff,
+        initialValues: _withVenue(EventFormType.oneOff, 1)
+          ..[EventCreateFormFields.titleId] = 'Open day',
+      );
+
+      expect(key.currentState!.validate()!.keys, {
+        EventCreateFormFields.titleId,
+        EventCreateFormFields.visibilityId,
+        EventCreateFormFields.venueId,
+        EventCreateFormFields.scheduleId,
+      });
+    });
+
+    testWidgets('Issue 54: the form shows no title and no button of its own', (
+      tester,
+    ) async {
+      await _pump(tester, type: EventFormType.camp);
+
+      expect(find.byType(ShadButton), findsNothing);
+      expect(find.textContaining('New '), findsNothing);
+      expect(find.text('Title *'), findsOneWidget);
+      expect(find.text('Venue *'), findsOneWidget);
+    });
+
+    testWidgets('Issue 54: a venue the server refused shows on the venue, a '
+        'clash inline', (tester) async {
+      final key = await _pump(
+        tester,
+        type: EventFormType.camp,
+        initialValues: _withVenue(EventFormType.camp, 1),
+      );
+
+      key.currentState!.showErrors(
+        fieldErrors: const {
+          EventCreateFormFields.venueId: 'That venue no longer exists.',
+          EventCreateFormFields.scheduleId: 'Too far ahead.',
+        },
+        formError: 'That clashes with another booking.',
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('That venue no longer exists.'), findsOneWidget);
+      expect(find.text('Too far ahead.'), findsOneWidget);
+      expect(find.text('That clashes with another booking.'), findsOneWidget);
+    });
+
+    testWidgets('Issue 54: enabled false turns the fields off', (tester) async {
+      await _pump(tester, type: EventFormType.camp, enabled: false);
+
+      final title = tester.widget<ShadInputFormField>(
+        find.byWidgetPredicate(
+          (w) =>
+              w is ShadInputFormField && w.id == EventCreateFormFields.titleId,
+        ),
+      );
+      expect(title.enabled, isFalse);
     });
   });
 

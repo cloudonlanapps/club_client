@@ -1,5 +1,8 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show ProgrammeScheduleAdjustValue, ProgrammeScheduleData;
+    show
+        ProgrammeScheduleAdjustFormFields,
+        ProgrammeScheduleAdjustValue,
+        ProgrammeScheduleData;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -73,6 +76,18 @@ ProgrammeScheduleAdjustValue buildProgrammeScheduleAdjustInitialValues(
   from: fromOptions.isEmpty ? null : fromOptions.first,
   schedule: buildProgrammeScheduleInitialValues(event),
   venueId: event.venueId,
+);
+
+/// The adjustment `ProgrammeScheduleAdjustForm.validate()` returned as
+/// [values]: the From session, the new terms and the venue.
+ProgrammeScheduleAdjustValue programmeScheduleAdjustValueOf(
+  Map<String, dynamic> values,
+) => ProgrammeScheduleAdjustValue(
+  from: values[ProgrammeScheduleAdjustFormFields.fromId] as DateTime?,
+  schedule:
+      values[ProgrammeScheduleAdjustFormFields.scheduleId]
+          as ProgrammeScheduleData,
+  venueId: values[ProgrammeScheduleAdjustFormFields.venueId] as int?,
 );
 
 /// Bridges the programme Schedule block's forms to the master's calls.

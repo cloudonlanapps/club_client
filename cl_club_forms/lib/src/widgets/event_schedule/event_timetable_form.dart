@@ -2,10 +2,12 @@ import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../models/event_timetable_value.dart';
 import '../../models/session_input.dart';
 import '../../models/timetable_schedule_option.dart';
+import '../form/form_body.dart';
+import '../form/form_contract.dart';
 import '../form/labeled_form_row.dart';
+import 'event_timetable_form_fields.dart';
 import 'event_timetable_form_validators.dart';
 import 'event_timetable_sessions_field.dart';
 
@@ -17,11 +19,9 @@ import 'event_timetable_sessions_field.dart';
 /// picker chooses which (the latest by default), and switching shows that
 /// schedule's own split over its own occurrence length.
 ///
-/// SDK-free: the host seeds [schedules] from its models, drives the form
-/// through a `GlobalKey<EventTimetableFormState>` — [EventTimetableFormState
-/// .validate] from Save, [EventTimetableFormState.isDirty] for no-op
-/// detection — and shows a server refusal of the split against the form with
-/// [EventTimetableFormState.showSessionsError].
+/// SDK-free: the host seeds [schedules] from its models and drives the form
+/// through a `GlobalKey<EventTimetableFormState>` ([FormContract]); a server
+/// refusal of the split goes back on the sessions field with `showErrors`.
 class EventTimetableForm extends StatefulWidget {
   const EventTimetableForm({
     required this.schedules,
@@ -30,12 +30,6 @@ class EventTimetableForm extends StatefulWidget {
     this.enabled = true,
     super.key,
   }) : assert(schedules.length > 0, 'at least one schedule');
-
-  /// Field id of the schedule picker (an index into [schedules]).
-  static const String scheduleId = 'schedule';
-
-  /// Field id of the sessions editor.
-  static const String sessionsId = 'sessions';
 
   /// The schedules that may be corrected, oldest first.
   final List<TimetableScheduleOption> schedules;
@@ -46,16 +40,19 @@ class EventTimetableForm extends StatefulWidget {
   /// A muted line under the editor saying what a correction does.
   final String? note;
 
-  /// Whether the fields accept input.
+  /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
 
   @override
   State<EventTimetableForm> createState() => EventTimetableFormState();
 }
 
-class EventTimetableFormState extends State<EventTimetableForm> {
-  final formKey = GlobalKey<ShadFormState>();
-
+/// State of [EventTimetableForm]. Its values are the chosen schedule's id
+/// (`int?`) under [EventTimetableFormFields.scheduleId] and the split
+/// (`List<SessionInput>`, empty for one undivided session) under
+/// [EventTimetableFormFields.sessionsId].
+class EventTimetableFormState extends State<EventTimetableForm>
+    with FormContract<EventTimetableForm> {
   /// Index into `EventTimetableForm.schedules` of the schedule being edited.
   late int selectedIndex =
       widget.initialScheduleIndex ?? widget.schedules.length - 1;
@@ -64,37 +61,28 @@ class EventTimetableFormState extends State<EventTimetableForm> {
   TimetableScheduleOption get selectedSchedule =>
       widget.schedules[selectedIndex];
 
+  /// The split as the form holds it now.
   List<SessionInput> get currentSessions =>
-      formKey.currentState?.value[EventTimetableForm.sessionsId]
+      formKey.currentState?.value[EventTimetableFormFields.sessionsId]
           as List<SessionInput>? ??
       selectedSchedule.sessions;
 
-  /// Validates the split and returns it with the chosen schedule, else
-  /// `null` (the sessions field shows why).
-  EventTimetableValue? validate() {
-    final form = formKey.currentState;
-    if (form == null || !form.saveAndValidate()) return null;
-    return EventTimetableValue(
-      scheduleId: selectedSchedule.id,
-      sessions: currentSessions,
-    );
-  }
+  @override
+  Map<String, dynamic> assemble(Map<String, dynamic> values) => {
+    EventTimetableFormFields.scheduleId: selectedSchedule.id,
+    EventTimetableFormFields.sessionsId: currentSessions,
+  };
 
   /// Whether the chosen schedule's split differs from its current one.
+  @override
   bool get isDirty => !listEquals(currentSessions, selectedSchedule.sessions);
 
-  /// Shows [message] against the sessions field, e.g. when the server
-  /// refuses the split.
-  void showSessionsError(String message) => formKey.currentState?.setFieldError(
-    EventTimetableForm.sessionsId,
-    message,
-  );
-
+  /// Shows the split of the schedule at [index] in place of the present one.
   void selectSchedule(int? index) {
     if (index == null || index == selectedIndex) return;
     setState(() => selectedIndex = index);
     formKey.currentState?.setFieldValue<List<SessionInput>>(
-      EventTimetableForm.sessionsId,
+      EventTimetableFormFields.sessionsId,
       selectedSchedule.sessions,
     );
   }
@@ -107,19 +95,17 @@ class EventTimetableFormState extends State<EventTimetableForm> {
     return ShadForm(
       key: formKey,
       initialValue: {
-        EventTimetableForm.scheduleId: selectedIndex,
-        EventTimetableForm.sessionsId: schedule.sessions,
+        EventTimetableFormFields.scheduleId: selectedIndex,
+        EventTimetableFormFields.sessionsId: schedule.sessions,
       },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        spacing: 16,
+      child: FormBody(
+        error: formError,
         children: [
           if (widget.schedules.length > 1)
             LabeledFormRow(
               label: 'Schedule',
               field: ShadSelectFormField<int>(
-                id: EventTimetableForm.scheduleId,
+                id: EventTimetableFormFields.scheduleId,
                 initialValue: selectedIndex,
                 enabled: widget.enabled,
                 options: [
@@ -137,7 +123,7 @@ class EventTimetableFormState extends State<EventTimetableForm> {
           LabeledFormRow(
             label: 'Sessions',
             field: EventTimetableSessionsField(
-              id: EventTimetableForm.sessionsId,
+              id: EventTimetableFormFields.sessionsId,
               scheduleKey: selectedIndex,
               totalMinutes: schedule.totalMinutes,
               startTime: schedule.startTime,

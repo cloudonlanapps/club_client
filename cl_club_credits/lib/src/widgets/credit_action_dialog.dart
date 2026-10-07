@@ -1,63 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../utils/credit_action_runner.dart';
-
-/// Hosts one credit form in a dialog (club_core#101): Cancel and a submit
-/// button, the in-flight state, and a toast when the server refuses. The
-/// form stays pure UI: [validate] reads it through its key, and [onSubmit]
-/// makes the call. Pops `true` once the action succeeds.
+/// The dialog one credit form shows in (club_core#101): its [title], the
+/// [form], Cancel and a submit button. `CreditActionForm` drives the form
+/// and holds the in-flight state; this is the chrome around it.
 ///
 /// Only Add credit from a picker's "+" chip opens this way (club_client#41);
 /// inside the credit view the forms show in place, in a `CreditActionPanel`.
-class CreditActionDialog extends StatefulWidget {
+class CreditActionDialog extends StatelessWidget {
   const CreditActionDialog({
     required this.title,
     required this.form,
-    required this.validate,
+    required this.saving,
     required this.onSubmit,
-    this.submitLabel = 'Save',
+    this.submitLabel = defaultSubmitLabel,
     super.key,
   });
 
+  /// The submit button's text unless the host gives another.
+  static const String defaultSubmitLabel = 'Save';
+
+  /// The dialog's heading.
   final String title;
+
+  /// The credit form.
   final Widget form;
-  final Map<String, dynamic>? Function() validate;
-  final Future<void> Function(Map<String, dynamic> values) onSubmit;
+
+  /// Whether the action is in flight: both buttons are then off.
+  final bool saving;
+
+  /// Validates the form and runs the action.
+  final VoidCallback onSubmit;
+
+  /// The submit button's text.
   final String submitLabel;
-
-  @override
-  State<CreditActionDialog> createState() => CreditActionDialogState();
-}
-
-class CreditActionDialogState extends State<CreditActionDialog> {
-  bool saving = false;
-
-  Future<void> submit() async {
-    final values = widget.validate();
-    if (values == null) return;
-    setState(() => saving = true);
-    final done = await runCreditAction(context, () => widget.onSubmit(values));
-    if (!mounted) return;
-    setState(() => saving = false);
-    if (done) Navigator.of(context).pop(true);
-  }
 
   @override
   Widget build(BuildContext context) {
     return ShadDialog(
-      title: Text(widget.title),
+      title: Text(title),
       actions: [
         ShadButton.outline(
           onPressed: saving ? null : () => Navigator.of(context).pop(false),
           child: const Text('Cancel'),
         ),
         ShadButton(
-          onPressed: saving ? null : submit,
-          child: Text(widget.submitLabel),
+          onPressed: saving ? null : onSubmit,
+          child: Text(submitLabel),
         ),
       ],
-      child: SingleChildScrollView(child: widget.form),
+      child: SingleChildScrollView(child: form),
     );
   }
 }

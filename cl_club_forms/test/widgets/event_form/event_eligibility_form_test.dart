@@ -1,11 +1,15 @@
 import 'package:cl_calendar/cl_calendar.dart' show CLDatePickerFormField;
 import 'package:cl_club_forms/cl_club_forms.dart';
+import 'package:cl_club_forms/src/constants/form_spacing.dart' show FormSpacing;
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_fields.dart'
     show AgeEligibilityFields;
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
     show AgeEligibilityFormFields;
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_validators.dart'
     show AgeEligibilityFormValidators;
+import 'package:cl_club_forms/src/widgets/form/form_body.dart' show FormBody;
+import 'package:cl_club_forms/src/widgets/form/labeled_form_row.dart'
+    show LabeledFormRow;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -273,5 +277,107 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text(AgeEligibilityFields.strictHint), findsOneWidget);
+  });
+
+  group('Issue 54: EventEligibilityForm follows the form contract', () {
+    Future<GlobalKey<EventEligibilityFormState>> pump(
+      WidgetTester tester, {
+      bool enabled = true,
+    }) async {
+      await _setSurface(tester);
+      final key = GlobalKey<EventEligibilityFormState>();
+      await tester.pumpWidget(
+        _wrap(
+          EventEligibilityForm(
+            key: key,
+            initialValues: {
+              EventFormFields.genderId: null,
+              ...AgeEligibilityFormValues.initial(),
+            },
+            enabled: enabled,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      return key;
+    }
+
+    testWidgets('Issue 54: gender, the ages and their parts are labelled '
+        'rows', (tester) async {
+      await pump(tester);
+
+      for (final label in [
+        'Gender',
+        AgeEligibilityFields.minAgeTitle,
+        AgeEligibilityFields.maxAgeTitle,
+      ]) {
+        expect(
+          find.descendant(
+            of: find.byType(LabeledFormRow),
+            matching: find.text(label),
+          ),
+          findsOneWidget,
+          reason: label,
+        );
+      }
+      // Years, months and days of both ages.
+      expect(find.text('Years'), findsNWidgets(2));
+      final inputs = tester.widgetList<ShadInputFormField>(
+        find.byType(ShadInputFormField),
+      );
+      expect(inputs, hasLength(6));
+      expect(inputs.every((input) => input.label == null), isTrue);
+    });
+
+    testWidgets('Issue 54: the rows are stacked by FormBody, the age rows '
+        'with the same gap', (tester) async {
+      await pump(tester);
+
+      expect(find.byType(FormBody), findsOneWidget);
+      final cluster = tester.widget<Column>(
+        find
+            .descendant(
+              of: find.byType(AgeEligibilityFields),
+              matching: find.byType(Column),
+            )
+            .first,
+      );
+      expect(cluster.spacing, FormSpacing.rowGap);
+    });
+
+    testWidgets('Issue 54: enabled false turns every field off', (
+      tester,
+    ) async {
+      await pump(tester, enabled: false);
+
+      final inputs = tester.widgetList<ShadInputFormField>(
+        find.byType(ShadInputFormField),
+      );
+      expect(inputs.every((input) => !input.enabled), isTrue);
+      expect(
+        tester
+            .widget<ShadSelectFormField<EventGender>>(
+              find.byType(ShadSelectFormField<EventGender>),
+            )
+            .enabled,
+        isFalse,
+      );
+    });
+
+    testWidgets('Issue 54: a refusal of the server shows on the field, and '
+        'inline', (tester) async {
+      final key = await pump(tester);
+
+      key.currentState!.showErrors(
+        fieldErrors: const {
+          AgeEligibilityFormFields.minAgeYearsId: 'Too young.',
+        },
+        formError: 'Could not update eligibility.',
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Too young.'), findsOneWidget);
+      expect(find.text('Could not update eligibility.'), findsOneWidget);
+    });
   });
 }

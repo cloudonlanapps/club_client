@@ -161,5 +161,40 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Could not save.'), findsNothing);
     });
+
+    testWidgets('Issue 54: a field the server refused can be corrected and '
+        'validated again', (tester) async {
+      final key = await _pump(tester);
+      await _type(tester, 0, 'Asha');
+      await _type(tester, 1, 'Asha');
+      key.currentState!.showErrors(
+        fieldErrors: const {_nameId: 'Name already taken.'},
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Name already taken.'), findsOneWidget);
+
+      await _type(tester, 0, 'Asha K');
+      await _type(tester, 1, 'Asha K');
+      expect(key.currentState!.validate(), {_nameId: 'Asha K'});
+      await tester.pumpAndSettle();
+      expect(find.text('Name already taken.'), findsNothing);
+    });
+
+    testWidgets('Issue 54: showErrors replaces the messages of an earlier '
+        'refusal', (tester) async {
+      final key = await _pump(tester);
+      key.currentState!.showErrors(
+        fieldErrors: const {_nameId: 'Name already taken.'},
+      );
+      await tester.pumpAndSettle();
+
+      key.currentState!.showErrors(
+        fieldErrors: const {_againId: 'Does not match our records.'},
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Name already taken.'), findsNothing);
+      expect(find.text('Does not match our records.'), findsOneWidget);
+    });
   });
 }

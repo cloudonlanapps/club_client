@@ -1,5 +1,8 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show ProgrammeEndDateForm, ProgrammeEndDateFormState;
+    show
+        ProgrammeEndDateForm,
+        ProgrammeEndDateFormFields,
+        ProgrammeEndDateFormState;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -37,7 +40,8 @@ const String programmeEndDateFailedMessage =
 /// A programme with no end date sets one, with a reason. One whose end is
 /// ahead moves it to another day, or removes it with **Clear end date**. The
 /// form states the last session the chosen day gives before anything is
-/// saved. A refusal stays in the dialog as an inline message.
+/// saved. A refusal stays in the dialog: on the last day when it is about
+/// the day chosen, else as an inline message.
 class ProgrammeEndDateDialog extends ConsumerStatefulWidget {
   const ProgrammeEndDateDialog({
     required this.event,
@@ -75,24 +79,30 @@ class ProgrammeEndDateDialogState
   Future<void> save() async {
     final form = formKey.currentState;
     if (form == null || saving) return;
-    final value = form.validate();
-    if (value == null) return;
+    final values = form.validate();
+    if (values == null) return;
     if (!form.isDirty) {
       Navigator.of(context).pop();
       return;
     }
+    final lastDay = values[ProgrammeEndDateFormFields.lastDayId] as DateTime;
     final cutoff = programmeEndCutoff(
       widget.event,
-      value.lastDay,
+      lastDay,
       schedules: widget.schedules,
     );
     if (cutoff == null) {
-      form.showFormError(programmeEndDateNoSessionMessage);
+      form.showErrors(
+        fieldErrors: const {
+          ProgrammeEndDateFormFields.lastDayId:
+              programmeEndDateNoSessionMessage,
+        },
+      );
       return;
     }
     await commit(
-      lastDay: value.lastDay,
-      reason: value.reason,
+      lastDay: lastDay,
+      reason: values[ProgrammeEndDateFormFields.reasonId] as String,
       done: hasEnd
           ? programmeEndDateChangedMessage
           : programmeEndDateSetMessage,
@@ -132,9 +142,23 @@ class ProgrammeEndDateDialogState
     } on Object catch (e) {
       if (!mounted) return;
       setState(() => saving = false);
-      formKey.currentState?.showFormError(failureOf(e));
+      final message = failureOf(e);
+      if (isAboutLastDay(e) && lastDay != null) {
+        formKey.currentState?.showErrors(
+          fieldErrors: {ProgrammeEndDateFormFields.lastDayId: message},
+        );
+      } else {
+        formKey.currentState?.showErrors(formError: message);
+      }
     }
   }
+
+  /// Whether the refusal [error] is about the day chosen: too far ahead, or
+  /// a last session too close to now.
+  bool isAboutLastDay(Object error) =>
+      error is ServerException &&
+      (error.code == SdkErrorCode.beyondSchedulingHorizon ||
+          error.code == SdkErrorCode.cutoffTooSoon);
 
   String failureOf(Object error) {
     if (error is ServerException && error.code == SdkErrorCode.invalidState) {

@@ -1,5 +1,5 @@
 /// Pure validators for `EventCreateForm`. Reused by the form's fields and by
-/// its cross-field `handleSubmit` gate; SDK-free so tests can call them
+/// its cross-field rule; SDK-free so tests can call them
 /// directly.
 class EventCreateFormValidators {
   EventCreateFormValidators._();

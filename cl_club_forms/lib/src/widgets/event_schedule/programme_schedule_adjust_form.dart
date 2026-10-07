@@ -4,8 +4,11 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../models/programme_schedule_adjust_value.dart';
 import '../../models/programme_schedule_data.dart';
 import '../event_create/event_create_form_fields.dart' show EventVenueOption;
+import '../form/form_body.dart';
+import '../form/form_contract.dart';
 import '../form/labeled_form_row.dart';
 import 'event_venue_select_field.dart';
+import 'programme_schedule_adjust_form_fields.dart';
 import 'programme_schedule_adjust_form_validators.dart';
 import 'programme_schedule_fields.dart';
 
@@ -16,10 +19,8 @@ import 'programme_schedule_fields.dart';
 ///
 /// SDK-free: the host seeds [initialValue], [fromOptions] and [venues] from
 /// its models and drives the form through a
-/// `GlobalKey<ProgrammeScheduleAdjustFormState>` —
-/// [ProgrammeScheduleAdjustFormState.validate] from Save,
-/// [ProgrammeScheduleAdjustFormState.isDirty] for no-op detection — and
-/// shows a refusal with [ProgrammeScheduleAdjustFormState.showFormError].
+/// `GlobalKey<ProgrammeScheduleAdjustFormState>` ([FormContract]); a refusal
+/// goes back on the field it is about, or inline, with `showErrors`.
 class ProgrammeScheduleAdjustForm extends StatefulWidget {
   const ProgrammeScheduleAdjustForm({
     required this.initialValue,
@@ -28,15 +29,6 @@ class ProgrammeScheduleAdjustForm extends StatefulWidget {
     this.enabled = true,
     super.key,
   });
-
-  /// Field id of the From session picker.
-  static const String fromId = 'from';
-
-  /// Field id of the weekdays, start time, duration and sessions.
-  static const String scheduleId = 'schedule';
-
-  /// Field id of the venue picker.
-  static const String venueId = 'venue';
 
   /// How a From session is written in the picker and in [effectLine].
   static final DateFormat fromFormat = DateFormat('EEE d MMM y, HH:mm');
@@ -56,7 +48,7 @@ class ProgrammeScheduleAdjustForm extends StatefulWidget {
   /// The venues the programme may move to.
   final List<EventVenueOption> venues;
 
-  /// Whether the fields accept input.
+  /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
 
   @override
@@ -64,40 +56,42 @@ class ProgrammeScheduleAdjustForm extends StatefulWidget {
       ProgrammeScheduleAdjustFormState();
 }
 
+/// State of [ProgrammeScheduleAdjustForm]. Its values are the From session
+/// (`DateTime`), the schedule (`ProgrammeScheduleData`) and the venue id,
+/// under the ids of [ProgrammeScheduleAdjustFormFields].
 class ProgrammeScheduleAdjustFormState
-    extends State<ProgrammeScheduleAdjustForm> {
-  final formKey = GlobalKey<ShadFormState>();
-
-  /// The form-level message of a refused save, shown inline.
-  String? formError;
-
+    extends State<ProgrammeScheduleAdjustForm>
+    with FormContract<ProgrammeScheduleAdjustForm> {
   /// The From session chosen now.
   late DateTime? from = widget.initialValue.from;
 
+  /// The adjustment as the form holds it now.
   ProgrammeScheduleAdjustValue get currentValue {
     final values = formKey.currentState?.value;
     if (values == null) return widget.initialValue;
     return ProgrammeScheduleAdjustValue(
-      from: values[ProgrammeScheduleAdjustForm.fromId] as DateTime?,
+      from: values[ProgrammeScheduleAdjustFormFields.fromId] as DateTime?,
       schedule:
-          values[ProgrammeScheduleAdjustForm.scheduleId]
+          values[ProgrammeScheduleAdjustFormFields.scheduleId]
               as ProgrammeScheduleData? ??
           widget.initialValue.schedule,
-      venueId: values[ProgrammeScheduleAdjustForm.venueId] as int?,
+      venueId: values[ProgrammeScheduleAdjustFormFields.venueId] as int?,
     );
   }
 
-  /// Validates every field and returns the adjustment, else `null` (the
-  /// fields say why).
-  ProgrammeScheduleAdjustValue? validate() {
-    final form = formKey.currentState;
-    if (form == null || !form.saveAndValidate()) return null;
-    setState(() => formError = null);
-    return currentValue;
+  @override
+  Map<String, dynamic> assemble(Map<String, dynamic> values) {
+    final value = currentValue;
+    return {
+      ProgrammeScheduleAdjustFormFields.fromId: value.from,
+      ProgrammeScheduleAdjustFormFields.scheduleId: value.schedule,
+      ProgrammeScheduleAdjustFormFields.venueId: value.venueId,
+    };
   }
 
   /// Whether the terms differ from the present schedule. Choosing another
   /// From session alone changes nothing.
+  @override
   bool get isDirty {
     final value = currentValue;
     final initial = widget.initialValue;
@@ -105,33 +99,26 @@ class ProgrammeScheduleAdjustFormState
         value.venueId != initial.venueId;
   }
 
-  /// Shows [message] as the inline form-level message, e.g. a clash the
-  /// server refused the adjustment for.
-  void showFormError(String message) => setState(() => formError = message);
-
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
     final initial = widget.initialValue;
     final chosen = from;
-    final error = formError;
     return ShadForm(
       key: formKey,
       initialValue: {
-        ProgrammeScheduleAdjustForm.fromId: initial.from,
-        ProgrammeScheduleAdjustForm.scheduleId: initial.schedule,
-        ProgrammeScheduleAdjustForm.venueId: initial.venueId,
+        ProgrammeScheduleAdjustFormFields.fromId: initial.from,
+        ProgrammeScheduleAdjustFormFields.scheduleId: initial.schedule,
+        ProgrammeScheduleAdjustFormFields.venueId: initial.venueId,
       },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        spacing: 16,
+      child: FormBody(
+        error: formError,
         children: [
           LabeledFormRow(
             label: 'From',
             required: true,
             field: ShadSelectFormField<DateTime>(
-              id: ProgrammeScheduleAdjustForm.fromId,
+              id: ProgrammeScheduleAdjustFormFields.fromId,
               initialValue: initial.from,
               enabled: widget.enabled,
               placeholder: const Text('Pick a session'),
@@ -157,14 +144,14 @@ class ProgrammeScheduleAdjustFormState
             ),
           ),
           ProgrammeScheduleFormField(
-            id: ProgrammeScheduleAdjustForm.scheduleId,
+            id: ProgrammeScheduleAdjustFormFields.scheduleId,
             initialValue: initial.schedule,
             enabled: widget.enabled,
             showDateRange: false,
             validator: ProgrammeScheduleFormField.aggregateValidator,
           ),
           EventVenueSelectField(
-            id: ProgrammeScheduleAdjustForm.venueId,
+            id: ProgrammeScheduleAdjustFormFields.venueId,
             venues: widget.venues,
             initialValue: initial.venueId,
             enabled: widget.enabled,
@@ -175,13 +162,6 @@ class ProgrammeScheduleAdjustFormState
               ProgrammeScheduleAdjustForm.effectLine(chosen),
               style: theme.textTheme.small.copyWith(
                 color: theme.colorScheme.mutedForeground,
-              ),
-            ),
-          if (error != null)
-            Text(
-              error,
-              style: theme.textTheme.small.copyWith(
-                color: theme.colorScheme.destructive,
               ),
             ),
         ],

@@ -5,6 +5,7 @@ import 'package:cl_club_forms/cl_club_forms.dart'
     show
         CampScheduleForm,
         EventTimetableForm,
+        EventTimetableFormFields,
         EventTimetableFormState,
         EventTimetableFormValidators,
         SessionInput;
@@ -153,7 +154,7 @@ Future<void> _splitDay(WidgetTester tester, {required int totalHours}) async {
   );
   final end = '${(6 + totalHours).toString().padLeft(2, '0')}:00';
   state.formKey.currentState!.setFieldValue<List<SessionInput>>(
-    EventTimetableForm.sessionsId,
+    EventTimetableFormFields.sessionsId,
     [
       const SessionInput(name: 'Warm-up', startTime: '06:00', endTime: '07:00'),
       SessionInput(name: 'Drills', startTime: '07:00', endTime: end),

@@ -2,20 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../models/camp_schedule_data.dart';
+import '../form/form_body.dart';
+import '../form/form_contract.dart';
 import 'camp_schedule_fields.dart';
+import 'camp_schedule_form_fields.dart';
 
 /// Pure-UI editor for a camp event's schedule — start date, training-day
 /// count, daily start time, duration, rest days and an optional named-session
 /// split. Wraps the shared [CampScheduleFormField] in its own [ShadForm] so it
-/// can be driven the same way as the other section editors
-/// (`EventEligibilityForm`, `LocationEditForm`, …).
+/// can be driven the same way as the other section editors.
 ///
-/// Host-agnostic and SDK-free: a caller (`cl_club_events`) embeds it and drives
-/// it through a `GlobalKey<CampScheduleFormState>`, calling
-/// [CampScheduleFormState.validate] from the Save action and reading
-/// [CampScheduleFormState.isDirty] for no-op detection. The caller seeds
-/// [initialValue] from the current event (the reverse adapter) and translates
-/// the returned [CampScheduleData] back to the SDK reschedule call.
+/// Host-agnostic and SDK-free: a caller (`cl_club_events`) embeds it and
+/// drives it through a `GlobalKey<CampScheduleFormState>` ([FormContract]).
+/// The caller seeds [initialValue] from the current event (the reverse
+/// adapter) and translates the returned [CampScheduleData] back to the SDK
+/// reschedule call.
 class CampScheduleForm extends StatefulWidget {
   const CampScheduleForm({
     required this.initialValue,
@@ -27,35 +28,33 @@ class CampScheduleForm extends StatefulWidget {
   /// when editing.
   final CampScheduleData initialValue;
 
-  /// Whether the fields accept input.
+  /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
 
   @override
   State<CampScheduleForm> createState() => CampScheduleFormState();
 }
 
-class CampScheduleFormState extends State<CampScheduleForm> {
-  /// Field id the single [CampScheduleFormField] registers under.
-  static const String scheduleId = 'schedule';
-
-  final formKey = GlobalKey<ShadFormState>();
-
-  /// Validates the schedule and returns the assembled [CampScheduleData] when
-  /// valid, else `null` (the field surfaces its own inline errors via
-  /// [CampScheduleFormField.aggregateValidator] and its sub-fields).
-  CampScheduleData? validate() {
-    final form = formKey.currentState;
-    if (form == null || !form.saveAndValidate()) return null;
-    return form.value[scheduleId] as CampScheduleData?;
-  }
+/// State of [CampScheduleForm]. Its values are
+/// `{CampScheduleFormFields.scheduleId: CampScheduleData}`; the field shows
+/// its own inline errors ([CampScheduleFormField.aggregateValidator] and its
+/// inputs).
+class CampScheduleFormState extends State<CampScheduleForm>
+    with FormContract<CampScheduleForm> {
+  @override
+  Map<String, dynamic> assemble(Map<String, dynamic> values) => {
+    CampScheduleFormFields.scheduleId:
+        values[CampScheduleFormFields.scheduleId] as CampScheduleData,
+  };
 
   /// Whether the schedule differs from the value the form was seeded with.
   /// Relies on [CampScheduleData]'s value equality, so an unedited open is
   /// never dirty (an unmodified Save is a no-op).
+  @override
   bool get isDirty {
     final form = formKey.currentState;
     if (form == null) return false;
-    final current = form.value[scheduleId];
+    final current = form.value[CampScheduleFormFields.scheduleId];
     return current is CampScheduleData && current != widget.initialValue;
   }
 
@@ -63,12 +62,17 @@ class CampScheduleFormState extends State<CampScheduleForm> {
   Widget build(BuildContext context) {
     return ShadForm(
       key: formKey,
-      initialValue: {scheduleId: widget.initialValue},
-      child: CampScheduleFormField(
-        id: scheduleId,
-        initialValue: widget.initialValue,
-        enabled: widget.enabled,
-        validator: CampScheduleFormField.aggregateValidator,
+      initialValue: {CampScheduleFormFields.scheduleId: widget.initialValue},
+      child: FormBody(
+        error: formError,
+        children: [
+          CampScheduleFormField(
+            id: CampScheduleFormFields.scheduleId,
+            initialValue: widget.initialValue,
+            enabled: widget.enabled,
+            validator: CampScheduleFormField.aggregateValidator,
+          ),
+        ],
       ),
     );
   }

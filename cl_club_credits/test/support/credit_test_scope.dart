@@ -18,6 +18,9 @@ class StubAccounts extends ClCreditAccountsMasterNotifier {
   final Map<String, List<CreditAccount>> accounts;
   final List<String> opened = [];
 
+  /// When set, every action throws this instead of applying.
+  Exception? error;
+
   @override
   Future<List<CreditAccount>> build(String arg) async =>
       accounts[arg] ?? const [];
@@ -44,6 +47,8 @@ class StubAccounts extends ClCreditAccountsMasterNotifier {
     required DateTime validUntilUtc,
     required String reason,
   }) async {
+    final refusal = error;
+    if (refusal != null) throw refusal;
     actions.add('extend $accountId $reason');
     return account(accountId, membername: username, balance: 1);
   }
@@ -54,6 +59,8 @@ class StubAccounts extends ClCreditAccountsMasterNotifier {
     required int credits,
     required String reason,
   }) async {
+    final refusal = error;
+    if (refusal != null) throw refusal;
     actions.add('reverse $accountId $reason');
     return account(accountId, membername: username, balance: 0);
   }

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../form/form_body.dart';
+import '../form/form_contract.dart';
 import '../form/labeled_form_row.dart';
 import 'credit_date_field.dart';
-import 'credit_form_body.dart';
 import 'credit_form_fields.dart';
 import 'credit_form_validators.dart';
 import 'credit_number_field.dart';
@@ -11,16 +12,13 @@ import 'credit_programme_option.dart';
 import 'credit_reason_field.dart';
 
 /// Add credit: a new account for a member (club_core#101). Pure UI, driven
-/// through a `GlobalKey<CreditGrantFormState>`: [CreditGrantFormState.validate]
-/// returns the flat values, or null when invalid.
-///
-/// Values: credits (int), validFrom / validUntil (local dates), programme
-/// (an option id, or [CreditFormFields.generalProgramme]), trial (bool),
-/// reason (trimmed).
+/// through a `GlobalKey<CreditGrantFormState>` ([FormContract]).
 class CreditGrantForm extends StatefulWidget {
   const CreditGrantForm({
     required this.programmes,
     required this.initialValues,
+    this.today,
+    this.enabled = true,
     super.key,
   });
 
@@ -30,8 +28,17 @@ class CreditGrantForm extends StatefulWidget {
   /// Seed from [defaultValues].
   final Map<String, dynamic> initialValues;
 
+  /// The day the validity window is checked against; now when null.
+  final DateTime? today;
+
+  /// Whether the fields respond; the host turns it off while it saves.
+  final bool enabled;
+
   /// How long a new account is valid by default.
   static const Duration defaultValidity = Duration(days: 90);
+
+  /// What the programme select shows for a general (unbound) account.
+  static const String generalLabel = 'General';
 
   /// A fresh grant from [today]: general unless [programmeId] is given, trial
   /// when [trial].
@@ -56,40 +63,38 @@ class CreditGrantForm extends StatefulWidget {
   State<CreditGrantForm> createState() => CreditGrantFormState();
 }
 
-class CreditGrantFormState extends State<CreditGrantForm> {
-  final formKey = GlobalKey<ShadFormState>();
-  String? error;
+/// State of [CreditGrantForm]. Its values are credits (int), validFrom /
+/// validUntil (local dates), programme (an option id, or
+/// [CreditFormFields.generalProgramme]), trial (bool) and reason (trimmed).
+class CreditGrantFormState extends State<CreditGrantForm>
+    with FormContract<CreditGrantForm> {
+  @override
+  String? crossFieldError(Map<String, dynamic> values) =>
+      CreditFormValidators.window(
+        from: values[CreditFormFields.validFromId] as DateTime,
+        until: values[CreditFormFields.validUntilId] as DateTime,
+        today: widget.today ?? DateTime.now(),
+      );
 
-  /// Validates; returns the flat values, or null (with an inline message for
-  /// a cross-field rule).
-  Map<String, dynamic>? validate({DateTime? today}) {
-    final form = formKey.currentState;
-    if (form == null || !form.saveAndValidate()) return null;
-    final v = form.value;
-    final from = v[CreditFormFields.validFromId] as DateTime;
-    final until = v[CreditFormFields.validUntilId] as DateTime;
-    final windowError = CreditFormValidators.window(
-      from: from,
-      until: until,
-      today: today ?? DateTime.now(),
-    );
-    setState(() => error = windowError);
-    if (windowError != null) return null;
-    return {
-      CreditFormFields.creditsId: int.parse(
-        (v[CreditFormFields.creditsId] as String).trim(),
-      ),
-      CreditFormFields.validFromId: from,
-      CreditFormFields.validUntilId: until,
-      CreditFormFields.programmeId: v[CreditFormFields.programmeId] as int,
-      CreditFormFields.trialId: v[CreditFormFields.trialId] as bool? ?? false,
-      CreditFormFields.reasonId: (v[CreditFormFields.reasonId] as String)
-          .trim(),
-    };
-  }
+  @override
+  Map<String, dynamic> assemble(Map<String, dynamic> values) => {
+    CreditFormFields.creditsId: int.parse(
+      (values[CreditFormFields.creditsId] as String).trim(),
+    ),
+    CreditFormFields.validFromId:
+        values[CreditFormFields.validFromId] as DateTime,
+    CreditFormFields.validUntilId:
+        values[CreditFormFields.validUntilId] as DateTime,
+    CreditFormFields.programmeId: values[CreditFormFields.programmeId] as int,
+    CreditFormFields.trialId:
+        values[CreditFormFields.trialId] as bool? ?? false,
+    CreditFormFields.reasonId: (values[CreditFormFields.reasonId] as String)
+        .trim(),
+  };
 
+  /// What the select shows for programme [id].
   String programmeTitle(int id) => id == CreditFormFields.generalProgramme
-      ? 'General'
+      ? CreditGrantForm.generalLabel
       : widget.programmes
             .firstWhere(
               (p) => p.id == id,
@@ -99,46 +104,55 @@ class CreditGrantFormState extends State<CreditGrantForm> {
 
   @override
   Widget build(BuildContext context) {
-    return CreditFormBody(
-      formKey: formKey,
+    final enabled = widget.enabled;
+    return ShadForm(
+      key: formKey,
       initialValue: widget.initialValues,
-      error: error,
-      fields: [
-        const CreditNumberField(
-          id: CreditFormFields.creditsId,
-          label: 'Credits',
-        ),
-        const CreditDateField(
-          id: CreditFormFields.validFromId,
-          label: 'Valid from',
-        ),
-        const CreditDateField(
-          id: CreditFormFields.validUntilId,
-          label: 'Valid until',
-        ),
-        LabeledFormRow(
-          label: 'Programme',
-          field: ShadSelectFormField<int>(
-            id: CreditFormFields.programmeId,
-            options: [
-              const ShadOption(
-                value: CreditFormFields.generalProgramme,
-                child: Text('General'),
-              ),
-              for (final p in widget.programmes)
-                ShadOption(value: p.id, child: Text(p.title)),
-            ],
-            selectedOptionBuilder: (context, id) => Text(programmeTitle(id)),
+      child: FormBody(
+        error: formError,
+        children: [
+          CreditNumberField(
+            id: CreditFormFields.creditsId,
+            label: 'Credits',
+            enabled: enabled,
           ),
-        ),
-        ShadSwitchFormField(
-          id: CreditFormFields.trialId,
-          initialValue:
-              widget.initialValues[CreditFormFields.trialId] as bool? ?? false,
-          inputLabel: const Text('Trial'),
-        ),
-        const CreditReasonField(),
-      ],
+          CreditDateField(
+            id: CreditFormFields.validFromId,
+            label: 'Valid from',
+            enabled: enabled,
+          ),
+          CreditDateField(
+            id: CreditFormFields.validUntilId,
+            label: 'Valid until',
+            enabled: enabled,
+          ),
+          LabeledFormRow(
+            label: 'Programme',
+            field: ShadSelectFormField<int>(
+              id: CreditFormFields.programmeId,
+              enabled: enabled,
+              options: [
+                const ShadOption(
+                  value: CreditFormFields.generalProgramme,
+                  child: Text(CreditGrantForm.generalLabel),
+                ),
+                for (final p in widget.programmes)
+                  ShadOption(value: p.id, child: Text(p.title)),
+              ],
+              selectedOptionBuilder: (context, id) => Text(programmeTitle(id)),
+            ),
+          ),
+          ShadSwitchFormField(
+            id: CreditFormFields.trialId,
+            initialValue:
+                widget.initialValues[CreditFormFields.trialId] as bool? ??
+                false,
+            enabled: enabled,
+            inputLabel: const Text('Trial'),
+          ),
+          CreditReasonField(enabled: enabled),
+        ],
+      ),
     );
   }
 }

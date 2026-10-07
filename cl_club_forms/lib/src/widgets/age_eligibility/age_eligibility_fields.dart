@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../constants/form_spacing.dart';
 import 'age_eligibility_form_fields.dart';
 import 'age_input_row.dart';
 
@@ -26,9 +27,6 @@ class AgeEligibilityFields extends StatelessWidget {
       'Off: also members up to a year short of the minimum or past the '
       'maximum.';
 
-  /// Gap between the cluster's rows.
-  static const double rowGap = 12;
-
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
@@ -44,7 +42,7 @@ class AgeEligibilityFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
-      spacing: rowGap,
+      spacing: FormSpacing.rowGap,
       children: [
         AgeInputRow(
           title: minAgeTitle,

@@ -10,11 +10,13 @@ import '../../../utils/event_write_error_message.dart';
 
 /// Dialog to reschedule a single camp [occurrence] (start / duration / venue).
 ///
-/// Hosts the SDK-free [OccurrenceRescheduleForm] from `ui_lib`, supplies the
-/// venue options from the master provider, and drives the form through a
-/// `GlobalKey`. On Save it diffs via [OccurrenceRescheduleFormSubmit] and calls
-/// the camp master notifier, mapping the server's reschedule guards to friendly
-/// messages. Pops `true` when a reschedule was applied.
+/// Hosts the SDK-free [OccurrenceRescheduleForm], supplies the venue options
+/// from the master provider, and drives the form through a `GlobalKey`. On
+/// Save it diffs via [OccurrenceRescheduleFormSubmit] and calls the camp
+/// master notifier, mapping the server's reschedule guards to friendly
+/// messages: on the field a guard is about (a start in the past, a venue
+/// that is gone), else inline under the form. Pops `true` when a reschedule
+/// was applied.
 class OccurrenceRescheduleDialog extends ConsumerStatefulWidget {
   const OccurrenceRescheduleDialog({required this.occurrence, super.key});
 
@@ -29,7 +31,20 @@ class OccurrenceRescheduleDialogState
     extends ConsumerState<OccurrenceRescheduleDialog> {
   final _formKey = GlobalKey<OccurrenceRescheduleFormState>();
   bool _submitting = false;
-  String? _error;
+
+  /// Server code of a new start that is not in the future.
+  static const String pastRescheduleTimeCode = 'PAST_RESCHEDULE_TIME';
+
+  /// Server code of a venue that no longer exists.
+  static const String venueNotFoundCode = 'VENUE_NOT_FOUND';
+
+  /// The id of the form's field the refusal [e] is about, or `null` when
+  /// it is about none of them.
+  String? refusedFieldId(ServerException e) => switch (e.code) {
+    pastRescheduleTimeCode => OccurrenceRescheduleFormFields.scheduleId,
+    venueNotFoundCode => OccurrenceRescheduleFormFields.venueId,
+    _ => null,
+  };
 
   Future<void> _save() async {
     final values = _formKey.currentState?.validate();
@@ -40,10 +55,7 @@ class OccurrenceRescheduleDialogState
       return;
     }
 
-    setState(() {
-      _submitting = true;
-      _error = null;
-    });
+    setState(() => _submitting = true);
     try {
       await OccurrenceRescheduleFormSubmit.updateSchedule(
         occurrence: widget.occurrence,
@@ -64,22 +76,23 @@ class OccurrenceRescheduleDialogState
       Navigator.of(context).pop(false);
     } on ServerException catch (e) {
       if (!mounted) return;
-      setState(() {
-        _submitting = false;
-        _error = occurrenceRescheduleErrorMessage(e);
-      });
+      setState(() => _submitting = false);
+      final message = occurrenceRescheduleErrorMessage(e);
+      final fieldId = refusedFieldId(e);
+      if (fieldId == null) {
+        _formKey.currentState?.showErrors(formError: message);
+      } else {
+        _formKey.currentState?.showErrors(fieldErrors: {fieldId: message});
+      }
     } on Object catch (e) {
       if (!mounted) return;
-      setState(() {
-        _submitting = false;
-        _error = eventWriteErrorMessage(e);
-      });
+      setState(() => _submitting = false);
+      _formKey.currentState?.showErrors(formError: eventWriteErrorMessage(e));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
     final venues =
         (ref
                     .watch(
@@ -115,26 +128,13 @@ class OccurrenceRescheduleDialogState
               : const Text('Save'),
         ),
       ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 12,
-        children: [
-          OccurrenceRescheduleForm(
-            key: _formKey,
-            initialValues: buildOccurrenceRescheduleInitialValues(
-              widget.occurrence,
-            ),
-            venues: venues,
-            enabled: !_submitting,
-          ),
-          if (_error != null)
-            Text(
-              _error!,
-              style: theme.textTheme.small.copyWith(
-                color: theme.colorScheme.destructive,
-              ),
-            ),
-        ],
+      child: OccurrenceRescheduleForm(
+        key: _formKey,
+        initialValues: buildOccurrenceRescheduleInitialValues(
+          widget.occurrence,
+        ),
+        venues: venues,
+        enabled: !_submitting,
       ),
     );
   }

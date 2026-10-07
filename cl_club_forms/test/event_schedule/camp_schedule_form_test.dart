@@ -1,6 +1,7 @@
 import 'package:cl_club_forms/src/models/camp_schedule_data.dart';
 import 'package:cl_club_forms/src/widgets/event_schedule/camp_schedule_fields.dart';
 import 'package:cl_club_forms/src/widgets/event_schedule/camp_schedule_form.dart';
+import 'package:cl_club_forms/src/widgets/event_schedule/camp_schedule_form_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -48,7 +49,7 @@ void main() {
     final key = await _pump(tester, initial);
 
     final value = key.currentState!.validate();
-    expect(value, initial);
+    expect(value, {CampScheduleFormFields.scheduleId: initial});
     expect(key.currentState!.isDirty, isFalse);
   });
 
@@ -63,6 +64,31 @@ void main() {
     expect(key.currentState!.isDirty, isTrue);
     final value = key.currentState!.validate();
     expect(value, isNotNull);
-    expect(value!.durationMinutes, 180);
+    final schedule =
+        value![CampScheduleFormFields.scheduleId] as CampScheduleData;
+    expect(schedule.durationMinutes, 180);
+  });
+
+  testWidgets('Issue 54: a split the server refused shows on the schedule', (
+    tester,
+  ) async {
+    final key = await _pump(tester, _seed());
+
+    key.currentState!.showErrors(
+      fieldErrors: const {
+        CampScheduleFormFields.scheduleId: 'The sessions must add up.',
+      },
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('The sessions must add up.'), findsOneWidget);
+  });
+
+  testWidgets('Issue 54: the rest days are a labelled row of the form', (
+    tester,
+  ) async {
+    await _pump(tester, _seed());
+
+    expect(find.text('Rest Days (tap to toggle)'), findsOneWidget);
   });
 }

@@ -72,15 +72,22 @@ void main() {
     final state = await _pump(tester);
 
     expect(state.isDirty, isFalse);
-    expect(state.validate(), _initial);
+    expect(state.validate(), {
+      ProgrammeScheduleAdjustFormFields.fromId: _initial.from,
+      ProgrammeScheduleAdjustFormFields.scheduleId: _initial.schedule,
+      ProgrammeScheduleAdjustFormFields.venueId: _initial.venueId,
+    });
 
     state.formKey.currentState!.setFieldValue<DateTime>(
-      ProgrammeScheduleAdjustForm.fromId,
+      ProgrammeScheduleAdjustFormFields.fromId,
       _options[1],
     );
     await tester.pump();
     expect(state.isDirty, isFalse);
-    expect(state.validate()?.from, _options[1]);
+    expect(
+      state.validate()?[ProgrammeScheduleAdjustFormFields.fromId],
+      _options[1],
+    );
     await tester.pump();
     expect(
       find.text(ProgrammeScheduleAdjustForm.effectLine(_options[1])),
@@ -92,25 +99,47 @@ void main() {
     final state = await _pump(tester);
 
     state.formKey.currentState!.setFieldValue<ProgrammeScheduleData>(
-      ProgrammeScheduleAdjustForm.scheduleId,
+      ProgrammeScheduleAdjustFormFields.scheduleId,
       _initial.schedule.copyWith(weekdays: {DateTime.tuesday}),
     );
     await tester.pump();
 
     expect(state.isDirty, isTrue);
-    expect(state.validate()?.schedule.weekdays, {DateTime.tuesday});
+    final schedule =
+        state.validate()?[ProgrammeScheduleAdjustFormFields.scheduleId]
+            as ProgrammeScheduleData?;
+    expect(schedule?.weekdays, {DateTime.tuesday});
   });
 
   testWidgets('Issue 38: a refusal shows inline', (tester) async {
     final state = await _pump(tester);
 
-    state.showFormError('This schedule clashes with another programme.');
+    state.showErrors(
+      formError: 'This schedule clashes with another programme.',
+    );
     await tester.pump();
 
     expect(
       find.text('This schedule clashes with another programme.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('Issue 54: a refusal about a field shows on that field', (
+    tester,
+  ) async {
+    final state = await _pump(tester);
+
+    state.showErrors(
+      fieldErrors: const {
+        ProgrammeScheduleAdjustFormFields.fromId: 'Pick a later session.',
+        ProgrammeScheduleAdjustFormFields.venueId: 'That venue is gone.',
+      },
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Pick a later session.'), findsOneWidget);
+    expect(find.text('That venue is gone.'), findsOneWidget);
   });
 
   test('Issue 38: From must be one of the offered session starts', () {

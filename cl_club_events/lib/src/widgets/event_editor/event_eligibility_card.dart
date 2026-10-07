@@ -34,7 +34,11 @@ class EventEligibilityCard extends ConsumerStatefulWidget {
 class EventEligibilityCardState extends ConsumerState<EventEligibilityCard> {
   final formKey = GlobalKey<EventEligibilityFormState>();
 
+  /// Whether a save is in flight: the form's fields are then off.
+  bool saving = false;
+
   Future<bool> save(Map<String, dynamic> values) async {
+    setState(() => saving = true);
     try {
       await EventFormSubmit.updateEligibility(
         event: widget.event,
@@ -60,6 +64,8 @@ class EventEligibilityCardState extends ConsumerState<EventEligibilityCard> {
         ),
       );
       return false;
+    } finally {
+      if (mounted) setState(() => saving = false);
     }
   }
 
@@ -75,6 +81,7 @@ class EventEligibilityCardState extends ConsumerState<EventEligibilityCard> {
       editBuilder: () => EventEligibilityForm(
         key: formKey,
         initialValues: initialValues,
+        enabled: !saving,
         // The card's Reset shows only while the form holds a value.
         onChanged: () => setState(() {}),
       ),

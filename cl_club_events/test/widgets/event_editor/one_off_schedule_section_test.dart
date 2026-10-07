@@ -6,9 +6,12 @@ import 'package:cl_club_forms/cl_club_forms.dart'
         EventTimetableForm,
         OneOffScheduleData,
         OneOffScheduleForm,
+        OneOffScheduleFormFields,
         OneOffScheduleFormState,
         OneOffScheduleFormValidators,
         SessionInput;
+import 'package:cl_club_forms/src/widgets/event_schedule/event_venue_select_field.dart'
+    show EventVenueSelectField;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         clEventSchedulesProvider,
@@ -107,7 +110,7 @@ OneOffScheduleFormState _form(WidgetTester tester) =>
 /// Moves the open editor's start to [startLocal], keeping the duration.
 Future<void> _moveTo(WidgetTester tester, DateTime startLocal) async {
   _form(tester).formKey.currentState!.setFieldValue<OneOffScheduleData>(
-    OneOffScheduleForm.scheduleId,
+    OneOffScheduleFormFields.scheduleId,
     OneOffScheduleData(
       date: DateTime(startLocal.year, startLocal.month, startLocal.day),
       startTime: ShadTimeOfDay(
@@ -140,18 +143,21 @@ void main() {
       final moved = start.add(const Duration(days: 1));
       await _moveTo(tester, moved);
       final form = _form(tester).formKey.currentState!
-        ..setFieldValue<int>(OneOffScheduleForm.venueId, 9);
+        ..setFieldValue<int>(OneOffScheduleFormFields.venueId, 9);
       final hour = moved.hour.toString().padLeft(2, '0');
       final mid = (moved.hour + 1).toString().padLeft(2, '0');
       final end = (moved.hour + 2).toString().padLeft(2, '0');
-      form.setFieldValue<List<SessionInput>>(OneOffScheduleForm.sessionsId, [
-        SessionInput(
-          name: 'Warm-up',
-          startTime: '$hour:00',
-          endTime: '$mid:00',
-        ),
-        SessionInput(name: 'Match', startTime: '$mid:00', endTime: '$end:00'),
-      ]);
+      form.setFieldValue<List<SessionInput>>(
+        OneOffScheduleFormFields.sessionsId,
+        [
+          SessionInput(
+            name: 'Warm-up',
+            startTime: '$hour:00',
+            endTime: '$mid:00',
+          ),
+          SessionInput(name: 'Match', startTime: '$mid:00', endTime: '$end:00'),
+        ],
+      );
       await tester.pump();
       await _save(tester);
 
@@ -278,6 +284,58 @@ void main() {
     expect(find.textContaining('further ahead'), findsOneWidget);
     expect(find.textContaining('raw server text'), findsNothing);
     expect(find.byType(OneOffScheduleForm), findsOneWidget);
+  });
+
+  testWidgets('Issue 54: a venue the server refuses shows on the venue, and '
+      'Save can be tried again', (tester) async {
+    final start = _hoursFromNow(48);
+    final events = await _pump(tester, _oneOff(startLocal: start));
+    events.error = const ServerException(
+      statusCode: 404,
+      code: SdkErrorCode.venueNotFound,
+      message: 'raw server text',
+    );
+
+    await _openEditor(tester);
+    await _moveTo(tester, start.add(const Duration(days: 1)));
+    await _save(tester);
+
+    expect(
+      find.descendant(
+        of: find.byType(EventVenueSelectField),
+        matching: find.textContaining('That venue no longer exists'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('raw server text'), findsNothing);
+    expect(find.byType(OneOffScheduleForm), findsOneWidget);
+
+    expect(events.reschedules, hasLength(1), reason: 'the refused attempt');
+
+    events.error = null;
+    await _save(tester);
+    expect(events.reschedules, hasLength(2), reason: 'the second attempt');
+    expect(find.byType(OneOffScheduleForm), findsNothing);
+  });
+
+  test('Issue 54: oneOffScheduleValueOf reads the form values', () {
+    final schedule = OneOffScheduleData(
+      date: DateTime(2030, 5, 14),
+      startTime: const ShadTimeOfDay(hour: 18, minute: 0, second: 0),
+    );
+    const sessions = [
+      SessionInput(name: 'Warm-up', startTime: '18:00', endTime: '18:30'),
+    ];
+
+    final value = oneOffScheduleValueOf({
+      OneOffScheduleFormFields.scheduleId: schedule,
+      OneOffScheduleFormFields.venueId: 9,
+      OneOffScheduleFormFields.sessionsId: sessions,
+    });
+
+    expect(value.schedule, schedule);
+    expect(value.venueId, 9);
+    expect(value.sessions, sessions);
   });
 
   testWidgets('Issue 37: a viewer who may not edit sees no pencil', (

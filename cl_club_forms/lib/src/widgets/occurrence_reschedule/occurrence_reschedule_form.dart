@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../constants/form_spacing.dart';
 import '../../models/one_off_schedule_data.dart';
 import '../event_create/event_create_form_fields.dart' show EventVenueOption;
+import '../event_schedule/event_venue_select_field.dart';
 import '../event_schedule/one_off_schedule_fields.dart';
 import '../event_schedule/two_column_grid.dart';
-import '../form/labeled_form_row.dart';
+import '../form/form_body.dart';
+import '../form/form_contract.dart';
 import 'occurrence_reschedule_form_fields.dart';
+import 'occurrence_reschedule_form_validators.dart';
 
 /// Pure-UI form to reschedule a single camp occurrence (no SDK / no Riverpod).
 ///
@@ -17,11 +21,9 @@ import 'occurrence_reschedule_form_fields.dart';
 /// a no-op (`isDirty` stays `false`).
 ///
 /// The form owns no buttons or dialog: the host drives it through a
-/// `GlobalKey<OccurrenceRescheduleFormState>`. The host's Save calls
-/// [OccurrenceRescheduleFormState.validate], which validates and returns the
-/// flat form values (or `null` when invalid). The caller's adapter
-/// (`cl_club_events` `occurrence_reschedule_form_helpers`) diffs those values
-/// against the occurrence and sends only the changed fields to the SDK.
+/// `GlobalKey<OccurrenceRescheduleFormState>` ([FormContract]). The caller's
+/// adapter (`cl_club_events` `occurrence_reschedule_form_helpers`) diffs the
+/// values against the occurrence and sends only the changed fields to the SDK.
 class OccurrenceRescheduleForm extends StatefulWidget {
   const OccurrenceRescheduleForm({
     required this.initialValues,
@@ -38,6 +40,7 @@ class OccurrenceRescheduleForm extends StatefulWidget {
   /// venue master provider.
   final List<EventVenueOption> venues;
 
+  /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
 
   @override
@@ -45,34 +48,34 @@ class OccurrenceRescheduleForm extends StatefulWidget {
       OccurrenceRescheduleFormState();
 }
 
-class OccurrenceRescheduleFormState extends State<OccurrenceRescheduleForm> {
-  final formKey = GlobalKey<ShadFormState>();
-
-  static const List<String> _trackedIds = [
+/// State of [OccurrenceRescheduleForm]. Its values are
+/// `{scheduleId: OneOffScheduleData, venueId: int}`, under the ids of
+/// [OccurrenceRescheduleFormFields].
+class OccurrenceRescheduleFormState extends State<OccurrenceRescheduleForm>
+    with FormContract<OccurrenceRescheduleForm> {
+  /// The form's own field ids. The schedule field's inputs register under
+  /// generated ids in the same `ShadForm`; the schedule value already
+  /// gathers every one of their edits.
+  static const List<String> trackedIds = [
     OccurrenceRescheduleFormFields.scheduleId,
     OccurrenceRescheduleFormFields.venueId,
   ];
 
-  /// `true` once the schedule or venue diverges from the seeded values. A
-  /// freshly mounted form is not dirty, so an unmodified Save closes without an
-  /// SDK call.
-  bool get isDirty {
-    formKey.currentState?.save();
-    final current = formKey.currentState?.value ?? const {};
-    final initial = formKey.currentState?.initialValue ?? const {};
-    for (final id in _trackedIds) {
-      if (initial[id] != current[id]) return true;
-    }
-    return false;
-  }
+  @override
+  Map<String, dynamic> assemble(Map<String, dynamic> values) => {
+    for (final id in trackedIds) id: values[id],
+  };
 
-  /// Validates the schedule + venue fields; returns the flat form values
-  /// (`{scheduleId: OneOffScheduleData, venueId: int}`) or `null` when invalid.
-  Map<String, dynamic>? validate() {
+  /// `true` once the schedule or venue diverges from the seeded values. A
+  /// freshly mounted form is not dirty, so an unmodified Save closes without
+  /// an SDK call.
+  @override
+  bool get isDirty {
     final form = formKey.currentState;
-    if (form == null || !form.validate()) return null;
-    form.save();
-    return Map<String, dynamic>.from(form.value);
+    if (form == null) return false;
+    final current = form.value;
+    final initial = form.initialValue;
+    return trackedIds.any((id) => initial[id] != current[id]);
   }
 
   @override
@@ -80,9 +83,8 @@ class OccurrenceRescheduleFormState extends State<OccurrenceRescheduleForm> {
     return ShadForm(
       key: formKey,
       initialValue: widget.initialValues,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 16,
+      child: FormBody(
+        error: formError,
         children: [
           OneOffScheduleFormField(
             id: OccurrenceRescheduleFormFields.scheduleId,
@@ -93,34 +95,16 @@ class OccurrenceRescheduleFormState extends State<OccurrenceRescheduleForm> {
             validator: OneOffScheduleFormField.aggregateValidator,
           ),
           TwoColumnGrid(
+            runSpacing: FormSpacing.rowGap,
             children: [
-              LabeledFormRow(
-                label: 'Venue',
-                required: true,
-                field: ShadSelectFormField<int>(
-                  id: OccurrenceRescheduleFormFields.venueId,
-                  initialValue:
-                      widget.initialValues[OccurrenceRescheduleFormFields
-                              .venueId]
-                          as int?,
-                  enabled: widget.enabled,
-                  placeholder: const Text('Select a venue'),
-                  validator: (value) =>
-                      value == null ? 'Venue is required' : null,
-                  options: [
-                    for (final venue in widget.venues)
-                      ShadOption(value: venue.id, child: Text(venue.name)),
-                  ],
-                  selectedOptionBuilder: (context, value) => Text(
-                    widget.venues
-                        .firstWhere(
-                          (venue) => venue.id == value,
-                          orElse: () =>
-                              EventVenueOption(id: value, name: '#$value'),
-                        )
-                        .name,
-                  ),
-                ),
+              EventVenueSelectField(
+                id: OccurrenceRescheduleFormFields.venueId,
+                venues: widget.venues,
+                initialValue:
+                    widget.initialValues[OccurrenceRescheduleFormFields.venueId]
+                        as int?,
+                enabled: widget.enabled,
+                validator: OccurrenceRescheduleFormValidators.venue,
               ),
               const SizedBox.shrink(),
             ],

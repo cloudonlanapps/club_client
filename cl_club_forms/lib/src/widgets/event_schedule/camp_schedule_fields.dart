@@ -2,6 +2,7 @@ import 'package:cl_calendar/cl_calendar.dart' show CLDatePickerFormField;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../constants/form_spacing.dart';
 import '../../models/camp_schedule_data.dart';
 import '../../models/session_input.dart';
 import '../form/labeled_form_row.dart';
@@ -194,9 +195,10 @@ class CampScheduleFormFieldBodyState extends State<CampScheduleFormFieldBody> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 16,
+      spacing: FormSpacing.rowGap,
       children: [
         TwoColumnGrid(
+          runSpacing: FormSpacing.rowGap,
           children: [
             LabeledFormRow(
               label: 'Start Date',
@@ -258,6 +260,7 @@ class CampScheduleFormFieldBodyState extends State<CampScheduleFormFieldBody> {
         // programme and one-off schedules use); Sessions takes a full-width
         // row of its own below, giving the session-title inputs the space.
         TwoColumnGrid(
+          runSpacing: FormSpacing.rowGap,
           children: [
             LabeledFormRow(
               label: 'Start Time',
@@ -321,16 +324,18 @@ class CampScheduleFormFieldBodyState extends State<CampScheduleFormFieldBody> {
           ),
         ),
         if (selectedStartDate != null)
-          CampDateExclusionCalendar(
-            campStartDate: selectedStartDate!,
-            durationDays: durationDays,
-            excludedDates: excludedDates,
-            enabled: enabled,
+          LabeledFormRow(
             label: 'Rest Days (tap to toggle)',
-            onChanged: (dates) {
-              setState(() => excludedDates = dates);
-              emit();
-            },
+            field: CampDateExclusionCalendar(
+              campStartDate: selectedStartDate!,
+              durationDays: durationDays,
+              excludedDates: excludedDates,
+              enabled: enabled,
+              onChanged: (dates) {
+                setState(() => excludedDates = dates);
+                emit();
+              },
+            ),
           ),
       ],
     );

@@ -1,9 +1,9 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
     show
         EventTimetableForm,
+        EventTimetableFormFields,
         EventTimetableFormState,
         EventTimetableFormValidators,
-        EventTimetableValue,
         SessionInput,
         TimetableScheduleOption;
 import 'package:flutter/material.dart';
@@ -16,6 +16,12 @@ const List<SessionInput> _split = [
   SessionInput(name: 'Warm-up', startTime: '06:00', endTime: '06:30'),
   SessionInput(name: 'Drills', startTime: '06:30', endTime: '08:00'),
 ];
+
+/// What the form returns for the schedule [scheduleId] split as [sessions].
+Map<String, dynamic> _values(int scheduleId, List<SessionInput> sessions) => {
+  EventTimetableFormFields.scheduleId: scheduleId,
+  EventTimetableFormFields.sessionsId: sessions,
+};
 
 const TimetableScheduleOption _earlier = TimetableScheduleOption(
   id: 10,
@@ -84,7 +90,7 @@ void main() {
       expect(state.isDirty, isFalse);
       expect(
         state.validate(),
-        const EventTimetableValue(scheduleId: 11, sessions: _split),
+        _values(11, _split),
       );
       expect(find.text('Corrects the timetable; no dates move.'), findsOne);
       expect(
@@ -100,7 +106,7 @@ void main() {
       final state = await _pump(tester, schedules: const [_current]);
 
       state.formKey.currentState!.setFieldValue<List<SessionInput>>(
-        EventTimetableForm.sessionsId,
+        EventTimetableFormFields.sessionsId,
         const [],
       );
       await tester.pump();
@@ -108,7 +114,7 @@ void main() {
       expect(state.isDirty, isTrue);
       expect(
         state.validate(),
-        const EventTimetableValue(scheduleId: 11, sessions: []),
+        _values(11, const []),
       );
     });
 
@@ -121,7 +127,7 @@ void main() {
       expect(find.text('From 1 Jul 2026 (current)'), findsOne);
 
       state.formKey.currentState!.setFieldValue<int>(
-        EventTimetableForm.scheduleId,
+        EventTimetableFormFields.scheduleId,
         0,
       );
       await tester.pumpAndSettle();
@@ -129,7 +135,7 @@ void main() {
       expect(state.selectedSchedule, _earlier);
       expect(
         state.validate(),
-        const EventTimetableValue(scheduleId: 10, sessions: []),
+        _values(10, const []),
         reason: "the earlier schedule's own timetable is edited",
       );
       expect(state.isDirty, isFalse);
@@ -165,7 +171,12 @@ void main() {
     ) async {
       final state = await _pump(tester, schedules: const [_current]);
 
-      state.showSessionsError('The sessions must add up to 2h.');
+      state.showErrors(
+        fieldErrors: const {
+          EventTimetableFormFields.sessionsId:
+              'The sessions must add up to 2h.',
+        },
+      );
       await tester.pump();
 
       expect(find.text('The sessions must add up to 2h.'), findsOne);

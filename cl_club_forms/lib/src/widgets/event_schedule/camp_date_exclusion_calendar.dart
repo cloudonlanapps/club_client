@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import 'form_field_label.dart';
-
 /// Calendar widget for selecting dates to exclude from a camp.
 ///
 /// Shows the camp duration highlighted and allows tapping dates to toggle
@@ -15,14 +13,12 @@ class CampDateExclusionCalendar extends StatefulWidget {
     required this.onChanged,
     super.key,
     this.enabled = true,
-    this.label,
   });
   final DateTime campStartDate;
   final int durationDays;
   final Set<DateTime> excludedDates;
   final ValueChanged<Set<DateTime>> onChanged;
   final bool enabled;
-  final String? label;
 
   @override
   State<CampDateExclusionCalendar> createState() =>
@@ -112,10 +108,6 @@ class CampDateExclusionCalendarState extends State<CampDateExclusionCalendar> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (widget.label != null) ...[
-          FormFieldLabel(label: widget.label!),
-          const SizedBox(height: 8),
-        ],
         Container(
           decoration: BoxDecoration(
             border: Border.all(color: theme.colorScheme.border),

@@ -2,8 +2,10 @@ import 'package:cl_calendar/cl_calendar.dart' show CLDatePickerFormField;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../models/programme_end_date_value.dart';
+import '../form/form_body.dart';
+import '../form/form_contract.dart';
 import '../form/labeled_form_row.dart';
+import 'programme_end_date_form_fields.dart';
 import 'programme_end_date_form_validators.dart';
 
 /// Pure-UI editor of a programme's end date: the last day it runs on, any
@@ -14,12 +16,9 @@ import 'programme_end_date_form_validators.dart';
 /// anything is saved.
 ///
 /// SDK-free: the host drives the form through a
-/// `GlobalKey<ProgrammeEndDateFormState>` —
-/// [ProgrammeEndDateFormState.validate] from Save,
-/// [ProgrammeEndDateFormState.isDirty] for no-op detection,
+/// `GlobalKey<ProgrammeEndDateFormState>` ([FormContract]), reads
 /// [ProgrammeEndDateFormState.reason] for an action that needs only the
-/// reason — and shows a refusal with
-/// [ProgrammeEndDateFormState.showFormError].
+/// reason, and shows a refusal with `showErrors`.
 class ProgrammeEndDateForm extends StatefulWidget {
   const ProgrammeEndDateForm({
     required this.reasonRequired,
@@ -28,12 +27,6 @@ class ProgrammeEndDateForm extends StatefulWidget {
     this.enabled = true,
     super.key,
   });
-
-  /// Field id of the last day.
-  static const String lastDayId = 'lastDay';
-
-  /// Field id of the reason.
-  static const String reasonId = 'reason';
 
   /// The day the programme ends on now; `null` when it has no end.
   final DateTime? initialDay;
@@ -44,76 +37,64 @@ class ProgrammeEndDateForm extends StatefulWidget {
   /// What ending on the given day gives, in the host's words.
   final String Function(DateTime day) resultOf;
 
-  /// Whether the fields accept input.
+  /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
 
   @override
   State<ProgrammeEndDateForm> createState() => ProgrammeEndDateFormState();
 }
 
-class ProgrammeEndDateFormState extends State<ProgrammeEndDateForm> {
-  final formKey = GlobalKey<ShadFormState>();
-
-  /// The form-level message of a refused save, shown inline.
-  String? formError;
-
+/// State of [ProgrammeEndDateForm]. Its values are the last day (a local
+/// `DateTime`) and the reason (trimmed), under the ids of
+/// [ProgrammeEndDateFormFields].
+class ProgrammeEndDateFormState extends State<ProgrammeEndDateForm>
+    with FormContract<ProgrammeEndDateForm> {
   /// The day chosen now.
   late DateTime? lastDay = widget.initialDay;
 
   /// The reason typed so far, trimmed.
   String get reason =>
-      (formKey.currentState?.value[ProgrammeEndDateForm.reasonId] as String? ??
+      (formKey.currentState?.value[ProgrammeEndDateFormFields.reasonId]
+                  as String? ??
               '')
           .trim();
 
-  /// Validates the day and the reason and returns them, else `null` (the
-  /// fields say why).
-  ProgrammeEndDateValue? validate() {
-    final form = formKey.currentState;
-    if (form == null || !form.saveAndValidate()) return null;
-    final day = form.value[ProgrammeEndDateForm.lastDayId] as DateTime?;
-    if (day == null) return null;
-    setState(() => formError = null);
-    return ProgrammeEndDateValue(lastDay: day, reason: reason);
-  }
+  @override
+  Map<String, dynamic> assemble(Map<String, dynamic> values) => {
+    ProgrammeEndDateFormFields.lastDayId:
+        values[ProgrammeEndDateFormFields.lastDayId] as DateTime,
+    ProgrammeEndDateFormFields.reasonId: reason,
+  };
 
   /// Whether the chosen day differs from the one the programme ends on now.
+  @override
   bool get isDirty {
     final day =
-        formKey.currentState?.value[ProgrammeEndDateForm.lastDayId]
+        formKey.currentState?.value[ProgrammeEndDateFormFields.lastDayId]
             as DateTime?;
     final initial = widget.initialDay;
     if (day == null || initial == null) return day != initial;
     return !DateUtils.isSameDay(day, initial);
   }
 
-  /// Shows [message] as the inline form-level message.
-  void showFormError(String message) => setState(() => formError = message);
-
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    final muted = theme.textTheme.small.copyWith(
-      color: theme.colorScheme.mutedForeground,
-    );
     final day = lastDay;
-    final error = formError;
     return ShadForm(
       key: formKey,
       initialValue: {
-        ProgrammeEndDateForm.lastDayId: widget.initialDay,
-        ProgrammeEndDateForm.reasonId: '',
+        ProgrammeEndDateFormFields.lastDayId: widget.initialDay,
+        ProgrammeEndDateFormFields.reasonId: '',
       },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        spacing: 16,
+      child: FormBody(
+        error: formError,
         children: [
           LabeledFormRow(
             label: 'Last day',
             required: true,
             field: CLDatePickerFormField(
-              id: ProgrammeEndDateForm.lastDayId,
+              id: ProgrammeEndDateFormFields.lastDayId,
               initialValue: widget.initialDay,
               enabled: widget.enabled,
               yearsBefore: 0,
@@ -121,12 +102,18 @@ class ProgrammeEndDateFormState extends State<ProgrammeEndDateForm> {
               onChanged: (value) => setState(() => lastDay = value),
             ),
           ),
-          if (day != null) Text(widget.resultOf(day), style: muted),
+          if (day != null)
+            Text(
+              widget.resultOf(day),
+              style: theme.textTheme.small.copyWith(
+                color: theme.colorScheme.mutedForeground,
+              ),
+            ),
           LabeledFormRow(
             label: 'Reason',
             required: widget.reasonRequired,
             field: ShadInputFormField(
-              id: ProgrammeEndDateForm.reasonId,
+              id: ProgrammeEndDateFormFields.reasonId,
               enabled: widget.enabled,
               keyboardType: TextInputType.text,
               maxLength: ProgrammeEndDateFormValidators.reasonMaxLength,
@@ -137,13 +124,6 @@ class ProgrammeEndDateFormState extends State<ProgrammeEndDateForm> {
               ),
             ),
           ),
-          if (error != null)
-            Text(
-              error,
-              style: theme.textTheme.small.copyWith(
-                color: theme.colorScheme.destructive,
-              ),
-            ),
         ],
       ),
     );

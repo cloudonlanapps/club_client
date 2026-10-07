@@ -5,11 +5,14 @@ import '../../models/one_off_schedule_data.dart';
 import '../../models/one_off_schedule_value.dart';
 import '../../models/session_input.dart';
 import '../event_create/event_create_form_fields.dart' show EventVenueOption;
+import '../form/form_body.dart';
+import '../form/form_contract.dart';
 import '../form/labeled_form_row.dart';
 import 'event_timetable_form_validators.dart';
 import 'event_timetable_sessions_field.dart';
 import 'event_venue_select_field.dart';
 import 'one_off_schedule_fields.dart';
+import 'one_off_schedule_form_fields.dart';
 import 'one_off_schedule_form_validators.dart';
 import 'session_split_field.dart';
 
@@ -19,12 +22,9 @@ import 'session_split_field.dart';
 /// recur, so there is no recurrence input.
 ///
 /// SDK-free: the host seeds [initialValue] and [venues] from its models and
-/// drives the form through a `GlobalKey<OneOffScheduleFormState>` —
-/// [OneOffScheduleFormState.validate] from Save,
-/// [OneOffScheduleFormState.isDirty] for no-op detection — and shows a
-/// server refusal against the form with
-/// [OneOffScheduleFormState.showSessionsError] or
-/// [OneOffScheduleFormState.showFormError].
+/// drives the form through a `GlobalKey<OneOffScheduleFormState>`
+/// ([FormContract]); a server refusal goes back on the field it is about,
+/// or inline, with `showErrors`.
 class OneOffScheduleForm extends StatefulWidget {
   const OneOffScheduleForm({
     required this.initialValue,
@@ -33,15 +33,6 @@ class OneOffScheduleForm extends StatefulWidget {
     this.enabled = true,
     super.key,
   });
-
-  /// Field id of the date, start time and duration.
-  static const String scheduleId = 'schedule';
-
-  /// Field id of the venue picker.
-  static const String venueId = 'venue';
-
-  /// Field id of the sessions editor.
-  static const String sessionsId = 'sessions';
 
   /// The schedule the form is seeded with: the one-off's current one.
   final OneOffScheduleValue initialValue;
@@ -53,67 +44,68 @@ class OneOffScheduleForm extends StatefulWidget {
   /// a one-off may only be postponed. `null` accepts any start.
   final DateTime? notBefore;
 
-  /// Whether the fields accept input.
+  /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
 
   @override
   State<OneOffScheduleForm> createState() => OneOffScheduleFormState();
 }
 
-class OneOffScheduleFormState extends State<OneOffScheduleForm> {
-  final formKey = GlobalKey<ShadFormState>();
-
-  /// The form-level message of a failed cross-field rule, shown inline.
-  String? formError;
+/// State of [OneOffScheduleForm]. Its values are the schedule
+/// (`OneOffScheduleData`), the venue id and the sessions
+/// (`List<SessionInput>`), under the ids of [OneOffScheduleFormFields].
+class OneOffScheduleFormState extends State<OneOffScheduleForm>
+    with FormContract<OneOffScheduleForm> {
+  /// The start the sessions are walked from while none is chosen.
+  static const ShadTimeOfDay midnight = ShadTimeOfDay(
+    hour: 0,
+    minute: 0,
+    second: 0,
+  );
 
   /// The schedule the sessions editor is laid out against.
   late OneOffScheduleData schedule = widget.initialValue.schedule;
 
   /// The start time the sessions are walked from.
-  ShadTimeOfDay get sessionsStart =>
-      schedule.startTime ?? const ShadTimeOfDay(hour: 0, minute: 0, second: 0);
+  ShadTimeOfDay get sessionsStart => schedule.startTime ?? midnight;
 
+  /// The schedule as the form holds it now.
   OneOffScheduleValue get currentValue {
     final values = formKey.currentState?.value;
     if (values == null) return widget.initialValue;
     return OneOffScheduleValue(
       schedule:
-          values[OneOffScheduleForm.scheduleId] as OneOffScheduleData? ??
+          values[OneOffScheduleFormFields.scheduleId] as OneOffScheduleData? ??
           schedule,
-      venueId: values[OneOffScheduleForm.venueId] as int?,
+      venueId: values[OneOffScheduleFormFields.venueId] as int?,
       sessions: List<SessionInput>.from(
-        values[OneOffScheduleForm.sessionsId] as List? ?? const [],
+        values[OneOffScheduleFormFields.sessionsId] as List? ?? const [],
       ),
     );
   }
 
-  /// Validates every field and the postpone-only rule, and returns the
-  /// edited schedule, else `null` (the fields, or the inline form message,
-  /// say why).
-  OneOffScheduleValue? validate() {
-    final form = formKey.currentState;
-    if (form == null || !form.saveAndValidate()) return null;
+  /// The postpone-only rule: the new start is not before
+  /// [OneOffScheduleForm.notBefore].
+  @override
+  String? crossFieldError(Map<String, dynamic> values) =>
+      OneOffScheduleFormValidators.notEarlier(
+        currentValue.schedule,
+        widget.notBefore,
+      );
+
+  @override
+  Map<String, dynamic> assemble(Map<String, dynamic> values) {
     final value = currentValue;
-    final error = OneOffScheduleFormValidators.notEarlier(
-      value.schedule,
-      widget.notBefore,
-    );
-    setState(() => formError = error);
-    return error == null ? value : null;
+    return {
+      OneOffScheduleFormFields.scheduleId: value.schedule,
+      OneOffScheduleFormFields.venueId: value.venueId,
+      OneOffScheduleFormFields.sessionsId: value.sessions,
+    };
   }
 
   /// Whether the schedule differs from the one the form was seeded with.
+  @override
   bool get isDirty => currentValue != widget.initialValue;
-
-  /// Shows [message] against the sessions field, e.g. when the server
-  /// refuses the split.
-  void showSessionsError(String message) => formKey.currentState?.setFieldError(
-    OneOffScheduleForm.sessionsId,
-    message,
-  );
-
-  /// Shows [message] as the inline form-level message.
-  void showFormError(String message) => setState(() => formError = message);
 
   /// Keeps the sessions in step with the date, start time and duration: a
   /// new duration resets the split to one session, a new start time moves
@@ -128,7 +120,7 @@ class OneOffScheduleFormState extends State<OneOffScheduleForm> {
     });
     if (current.isEmpty) return;
     formKey.currentState?.setFieldValue<List<SessionInput>>(
-      OneOffScheduleForm.sessionsId,
+      OneOffScheduleFormFields.sessionsId,
       durationChanged
           ? const <SessionInput>[]
           : SessionSplitField.walkedFrom(current, sessionsStart),
@@ -137,30 +129,26 @@ class OneOffScheduleFormState extends State<OneOffScheduleForm> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
     final initial = widget.initialValue;
-    final error = formError;
     return ShadForm(
       key: formKey,
       initialValue: {
-        OneOffScheduleForm.scheduleId: initial.schedule,
-        OneOffScheduleForm.venueId: initial.venueId,
-        OneOffScheduleForm.sessionsId: initial.sessions,
+        OneOffScheduleFormFields.scheduleId: initial.schedule,
+        OneOffScheduleFormFields.venueId: initial.venueId,
+        OneOffScheduleFormFields.sessionsId: initial.sessions,
       },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        spacing: 16,
+      child: FormBody(
+        error: formError,
         children: [
           OneOffScheduleFormField(
-            id: OneOffScheduleForm.scheduleId,
+            id: OneOffScheduleFormFields.scheduleId,
             initialValue: initial.schedule,
             enabled: widget.enabled,
             validator: OneOffScheduleFormField.aggregateValidator,
             onChanged: onScheduleChanged,
           ),
           EventVenueSelectField(
-            id: OneOffScheduleForm.venueId,
+            id: OneOffScheduleFormFields.venueId,
             venues: widget.venues,
             initialValue: initial.venueId,
             enabled: widget.enabled,
@@ -169,7 +157,7 @@ class OneOffScheduleFormState extends State<OneOffScheduleForm> {
           LabeledFormRow(
             label: 'Sessions',
             field: EventTimetableSessionsField(
-              id: OneOffScheduleForm.sessionsId,
+              id: OneOffScheduleFormFields.sessionsId,
               scheduleKey: (schedule.durationMinutes, sessionsStart),
               totalMinutes: schedule.durationMinutes,
               startTime: sessionsStart,
@@ -182,13 +170,6 @@ class OneOffScheduleFormState extends State<OneOffScheduleForm> {
                   ),
             ),
           ),
-          if (error != null)
-            Text(
-              error,
-              style: theme.textTheme.small.copyWith(
-                color: theme.colorScheme.destructive,
-              ),
-            ),
         ],
       ),
     );

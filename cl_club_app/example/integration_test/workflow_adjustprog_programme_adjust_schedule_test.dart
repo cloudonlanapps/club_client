@@ -33,6 +33,7 @@ import 'package:cl_club_events/src/widgets/event_editor/programme_schedule_read.
 import 'package:cl_club_forms/cl_club_forms.dart'
     show
         ProgrammeScheduleAdjustForm,
+        ProgrammeScheduleAdjustFormFields,
         ProgrammeScheduleAdjustFormState,
         ProgrammeScheduleData;
 import 'package:club_sdk_2/club_sdk_2.dart'
@@ -193,9 +194,12 @@ void main() {
       // ─── 2. From the third session: Tue + Sat, 14:00, the other venue ─
       final from = options[_kFromIndex];
       form.formKey.currentState!
-        ..setFieldValue<DateTime>(ProgrammeScheduleAdjustForm.fromId, from)
+        ..setFieldValue<DateTime>(
+          ProgrammeScheduleAdjustFormFields.fromId,
+          from,
+        )
         ..setFieldValue<ProgrammeScheduleData>(
-          ProgrammeScheduleAdjustForm.scheduleId,
+          ProgrammeScheduleAdjustFormFields.scheduleId,
           form.widget.initialValue.schedule.copyWith(
             weekdays: _kNewDays,
             sessionStartTime: () =>
@@ -203,7 +207,7 @@ void main() {
           ),
         )
         ..setFieldValue<int>(
-          ProgrammeScheduleAdjustForm.venueId,
+          ProgrammeScheduleAdjustFormFields.venueId,
           _otherVenueId,
         );
       await tester.pump();

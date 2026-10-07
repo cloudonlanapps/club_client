@@ -23,6 +23,9 @@ mixin FormContract<T extends StatefulWidget> on State<T> {
   /// The form-level message to show inline; null when there is none.
   String? formError;
 
+  /// The ids of the fields now showing a message [showErrors] put there.
+  final Set<String> refusedFieldIds = <String>{};
+
   /// The message for a rule across fields that [values] break, or null.
   String? crossFieldError(Map<String, dynamic> values) => null;
 
@@ -36,6 +39,7 @@ mixin FormContract<T extends StatefulWidget> on State<T> {
   Map<String, dynamic>? validate() {
     final form = formKey.currentState;
     if (form == null) return null;
+    clearFieldErrors();
     if (!form.saveAndValidate(focusOnInvalid: false)) {
       setFormError(null);
       return null;
@@ -55,16 +59,35 @@ mixin FormContract<T extends StatefulWidget> on State<T> {
 
   /// Shows what the server refused: a message on each field of
   /// [fieldErrors], keyed by field id, and [formError] inline.
+  ///
+  /// The messages replace those of an earlier call, and stay on the fields
+  /// until the next [validate], which judges the fields by what they hold
+  /// then.
   void showErrors({
     Map<String, String> fieldErrors = const {},
     String? formError,
   }) {
     final form = formKey.currentState;
     if (form == null) return;
+    clearFieldErrors();
     for (final entry in fieldErrors.entries) {
       form.setFieldError(entry.key, entry.value);
+      refusedFieldIds.add(entry.key);
     }
     setFormError(formError);
+  }
+
+  /// Takes the messages [showErrors] put on the fields off again. A field
+  /// showing one counts as invalid whatever it holds, so [validate] clears
+  /// them before it checks the fields.
+  void clearFieldErrors() {
+    final form = formKey.currentState;
+    if (form != null) {
+      for (final id in refusedFieldIds) {
+        if (form.fields.containsKey(id)) form.setFieldError(id, null);
+      }
+    }
+    refusedFieldIds.clear();
   }
 
   /// Sets the inline form-level message; null clears it.

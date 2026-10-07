@@ -3,7 +3,10 @@ import 'package:cl_club_events/src/widgets/event_editor/event_schedule_section.d
 import 'package:cl_club_events/src/widgets/event_editor/programme_end_date_dialog.dart';
 import 'package:cl_club_events/src/widgets/event_editor/programme_schedule_actions.dart';
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show ProgrammeEndDateForm, ProgrammeEndDateFormState;
+    show
+        ProgrammeEndDateForm,
+        ProgrammeEndDateFormFields,
+        ProgrammeEndDateFormState;
 import 'package:cl_club_forms/src/widgets/event_schedule/programme_end_date_form_validators.dart'
     show ProgrammeEndDateFormValidators;
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -84,7 +87,7 @@ ProgrammeEndDateFormState _form(WidgetTester tester) =>
 
 Future<void> _pick(WidgetTester tester, DateTime day) async {
   _form(tester).formKey.currentState!.setFieldValue<DateTime?>(
-    ProgrammeEndDateForm.lastDayId,
+    ProgrammeEndDateFormFields.lastDayId,
     day,
   );
   await tester.pumpAndSettle();

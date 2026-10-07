@@ -19,6 +19,16 @@ class CreditFormValidators {
   static String? requiredDate(DateTime? value) =>
       value == null ? 'Pick a date' : null;
 
+  /// Shown when an extension does not move the end later.
+  static const String notExtendedMessage = 'Pick a date after the current end';
+
+  /// An extension ends after [currentValidUntil]. Returns the inline
+  /// message, or null when [until] is later.
+  static String? extended({
+    required DateTime until,
+    required DateTime currentValidUntil,
+  }) => until.isAfter(currentValidUntil) ? null : notExtendedMessage;
+
   /// The cross-field rule of a validity window, checked on submit: it ends on
   /// or after it starts, and not before [today]. Returns the inline message,
   /// or null when the window is valid.

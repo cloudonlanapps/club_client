@@ -31,7 +31,11 @@ import 'package:cl_club_events/cl_club_events.dart' show EventDetailsView;
 import 'package:cl_club_events/src/models/camp_schedule_form_helpers.dart'
     show campStartedMessage;
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show EventTimetableForm, EventTimetableFormState, SessionInput;
+    show
+        EventTimetableForm,
+        EventTimetableFormFields,
+        EventTimetableFormState,
+        SessionInput;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart'
@@ -261,7 +265,7 @@ Future<void> _correctTimetable(WidgetTester tester) async {
       .formKey
       .currentState!
       .setFieldValue<List<SessionInput>>(
-        EventTimetableForm.sessionsId,
+        EventTimetableFormFields.sessionsId,
         _kSplit,
       );
   await tester.pump();

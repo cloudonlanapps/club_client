@@ -2,6 +2,7 @@ import 'package:cl_calendar/cl_calendar.dart' show CLDatePickerFormField;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../constants/form_spacing.dart';
 import '../../models/one_off_schedule_data.dart';
 import '../form/labeled_form_row.dart';
 import 'two_column_grid.dart';
@@ -153,9 +154,10 @@ class OneOffScheduleFormFieldBodyState
     final enabled = widget.state.widget.enabled;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 16,
+      spacing: FormSpacing.rowGap,
       children: [
         TwoColumnGrid(
+          runSpacing: FormSpacing.rowGap,
           children: [
             LabeledFormRow(
               label: 'Date',
@@ -174,6 +176,7 @@ class OneOffScheduleFormFieldBodyState
           ],
         ),
         TwoColumnGrid(
+          runSpacing: FormSpacing.rowGap,
           children: [
             LabeledFormRow(
               label: 'Start Time',

@@ -2,6 +2,7 @@ import 'package:cl_calendar/cl_calendar.dart' show CLDatePickerFormField;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../constants/form_spacing.dart';
 import '../../models/programme_schedule_data.dart';
 import '../../models/session_input.dart';
 import '../form/labeled_form_row.dart';
@@ -245,7 +246,7 @@ class ProgrammeScheduleFormFieldBodyState
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 16,
+      spacing: FormSpacing.rowGap,
       children: [
         LabeledFormRow(
           label: 'Days of Week',
@@ -282,6 +283,7 @@ class ProgrammeScheduleFormFieldBodyState
         ),
         if (widget.showDateRange)
           TwoColumnGrid(
+            runSpacing: FormSpacing.rowGap,
             children: [
               LabeledFormRow(
                 label: 'Start Date',
@@ -338,6 +340,7 @@ class ProgrammeScheduleFormFieldBodyState
             ],
           ),
         TwoColumnGrid(
+          runSpacing: FormSpacing.rowGap,
           children: [
             LabeledFormRow(
               label: 'Start Time',

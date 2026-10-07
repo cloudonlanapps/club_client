@@ -34,7 +34,10 @@ import 'package:cl_club_events/src/widgets/event_editor/programme_end_date_dialo
 import 'package:cl_club_events/src/widgets/event_editor/programme_schedule_actions.dart'
     show ProgrammeScheduleActions;
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show ProgrammeEndDateForm, ProgrammeEndDateFormState;
+    show
+        ProgrammeEndDateForm,
+        ProgrammeEndDateFormFields,
+        ProgrammeEndDateFormState;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show
         Event,
@@ -179,7 +182,11 @@ void main() {
         reason: 'there is no end date to clear yet',
       );
       await _pickLastDay(tester, _kFirstLastDay);
-      await enterTextById(tester, ProgrammeEndDateForm.reasonId, _kReason);
+      await enterTextById(
+        tester,
+        ProgrammeEndDateFormFields.reasonId,
+        _kReason,
+      );
       await _saveEndDate(tester);
       await _expectEndDateShown(tester, _kFirstLastDay);
       var state = await _serverState();
@@ -320,7 +327,7 @@ ProgrammeEndDateFormState _form(WidgetTester tester) =>
 /// last session it gives.
 Future<void> _pickLastDay(WidgetTester tester, int days) async {
   _form(tester).formKey.currentState!.setFieldValue<DateTime?>(
-    ProgrammeEndDateForm.lastDayId,
+    ProgrammeEndDateFormFields.lastDayId,
     _localDay(days),
   );
   await tester.pump();

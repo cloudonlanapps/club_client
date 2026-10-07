@@ -162,6 +162,27 @@ void main() {
       expect(find.text('Could not save.'), findsNothing);
     });
 
+    testWidgets('Issue 52: a refusal for a field that is not on screen shows '
+        'inline', (tester) async {
+      final key = await _pump(tester);
+      key.currentState!.showErrors(
+        fieldErrors: const {'elsewhere': 'Not allowed here.'},
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Not allowed here.'), findsOneWidget);
+    });
+
+    testWidgets('Issue 52: an invalid form puts the focus on the first '
+        'invalid field', (tester) async {
+      final key = await _pump(tester);
+      expect(key.currentState!.validate(), isNull);
+      await tester.pumpAndSettle();
+      final first = tester.widget<EditableText>(
+        find.byType(EditableText).first,
+      );
+      expect(first.focusNode.hasFocus, isTrue);
+    });
+
     testWidgets('Issue 54: a field the server refused can be corrected and '
         'validated again', (tester) async {
       final key = await _pump(tester);

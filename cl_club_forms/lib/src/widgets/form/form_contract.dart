@@ -35,12 +35,12 @@ mixin FormContract<T extends StatefulWidget> on State<T> {
 
   /// Validates the form. Returns its values, or null when a field or a rule
   /// across fields is broken; the messages then show on the fields and
-  /// inline.
+  /// inline, and the first invalid field takes the focus.
   Map<String, dynamic>? validate() {
     final form = formKey.currentState;
     if (form == null) return null;
     clearFieldErrors();
-    if (!form.saveAndValidate(focusOnInvalid: false)) {
+    if (!form.saveAndValidate()) {
       setFormError(null);
       return null;
     }
@@ -62,7 +62,8 @@ mixin FormContract<T extends StatefulWidget> on State<T> {
   ///
   /// The messages replace those of an earlier call, and stay on the fields
   /// until the next [validate], which judges the fields by what they hold
-  /// then.
+  /// then. A message for a field that is not on screen is shown inline
+  /// instead, unless [formError] is given.
   void showErrors({
     Map<String, String> fieldErrors = const {},
     String? formError,
@@ -70,11 +71,16 @@ mixin FormContract<T extends StatefulWidget> on State<T> {
     final form = formKey.currentState;
     if (form == null) return;
     clearFieldErrors();
+    String? unplaced;
     for (final entry in fieldErrors.entries) {
+      if (!form.fields.containsKey(entry.key)) {
+        unplaced ??= entry.value;
+        continue;
+      }
       form.setFieldError(entry.key, entry.value);
       refusedFieldIds.add(entry.key);
     }
-    setFormError(formError);
+    setFormError(formError ?? unplaced);
   }
 
   /// Takes the messages [showErrors] put on the fields off again. A field

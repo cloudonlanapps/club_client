@@ -133,10 +133,12 @@ Credit has exactly two UI pieces (#101, #102):
   route plumbing, and it works over dialogs. `CreditChip.add`, the "+" chip
   of a member a picker cannot fund, does **not** open the sheet: it opens Add
   credit alone in a dialog over the picker (`showCreditGrantDialog`),
-  pre-filled with the programme and trial flag (club_client#41). In the
+  pre-filled with the programme and trial flag (club_client#41). Only an
+  admin may add credit, so "+" renders nothing for anyone else: an organizer
+  who is not an admin sees the number chip alone (club_client#49). In the
   pickers (Assign Users, Assign Trial) a member with no usable credit shows
   two chips side by side: the coin and `0` (a number chip, so it opens the
-  sheet) and then "+". A funded member shows the number chip only; once "+"
+  sheet) and then, for an admin, "+". A funded member shows the number chip only; once "+"
   is saved the row turns into that form.
 - **`CreditView`** — usable total, packages, statement (server `totalAfter`,
   never recomputed), and admin-only actions. `/memberzone/credit/:username`

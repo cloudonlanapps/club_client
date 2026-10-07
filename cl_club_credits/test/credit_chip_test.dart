@@ -2,6 +2,7 @@ import 'package:cl_club_credits/cl_club_credits.dart';
 import 'package:cl_club_credits/src/widgets/credit_action_dialog.dart';
 import 'package:cl_club_forms/cl_club_forms.dart'
     show CreditFormFields, CreditGrantForm;
+import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -211,6 +212,41 @@ void main() {
       expect(routes.depth, 1);
       expect(find.byType(CreditActionDialog), findsOneWidget);
       expect(find.byType(CreditView), findsNothing);
+    });
+  });
+
+  group('Issue 49: the "+" chip is for admins only', () {
+    Future<void> pumpAddChip(WidgetTester tester, UserPrivate? user) async {
+      await tester.pumpWidget(
+        creditScope(
+          user: user,
+          child: const CreditChip.add(
+            username: _member,
+            grantPrefill: (programmeId: 9, trial: false),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Issue 49: an admin sees "+"', (tester) async {
+      await pumpAddChip(tester, viewer('an_admin', admin: true));
+
+      expect(find.bySemanticsLabel('Add credit'), findsOneWidget);
+    });
+
+    testWidgets('Issue 49: a coach sees no "+"', (tester) async {
+      await pumpAddChip(tester, viewer('a_coach', coach: true));
+
+      expect(find.byType(CreditCountChip), findsNothing);
+    });
+
+    testWidgets('Issue 49: no "+" while the viewer is unknown', (
+      tester,
+    ) async {
+      await pumpAddChip(tester, null);
+
+      expect(find.byType(CreditCountChip), findsNothing);
     });
   });
 }

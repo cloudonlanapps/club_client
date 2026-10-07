@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clMemberCreditTotalProvider, creditSystemProvider;
 import 'package:flutter/widgets.dart';
@@ -28,7 +29,8 @@ class CreditChip extends ConsumerWidget {
   /// in a picker (club_core#105): it opens Add credit alone in a dialog,
   /// pre-filled with [grantPrefill], with no credit view behind it
   /// (club_client#41). Once saved, the picker refreshes through
-  /// `creditsVersion`.
+  /// `creditsVersion`. Only an admin may add credit, so it renders nothing
+  /// for anyone else (club_client#49).
   const CreditChip.add({
     required this.username,
     required CreditGrantPrefill this.grantPrefill,
@@ -48,6 +50,10 @@ class CreditChip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (ref.watch(creditSystemProvider) != true) return const SizedBox.shrink();
     final prefill = grantPrefill;
+    if (prefill != null &&
+        ref.watch(authStateProvider).valueOrNull?.isAdmin != true) {
+      return const SizedBox.shrink();
+    }
     final shown = prefill != null
         ? null
         : credits ?? ref.watch(clMemberCreditTotalProvider(username));

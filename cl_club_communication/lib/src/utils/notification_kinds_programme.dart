@@ -29,7 +29,7 @@ final List<NotificationKind> kProgrammeNotificationKinds = <NotificationKind>[
   // server's daily scan sends one to every admin, once, when an enrolled
   // member of a running programme stops meeting its criteria. Nobody is
   // removed. It is about one member, so a tap opens that member's profile,
-  // whose Events card marks the programme (club_client#43).
+  // whose Events section marks the programme (club_client#43).
   const NotificationKind(
     type: NotificationType.enrollmentMemberIneligible,
     typeLabel: 'Member no longer eligible',

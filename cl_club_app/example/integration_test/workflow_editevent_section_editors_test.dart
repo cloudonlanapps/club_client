@@ -360,8 +360,8 @@ void main() {
 
       // ─── Phase 5: cleanup ──────────────────────────────────────────────
       await loginViaUi(tester, _kAdmin, _kPwd);
-      // The editor exposes no event-delete affordance, so soft-delete via the
-      // master notifier (the editor feature under test does not own deletion).
+      // Soft-delete via the master notifier: the section editors under test
+      // do not own deletion (the editor's management section does).
       await container(
         tester,
       ).read(clEventsMasterProvider.notifier).deleteEvent(eventId);

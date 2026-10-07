@@ -7,7 +7,7 @@
 # directories (.native_deploy/deployed/) stay inside this checkout too. Each
 # conf clones club_server's main branch from git:
 #   app_test_server1.conf  modules off, identity verification on, default country code 44
-#   app_test_server2.conf  as p52club deploys: modules on, identity verification off, no default country code
+#   app_test_server2.conf  modules on, identity verification off, no default country code
 # Tests decide what to expect from GET /v1/capabilities, never from the club.
 
 APP_EXAMPLE_DIR := "cl_club_app/example"

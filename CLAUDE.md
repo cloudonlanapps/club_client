@@ -109,10 +109,10 @@ Rules:
   check there.
 - **The templates stay neutral and buildable.** A change to an example's
   `lib/`, `pubspec.yaml` or assets reaches every club's next build.
-- **Branches:** only `main` exists today. `beta_release` and `release`, mirroring
-  club_server's and promoted with it (`main → beta_release → release`), are
-  created at the first release under this scheme: dev builds `main`, beta
-  `beta_release`, prod `release`.
+- **Branches:** `main`, `beta_release` and `release` mirror club_server's and
+  are promoted with it (`main → beta_release → release`): dev builds `main`,
+  beta `beta_release`, prod `release`. A release is tagged
+  `RELEASE_VERSION_<major>_<minor>_<patch>`.
 
 ## Club event types (club.json)
 
@@ -476,7 +476,7 @@ own isolated server.
 
 Editing an existing entity happens **section-by-section, inline, in place** — never via a dialog/popover and never via a `/…/:id/edit` route. All section editors are built on one shared, SDK-free primitive in `ui_lib`; do not hand-roll the chrome, the edit pencil, or a dialog host per feature.
 
-1. **Use `EditableSectionCard<T>` for every structured section.** It is the canonical chrome (a titled `ShadCard`) and owns the read↔edit toggle, validation gating, no-op detection, and the in-flight saving state. The host supplies: read-mode content (`read`), the inline form (`editBuilder`, built only while editing so its `GlobalKey` attaches only in edit mode), `onValidate` (reads the form's state → partial value or `null`), `isDirty`, and `onSave(value) → Future<bool>`. `T` is the form's `validate()` return type: `Map<String, dynamic>`, for every form (rule 20).
+1. **Use `EditableSectionCard<T>` for every structured section.** It is the canonical chrome (a titled `ShadCard`) and owns the read↔edit toggle, validation gating, no-op detection, and the in-flight saving state. The host supplies: read-mode content (`read`), the inline form (`editBuilder`, built only while editing so its `GlobalKey` attaches only in edit mode), `onValidate` (reads the form's state → partial value or `null`), `isDirty`, and `onSave(value) → Future<bool>`. `T` is the form's `validate()` return type: `Map<String, dynamic>`, for every form (rule 20). A section whose form can be emptied may also pass `onReset` and `canReset`: the card then shows a reset action beside Cancel and Save in edit mode while `canReset()` is true. It empties the host's form; nothing is stored until Save.
 
 2. **The form is the SDK-free `cl_club_forms` widget; the SDK call lives in the host.** `EditableSectionCard` (in `ui_lib`) and the section forms (`UserPersonalDetailsForm`, `UserContactForm`, `UserAddressForm`, `GroupEligibilityForm`, `LocationEditForm`, …) never import `club_sdk_2`. The connected card (a `ConsumerStatefulWidget` in the feature package — e.g. `PersonalDetailsCard`, `GroupEligibilitySection`, `VenueLocationCard`) holds the `GlobalKey`, calls the `update<Section>` adapter inside `onSave`, shows the toast, invalidates providers, and returns `true`/`false`. Returning `false` keeps the card in edit mode for a retry.
 

@@ -19,15 +19,14 @@ checked against: one look at the end, not a look after each commit.
 ```bash
 just build
 scripts/capture_pages --out <dir> \
-    --static-dir ../../p52icehockyclub_website_static_data/static \
+    --static-dir <static-data-checkout>/static \
     --camp-id 1 --programme-id 4 --one-off-id 2 --venue-id 1
 ```
 
 **`--static-dir` is history.** That checkout was archived and deleted once the
 server began serving media by uuid; captures after step 3 pass no `--static-dir`
 at all, and the note the tool prints about `/static/` placeholders is expected.
-The tree now lives in the backup at
-`p52club_website_seed_backup/preserve/`.
+The tree now lives in a backup kept outside this repo.
 
 `--static-dir` serves the media tree at `/static/` from the same origin, the
 way nginx does in production. Without it every `/static/` image resolves to

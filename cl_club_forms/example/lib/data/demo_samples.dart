@@ -91,8 +91,9 @@ abstract final class DemoSamples {
     CreditProgrammeOption(id: 12, title: 'Weekend Programme'),
   ];
 
-  /// The languages the sample club translates its texts into.
-  static const List<String> languages = ['fr', 'es'];
+  /// The languages the sample club translates its texts into: Hindi and
+  /// Marathi.
+  static const List<String> languages = ['hi', 'mr'];
 
   /// The sample member, as the user forms take a member: field id to value.
   static Map<String, dynamic> get member => {
@@ -106,8 +107,9 @@ abstract final class DemoSamples {
     UserFormFields.dateOfBirthUtcId: DateTime.utc(2010, 3, 4),
     UserFormFields.addrLine1Id: '12 Example Street',
     UserFormFields.addrLine2Id: 'Block B',
-    UserFormFields.cityId: 'Sampletown',
-    UserFormFields.pincodeId: '000000',
+    UserFormFields.cityId: 'Pune',
+    UserFormFields.stateId: 'Maharashtra',
+    UserFormFields.pincodeId: '411001',
     UserFormFields.phoneId: '0000000000',
     UserFormFields.emailId: 'sam@example.test',
     UserFormFields.emergencyContactNameId: 'Pat Sample',

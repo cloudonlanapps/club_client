@@ -20,7 +20,8 @@ abstract final class ClubIdentityEntries {
           ClubDetailsFormFields.nameId: 'Example Sports Club',
           ClubDetailsFormFields.shortNameId: 'ESC',
           ClubDetailsFormFields.taglineId: FormTranslatedText('Play with us', {
-            'fr': 'Jouez avec nous',
+            'hi': 'हमारे साथ खेलें',
+            'mr': 'आमच्यासोबत खेळा',
           }),
           ClubDetailsFormFields.inquiryEmailId: 'hello@example.test',
         },
@@ -39,7 +40,7 @@ abstract final class ClubIdentityEntries {
           ClubContactFormFields.emailId: 'hello@example.test',
           ClubContactFormFields.emailSubjectId: FormTranslatedText(
             'A question for the club',
-            {'es': 'Una pregunta para el club'},
+            {'mr': 'क्लबसाठी एक प्रश्न'},
           ),
           ClubContactFormFields.instagramUrlId:
               'https://social.example.test/example-sports-club',
@@ -57,10 +58,15 @@ abstract final class ClubIdentityEntries {
         initialValues: const {
           ClubAddressFormFields.addressId: FormTranslatedText(
             '12 Example Street',
-            {'fr': '12 rue Exemple'},
+            {'hi': '12 उदाहरण मार्ग'},
           ),
-          ClubAddressFormFields.cityId: FormTranslatedText('Sampletown'),
-          ClubAddressFormFields.postalCodeId: '000000',
+          ClubAddressFormFields.cityId: FormTranslatedText('Pune', {
+            'mr': 'पुणे',
+          }),
+          ClubAddressFormFields.stateId: FormTranslatedText('Maharashtra', {
+            'mr': 'महाराष्ट्र',
+          }),
+          ClubAddressFormFields.postalCodeId: '411001',
         },
       ),
     ),

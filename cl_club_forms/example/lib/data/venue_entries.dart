@@ -22,7 +22,7 @@ abstract final class VenueEntries {
       formType: LocationEditForm,
       builder: (key) => LocationEditForm(
         key: key,
-        initialAddress: '12 Example Street, Sampletown',
+        initialAddress: '12 Example Street, Pune',
         initialMapUri: 'https://maps.example.test/main-hall',
       ),
     ),

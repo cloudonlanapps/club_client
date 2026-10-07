@@ -14,10 +14,10 @@ import 'evaluation_question_form_field.dart';
 /// Fills an evaluation against its template's [layout] (pure UI: no SDK,
 /// no Riverpod). Not a form in the sense of the form rules: nothing is
 /// collected and submitted together, each answer is reported as it changes
-/// and the host saves it at once. Sections show as titled cards; each question is one
-/// ShadForm field (keyed by [EvaluationFillFields.idFor]) with its answer
-/// input, a coach note where the item shows a comment area, and the host's
-/// [evidenceBuilder] slot where the item allows evidence.
+/// and the host saves it at once. Sections show as titled cards; each
+/// question is one ShadForm field (keyed by [EvaluationFillFields.idFor])
+/// with its answer input, a coach note where the item shows a comment area,
+/// and the host's [evidenceBuilder] slot where the item allows evidence.
 ///
 /// The widget owns the answers once seeded with [initialAnswers]; every
 /// change is reported through [onAnswerChanged] so the host can autosave

@@ -66,6 +66,12 @@ needs a server. `just unit-test cl_club_forms` runs them. The flows that
 host these forms are covered by the feature packages' tests and by the UI
 integration suite in `cl_club_app/example/integration_test/`.
 
+## Checking by eye
+
+[`docs/checklist.md`](docs/checklist.md) lists every form and where it shows
+in the app, for a visual pass. Add a line when a form is added, and correct
+one when a form moves to another screen.
+
 ## Example
 
 `example/` mounts `SignupForm` and `IdentityDocumentsConsentForm` bare, with

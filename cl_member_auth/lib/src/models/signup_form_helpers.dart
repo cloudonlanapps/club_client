@@ -1,71 +1,62 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show SignupGender, SignupSubmitResult;
+    show SignupGender, UserFormFields;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show AuthSource, Gender, SdkErrorCode, ServerException;
 import 'package:ui_lib/ui_lib.dart' show PhoneNumber;
 
-/// Form → SDK adapter for `SignupForm` (which lives SDK-free in `ui_lib`).
+/// Form → SDK adapter for `SignupForm` (which lives SDK-free in
+/// `cl_club_forms`).
 abstract final class SignupFormSubmit {
-  /// Shown under the form when registration fails for a reason no field
-  /// explains.
+  /// Shown when registration fails for a reason no field explains.
   static const String createFailedMessage =
       'Could not create account. Please try again.';
 
-  /// Registers the account the form describes and reports the outcome in the
-  /// form's own terms.
+  /// Shown on the username when another account has it.
+  static const String usernameTakenMessage = 'That username is already taken.';
+
+  /// Shown on the email when another account has it.
+  static const String emailRegisteredMessage =
+      'That email is already registered.';
+
+  /// Registers the account the form's [values] describe (keyed by
+  /// [UserFormFields] ids, as `SignupFormState.validate` returns them).
+  /// Throws what the server answers when it refuses.
   ///
   /// The phone is stored in international format, completed with
   /// [defaultCountryCode] when typed without a country code (#31).
-  static Future<SignupSubmitResult> create({
+  static Future<void> create({
     required AuthSource auth,
     required String defaultCountryCode,
-    required String username,
-    required String password,
-    required String email,
-    required String phone,
-    required DateTime dateOfBirthUtc,
-    required SignupGender gender,
-    String? firstName,
-    String? middleName,
-    String? lastName,
+    required Map<String, dynamic> values,
   }) async {
-    try {
-      await auth.register(
-        username: username,
-        email: email,
-        password: password,
-        phone: PhoneNumber.toInternational(
-          phone,
-          defaultCountryCode: defaultCountryCode,
-        ),
-        dateOfBirthUtc: dateOfBirthUtc,
-        gender: toSdkGender(gender),
-        firstName: firstName,
-        middleName: middleName,
-        lastName: lastName,
-      );
-      return const SignupSubmitResult();
-    } on ServerException catch (e) {
-      return resultFor(e.code);
-    } on Object catch (_) {
-      return const SignupSubmitResult(formError: createFailedMessage);
-    }
+    await auth.register(
+      username: values[UserFormFields.usernameId] as String,
+      email: values[UserFormFields.emailId] as String,
+      password: values[UserFormFields.passwordId] as String,
+      phone: PhoneNumber.toInternational(
+        values[UserFormFields.phoneId] as String,
+        defaultCountryCode: defaultCountryCode,
+      ),
+      dateOfBirthUtc: values[UserFormFields.dateOfBirthUtcId] as DateTime,
+      gender: toSdkGender(values[UserFormFields.genderId] as SignupGender),
+      firstName: values[UserFormFields.firstNameId] as String?,
+      middleName: values[UserFormFields.middleNameId] as String?,
+      lastName: values[UserFormFields.lastNameId] as String?,
+    );
   }
 
-  /// The form result for a refused registration: a message on the field the
-  /// server's [code] names, or [createFailedMessage].
-  static SignupSubmitResult resultFor(String? code) {
+  /// What the form shows for a refused registration: a message on the field
+  /// the server's answer names, keyed by field id. Empty when [error] names
+  /// no field; the host then shows [createFailedMessage].
+  static Map<String, String> fieldErrorsFor(Object error) {
+    final code = error is ServerException ? error.code : null;
     if (code == SdkErrorCode.duplicateUsername) {
-      return const SignupSubmitResult(
-        fieldErrors: {'username': 'That username is already taken.'},
-      );
+      return const {UserFormFields.usernameId: usernameTakenMessage};
     }
     if (code == SdkErrorCode.duplicateEmail) {
-      return const SignupSubmitResult(
-        fieldErrors: {'email': 'That email is already registered.'},
-      );
+      return const {UserFormFields.emailId: emailRegisteredMessage};
     }
-    return const SignupSubmitResult(formError: createFailedMessage);
+    return const {};
   }
 
   /// The SDK gender for the form's [gender].

@@ -21,8 +21,7 @@ void main() {
                 parentSetState = setState;
                 return UserForm(
                   key: formKey,
-                  isSubmitting: parentIsSubmitting,
-                  onSubmit: (_) async {},
+                  enabled: !parentIsSubmitting,
                   onCheckUsernameAvailable: (_) async => true,
                   onCanSubmitChanged: (_) {
                     notifyCount += 1;
@@ -52,16 +51,14 @@ void main() {
       expect(notifyCount, greaterThan(baselineNotifyCount));
       expect(tester.takeException(), isNull);
 
-      // Now trigger a parent rebuild whose new props flip canSubmit back
-      // to false (isSubmitting => true short-circuits canSubmit). This
-      // forces UserForm.didUpdateWidget to invoke onCanSubmitChanged.
+      // Now trigger a parent rebuild that turns the form off, as the host
+      // does while it saves. The form rebuilds under the parent's build.
       parentIsSubmitting = true;
       parentSetState(() {});
       await tester.pumpAndSettle();
 
-      // Pre-fix: a "setState called during build" FlutterError is thrown
-      // from inside didUpdateWidget. Post-fix the notification is
-      // deferred via addPostFrameCallback and no exception escapes.
+      // No "setState called during build" FlutterError may escape: the
+      // form never calls the parent back from inside a build.
       expect(
         tester.takeException(),
         isNull,

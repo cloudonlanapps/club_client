@@ -1,6 +1,9 @@
-import 'package:cl_club_forms/cl_club_forms.dart' show UserForm, UserFormState;
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show UserForm, UserFormFields, UserFormState;
 import 'package:cl_club_members/src/models/user_form_helpers.dart';
 import 'package:cl_club_members/src/widgets/default_password_dialog.dart';
+import 'package:cl_club_members/src/widgets/user_create_actions.dart';
+import 'package:cl_club_members/src/widgets/user_create_card.dart';
 import 'package:cl_member_auth/cl_member_auth.dart'
     show UsernameAvailability, authStateProvider, usernameAvailabilityProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -17,7 +20,10 @@ import '../utils/member_write_messages.dart';
 
 /// Admin create-user content view. No Scaffold — the host provides the shell.
 ///
-/// Layout: back button → "New User" header → form card → Create / Cancel.
+/// Layout: back button → "New User" header → [UserCreateCard] with the
+/// `UserForm` and the Cancel / Create user actions. The view validates the
+/// form, creates the user, holds the in-flight flag, and shows a username
+/// or an email the server refuses as taken on that field.
 class UserCreateView extends ConsumerStatefulWidget {
   const UserCreateView({
     required this.onCreated,
@@ -25,19 +31,41 @@ class UserCreateView extends ConsumerStatefulWidget {
     super.key,
   });
 
+  /// Heading of the page.
+  static const String pageTitle = 'New User';
+
+  /// Under the page heading's divider.
+  static const double headerGap = 8;
+
+  /// Called once the user is created.
   final VoidCallback onCreated;
+
+  /// Called when the admin leaves without creating.
   final VoidCallback onCancel;
 
   @override
   ConsumerState<UserCreateView> createState() => UserCreateViewState();
 }
 
+/// State of [UserCreateView]: holds the form's key, the in-flight flag and
+/// whether the form may be submitted.
 class UserCreateViewState extends ConsumerState<UserCreateView> {
+  /// Key of the create form.
   final createFormKey = GlobalKey<UserFormState>();
+
+  /// Whether the creation is in flight.
   bool isSubmitting = false;
+
+  /// Whether the form may be submitted: its username is confirmed
+  /// available.
   bool canSubmit = false;
 
-  Future<void> handleSubmit(Map<String, dynamic> values) async {
+  /// The Create user action: validates the form, creates the user its
+  /// values describe and reports the outcome.
+  Future<void> submit() async {
+    final values = createFormKey.currentState?.validate();
+    if (values == null) return;
+
     setState(() => isSubmitting = true);
     var success = false;
     var failedRoles = const <String>[];
@@ -49,12 +77,11 @@ class UserCreateViewState extends ConsumerState<UserCreateView> {
       );
       success = true;
     } on ServerException catch (e) {
-      if (e.code == SdkErrorCode.duplicateUsername) {
-        showError('That username is already taken.');
-      } else if (e.code == SdkErrorCode.duplicateEmail) {
-        showError('That email is already registered.');
-      } else {
+      final fieldErrors = UserFormSubmit.fieldErrorsFor(e);
+      if (fieldErrors.isEmpty) {
         showError(MemberWriteMessages.createUserFailed);
+      } else {
+        createFormKey.currentState?.showErrors(fieldErrors: fieldErrors);
       }
     } on Object catch (e) {
       showError(
@@ -64,7 +91,7 @@ class UserCreateViewState extends ConsumerState<UserCreateView> {
       if (mounted) setState(() => isSubmitting = false);
     }
     if (!success || !mounted) return;
-    final username = (values['username'] as String).trim();
+    final username = (values[UserFormFields.usernameId] as String).trim();
     if (failedRoles.isEmpty) {
       ShadToaster.of(context).show(
         ShadToast(description: Text('Created $username.')),
@@ -82,6 +109,7 @@ class UserCreateViewState extends ConsumerState<UserCreateView> {
     widget.onCreated();
   }
 
+  /// Shows [msg] as a failure toast.
   void showError(String msg) {
     if (!mounted) return;
     ShadToaster.of(context).show(
@@ -89,6 +117,7 @@ class UserCreateViewState extends ConsumerState<UserCreateView> {
     );
   }
 
+  /// Leaves the view, asking first when the form holds changes.
   Future<void> confirmCancel() async {
     final dirty = createFormKey.currentState?.isDirty ?? false;
     if (!dirty) {
@@ -107,6 +136,14 @@ class UserCreateViewState extends ConsumerState<UserCreateView> {
     }
   }
 
+  /// Whether [username] is free to create.
+  Future<bool> checkUsernameAvailable(String username) async {
+    final result = await ref.read(
+      usernameAvailabilityProvider(username).future,
+    );
+    return result == UsernameAvailability.available;
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(authStateProvider).valueOrNull;
@@ -123,76 +160,41 @@ class UserCreateViewState extends ConsumerState<UserCreateView> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           TitleRow(
-            title: 'New User',
+            title: UserCreateView.pageTitle,
             onBack: isSubmitting ? null : confirmCancel,
           ),
           const Divider(height: 1),
-          const SizedBox(height: 8),
-
+          const SizedBox(height: UserCreateView.headerGap),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              child: ShadCard(
-                padding: EdgeInsets.zero,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      UserForm(
-                        key: createFormKey,
-                        title: 'Creating new profile',
-                        initialValues: buildUserFormInitialValues(null),
-                        isSubmitting: isSubmitting,
-                        canEditDateOfBirth: true,
-                        canEditUseNamePublicly: true,
-                        canAssignAdmin: isSuperAdmin,
-                        canAssignCoach: isAdmin,
-                        onSubmit: handleSubmit,
-                        onCheckUsernameAvailable: (username) async {
-                          final result = await ref.read(
-                            usernameAvailabilityProvider(username).future,
-                          );
-                          return result == UsernameAvailability.available;
-                        },
-                        onShowDefaultPassword: () => showDialog<void>(
-                          context: context,
-                          builder: (_) => const DefaultPasswordDialog(),
-                        ),
-                        onCanSubmitChanged: (value) {
-                          if (canSubmit == value) return;
-                          setState(() => canSubmit = value);
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      buildActionButtons(),
-                    ],
-                  ),
+            child: UserCreateCard(
+              form: UserForm(
+                key: createFormKey,
+                initialValues: buildUserFormInitialValues(null),
+                enabled: !isSubmitting,
+                canEditDateOfBirth: true,
+                canEditUseNamePublicly: true,
+                canAssignAdmin: isSuperAdmin,
+                canAssignCoach: isAdmin,
+                onCheckUsernameAvailable: checkUsernameAvailable,
+                onShowDefaultPassword: () => showDialog<void>(
+                  context: context,
+                  builder: (_) => const DefaultPasswordDialog(),
                 ),
+                onCanSubmitChanged: (value) {
+                  if (canSubmit == value) return;
+                  setState(() => canSubmit = value);
+                },
+              ),
+              actions: UserCreateActions(
+                isSubmitting: isSubmitting,
+                canSubmit: canSubmit,
+                onCancel: confirmCancel,
+                onSubmit: submit,
               ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget buildActionButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        ShadButton.outline(
-          onPressed: isSubmitting ? null : confirmCancel,
-          child: const Text('Cancel'),
-        ),
-        const SizedBox(width: 12),
-        ShadButton(
-          onPressed: (isSubmitting || !canSubmit)
-              ? null
-              : () => createFormKey.currentState?.handleSubmit(),
-          child: Text(isSubmitting ? 'Creating…' : 'Create user'),
-        ),
-      ],
     );
   }
 }

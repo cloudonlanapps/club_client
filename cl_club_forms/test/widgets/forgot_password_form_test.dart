@@ -5,94 +5,69 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 Widget _wrap(Widget child) => ShadApp(home: Scaffold(body: child));
 
-Finder _field(String id) =>
-    find.byWidgetPredicate((w) => w is ShadInputFormField && w.id == id);
+Finder _email() => find.byWidgetPredicate(
+  (w) => w is ShadInputFormField && w.id == ForgotPasswordFormFields.emailId,
+);
 
-Future<void> _setSurface(WidgetTester tester) async {
+Future<GlobalKey<ForgotPasswordFormState>> _pump(
+  WidgetTester tester, {
+  VoidCallback? onSubmitted,
+}) async {
   await tester.binding.setSurfaceSize(const Size(1024, 2000));
   addTearDown(() => tester.binding.setSurfaceSize(null));
+  final key = GlobalKey<ForgotPasswordFormState>();
+  await tester.pumpWidget(
+    _wrap(ForgotPasswordForm(key: key, onSubmitted: onSubmitted)),
+  );
+  await tester.pumpAndSettle();
+  return key;
 }
 
 void main() {
   testWidgets('Issue 746: rejects an empty email', (tester) async {
-    await _setSurface(tester);
-    var submits = 0;
-    await tester.pumpWidget(
-      _wrap(
-        ForgotPasswordForm(
-          onSubmit: (_) async => submits++,
-          onBack: () {},
-        ),
-      ),
-    );
+    final key = await _pump(tester);
+
+    expect(key.currentState!.validate(), isNull);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(ShadButton, 'Send reset email'));
-    await tester.pumpAndSettle();
-
-    expect(submits, 0);
     expect(find.text('Email is required'), findsOneWidget);
   });
 
   testWidgets('Issue 746: rejects a malformed email', (tester) async {
-    await _setSurface(tester);
-    var submits = 0;
-    await tester.pumpWidget(
-      _wrap(
-        ForgotPasswordForm(
-          onSubmit: (_) async => submits++,
-          onBack: () {},
-        ),
-      ),
-    );
+    final key = await _pump(tester);
+
+    await tester.enterText(_email(), 'not-an-email');
+    expect(key.currentState!.validate(), isNull);
     await tester.pumpAndSettle();
 
-    await tester.enterText(_field('email'), 'not-an-email');
-    await tester.tap(find.widgetWithText(ShadButton, 'Send reset email'));
-    await tester.pumpAndSettle();
-
-    expect(submits, 0);
     expect(find.text('Enter a valid email'), findsOneWidget);
   });
 
   testWidgets('Issue 746: submits the trimmed email when valid', (
     tester,
   ) async {
-    await _setSurface(tester);
-    String? gotEmail;
-    await tester.pumpWidget(
-      _wrap(
-        ForgotPasswordForm(
-          onSubmit: (email) async => gotEmail = email,
-          onBack: () {},
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
+    final key = await _pump(tester);
 
-    await tester.enterText(_field('email'), '  member@example.com  ');
-    await tester.tap(find.widgetWithText(ShadButton, 'Send reset email'));
-    await tester.pumpAndSettle();
+    await tester.enterText(_email(), '  member@example.com  ');
 
-    expect(gotEmail, 'member@example.com');
+    expect(key.currentState!.validate(), {
+      ForgotPasswordFormFields.emailId: 'member@example.com',
+    });
   });
 
-  testWidgets('Issue 746: Back to sign in invokes onBack', (tester) async {
-    await _setSurface(tester);
-    var backs = 0;
-    await tester.pumpWidget(
-      _wrap(
-        ForgotPasswordForm(
-          onSubmit: (_) async {},
-          onBack: () => backs++,
-        ),
-      ),
-    );
+  testWidgets('Issue 53: ForgotPasswordForm has its field only, and Enter '
+      'calls onSubmitted', (tester) async {
+    var submitted = 0;
+    await _pump(tester, onSubmitted: () => submitted++);
+
+    expect(find.byType(ShadButton), findsNothing);
+    expect(find.text('Reset password'), findsNothing);
+    expect(find.text('Email *'), findsOneWidget);
+
+    await tester.enterText(_email(), 'member@example.com');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(ShadButton, 'Back to sign in'));
-    await tester.pumpAndSettle();
-
-    expect(backs, 1);
+    expect(submitted, 1);
   });
 }

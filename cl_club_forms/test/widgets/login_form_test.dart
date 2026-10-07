@@ -14,35 +14,44 @@ void main() {
   ) async {
     await tester.binding.setSurfaceSize(const Size(1024, 2000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    var submitted = false;
-    String? gotUser;
-    await tester.pumpWidget(
-      _wrap(
-        LoginForm(
-          onSubmit: (u, p) async {
-            submitted = true;
-            gotUser = u;
-          },
-          onForgotPassword: () {},
-          onSignUp: () {},
-        ),
-      ),
-    );
+    final key = GlobalKey<LoginFormState>();
+    await tester.pumpWidget(_wrap(LoginForm(key: key)));
     await tester.pumpAndSettle();
 
-    // Empty form — validation blocks the callback.
-    await tester.tap(find.widgetWithText(ShadButton, 'Sign in'));
+    // Empty form — validation gives the host nothing to submit.
+    expect(key.currentState!.validate(), isNull);
     await tester.pumpAndSettle();
-    expect(submitted, isFalse);
     expect(find.text('Username is required'), findsOneWidget);
     expect(find.text('Password is required'), findsOneWidget);
 
-    // Fill both — callback fires with the trimmed username.
-    await tester.enterText(_field('username'), '  asha  ');
-    await tester.enterText(_field('password'), 'secret');
-    await tester.tap(find.widgetWithText(ShadButton, 'Sign in'));
+    // Fill both — the values come back with the username trimmed.
+    await tester.enterText(_field(LoginFormFields.usernameId), '  asha  ');
+    await tester.enterText(_field(LoginFormFields.passwordId), 'secret');
+    expect(key.currentState!.validate(), {
+      LoginFormFields.usernameId: 'asha',
+      LoginFormFields.passwordId: 'secret',
+    });
+  });
+
+  testWidgets('Issue 53: LoginForm has fields only, each in a labelled row '
+      'marked required', (tester) async {
+    await tester.pumpWidget(_wrap(const LoginForm()));
     await tester.pumpAndSettle();
-    expect(submitted, isTrue);
-    expect(gotUser, 'asha');
+
+    expect(find.byType(ShadButton), findsNothing);
+    expect(find.text('Sign in'), findsNothing);
+    expect(find.text('Username *'), findsOneWidget);
+    expect(find.text('Password *'), findsOneWidget);
+  });
+
+  testWidgets('Issue 53: LoginForm with enabled off takes no input', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap(const LoginForm(enabled: false)));
+    await tester.pumpAndSettle();
+
+    for (final id in [LoginFormFields.usernameId, LoginFormFields.passwordId]) {
+      expect(tester.widget<ShadInputFormField>(_field(id)).enabled, isFalse);
+    }
   });
 }

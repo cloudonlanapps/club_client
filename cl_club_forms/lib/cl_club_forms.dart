@@ -14,6 +14,17 @@ export 'src/models/programme_schedule_adjust_value.dart'
 export 'src/models/programme_schedule_data.dart' show ProgrammeScheduleData;
 export 'src/models/session_input.dart' show SessionInput;
 export 'src/models/timetable_schedule_option.dart' show TimetableScheduleOption;
+// Account forms (pure UI, no SDK / no Riverpod)
+export 'src/widgets/account/change_password_form.dart'
+    show ChangePasswordForm, ChangePasswordFormState;
+export 'src/widgets/account/change_password_form_fields.dart'
+    show ChangePasswordFormFields;
+export 'src/widgets/account/forgot_password_form.dart'
+    show ForgotPasswordForm, ForgotPasswordFormState;
+export 'src/widgets/account/forgot_password_form_fields.dart'
+    show ForgotPasswordFormFields;
+export 'src/widgets/account/login_form.dart' show LoginForm, LoginFormState;
+export 'src/widgets/account/login_form_fields.dart' show LoginFormFields;
 // Age band of the eligibility editors (pure UI, no SDK / no Riverpod): its
 // values and the read view.
 export 'src/widgets/age_eligibility/age_eligibility_form_values.dart'
@@ -23,7 +34,6 @@ export 'src/widgets/age_eligibility/age_eligibility_summary.dart'
 export 'src/widgets/age_eligibility/age_eligibility_text.dart'
     show AgeEligibilityText;
 export 'src/widgets/age_eligibility/form_age.dart' show FormAge;
-export 'src/widgets/change_password_form.dart' show ChangePasswordForm;
 // Club identity section forms (pure UI, no SDK / no Riverpod): the club's
 // details, its contact block and its address, translatable fields as
 // FormTranslatedText; and the one-field form that adds a language to
@@ -113,7 +123,6 @@ export 'src/widgets/event_schedule/programme_schedule_adjust_form_fields.dart'
     show ProgrammeScheduleAdjustFormFields;
 // A two-column layout that stacks on narrow surfaces
 export 'src/widgets/event_schedule/two_column_grid.dart' show TwoColumnGrid;
-export 'src/widgets/forgot_password_form.dart' show ForgotPasswordForm;
 // Group forms (pure UI, no SDK / no Riverpod). The shared eligibility field
 // cluster is intentionally not exported — only the assembled forms are public.
 export 'src/widgets/group_form/group_create_form.dart'
@@ -132,7 +141,6 @@ export 'src/widgets/location_edit/location_edit_form.dart'
     show LocationEditForm, LocationEditFormState;
 export 'src/widgets/location_edit/location_edit_form_fields.dart'
     show LocationEditFormFields;
-export 'src/widgets/login_form.dart' show LoginForm;
 // Occurrence reschedule form (pure UI, no SDK / no Riverpod). Reuses the
 // one-off schedule field + a venue select; the host adapter diffs against the
 // occurrence and sends only changed fields.
@@ -144,8 +152,8 @@ export 'src/widgets/occurrence_reschedule/occurrence_reschedule_form_fields.dart
 export 'src/widgets/rename/rename_form.dart' show RenameForm, RenameFormState;
 export 'src/widgets/rename/rename_form_fields.dart' show RenameFormFields;
 // Signup form (pure UI, no SDK / no Riverpod)
-export 'src/widgets/signup/signup_form.dart'
-    show SignupForm, SignupGender, SignupSubmitResult;
+export 'src/widgets/signup/signup_form.dart' show SignupForm, SignupFormState;
+export 'src/widgets/signup/signup_gender.dart' show SignupGender;
 export 'src/widgets/signup/username_availability_field.dart'
     show UsernameAvailabilityField;
 // User form + section editors (pure UI, no SDK / no Riverpod)
@@ -156,6 +164,7 @@ export 'src/widgets/user_form/user_contact_form.dart'
     show UserContactForm, UserContactFormState;
 export 'src/widgets/user_form/user_form.dart' show UserForm, UserFormState;
 export 'src/widgets/user_form/user_form_assembly.dart' show UserFormAssembly;
+export 'src/widgets/user_form/user_form_fields.dart' show UserFormFields;
 export 'src/widgets/user_form/user_personal_details_form.dart'
     show UserPersonalDetailsForm, UserPersonalDetailsFormState;
 // Venue create form (pure UI, no SDK / no Riverpod)

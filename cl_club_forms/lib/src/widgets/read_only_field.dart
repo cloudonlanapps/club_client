@@ -1,8 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-/// Read-only label/value row used for fields the current form mode does not
-/// edit (for example, username when editing an existing user).
+import 'form/labeled_form_row.dart';
+
+/// A labelled row showing a value the current form does not edit (for
+/// example, a username that cannot change).
 class ReadOnlyField extends StatelessWidget {
   const ReadOnlyField({
     required this.label,
@@ -10,27 +12,35 @@ class ReadOnlyField extends StatelessWidget {
     super.key,
   });
 
+  /// Padding of the value inside its box.
+  static const EdgeInsets valuePadding = EdgeInsets.symmetric(
+    horizontal: 12,
+    vertical: 10,
+  );
+
+  /// Corner radius of the value's box.
+  static const double radius = 6;
+
+  /// The row's label.
   final String label;
+
+  /// The value shown.
   final String value;
 
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: theme.textTheme.small),
-        const SizedBox(height: 4),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.muted,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(value, style: theme.textTheme.p),
+    return LabeledFormRow(
+      label: label,
+      field: Container(
+        width: double.infinity,
+        padding: valuePadding,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.muted,
+          borderRadius: BorderRadius.circular(radius),
         ),
-      ],
+        child: Text(value, style: theme.textTheme.p),
+      ),
     );
   }
 }

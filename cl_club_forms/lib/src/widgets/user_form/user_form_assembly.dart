@@ -1,4 +1,5 @@
-import 'package:cl_club_forms/src/widgets/user_form/form_address.dart';
+import 'form_address.dart';
+import 'user_form_fields.dart';
 
 /// Pure, SDK-free assembly helpers for the user form.
 ///
@@ -110,6 +111,27 @@ class UserFormAssembly {
     if (d == null) return null;
     return DateTime.utc(d.year, d.month, d.day);
   }
+
+  /// The initial values of a form that edits [ids]: what [source] holds for
+  /// each, or the field's empty value (`''` for a text). Every id is present,
+  /// so the form's dirty check compares like with like.
+  static Map<String, dynamic> seed(
+    Iterable<String> ids,
+    Map<String, dynamic>? source,
+  ) => {
+    for (final id in ids)
+      id:
+          source?[id] ??
+          (UserFormFields.emptyValues.containsKey(id)
+              ? UserFormFields.emptyValues[id]
+              : ''),
+  };
+
+  /// The entries of [values] for [ids]: a section's partial map.
+  static Map<String, dynamic> pick(
+    Iterable<String> ids,
+    Map<String, dynamic> values,
+  ) => {for (final id in ids) id: values[id]};
 
   /// Converts empty strings to `null` for optional text fields.
   static String? maybe(String key, Map<String, dynamic> values) {

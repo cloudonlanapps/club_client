@@ -1,15 +1,17 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show UserContactForm, UserContactFormState;
+    show UserContactForm, UserContactFormState, UserFormFields;
 import 'package:cl_club_members/src/models/user_form_helpers.dart'
     show UserFormSubmit, buildUserFormInitialValues;
 import 'package:cl_club_members/src/utils/apply_user_update.dart';
 import 'package:cl_club_members/src/utils/profile_detail_rows.dart';
+import 'package:cl_club_members/src/utils/profile_save_error_message.dart';
 import 'package:cl_club_members/src/widgets/contact_detail_row.dart';
 import 'package:cl_club_members/src/widgets/emergency_contact_value.dart';
 import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show defaultCountryCodeProvider;
-import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
+import 'package:club_sdk_2/club_sdk_2.dart'
+    show SdkErrorCode, ServerException, UserPrivate;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
@@ -44,6 +46,16 @@ class UserContactInfoCardState extends ConsumerState<UserContactInfoCard> {
 
   /// Label of the button that starts an email to the member.
   static const String emailLabel = 'Email';
+
+  /// Shows an email the server refuses as taken on the form's email field.
+  /// Returns whether [error] was that refusal.
+  bool showRefusedEmail(ServerException error) {
+    if (error.code != SdkErrorCode.duplicateEmail) return false;
+    formKey.currentState?.showErrors(
+      fieldErrors: {UserFormFields.emailId: profileSaveErrorMessage(error)},
+    );
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,6 +123,7 @@ class UserContactInfoCardState extends ConsumerState<UserContactInfoCard> {
           defaultCountryCode: ref.read(defaultCountryCodeProvider),
         ),
         successMessage: 'Contact updated.',
+        onRefused: showRefusedEmail,
       ),
     );
   }

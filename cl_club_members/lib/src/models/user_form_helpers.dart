@@ -1,16 +1,20 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show FormAddress, SignupGender, UserFormAssembly;
+    show FormAddress, SignupGender, UserFormAssembly, UserFormFields;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClUsersMasterNotifier;
-import 'package:club_sdk_2/club_sdk_2.dart' show Address, Gender, UserPrivate;
+import 'package:club_sdk_2/club_sdk_2.dart'
+    show Address, Gender, SdkErrorCode, ServerException, UserPrivate;
 import 'package:ui_lib/ui_lib.dart' show PhoneNumber;
+
+import '../utils/member_write_messages.dart';
 
 /// Default password applied when an admin creates a user with the
 /// "Use default password" toggle on. Admins are expected to know this
 /// value out-of-band; it is not surfaced in the UI.
 const String defaultUserPassword = 'ChangeMe123';
 
-/// SDK ↔ form adapters for `UserForm` (which lives SDK-free in `ui_lib`).
+/// SDK ↔ form adapters for `UserForm` (which lives SDK-free in
+/// `cl_club_forms`).
 ///
 /// This is the one place that bridges the form's flat `Map<String, dynamic>`
 /// and form-local types ([SignupGender], [FormAddress]) to the SDK
@@ -39,28 +43,30 @@ extension GenderToForm on Gender {
 Map<String, dynamic> buildUserFormInitialValues(UserPrivate? user) {
   final ec = UserFormAssembly.parseEmergencyContact(user?.emergencyContact);
   return {
-    'username': user?.username ?? '',
-    'email': user?.email ?? '',
-    'password': '',
-    'confirmPassword': '',
-    'firstName': user?.firstName ?? '',
-    'middleName': user?.middleName ?? '',
-    'lastName': user?.lastName ?? '',
-    'nickname': user?.nickname ?? '',
-    'phone': user?.phone ?? '',
-    'emergencyContactName': ec.name ?? '',
-    'emergencyContactRelation': ec.relation,
-    'emergencyContactPhone': ec.phone ?? '',
-    'medicalInfo': user?.medicalInfo ?? '',
-    'addrLine1': user?.address?.addrLine1 ?? '',
-    'addrLine2': user?.address?.addrLine2 ?? '',
-    'city': user?.address?.city ?? '',
-    'state': user?.address?.state,
-    'pincode': user?.address?.pincode ?? '',
-    'gender': user?.gender?.toForm(),
-    'dateOfBirthUtc': UserFormAssembly.floorToUtcMidnight(user?.dateOfBirthUtc),
-    'useNamePublicly': user?.useNamePublicly ?? false,
-    'isPublicProfile': user?.isPublicProfile ?? false,
+    UserFormFields.usernameId: user?.username ?? '',
+    UserFormFields.emailId: user?.email ?? '',
+    UserFormFields.passwordId: '',
+    UserFormFields.confirmPasswordId: '',
+    UserFormFields.firstNameId: user?.firstName ?? '',
+    UserFormFields.middleNameId: user?.middleName ?? '',
+    UserFormFields.lastNameId: user?.lastName ?? '',
+    UserFormFields.nicknameId: user?.nickname ?? '',
+    UserFormFields.phoneId: user?.phone ?? '',
+    UserFormFields.emergencyContactNameId: ec.name ?? '',
+    UserFormFields.emergencyContactRelationId: ec.relation,
+    UserFormFields.emergencyContactPhoneId: ec.phone ?? '',
+    UserFormFields.medicalInfoId: user?.medicalInfo ?? '',
+    UserFormFields.addrLine1Id: user?.address?.addrLine1 ?? '',
+    UserFormFields.addrLine2Id: user?.address?.addrLine2 ?? '',
+    UserFormFields.cityId: user?.address?.city ?? '',
+    UserFormFields.stateId: user?.address?.state,
+    UserFormFields.pincodeId: user?.address?.pincode ?? '',
+    UserFormFields.genderId: user?.gender?.toForm(),
+    UserFormFields.dateOfBirthUtcId: UserFormAssembly.floorToUtcMidnight(
+      user?.dateOfBirthUtc,
+    ),
+    UserFormFields.useNamePubliclyId: user?.useNamePublicly ?? false,
+    UserFormFields.isPublicProfileId: user?.isPublicProfile ?? false,
   };
 }
 
@@ -68,11 +74,11 @@ Map<String, dynamic> buildUserFormInitialValues(UserPrivate? user) {
 /// when every field is empty.
 Address? assembleSdkAddress(Map<String, dynamic> values) {
   final form = UserFormAssembly.assembleAddress(
-    addrLine1: UserFormAssembly.maybe('addrLine1', values),
-    addrLine2: UserFormAssembly.maybe('addrLine2', values),
-    city: UserFormAssembly.maybe('city', values),
-    state: values['state'] as String?,
-    pincode: UserFormAssembly.maybe('pincode', values),
+    addrLine1: UserFormAssembly.maybe(UserFormFields.addrLine1Id, values),
+    addrLine2: UserFormAssembly.maybe(UserFormFields.addrLine2Id, values),
+    city: UserFormAssembly.maybe(UserFormFields.cityId, values),
+    state: values[UserFormFields.stateId] as String?,
+    pincode: UserFormAssembly.maybe(UserFormFields.pincodeId, values),
   );
   if (form == null) return null;
   return Address(
@@ -105,44 +111,51 @@ class UserFormSubmit {
     required String defaultCountryCode,
   }) async {
     await notifier.createUser(
-      username: (values['username'] as String).trim(),
-      email: (values['email'] as String).trim(),
-      passwordHash: (values['useDefaultPassword'] as bool? ?? true)
+      username: (values[UserFormFields.usernameId] as String).trim(),
+      email: (values[UserFormFields.emailId] as String).trim(),
+      passwordHash:
+          (values[UserFormFields.useDefaultPasswordId] as bool? ?? true)
           ? defaultUserPassword
-          : values['password'] as String,
+          : values[UserFormFields.passwordId] as String,
       phone: PhoneNumber.toInternational(
-        values['phone'] as String,
+        values[UserFormFields.phoneId] as String,
         defaultCountryCode: defaultCountryCode,
       ),
       dateOfBirthUtc: UserFormAssembly.floorToUtcMidnight(
-        values['dateOfBirthUtc'] as DateTime?,
+        values[UserFormFields.dateOfBirthUtcId] as DateTime?,
       )!,
-      gender: (values['gender'] as SignupGender).toSdk(),
-      firstName: UserFormAssembly.maybe('firstName', values),
-      middleName: UserFormAssembly.maybe('middleName', values),
-      lastName: UserFormAssembly.maybe('lastName', values),
+      gender: (values[UserFormFields.genderId] as SignupGender).toSdk(),
+      firstName: UserFormAssembly.maybe(UserFormFields.firstNameId, values),
+      middleName: UserFormAssembly.maybe(UserFormFields.middleNameId, values),
+      lastName: UserFormAssembly.maybe(UserFormFields.lastNameId, values),
       emergencyContact: UserFormAssembly.mergeEmergencyContact(
-        name: UserFormAssembly.maybe('emergencyContactName', values),
-        relation: values['emergencyContactRelation'] as String?,
+        name: UserFormAssembly.maybe(
+          UserFormFields.emergencyContactNameId,
+          values,
+        ),
+        relation: values[UserFormFields.emergencyContactRelationId] as String?,
         phone: PhoneNumber.toInternationalOrNull(
-          values['emergencyContactPhone'] as String?,
+          values[UserFormFields.emergencyContactPhoneId] as String?,
           defaultCountryCode: defaultCountryCode,
         ),
       ),
-      medicalNotes: UserFormAssembly.maybe('medicalInfo', values),
+      medicalNotes: UserFormAssembly.maybe(
+        UserFormFields.medicalInfoId,
+        values,
+      ),
       address: assembleSdkAddress(values),
     );
 
-    final username = (values['username'] as String).trim();
+    final username = (values[UserFormFields.usernameId] as String).trim();
     final failed = <String>[];
-    if (values['assignAdmin'] as bool? ?? false) {
+    if (values[UserFormFields.assignAdminId] as bool? ?? false) {
       try {
         await notifier.assignRole(username, 'admin');
       } on Object catch (_) {
         failed.add('admin');
       }
     }
-    if (values['assignCoach'] as bool? ?? false) {
+    if (values[UserFormFields.assignCoachId] as bool? ?? false) {
       try {
         await notifier.assignRole(username, 'coach');
       } on Object catch (_) {
@@ -150,6 +163,23 @@ class UserFormSubmit {
       }
     }
     return failed;
+  }
+
+  /// What the create form shows for a refused creation: a message on the
+  /// field the server's answer names, keyed by field id. Empty when [error]
+  /// names no field.
+  static Map<String, String> fieldErrorsFor(ServerException error) {
+    if (error.code == SdkErrorCode.duplicateUsername) {
+      return const {
+        UserFormFields.usernameId: MemberWriteMessages.usernameTaken,
+      };
+    }
+    if (error.code == SdkErrorCode.duplicateEmail) {
+      return const {
+        UserFormFields.emailId: MemberWriteMessages.emailRegistered,
+      };
+    }
+    return const {};
   }
 
   /// Partial update of the personal-details section (names, nickname, and —
@@ -163,18 +193,20 @@ class UserFormSubmit {
   }) {
     return notifier.updateUser(
       username,
-      firstName: () => UserFormAssembly.maybe('firstName', values),
-      middleName: () => UserFormAssembly.maybe('middleName', values),
-      lastName: () => UserFormAssembly.maybe('lastName', values),
-      nickname: () => UserFormAssembly.maybe('nickname', values),
-      useNamePublicly: values['useNamePublicly'] as bool?,
-      isPublicProfile: values['isPublicProfile'] as bool?,
-      gender: values.containsKey('gender')
-          ? () => (values['gender'] as SignupGender?)?.toSdk()
+      firstName: () =>
+          UserFormAssembly.maybe(UserFormFields.firstNameId, values),
+      middleName: () =>
+          UserFormAssembly.maybe(UserFormFields.middleNameId, values),
+      lastName: () => UserFormAssembly.maybe(UserFormFields.lastNameId, values),
+      nickname: () => UserFormAssembly.maybe(UserFormFields.nicknameId, values),
+      useNamePublicly: values[UserFormFields.useNamePubliclyId] as bool?,
+      isPublicProfile: values[UserFormFields.isPublicProfileId] as bool?,
+      gender: values.containsKey(UserFormFields.genderId)
+          ? () => (values[UserFormFields.genderId] as SignupGender?)?.toSdk()
           : null,
-      dateOfBirthUtc: values.containsKey('dateOfBirthUtc')
+      dateOfBirthUtc: values.containsKey(UserFormFields.dateOfBirthUtcId)
           ? () => UserFormAssembly.floorToUtcMidnight(
-              values['dateOfBirthUtc'] as DateTime?,
+              values[UserFormFields.dateOfBirthUtcId] as DateTime?,
             )
           : null,
     );
@@ -206,20 +238,24 @@ class UserFormSubmit {
   }) {
     return notifier.updateUser(
       username,
-      email: (values['email'] as String?)?.trim(),
+      email: (values[UserFormFields.emailId] as String?)?.trim(),
       phone: () => PhoneNumber.toInternationalOrNull(
-        values['phone'] as String?,
+        values[UserFormFields.phoneId] as String?,
         defaultCountryCode: defaultCountryCode,
       ),
       emergencyContact: () => UserFormAssembly.mergeEmergencyContact(
-        name: UserFormAssembly.maybe('emergencyContactName', values),
-        relation: values['emergencyContactRelation'] as String?,
+        name: UserFormAssembly.maybe(
+          UserFormFields.emergencyContactNameId,
+          values,
+        ),
+        relation: values[UserFormFields.emergencyContactRelationId] as String?,
         phone: PhoneNumber.toInternationalOrNull(
-          values['emergencyContactPhone'] as String?,
+          values[UserFormFields.emergencyContactPhoneId] as String?,
           defaultCountryCode: defaultCountryCode,
         ),
       ),
-      medicalNotes: () => UserFormAssembly.maybe('medicalInfo', values),
+      medicalNotes: () =>
+          UserFormAssembly.maybe(UserFormFields.medicalInfoId, values),
     );
   }
 
@@ -236,26 +272,35 @@ class UserFormSubmit {
     // as `null`, trips the server's PROTECTED_FIELDS guard with 403).
     await notifier.updateUser(
       username,
-      email: (values['email'] as String?)?.trim(),
-      firstName: () => UserFormAssembly.maybe('firstName', values),
-      middleName: () => UserFormAssembly.maybe('middleName', values),
-      lastName: () => UserFormAssembly.maybe('lastName', values),
-      nickname: () => UserFormAssembly.maybe('nickname', values),
-      phone: () => UserFormAssembly.maybe('phone', values),
-      dateOfBirthUtc: values.containsKey('dateOfBirthUtc')
+      email: (values[UserFormFields.emailId] as String?)?.trim(),
+      firstName: () =>
+          UserFormAssembly.maybe(UserFormFields.firstNameId, values),
+      middleName: () =>
+          UserFormAssembly.maybe(UserFormFields.middleNameId, values),
+      lastName: () => UserFormAssembly.maybe(UserFormFields.lastNameId, values),
+      nickname: () => UserFormAssembly.maybe(UserFormFields.nicknameId, values),
+      phone: () => UserFormAssembly.maybe(UserFormFields.phoneId, values),
+      dateOfBirthUtc: values.containsKey(UserFormFields.dateOfBirthUtcId)
           ? () => UserFormAssembly.floorToUtcMidnight(
-              values['dateOfBirthUtc'] as DateTime?,
+              values[UserFormFields.dateOfBirthUtcId] as DateTime?,
             )
           : null,
-      useNamePublicly: values['useNamePublicly'] as bool?,
+      useNamePublicly: values[UserFormFields.useNamePubliclyId] as bool?,
       emergencyContact: () => UserFormAssembly.mergeEmergencyContact(
-        name: UserFormAssembly.maybe('emergencyContactName', values),
-        relation: values['emergencyContactRelation'] as String?,
-        phone: UserFormAssembly.maybe('emergencyContactPhone', values),
+        name: UserFormAssembly.maybe(
+          UserFormFields.emergencyContactNameId,
+          values,
+        ),
+        relation: values[UserFormFields.emergencyContactRelationId] as String?,
+        phone: UserFormAssembly.maybe(
+          UserFormFields.emergencyContactPhoneId,
+          values,
+        ),
       ),
-      medicalNotes: () => UserFormAssembly.maybe('medicalInfo', values),
-      gender: values.containsKey('gender')
-          ? () => (values['gender'] as SignupGender?)?.toSdk()
+      medicalNotes: () =>
+          UserFormAssembly.maybe(UserFormFields.medicalInfoId, values),
+      gender: values.containsKey(UserFormFields.genderId)
+          ? () => (values[UserFormFields.genderId] as SignupGender?)?.toSdk()
           : null,
       address: () => assembleSdkAddress(values),
     );

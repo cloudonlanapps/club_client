@@ -1,4 +1,7 @@
-import 'package:cl_club_forms/cl_club_forms.dart' show SignupGender;
+import 'dart:io';
+
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show SignupGender, UserFormFields;
 import 'package:cl_member_auth/src/models/signup_form_helpers.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,19 +40,27 @@ class _RecordingAuth extends Fake implements AuthSource {
   }
 }
 
+/// What `SignupFormState.validate` returns for a filled signup form whose
+/// phone is [phone].
+Map<String, dynamic> _values(String phone) => {
+  UserFormFields.usernameId: 'robin',
+  UserFormFields.passwordId: 'not-a-real-password',
+  UserFormFields.emailId: 'robin@example.test',
+  UserFormFields.phoneId: phone,
+  UserFormFields.dateOfBirthUtcId: DateTime.utc(2010, 3, 4),
+  UserFormFields.genderId: SignupGender.female,
+  UserFormFields.firstNameId: null,
+  UserFormFields.middleNameId: null,
+  UserFormFields.lastNameId: null,
+};
+
 Future<String?> _registeredPhone(String typed, String code) async {
   final auth = _RecordingAuth();
-  final result = await SignupFormSubmit.create(
+  await SignupFormSubmit.create(
     auth: auth,
     defaultCountryCode: code,
-    username: 'robin',
-    password: 'not-a-real-password',
-    email: 'robin@example.test',
-    phone: typed,
-    dateOfBirthUtc: DateTime.utc(2010, 3, 4),
-    gender: SignupGender.female,
+    values: _values(typed),
   );
-  expect(result.isSuccess, isTrue);
   expect(auth.gender, Gender.female);
   return auth.phone;
 }
@@ -70,26 +81,65 @@ void main() {
     });
 
     test('Issue 31: a refusal is still a fixed field message', () async {
-      final result = await SignupFormSubmit.create(
-        auth: _RecordingAuth(
-          refusal: const ServerException(
+      const refusal = ServerException(
+        statusCode: 409,
+        code: SdkErrorCode.duplicateEmail,
+        message: 'duplicate',
+      );
+      Object? thrown;
+      try {
+        await SignupFormSubmit.create(
+          auth: _RecordingAuth(refusal: refusal),
+          defaultCountryCode: '91',
+          values: _values('9876543210'),
+        );
+      } on ServerException catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown, same(refusal));
+      expect(SignupFormSubmit.fieldErrorsFor(refusal), {
+        'email': 'That email is already registered.',
+      });
+    });
+  });
+
+  group('Issue 53: SignupFormSubmit names the field a refusal is about', () {
+    test('Issue 53: a taken username is a message on the username', () {
+      expect(
+        SignupFormSubmit.fieldErrorsFor(
+          const ServerException(
             statusCode: 409,
-            code: SdkErrorCode.duplicateEmail,
+            code: SdkErrorCode.duplicateUsername,
             message: 'duplicate',
           ),
         ),
-        defaultCountryCode: '91',
-        username: 'robin',
-        password: 'not-a-real-password',
-        email: 'robin@example.test',
-        phone: '9876543210',
-        dateOfBirthUtc: DateTime.utc(2010, 3, 4),
-        gender: SignupGender.female,
+        {UserFormFields.usernameId: SignupFormSubmit.usernameTakenMessage},
       );
+    });
 
-      expect(result.fieldErrors, {
-        'email': 'That email is already registered.',
-      });
+    test('Issue 53: any other failure names no field', () {
+      expect(SignupFormSubmit.fieldErrorsFor(Exception('offline')), isEmpty);
+      expect(
+        SignupFormSubmit.fieldErrorsFor(
+          const ServerException(
+            statusCode: 500,
+            code: 'SOMETHING_NEW',
+            message: 'raw',
+          ),
+        ),
+        isEmpty,
+      );
+    });
+  });
+
+  group('Issue 59: the signup adapter reads the form by its named ids', () {
+    test('Issue 59: no bare string field id is left in the adapter', () {
+      final source = File(
+        'lib/src/models/signup_form_helpers.dart',
+      ).readAsStringSync();
+      expect(RegExp(r"""\[['"]\w+['"]\]""").hasMatch(source), isFalse);
+      expect(source, contains('UserFormFields.usernameId'));
     });
   });
 }

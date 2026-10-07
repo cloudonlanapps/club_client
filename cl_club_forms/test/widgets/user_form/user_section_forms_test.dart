@@ -22,7 +22,10 @@ void main() {
       _wrap(
         UserAddressForm(
           key: key,
-          initialValues: const {'city': 'Pune', 'addrLine1': 'MG Road'},
+          initialValues: const {
+            UserFormFields.cityId: 'Pune',
+            UserFormFields.addrLine1Id: 'MG Road',
+          },
         ),
       ),
     );
@@ -30,9 +33,9 @@ void main() {
 
     final values = key.currentState!.validate();
     expect(values, isNotNull);
-    expect(values!.keys.toSet(), UserAddressForm.ids.toSet());
-    expect(values['addrLine1'], 'MG Road');
-    expect(values['city'], 'Pune');
+    expect(values!.keys.toSet(), UserFormFields.addressIds.toSet());
+    expect(values[UserFormFields.addrLine1Id], 'MG Road');
+    expect(values[UserFormFields.cityId], 'Pune');
   });
 
   testWidgets(
@@ -44,7 +47,7 @@ void main() {
         _wrap(
           UserPersonalDetailsForm(
             key: key,
-            initialValues: const {'firstName': 'Asha'},
+            initialValues: const {UserFormFields.firstNameId: 'Asha'},
           ),
         ),
       );
@@ -53,10 +56,10 @@ void main() {
       final values = key.currentState!.validate();
       expect(values, isNotNull);
       // Protected fields must not be sent when the editor can't change them.
-      expect(values!.containsKey('gender'), isFalse);
-      expect(values.containsKey('dateOfBirthUtc'), isFalse);
-      expect(values.containsKey('useNamePublicly'), isFalse);
-      expect(values['firstName'], 'Asha');
+      expect(values!.containsKey(UserFormFields.genderId), isFalse);
+      expect(values.containsKey(UserFormFields.dateOfBirthUtcId), isFalse);
+      expect(values.containsKey(UserFormFields.useNamePubliclyId), isFalse);
+      expect(values[UserFormFields.firstNameId], 'Asha');
     },
   );
 
@@ -70,9 +73,9 @@ void main() {
           UserPersonalDetailsForm(
             key: key,
             initialValues: {
-              'firstName': 'Asha',
-              'gender': SignupGender.female,
-              'dateOfBirthUtc': DateTime.utc(2000, 5, 1),
+              UserFormFields.firstNameId: 'Asha',
+              UserFormFields.genderId: SignupGender.female,
+              UserFormFields.dateOfBirthUtcId: DateTime.utc(2000, 5, 1),
             },
             canEditGender: true,
             canEditDateOfBirth: true,
@@ -84,9 +87,9 @@ void main() {
 
       final values = key.currentState!.validate();
       expect(values, isNotNull);
-      expect(values!.containsKey('gender'), isTrue);
-      expect(values.containsKey('dateOfBirthUtc'), isTrue);
-      expect(values.containsKey('useNamePublicly'), isTrue);
+      expect(values!.containsKey(UserFormFields.genderId), isTrue);
+      expect(values.containsKey(UserFormFields.dateOfBirthUtcId), isTrue);
+      expect(values.containsKey(UserFormFields.useNamePubliclyId), isTrue);
     },
   );
 
@@ -115,8 +118,8 @@ void main() {
         UserContactForm(
           key: key,
           initialValues: const {
-            'email': 'asha@example.com',
-            'phone': '9876543210',
+            UserFormFields.emailId: 'asha@example.com',
+            UserFormFields.phoneId: '9876543210',
           },
         ),
       ),
@@ -128,9 +131,9 @@ void main() {
 
     final values = key.currentState!.validate();
     expect(values, isNotNull);
-    expect(values!.keys.toSet(), UserContactForm.ids.toSet());
-    expect(values['email'], 'asha@example.com');
-    expect(values['phone'], '9876543210');
+    expect(values!.keys.toSet(), UserFormFields.contactIds.toSet());
+    expect(values[UserFormFields.emailId], 'asha@example.com');
+    expect(values[UserFormFields.phoneId], '9876543210');
   });
 
   testWidgets('UserContactForm blocks submit on invalid email / phone', (
@@ -142,7 +145,10 @@ void main() {
       _wrap(
         UserContactForm(
           key: key,
-          initialValues: const {'email': 'not-an-email', 'phone': '12'},
+          initialValues: const {
+            UserFormFields.emailId: 'not-an-email',
+            UserFormFields.phoneId: '12',
+          },
         ),
       ),
     );

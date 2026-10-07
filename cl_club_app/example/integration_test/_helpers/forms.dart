@@ -6,8 +6,8 @@
 //                              again if the field comes back empty. Robust
 //                              against form-field reordering across layouts.
 //   * ensureTextById         — re-type a field emptied after it was typed.
-//   * submitFormContaining   — invoke a labelled ShadButton's `onPressed`
-//                              from the ShadForm enclosing a known field.
+//   * submitFormContaining   — invoke `onPressed` of the labelled ShadButton
+//                              beside the ShadForm enclosing a known field.
 //                              Bypasses the gesture system and works for
 //                              off-screen submits.
 //   * setShadFormValues      — write non-text fields (selects, date pickers)
@@ -92,15 +92,16 @@ Finder editableById(WidgetTester tester, String fieldId) {
   return editable;
 }
 
-/// Submits a ShadForm by invoking its labelled ShadButton's `onPressed`
-/// directly. The form is identified by a unique-id field it contains.
+/// Submits a ShadForm by invoking `onPressed` of the labelled ShadButton
+/// its host draws beside it. The form is identified by a unique-id field
+/// it contains.
 ///
 /// Tapping by text proved fragile: `find.widgetWithText` on a generic
 /// label like "Sign in" can match the public navbar's button alongside
 /// the form's, and even with `.last` the synthesized tap may silently
 /// no-op (off-screen, MouseRegion stack). Walking from a known field up
-/// to its enclosing ShadForm and back down to the matching button is
-/// unambiguous and screen-size independent.
+/// to its enclosing ShadForm and on to the button nearest it
+/// ([submitButtonBeside]) is unambiguous and screen-size independent.
 Future<void> submitFormContaining(
   WidgetTester tester, {
   required String fieldId,
@@ -117,16 +118,7 @@ Future<void> submitFormContaining(
     findsOneWidget,
     reason: 'expected one ShadForm enclosing field "$fieldId"',
   );
-  final submit = find.descendant(
-    of: formFinder,
-    matching: find.widgetWithText(ShadButton, label),
-  );
-  expect(
-    submit,
-    findsOneWidget,
-    reason: 'expected one "$label" ShadButton inside the form',
-  );
-  final btn = tester.widget<ShadButton>(submit);
+  final btn = submitButtonBeside(formFinder.evaluate().single, label);
   expect(
     btn.onPressed,
     isNotNull,
@@ -134,6 +126,40 @@ Future<void> submitFormContaining(
   );
   btn.onPressed!.call();
   await tester.pumpAndSettle(const Duration(milliseconds: 250));
+}
+
+/// The ShadButton labelled [label] that belongs to the form at [form]: the
+/// one closest to it in the widget tree. A form owns no buttons; its host
+/// draws them beside it, so the button and the form share a near ancestor,
+/// which a same-labelled button elsewhere on the page (the public navbar's
+/// "Sign in") does not.
+ShadButton submitButtonBeside(Element form, String label) {
+  final around = <Element>[form];
+  form.visitAncestorElements((ancestor) {
+    around.add(ancestor);
+    return true;
+  });
+  ShadButton? nearest;
+  var nearestDistance = around.length;
+  for (final candidate in find.widgetWithText(ShadButton, label).evaluate()) {
+    var distance = around.length;
+    candidate.visitAncestorElements((ancestor) {
+      final index = around.indexOf(ancestor);
+      if (index < 0) return true;
+      distance = index;
+      return false;
+    });
+    if (distance < nearestDistance) {
+      nearest = candidate.widget as ShadButton;
+      nearestDistance = distance;
+    }
+  }
+  expect(
+    nearest,
+    isNotNull,
+    reason: 'expected a "$label" ShadButton beside the form',
+  );
+  return nearest!;
 }
 
 /// Invokes a ShadButton's `onPressed` directly instead of tapping it.
@@ -146,8 +172,8 @@ Future<void> submitFormContaining(
 /// to invoke `onPressed` sidesteps hit-testing entirely and is screen-size
 /// independent.
 ///
-/// Unlike [submitFormContaining], this does not require the button to live
-/// inside a ShadForm — pass any finder that resolves to a single ShadButton
+/// Unlike [submitFormContaining], this does not look for the button beside
+/// a ShadForm — pass any finder that resolves to a single ShadButton
 /// (e.g. `find.widgetWithText(ShadButton, 'Create user')` for a dialog
 /// action rendered outside the form).
 void invokeShadButton(WidgetTester tester, Finder finder, {String? reason}) {

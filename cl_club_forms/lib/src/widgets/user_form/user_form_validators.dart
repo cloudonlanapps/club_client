@@ -1,5 +1,5 @@
-import 'package:cl_club_forms/src/widgets/signup/signup_form.dart'
-    show SignupGender;
+import '../signup/signup_gender.dart';
+import 'user_form_fields.dart';
 
 /// Shared validators for user-shaped forms (`UserForm`, `SignupForm`).
 ///
@@ -10,10 +10,22 @@ class UserFormValidators {
 
   static final RegExp _usernamePattern = RegExp(r'^[a-z0-9_]+$');
 
+  /// Shown when the password is not typed a second time.
+  static const String confirmPasswordRequired = 'Please confirm the password';
+
+  /// Shown when the two passwords differ.
+  static const String passwordsDiffer = 'Passwords do not match';
+
+  /// Shown when a new account's username was not checked for availability.
+  static const String availabilityCheckRequired =
+      'Run the availability check before creating the account.';
+
   static String? username(String value) {
     final t = value.trim();
     if (t.isEmpty) return 'Username is required';
-    if (t.length < 3) return 'At least 3 characters';
+    if (t.length < UserFormFields.usernameMinLength) {
+      return 'At least 3 characters';
+    }
     if (!_usernamePattern.hasMatch(t)) {
       return 'Only lowercase letters, digits, and _';
     }
@@ -29,15 +41,27 @@ class UserFormValidators {
 
   static String? password(String value) {
     if (value.isEmpty) return 'Password is required';
-    if (value.length < 8) return 'At least 8 characters';
+    if (value.length < UserFormFields.passwordMinLength) {
+      return 'At least 8 characters';
+    }
     return null;
   }
+
+  /// The password typed again: required.
+  static String? confirmPassword(String value) =>
+      value.isEmpty ? confirmPasswordRequired : null;
+
+  /// The rule across the two passwords: they must be the same.
+  static String? passwordsMatch(String? password, String? confirm) =>
+      (password ?? '') == (confirm ?? '') ? null : passwordsDiffer;
 
   /// Phone is required and must be at least 10 characters.
   static String? phone(String value) {
     final t = value.trim();
     if (t.isEmpty) return 'Phone number is required';
-    if (t.length < 10) return 'Enter a valid phone number';
+    if (t.length < UserFormFields.phoneMinLength) {
+      return 'Enter a valid phone number';
+    }
     return null;
   }
 
@@ -45,7 +69,9 @@ class UserFormValidators {
   static String? phoneOptional(String value) {
     final t = value.trim();
     if (t.isEmpty) return null;
-    if (t.length < 10) return 'Enter a valid phone number';
+    if (t.length < UserFormFields.phoneMinLength) {
+      return 'Enter a valid phone number';
+    }
     return null;
   }
 

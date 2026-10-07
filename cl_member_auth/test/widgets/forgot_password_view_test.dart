@@ -81,6 +81,71 @@ void main() {
     },
   );
 
+  testWidgets('Issue 746: Back to sign in invokes onBack', (tester) async {
+    await _setSurface(tester);
+    var backs = 0;
+    await tester.pumpWidget(
+      _wrap(
+        ForgotPasswordView(
+          onNavigateToLogin: () => backs++,
+          onResetPassword: (_) async {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(ShadButton, 'Back to sign in'));
+    await tester.pumpAndSettle();
+
+    expect(backs, 1);
+  });
+
+  testWidgets('Issue 53: the view owns the heading and the Send action, '
+      'which validates the form before requesting', (tester) async {
+    await _setSurface(tester);
+    var requests = 0;
+    await tester.pumpWidget(
+      _wrap(
+        ForgotPasswordView(
+          onNavigateToLogin: () {},
+          onResetPassword: (_) async => requests++,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reset password'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(ShadButton, 'Send reset email'));
+    await tester.pumpAndSettle();
+
+    expect(requests, 0);
+    expect(find.text('Email is required'), findsOneWidget);
+  });
+
+  testWidgets('Issue 53: Enter in the email field sends the request', (
+    tester,
+  ) async {
+    await _setSurface(tester);
+    String? requested;
+    await tester.pumpWidget(
+      _wrap(
+        ForgotPasswordView(
+          onNavigateToLogin: () {},
+          onResetPassword: (email) async => requested = email,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(_emailField(), ' member@example.com ');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(requested, 'member@example.com');
+    expect(find.text('Check your email'), findsOneWidget);
+  });
+
   testWidgets('Issue 746: confirmation Back to sign in navigates to login', (
     tester,
   ) async {

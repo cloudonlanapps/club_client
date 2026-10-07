@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../user_form/user_form_fields.dart';
+
 /// Minimum username length before the **Check availability** button
 /// becomes visible. Reduces noise from single-letter probes.
 const int minLengthForCheck = 3;
@@ -9,7 +11,8 @@ const int minLengthForCheck = 3;
 /// Reusable username field with a "Check availability" affordance.
 ///
 /// Internally renders a `ShadInputFormField` plus a row with the
-/// **Check availability** button and a result/error message.
+/// **Check availability** button and a result/error message. It carries no
+/// label: the embedding form puts it in a `LabeledFormRow`.
 ///
 /// The widget is provider-agnostic: callers supply a [checkAvailability]
 /// callback that resolves to `true` when the username can be registered
@@ -23,18 +26,16 @@ const int minLengthForCheck = 3;
 /// button should disable until `confirmedUsername == current text`.
 class UsernameAvailabilityField extends StatefulWidget {
   const UsernameAvailabilityField({
-    required this.label,
     required this.enabled,
     required this.validator,
     required this.onAvailabilityChanged,
     required this.checkAvailability,
-    this.id = 'username',
+    this.id = UserFormFields.usernameId,
     this.placeholder,
     this.autofocus = false,
     super.key,
   });
 
-  final Widget label;
   final bool enabled;
   final String? Function(String) validator;
   final void Function(String username, String? confirmedUsername)
@@ -154,7 +155,6 @@ class UsernameAvailabilityFieldState extends State<UsernameAvailabilityField> {
         ShadInputFormField(
           id: widget.id,
           controller: controller,
-          label: widget.label,
           placeholder: widget.placeholder,
           autofocus: widget.autofocus,
           keyboardType: TextInputType.text,

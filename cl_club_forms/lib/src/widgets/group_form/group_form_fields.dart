@@ -11,8 +11,8 @@ class GroupFormFields {
   static const String descriptionId = 'description';
   static const String modeId = 'mode';
 
-  /// Gender criterion. The age band's inputs are the shared cluster's
-  /// (`AgeEligibilityFormFields`).
+  /// Gender criterion, a [GroupGender]. The age band's inputs are the shared
+  /// cluster's (`AgeEligibilityFormFields`).
   static const String genderId = 'gender';
 
   /// Create-only: "Add me into the group" switch. When true, the caller
@@ -42,18 +42,31 @@ enum GroupMode {
   bool get usesCriteria => this != GroupMode.manual;
 }
 
-/// Gender criterion for an auto/semi-auto group. Form-local mirror of the SDK
-/// `Gender`; the adapter maps between them.
+/// Who an auto / semi-auto group is for, by gender: anyone, boys or girls.
+/// The form's Gender always holds one of these; [any] is no gender criterion.
+/// The adapter maps them to and from the SDK `Gender`.
 enum GroupGender {
-  male,
-  female,
-  other,
-  preferNotToSay;
+  /// No gender criterion.
+  any,
 
+  /// Only boys.
+  boys,
+
+  /// Only girls.
+  girls;
+
+  /// The entry's text in the Gender field.
   String get label => switch (this) {
-    GroupGender.male => 'Male',
-    GroupGender.female => 'Female',
-    GroupGender.other => 'Other',
-    GroupGender.preferNotToSay => 'Prefer not to say',
+    GroupGender.any => 'Any',
+    GroupGender.boys => 'Boys',
+    GroupGender.girls => 'Girls',
   };
+
+  /// Whether this is a criterion of the group; false for [any].
+  bool get isCriterion => this != GroupGender.any;
+
+  /// The gender [values] hold under [GroupFormFields.genderId]; [any] when
+  /// they hold none.
+  static GroupGender of(Map<String, dynamic> values) =>
+      values[GroupFormFields.genderId] as GroupGender? ?? GroupGender.any;
 }

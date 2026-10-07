@@ -49,21 +49,31 @@ class GroupEligibilityFields extends StatefulWidget {
   /// Heading of the criteria group.
   static const String criteriaTitle = 'Eligibility criteria';
 
-  /// Whether [values] hold any criterion of a criteria-driven mode: a
-  /// gender, an age or a ticked Strict age check. A Manual group holds none.
+  /// Whether [values] hold any criterion of a criteria-driven mode: Boys or
+  /// Girls, an age or a ticked Strict age check. Gender on Any is none, and
+  /// a Manual group holds none.
   static bool holdsValue(Map<String, dynamic> values) {
     final mode =
         values[GroupFormFields.modeId] as GroupMode? ?? GroupMode.manual;
     return mode.usesCriteria &&
-        (values[GroupFormFields.genderId] != null ||
+        (GroupGender.of(values).isCriterion ||
             AgeEligibilityFormValues.holdsValue(values));
   }
 
-  /// Empties gender, both ages and the Strict age check of [form] and sets
-  /// its mode to Manual: a group with no criteria is a Manual group.
+  /// [values] with Gender on Any when they hold no gender, so the field
+  /// always shows an entry and a form nobody touched is not dirty. The
+  /// embedding form seeds its `ShadForm` with this.
+  static Map<String, dynamic> seeded(Map<String, dynamic> values) => {
+    ...values,
+    GroupFormFields.genderId: GroupGender.of(values),
+  };
+
+  /// Puts Gender back to Any, empties both ages and the Strict age check of
+  /// [form] and sets its mode to Manual: a group with no criteria is a
+  /// Manual group.
   static void reset(ShadFormState form) {
     form.setValue({
-      GroupFormFields.genderId: null,
+      GroupFormFields.genderId: GroupGender.any,
       ...AgeEligibilityFormValues.initial(),
       GroupFormFields.modeId: GroupMode.manual,
     });
@@ -135,7 +145,6 @@ class GroupEligibilityFieldsState extends State<GroupEligibilityFields> {
                 label: 'Gender',
                 field: ShadSelectFormField<GroupGender>(
                   id: GroupFormFields.genderId,
-                  placeholder: const Text('Any gender'),
                   enabled: editable,
                   options: [
                     for (final g in GroupGender.values)

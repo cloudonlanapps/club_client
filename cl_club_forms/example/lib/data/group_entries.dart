@@ -9,7 +9,7 @@ abstract final class GroupEntries {
   static Map<String, dynamic> get criteria => {
     ...GroupCreateForm.emptyValues,
     GroupFormFields.modeId: GroupMode.auto,
-    GroupFormFields.genderId: GroupGender.female,
+    GroupFormFields.genderId: GroupGender.girls,
     ...AgeEligibilityFormValues.initial(
       minAge: const FormAge(years: 8),
       maxAge: const FormAge(years: 12),

@@ -34,12 +34,13 @@ class GroupCreateForm extends StatefulWidget {
   /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
 
-  /// Default values for a fresh group: manual mode, nothing else set.
+  /// Default values for a fresh group: manual mode, Gender on Any, nothing
+  /// else set.
   static Map<String, dynamic> get emptyValues => {
     GroupFormFields.nameId: '',
     GroupFormFields.descriptionId: '',
     GroupFormFields.modeId: GroupMode.manual,
-    GroupFormFields.genderId: null,
+    GroupFormFields.genderId: GroupGender.any,
     GroupFormFields.addMeId: false,
     ...AgeEligibilityFormValues.initial(),
   };
@@ -52,9 +53,10 @@ class GroupCreateForm extends StatefulWidget {
 /// and the age cluster's, as the fields hold them.
 class GroupCreateFormState extends State<GroupCreateForm>
     with FormContract<GroupCreateForm> {
-  /// What the form starts with.
-  Map<String, dynamic> get initialValues =>
-      widget.initialValues ?? GroupCreateForm.emptyValues;
+  /// What the form starts with; Gender is on Any when the host gave none.
+  Map<String, dynamic> get initialValues => GroupEligibilityFields.seeded(
+    widget.initialValues ?? GroupCreateForm.emptyValues,
+  );
 
   @override
   String? crossFieldError(Map<String, dynamic> values) =>

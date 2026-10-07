@@ -15,7 +15,7 @@ Finder _input(String id) => find.byWidgetPredicate(
 
 Map<String, dynamic> _seeded({
   GroupMode mode = GroupMode.semiAuto,
-  GroupGender? gender,
+  GroupGender gender = GroupGender.any,
   FormAge? minAge,
   FormAge? maxAge,
   bool strictAge = false,
@@ -89,7 +89,7 @@ void main() {
     testWidgets('Issue 34: gender, either age or the Strict age check each '
         'count as a value', (tester) async {
       for (final values in [
-        _seeded(gender: GroupGender.female),
+        _seeded(gender: GroupGender.girls),
         _seeded(minAge: const FormAge(years: 5)),
         _seeded(maxAge: const FormAge(years: 18)),
         _seeded(strictAge: true),
@@ -114,7 +114,7 @@ void main() {
         tester,
         _seeded(
           mode: GroupMode.auto,
-          gender: GroupGender.male,
+          gender: GroupGender.boys,
           minAge: const FormAge(years: 5),
           maxAge: const FormAge(years: 18),
           strictAge: true,
@@ -136,7 +136,7 @@ void main() {
       final values = form.validate();
       expect(values, isNotNull);
       expect(values![GroupFormFields.modeId], GroupMode.manual);
-      expect(values[GroupFormFields.genderId], isNull);
+      expect(values[GroupFormFields.genderId], GroupGender.any);
       expect(AgeEligibilityFormValues.minAge(values), isNull);
       expect(AgeEligibilityFormValues.maxAge(values), isNull);
       expect(AgeEligibilityFormValues.strictAge(values), isFalse);
@@ -147,7 +147,7 @@ void main() {
       final form = await _pumpEditor(
         tester,
         _seeded(
-          gender: GroupGender.male,
+          gender: GroupGender.boys,
           minAge: const FormAge(years: 5),
           strictAge: true,
         ),
@@ -178,7 +178,7 @@ void main() {
         tester.widget<ShadCheckbox>(find.byType(ShadCheckbox)).value,
         false,
       );
-      expect(find.text('Any gender'), findsOneWidget);
+      expect(find.text(GroupGender.any.label), findsOneWidget);
       expect(form.hasValue, isFalse);
     });
 
@@ -273,7 +273,7 @@ void main() {
 
       expect(values[GroupFormFields.nameId], 'Juniors');
       expect(values[GroupFormFields.modeId], GroupMode.manual);
-      expect(values[GroupFormFields.genderId], isNull);
+      expect(values[GroupFormFields.genderId], GroupGender.any);
       expect(AgeEligibilityFormValues.minAge(values), isNull);
       expect(AgeEligibilityFormValues.strictAge(values), isFalse);
     });

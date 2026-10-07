@@ -32,7 +32,7 @@ const List<String> _criteriaRows = [
 
 Map<String, dynamic> _values({
   GroupMode mode = GroupMode.manual,
-  GroupGender? gender,
+  GroupGender gender = GroupGender.any,
   FormAge? minAge,
   FormAge? maxAge,
   bool strictAge = false,
@@ -152,27 +152,69 @@ void main() {
 
     testWidgets('Issue 61: the gender select starts on Any gender, offers '
         'the four genders and holds the one picked', (tester) async {
+      // Since #78 it starts on the entry Any and offers Any, Boys and Girls.
       final form = await _pump(tester, _values(mode: GroupMode.auto));
 
-      await tester.tap(find.text('Any gender'));
+      await tester.tap(find.text(GroupGender.any.label));
       await tester.pumpAndSettle();
-      for (final gender in GroupGender.values) {
-        expect(find.text(gender.label), findsOneWidget);
-      }
-      await tester.tap(find.text(GroupGender.preferNotToSay.label));
+      expect(find.text(GroupGender.boys.label), findsOneWidget);
+      expect(find.text(GroupGender.girls.label), findsOneWidget);
+      await tester.tap(find.text(GroupGender.girls.label));
       await tester.pumpAndSettle();
 
-      expect(form.value[GroupFormFields.genderId], GroupGender.preferNotToSay);
+      expect(form.value[GroupFormFields.genderId], GroupGender.girls);
+      expect(find.text(GroupGender.any.label), findsNothing);
+    });
+
+    testWidgets('Issue 78: the group Gender offers exactly Any, Boys and '
+        'Girls, with Any chosen by default', (tester) async {
+      final form = await _pump(tester, _values(mode: GroupMode.auto));
+
+      expect(form.value[GroupFormFields.genderId], GroupGender.any);
+      expect(find.text('Any'), findsOneWidget);
       expect(find.text('Any gender'), findsNothing);
+
+      await tester.tap(find.text('Any'));
+      await tester.pumpAndSettle();
+
+      final options = tester
+          .widgetList<ShadOption<GroupGender>>(
+            find.byType(ShadOption<GroupGender>),
+          )
+          .map((o) => o.value)
+          .toList();
+      expect(options, [GroupGender.any, GroupGender.boys, GroupGender.girls]);
+      expect([for (final g in options) g.label], ['Any', 'Boys', 'Girls']);
+      for (final label in ['Male', 'Female', 'Other', 'Prefer not to say']) {
+        expect(find.text(label), findsNothing, reason: label);
+      }
+    });
+
+    testWidgets('Issue 78: Boys or Girls, then Any again, leaves the group '
+        'with no gender criterion', (tester) async {
+      for (final picked in [GroupGender.boys, GroupGender.girls]) {
+        final form = await _pump(tester, _values(mode: GroupMode.semiAuto));
+
+        await pickOption(tester, from: 'Any', to: picked.label);
+        expect(form.value[GroupFormFields.genderId], picked);
+        expect(GroupEligibilityFields.holdsValue(form.value), isTrue);
+
+        await pickOption(tester, from: picked.label, to: 'Any');
+        expect(form.value[GroupFormFields.genderId], GroupGender.any);
+        expect(GroupGender.of(form.value).isCriterion, isFalse);
+        expect(GroupEligibilityFields.holdsValue(form.value), isFalse);
+
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
     });
 
     testWidgets('Issue 61: a seeded gender shows by its label', (tester) async {
       await _pump(
         tester,
-        _values(mode: GroupMode.auto, gender: GroupGender.female),
+        _values(mode: GroupMode.auto, gender: GroupGender.girls),
       );
 
-      expect(find.text(GroupGender.female.label), findsOneWidget);
+      expect(find.text(GroupGender.girls.label), findsOneWidget);
     });
   });
 
@@ -182,7 +224,7 @@ void main() {
       expect(
         GroupEligibilityFields.holdsValue(
           _values(
-            gender: GroupGender.male,
+            gender: GroupGender.boys,
             minAge: const FormAge(years: 5),
             strictAge: true,
           ),
@@ -194,7 +236,7 @@ void main() {
     test('Issue 61: values without a mode read as Manual', () {
       expect(
         GroupEligibilityFields.holdsValue(const {
-          GroupFormFields.genderId: GroupGender.male,
+          GroupFormFields.genderId: GroupGender.boys,
         }),
         isFalse,
       );
@@ -206,10 +248,33 @@ void main() {
       }
     });
 
+    test('Issue 78: Gender on Any, or no gender at all, is not a held '
+        'criterion', () {
+      expect(
+        GroupEligibilityFields.holdsValue(
+          _values(mode: GroupMode.auto, gender: GroupGender.any),
+        ),
+        isFalse,
+      );
+      expect(
+        GroupEligibilityFields.holdsValue({
+          ..._values(mode: GroupMode.auto),
+          GroupFormFields.genderId: null,
+        }),
+        isFalse,
+      );
+      expect(
+        GroupEligibilityFields.seeded(const {
+          GroupFormFields.modeId: GroupMode.auto,
+        })[GroupFormFields.genderId],
+        GroupGender.any,
+      );
+    });
+
     test('Issue 61: in a criteria mode a gender, an age on either side, a '
         'part of an age or the Strict age check each count', () {
       for (final values in [
-        _values(mode: GroupMode.auto, gender: GroupGender.other),
+        _values(mode: GroupMode.auto, gender: GroupGender.girls),
         _values(mode: GroupMode.auto, minAge: const FormAge(years: 5)),
         _values(mode: GroupMode.semiAuto, maxAge: const FormAge(years: 18)),
         _values(mode: GroupMode.semiAuto, strictAge: true),
@@ -227,7 +292,7 @@ void main() {
   group('Issue 61: GroupEligibilityFields Reset', () {
     final filled = _values(
       mode: GroupMode.auto,
-      gender: GroupGender.male,
+      gender: GroupGender.boys,
       minAge: const FormAge(years: 5, months: 6),
       maxAge: const FormAge(years: 18),
       strictAge: true,
@@ -275,8 +340,8 @@ void main() {
       await enterField(tester, _A.maxAgeMonthsId, '6');
       await pickOption(
         tester,
-        from: 'Any gender',
-        to: GroupGender.female.label,
+        from: GroupGender.any.label,
+        to: GroupGender.girls.label,
       );
       await tester.tap(find.text(FormStrings.reset));
       await tester.pumpAndSettle();
@@ -311,7 +376,7 @@ void main() {
   group('Issue 61: GroupEligibilityFields locked, disabled and narrow', () {
     final seeded = _values(
       mode: GroupMode.semiAuto,
-      gender: GroupGender.female,
+      gender: GroupGender.girls,
       minAge: const FormAge(years: 5),
     );
 

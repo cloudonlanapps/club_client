@@ -18,7 +18,7 @@ typedef _A = AgeEligibilityFormFields;
 Map<String, dynamic> _initial({
   String name = '',
   GroupMode mode = GroupMode.manual,
-  GroupGender? gender,
+  GroupGender gender = GroupGender.any,
 }) => {
   ...GroupCreateForm.emptyValues,
   _F.nameId: name,
@@ -106,11 +106,11 @@ void main() {
         'cleans it', (tester) async {
       final state = await pumpAuto(tester);
 
-      await pickOption(tester, from: 'Any gender', to: GroupGender.other.label);
+      await pickOption(tester, from: 'Any', to: GroupGender.boys.label);
       expect(state.isDirty, isTrue);
 
-      // The select has no "none" option; the host's way back is the form.
-      await setField(tester, state, _F.genderId, null);
+      // Since #78 Any is an entry of the select, so it is picked again.
+      await pickOption(tester, from: GroupGender.boys.label, to: 'Any');
       expect(state.isDirty, isFalse);
     });
 
@@ -121,7 +121,7 @@ void main() {
         initialValues: _initial(
           name: 'Juniors',
           mode: GroupMode.auto,
-          gender: GroupGender.male,
+          gender: GroupGender.boys,
         ),
       );
       expect(state.isDirty, isFalse);
@@ -180,7 +180,7 @@ void main() {
       final initial = _initial(
         name: 'Juniors',
         mode: GroupMode.auto,
-        gender: GroupGender.male,
+        gender: GroupGender.boys,
       );
       await _pump(tester, initialValues: initial, enabled: false);
 
@@ -203,7 +203,7 @@ void main() {
           initialValues: _initial(
             name: 'Juniors',
             mode: GroupMode.semiAuto,
-            gender: GroupGender.preferNotToSay,
+            gender: GroupGender.girls,
           ),
         ),
       );

@@ -101,7 +101,7 @@ class _GroupEligibilitySectionState
     try {
       await GroupFormSubmit.updateEligibility(
         values: values,
-        groupId: widget.group.id,
+        group: widget.group,
         notifier: ref.read(clGroupsMasterProvider.notifier),
       );
       if (!mounted) return true;

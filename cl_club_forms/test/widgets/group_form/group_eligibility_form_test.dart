@@ -67,7 +67,7 @@ void main() {
           key: key,
           initialValues: const {
             GroupFormFields.modeId: GroupMode.auto,
-            GroupFormFields.genderId: GroupGender.female,
+            GroupFormFields.genderId: GroupGender.girls,
           },
         ),
       ),
@@ -76,7 +76,7 @@ void main() {
 
     final values = key.currentState!.validate();
     expect(values, isNotNull);
-    expect(values![GroupFormFields.genderId], GroupGender.female);
+    expect(values![GroupFormFields.genderId], GroupGender.girls);
   });
 
   Finder input(String id) => find.byWidgetPredicate(

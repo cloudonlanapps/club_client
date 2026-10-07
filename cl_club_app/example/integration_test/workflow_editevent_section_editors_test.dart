@@ -236,7 +236,7 @@ void main() {
       await tapSectionPencil(tester, _sectionCard('Eligibility'));
       expect(find.textContaining('DOB'), findsNothing);
       setShadFormValues(tester, {
-        EventFormFields.genderId: EventGender.female,
+        EventFormFields.genderId: EventGender.girls,
         AgeEligibilityFormFields.strictAgeId: true,
       });
       await enterTextById(

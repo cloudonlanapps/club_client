@@ -104,7 +104,7 @@ void main() {
       required GroupMode mode,
       String minYears = '',
       String maxYears = '',
-      GroupGender? gender,
+      GroupGender gender = GroupGender.any,
     }) => {
       ...GroupCreateForm.emptyValues,
       GroupFormFields.modeId: mode,
@@ -139,10 +139,75 @@ void main() {
       );
     });
 
+    test('Issue 78: an auto or semi-auto group with Gender on Any and no '
+        'age limit is refused, as one with no gender was', () {
+      for (final mode in [GroupMode.auto, GroupMode.semiAuto]) {
+        final message =
+            'Set at least one criterion (age or gender) for an '
+            '${mode.label.toLowerCase()} group.';
+        expect(
+          GroupFormValidators.eligibility(
+            values(mode: mode, gender: GroupGender.any),
+          ),
+          message,
+        );
+        expect(
+          GroupFormValidators.eligibility({
+            ...values(mode: mode),
+            GroupFormFields.genderId: null,
+          }),
+          message,
+        );
+      }
+    });
+
+    test('Issue 78: Boys or Girls alone, or Any with an age limit, is '
+        'enough; a Manual group needs nothing', () {
+      for (final gender in [GroupGender.boys, GroupGender.girls]) {
+        expect(
+          GroupFormValidators.eligibility(
+            values(mode: GroupMode.semiAuto, gender: gender),
+          ),
+          isNull,
+        );
+      }
+      expect(
+        GroupFormValidators.eligibility(
+          values(mode: GroupMode.auto, minYears: '9'),
+        ),
+        isNull,
+      );
+      expect(
+        GroupFormValidators.eligibility(values(mode: GroupMode.manual)),
+        isNull,
+      );
+    });
+
+    test('Issue 78: GroupGender is Any, Boys and Girls, and only Boys and '
+        'Girls are criteria', () {
+      expect(
+        {for (final g in GroupGender.values) g: g.label},
+        {
+          GroupGender.any: 'Any',
+          GroupGender.boys: 'Boys',
+          GroupGender.girls: 'Girls',
+        },
+      );
+      expect(
+        [for (final g in GroupGender.values) g.isCriterion],
+        [false, true, true],
+      );
+      expect(GroupGender.of(const {}), GroupGender.any);
+      expect(
+        GroupGender.of(const {GroupFormFields.genderId: GroupGender.girls}),
+        GroupGender.girls,
+      );
+    });
+
     test('Issue 55: a gender or an age alone is enough', () {
       expect(
         GroupFormValidators.eligibility(
-          values(mode: GroupMode.auto, gender: GroupGender.male),
+          values(mode: GroupMode.auto, gender: GroupGender.boys),
         ),
         isNull,
       );
@@ -294,7 +359,7 @@ void main() {
       expect(
         GroupFormValidators.eligibility(
           values(GroupMode.auto, const {
-            GroupFormFields.genderId: GroupGender.female,
+            GroupFormFields.genderId: GroupGender.girls,
             AgeEligibilityFormFields.minAgeYearsId: '12',
             AgeEligibilityFormFields.maxAgeYearsId: '11',
             AgeEligibilityFormFields.maxAgeMonthsId: '11',

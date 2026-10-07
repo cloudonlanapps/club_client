@@ -29,7 +29,7 @@ const _ageRows = ['Years', 'Months', 'Days'];
 Map<String, dynamic> _initial({
   String name = '',
   GroupMode mode = GroupMode.manual,
-  GroupGender? gender,
+  GroupGender gender = GroupGender.any,
 }) => {
   ...GroupCreateForm.emptyValues,
   _F.nameId: name,
@@ -117,7 +117,7 @@ void main() {
       await _pump(tester, initialValues: _initial(mode: GroupMode.auto));
       expectNoHostChrome(tester);
 
-      await pickOption(tester, from: 'Any gender', to: GroupGender.male.label);
+      await pickOption(tester, from: 'Any', to: GroupGender.boys.label);
       expect(find.byType(ShadButton), findsOneWidget);
       expectNoHostChrome(tester, allowedButtonTexts: {FormStrings.reset});
     });
@@ -186,12 +186,12 @@ void main() {
 
       await pickOption(
         tester,
-        from: 'Any gender',
-        to: GroupGender.female.label,
+        from: GroupGender.any.label,
+        to: GroupGender.girls.label,
       );
 
       final values = await _validate(tester, state);
-      expect(values![_F.genderId], GroupGender.female);
+      expect(values![_F.genderId], GroupGender.girls);
       expect(find.textContaining('at least one criterion'), findsNothing);
     });
 
@@ -286,7 +286,7 @@ void main() {
         _F.nameId: ' U12 Boys ',
         _F.descriptionId: 'Tuesday ice',
         _F.modeId: GroupMode.manual,
-        _F.genderId: null,
+        _F.genderId: GroupGender.any,
         _F.addMeId: false,
         ...AgeEligibilityFormValues.initial(),
       });
@@ -309,7 +309,7 @@ void main() {
         _F.nameId: 'U12 Girls',
         _F.descriptionId: 'Tuesday ice',
         _F.modeId: GroupMode.semiAuto,
-        _F.genderId: GroupGender.female,
+        _F.genderId: GroupGender.girls,
         _F.addMeId: true,
         ...AgeEligibilityFormValues.initial(
           minAge: const FormAge(years: 9, months: 6),

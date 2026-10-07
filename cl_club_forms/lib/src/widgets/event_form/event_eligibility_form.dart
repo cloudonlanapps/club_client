@@ -24,8 +24,8 @@ class EventEligibilityForm extends StatefulWidget {
     super.key,
   });
 
-  /// Form values: optional [EventGender] gender under
-  /// [EventFormFields.genderId], and the age cluster's entries
+  /// Form values: the [EventGender] under [EventFormFields.genderId]
+  /// ([EventGender.any] when left out), and the age cluster's entries
   /// (`AgeEligibilityFormValues.initial`).
   final Map<String, dynamic> initialValues;
 
@@ -36,18 +36,26 @@ class EventEligibilityForm extends StatefulWidget {
   /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
 
-  /// Whether [values] hold any eligibility: a gender, an age or a ticked
-  /// Strict age check.
+  /// Whether [values] hold any eligibility: Boys or Girls, an age or a
+  /// ticked Strict age check. Gender on Any is none.
   static bool holdsValue(Map<String, dynamic> values) =>
-      values[EventFormFields.genderId] != null ||
+      EventGender.of(values).isCriterion ||
       AgeEligibilityFormValues.holdsValue(values);
+
+  /// [values] with Gender on Any when they hold no gender, so the field
+  /// always shows an entry and a form nobody touched is not dirty.
+  static Map<String, dynamic> seeded(Map<String, dynamic> values) => {
+    ...values,
+    EventFormFields.genderId: EventGender.of(values),
+  };
 
   @override
   State<EventEligibilityForm> createState() => EventEligibilityFormState();
 }
 
-/// State of [EventEligibilityForm]. Its values are the gender and the age
-/// cluster's entries, as the form holds them.
+/// State of [EventEligibilityForm]. Its values are the gender (never null:
+/// [EventGender.any] is no gender criterion) and the age cluster's entries,
+/// as the form holds them.
 class EventEligibilityFormState extends State<EventEligibilityForm>
     with FormContract<EventEligibilityForm> {
   /// The age band: every part within its limit, the minimum not above the
@@ -62,12 +70,12 @@ class EventEligibilityFormState extends State<EventEligibilityForm>
     return form != null && EventEligibilityForm.holdsValue(form.value);
   }
 
-  /// Empties gender, both ages and the Strict age check. Nothing is stored:
-  /// the form is then changed, and the host's Save sends the empty
-  /// eligibility.
+  /// Puts Gender back to Any and empties both ages and the Strict age check.
+  /// Nothing is stored: the form is then changed, and the host's Save sends
+  /// the empty eligibility.
   void reset() {
     formKey.currentState?.setValue({
-      EventFormFields.genderId: null,
+      EventFormFields.genderId: EventGender.any,
       ...AgeEligibilityFormValues.initial(),
     });
     setFormError(null);
@@ -77,7 +85,7 @@ class EventEligibilityFormState extends State<EventEligibilityForm>
   Widget build(BuildContext context) {
     return ShadForm(
       key: formKey,
-      initialValue: widget.initialValues,
+      initialValue: EventEligibilityForm.seeded(widget.initialValues),
       onChanged: widget.onChanged,
       child: FormBody(
         error: formError,
@@ -87,7 +95,6 @@ class EventEligibilityFormState extends State<EventEligibilityForm>
             field: ShadSelectFormField<EventGender>(
               id: EventFormFields.genderId,
               enabled: widget.enabled,
-              placeholder: const Text('Any gender'),
               options: [
                 for (final g in EventGender.values)
                   ShadOption(value: g, child: Text(g.label)),

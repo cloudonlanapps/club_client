@@ -692,13 +692,12 @@ void main() {
 /// Per CLAUDE.md the only legitimate `go` is to a sub-flow start —
 /// `/memberzone` is the dashboard, the user-facing entry point.
 /// Maps the SDK [Gender] used by the test fixtures to the form-local
-/// [GroupGender] the SDK-free group form speaks.
-GroupGender? _toGroupGender(Gender? g) => switch (g) {
-  Gender.male => GroupGender.male,
-  Gender.female => GroupGender.female,
-  Gender.other => GroupGender.other,
-  Gender.preferNotToSay => GroupGender.preferNotToSay,
-  null => null,
+/// [GroupGender] the SDK-free group form speaks: Boys, Girls, or Any for no
+/// gender criterion (the form offers no other entry, club_client#78).
+GroupGender _toGroupGender(Gender? g) => switch (g) {
+  Gender.male => GroupGender.boys,
+  Gender.female => GroupGender.girls,
+  Gender.other || Gender.preferNotToSay || null => GroupGender.any,
 };
 
 Future<void> _createGroupViaUi(
@@ -760,7 +759,7 @@ Future<void> _createGroupViaUi(
         '$maxAgeYears',
       );
     }
-    setShadFormValues(tester, {'gender': ?_toGroupGender(gender)});
+    setShadFormValues(tester, {'gender': _toGroupGender(gender)});
     await tester.pump();
   }
 

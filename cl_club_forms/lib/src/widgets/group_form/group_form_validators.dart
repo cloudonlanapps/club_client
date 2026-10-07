@@ -11,8 +11,9 @@ class GroupFormValidators {
   static String? name(String value) =>
       CommonFormValidators.name(value, label: 'Group name');
 
-  /// Cross-field: an auto / semi-auto group needs at least one criterion,
-  /// otherwise it is indistinguishable from a manual group.
+  /// Cross-field: an auto / semi-auto group needs at least one criterion —
+  /// an age limit, or Gender on Boys or Girls (Any is none) — otherwise it
+  /// is indistinguishable from a manual group.
   static String? criteriaForMode(
     GroupMode mode, {
     required bool hasAnyCriterion,
@@ -35,12 +36,12 @@ class GroupFormValidators {
     final mode =
         values[GroupFormFields.modeId] as GroupMode? ?? GroupMode.manual;
     if (!mode.usesCriteria) return null;
-    final gender = values[GroupFormFields.genderId] as GroupGender?;
     return AgeEligibilityFormValidators.band(values) ??
         criteriaForMode(
           mode,
           hasAnyCriterion:
-              AgeEligibilityFormValues.hasAgeBound(values) || gender != null,
+              AgeEligibilityFormValues.hasAgeBound(values) ||
+              GroupGender.of(values).isCriterion,
         );
   }
 }

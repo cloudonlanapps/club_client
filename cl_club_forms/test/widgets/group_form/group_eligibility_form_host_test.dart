@@ -16,7 +16,7 @@ typedef _A = AgeEligibilityFormFields;
 
 Map<String, dynamic> _seeded({
   GroupMode mode = GroupMode.semiAuto,
-  GroupGender? gender,
+  GroupGender gender = GroupGender.any,
   FormAge? minAge,
   FormAge? maxAge,
   bool strictAge = false,
@@ -102,19 +102,19 @@ void main() {
 
     testWidgets('Issue 61: another gender dirties it, and the old one back '
         'cleans it', (tester) async {
-      final state = await _pump(tester, _seeded(gender: GroupGender.male));
+      final state = await _pump(tester, _seeded(gender: GroupGender.boys));
 
       await pickOption(
         tester,
-        from: GroupGender.male.label,
-        to: GroupGender.female.label,
+        from: GroupGender.boys.label,
+        to: GroupGender.girls.label,
       );
       expect(state.isDirty, isTrue);
 
       await pickOption(
         tester,
-        from: GroupGender.female.label,
-        to: GroupGender.male.label,
+        from: GroupGender.girls.label,
+        to: GroupGender.boys.label,
       );
       expect(state.isDirty, isFalse);
     });
@@ -159,7 +159,7 @@ void main() {
     ) async {
       await _pump(
         tester,
-        _seeded(gender: GroupGender.male, strictAge: true),
+        _seeded(gender: GroupGender.boys, strictAge: true),
         enabled: false,
       );
 
@@ -180,7 +180,7 @@ void main() {
           tester,
           GroupEligibilityForm(
             initialValues: _seeded(
-              gender: GroupGender.preferNotToSay,
+              gender: GroupGender.girls,
               minAge: const FormAge(years: 100, months: 11, days: 30),
               maxAge: const FormAge(years: 150, months: 11, days: 30),
             ),

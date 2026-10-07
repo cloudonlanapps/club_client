@@ -35,7 +35,7 @@ const List<String> _criteriaRows = [
 
 Map<String, dynamic> _seeded({
   GroupMode mode = GroupMode.semiAuto,
-  GroupGender? gender,
+  GroupGender gender = GroupGender.any,
   FormAge? minAge,
   FormAge? maxAge,
   bool strictAge = false,
@@ -116,7 +116,7 @@ void main() {
     ) async {
       await _pump(
         tester,
-        _seeded(gender: GroupGender.male, minAge: const FormAge(years: 5)),
+        _seeded(gender: GroupGender.boys, minAge: const FormAge(years: 5)),
       );
 
       expect(find.byType(ShadButton), findsNothing);
@@ -138,14 +138,14 @@ void main() {
     testWidgets('Issue 61: locked criteria are shown as stored, and neither '
         'the mode nor any criterion responds', (tester) async {
       final seeded = _seeded(
-        gender: GroupGender.female,
+        gender: GroupGender.girls,
         minAge: const FormAge(years: 5),
         strictAge: true,
       );
       final state = await _pump(tester, seeded, criteriaLocked: true);
 
       expect(rowLabels(tester), ['Mode', ..._criteriaRows]);
-      expect(find.text(GroupGender.female.label), findsOneWidget);
+      expect(find.text(GroupGender.girls.label), findsOneWidget);
       await expectNoFieldResponds(tester);
       expect(state.isDirty, isFalse);
       expect(await _validate(tester, state), seeded);
@@ -174,9 +174,9 @@ void main() {
       final state = await _pump(tester, _seeded(mode: GroupMode.auto));
       expect(await _validate(tester, state), isNull);
 
-      await pickOption(tester, from: 'Any gender', to: GroupGender.male.label);
+      await pickOption(tester, from: 'Any', to: GroupGender.boys.label);
 
-      expect((await _validate(tester, state))![_F.genderId], GroupGender.male);
+      expect((await _validate(tester, state))![_F.genderId], GroupGender.boys);
       expect(find.textContaining('at least one criterion'), findsNothing);
     });
 
@@ -259,15 +259,15 @@ void main() {
       await tester.tap(find.byType(ShadCheckbox));
       await pickOption(
         tester,
-        from: 'Any gender',
-        to: GroupGender.female.label,
+        from: GroupGender.any.label,
+        to: GroupGender.girls.label,
       );
 
       final values = await _validate(tester, state);
 
       expect(values, {
         _F.modeId: GroupMode.semiAuto,
-        _F.genderId: GroupGender.female,
+        _F.genderId: GroupGender.girls,
         _A.minAgeYearsId: '5',
         _A.minAgeMonthsId: '',
         _A.minAgeDaysId: '',
@@ -284,7 +284,7 @@ void main() {
     testWidgets('Issue 61: seeded values come back unchanged', (tester) async {
       final seeded = _seeded(
         mode: GroupMode.auto,
-        gender: GroupGender.other,
+        gender: GroupGender.boys,
         minAge: const FormAge(years: 9, months: 6, days: 15),
         maxAge: const FormAge(years: 12),
         strictAge: true,
@@ -300,8 +300,67 @@ void main() {
       final state = await _pump(tester, _seeded(mode: GroupMode.manual));
 
       final values = (await _validate(tester, state))!;
+      // Since #78 the gender is never null: no criterion is Any.
       expect(values.containsKey(_F.genderId), isTrue);
-      expect(values[_F.genderId], isNull);
+      expect(values[_F.genderId], GroupGender.any);
+    });
+
+    for (final mode in [GroupMode.semiAuto, GroupMode.auto]) {
+      testWidgets('Issue 78: a ${mode.label} group with Gender on Any and '
+          'no age limit is refused as before', (tester) async {
+        final state = await _pump(
+          tester,
+          _seeded(mode: mode, gender: GroupGender.boys),
+        );
+        expect(await _validate(tester, state), isNotNull);
+
+        await pickOption(tester, from: 'Boys', to: 'Any');
+
+        expect(state.formKey.currentState!.value[_F.genderId], GroupGender.any);
+        expect(await _validate(tester, state), isNull);
+        expect(
+          find.text(
+            'Set at least one criterion (age or gender) for an '
+            '${mode.label.toLowerCase()} group.',
+          ),
+          findsOneWidget,
+        );
+      });
+    }
+
+    testWidgets('Issue 78: Boys or Girls, then Any again, validates to no '
+        'gender criterion', (tester) async {
+      for (final picked in [GroupGender.boys, GroupGender.girls]) {
+        final state = await _pump(
+          tester,
+          _seeded(maxAge: const FormAge(years: 12)),
+        );
+
+        await pickOption(tester, from: 'Any', to: picked.label);
+        expect((await _validate(tester, state))![_F.genderId], picked);
+        expect(state.isDirty, isTrue);
+
+        await pickOption(tester, from: picked.label, to: 'Any');
+        final values = (await _validate(tester, state))!;
+        expect(values[_F.genderId], GroupGender.any);
+        expect(GroupGender.of(values).isCriterion, isFalse);
+        expect(state.isDirty, isFalse);
+
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
+    });
+
+    testWidgets('Issue 78: initial values without a gender start on Any and '
+        'are not dirty', (tester) async {
+      final state = await _pump(tester, {
+        _F.modeId: GroupMode.semiAuto,
+        ...AgeEligibilityFormValues.initial(maxAge: const FormAge(years: 12)),
+      });
+
+      expect(find.text('Any'), findsOneWidget);
+      expect(state.isDirty, isFalse);
+      expect(state.hasValue, isTrue);
+      expect((await _validate(tester, state))![_F.genderId], GroupGender.any);
     });
   });
 }

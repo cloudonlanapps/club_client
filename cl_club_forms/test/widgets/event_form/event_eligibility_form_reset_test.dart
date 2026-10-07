@@ -12,7 +12,7 @@ Finder _input(String id) => find.byWidgetPredicate(
 );
 
 Map<String, dynamic> _seeded({
-  EventGender? gender,
+  EventGender gender = EventGender.any,
   FormAge? minAge,
   FormAge? maxAge,
   bool strictAge = false,
@@ -62,7 +62,7 @@ void main() {
   testWidgets('Issue 34: gender, either age or the Strict age check each '
       'count as a value', (tester) async {
     for (final values in [
-      _seeded(gender: EventGender.female),
+      _seeded(gender: EventGender.girls),
       _seeded(minAge: const FormAge(years: 5)),
       _seeded(maxAge: const FormAge(years: 18)),
       _seeded(strictAge: true),
@@ -97,7 +97,7 @@ void main() {
     final form = await _pump(
       tester,
       _seeded(
-        gender: EventGender.female,
+        gender: EventGender.girls,
         minAge: const FormAge(years: 5, months: 6),
         maxAge: const FormAge(years: 18, days: 3),
         strictAge: true,
@@ -132,15 +132,36 @@ void main() {
       );
     }
     expect(tester.widget<ShadCheckbox>(find.byType(ShadCheckbox)).value, false);
-    expect(find.text(EventGender.female.label), findsNothing);
-    expect(find.text('Any gender'), findsOneWidget);
+    expect(find.text(EventGender.girls.label), findsNothing);
+    expect(find.text(EventGender.any.label), findsOneWidget);
 
     final values = form.validate();
     expect(values, isNotNull);
-    expect(values![EventFormFields.genderId], isNull);
+    expect(values![EventFormFields.genderId], EventGender.any);
     expect(AgeEligibilityFormValues.minAge(values), isNull);
     expect(AgeEligibilityFormValues.maxAge(values), isNull);
     expect(AgeEligibilityFormValues.strictAge(values), isFalse);
+  });
+
+  testWidgets('Issue 78: Gender on Any is no value, and Reset puts a picked '
+      'gender back to Any', (tester) async {
+    expect(EventEligibilityForm.holdsValue(_seeded()), isFalse);
+    expect(
+      EventEligibilityForm.holdsValue({EventFormFields.genderId: null}),
+      isFalse,
+    );
+
+    final form = await _pump(tester, _seeded(gender: EventGender.boys));
+    expect(form.hasValue, isTrue);
+
+    form.reset();
+    await tester.pumpAndSettle();
+
+    expect(form.hasValue, isFalse);
+    expect(form.isDirty, isTrue);
+    expect(find.text('Any'), findsOneWidget);
+    expect(find.text('Boys'), findsNothing);
+    expect(form.validate()![EventFormFields.genderId], EventGender.any);
   });
 
   testWidgets('Issue 34: reset clears the inline band message', (tester) async {

@@ -19,18 +19,31 @@ class EventFormFields {
   static const String coachNamesId = 'coachNames';
 }
 
-/// Gender criterion for an event's eligibility. Form-local mirror of the SDK
-/// `Gender`; the caller's adapter maps between them.
+/// Who an event is for, by gender: anyone, boys or girls. The form's Gender
+/// always holds one of these; [any] is no gender criterion. The caller's
+/// adapter maps them to and from the SDK `Gender`.
 enum EventGender {
-  male,
-  female,
-  other,
-  preferNotToSay;
+  /// No gender criterion.
+  any,
 
+  /// Only boys.
+  boys,
+
+  /// Only girls.
+  girls;
+
+  /// The entry's text in the Gender field.
   String get label => switch (this) {
-    EventGender.male => 'Male',
-    EventGender.female => 'Female',
-    EventGender.other => 'Other',
-    EventGender.preferNotToSay => 'Prefer not to say',
+    EventGender.any => 'Any',
+    EventGender.boys => 'Boys',
+    EventGender.girls => 'Girls',
   };
+
+  /// Whether this limits who is eligible; false for [any].
+  bool get isCriterion => this != EventGender.any;
+
+  /// The gender [values] hold under [EventFormFields.genderId]; [any] when
+  /// they hold none.
+  static EventGender of(Map<String, dynamic> values) =>
+      values[EventFormFields.genderId] as EventGender? ?? EventGender.any;
 }

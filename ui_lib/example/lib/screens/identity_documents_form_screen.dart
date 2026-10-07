@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+// The demo is this package's own host for the form.
+// ignore: implementation_imports
+import 'package:ui_lib/src/widgets/identity_documents/identity_documents_form.dart'
+    show kIdentityDocsFieldId;
 import 'package:ui_lib/ui_lib.dart';
 
 /// Demo screen for [IdentityDocumentsForm].

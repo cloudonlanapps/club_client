@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show BorderedMenuList;
+import 'package:ui_lib/src/widgets/bordered_menu_list.dart'
+    show BorderedMenuList;
 
 const _memberArea = 'Member Area';
 

@@ -1,4 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ui_lib/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
+    show AgeEligibilityFormFields;
+import 'package:ui_lib/src/widgets/age_eligibility/age_eligibility_form_validators.dart'
+    show AgeEligibilityFormValidators;
 import 'package:ui_lib/ui_lib.dart';
 
 Map<String, dynamic> _values({

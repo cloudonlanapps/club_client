@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show CommonFormValidators;
+import 'package:ui_lib/src/widgets/common_form_validators.dart'
+    show CommonFormValidators;
 
 void main() {
   group('CommonFormValidators.name', () {

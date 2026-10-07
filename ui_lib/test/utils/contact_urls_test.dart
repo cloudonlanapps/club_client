@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show ContactUrls, PhoneNumber;
+import 'package:ui_lib/src/utils/contact_urls.dart' show ContactUrls;
+import 'package:ui_lib/ui_lib.dart' show PhoneNumber;
 
 void main() {
   group('Issue 32: contact links', () {

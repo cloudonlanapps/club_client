@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-/// Weekday name abbreviations (Mon-Sun).
-const weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
 /// Weekday full names (Monday-Sunday).
 const weekdayFullNames = [
   'Monday',

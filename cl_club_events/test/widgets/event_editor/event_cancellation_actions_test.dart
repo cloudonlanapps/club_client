@@ -12,7 +12,8 @@ import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show EventCancellationFormValidators;
+import 'package:ui_lib/src/widgets/event_cancellation/event_cancellation_form_validators.dart'
+    show EventCancellationFormValidators;
 
 const _organizer = 'the_organizer';
 const _reason = 'The rink is closed';

@@ -3,6 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/src/constants/identity_documents.dart'
+    show kIdentityDocumentMaxBytes;
+import 'package:ui_lib/src/widgets/identity_documents/identity_document_slot.dart'
+    show IdentityDocumentRejectionReason, IdentityDocumentsFormValidators;
+import 'package:ui_lib/src/widgets/identity_documents/identity_documents_form.dart'
+    show kIdentityDocsFieldId, kPrivacyAcceptedFieldId;
 import 'package:ui_lib/ui_lib.dart';
 
 const Size _kSurface = Size(1024, 1400);

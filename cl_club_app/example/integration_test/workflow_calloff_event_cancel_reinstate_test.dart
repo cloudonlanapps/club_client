@@ -28,12 +28,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/src/widgets/event_cancellation/event_cancellation_form_validators.dart'
+    show EventCancellationFormValidators;
 import 'package:ui_lib/ui_lib.dart'
-    show
-        ActionButton,
-        EntityCard,
-        EventCancellationFormFields,
-        EventCancellationFormValidators;
+    show ActionButton, EntityCard, EventCancellationFormFields;
 
 import '_helpers/auth.dart';
 import '_helpers/events.dart';

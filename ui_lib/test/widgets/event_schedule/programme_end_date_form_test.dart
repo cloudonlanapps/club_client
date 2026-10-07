@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/src/models/programme_end_date_value.dart'
+    show ProgrammeEndDateValue;
+import 'package:ui_lib/src/widgets/event_schedule/programme_end_date_form_validators.dart'
+    show ProgrammeEndDateFormValidators;
 import 'package:ui_lib/ui_lib.dart';
 
 /// The local day [days] from today.

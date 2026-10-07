@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ui_lib/src/widgets/club_identity_form/club_identity_form_validators.dart'
+    show ClubIdentityFormValidators;
 import 'package:ui_lib/ui_lib.dart';
 
 void main() {

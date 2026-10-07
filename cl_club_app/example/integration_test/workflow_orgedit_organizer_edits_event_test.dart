@@ -32,13 +32,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
+    show AgeEligibilityFormFields;
 import 'package:ui_lib/ui_lib.dart'
-    show
-        AgeEligibilityFormFields,
-        EntityCard,
-        EventFormFields,
-        EventGender,
-        SectionEditButton;
+    show EntityCard, EventFormFields, EventGender, SectionEditButton;
 
 import '_helpers/auth.dart';
 import '_helpers/editors.dart';

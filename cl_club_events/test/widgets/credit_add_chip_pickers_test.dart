@@ -9,13 +9,10 @@ import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/src/widgets/user_selection_tile.dart'
+    show UserSelectionTile;
 import 'package:ui_lib/ui_lib.dart'
-    show
-        CreditCountChip,
-        CreditFormFields,
-        CreditGrantForm,
-        PickerUser,
-        UserSelectionTile;
+    show CreditCountChip, CreditFormFields, CreditGrantForm, PickerUser;
 
 import '../support/credit_scope.dart';
 

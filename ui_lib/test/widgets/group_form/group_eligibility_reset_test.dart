@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/src/widgets/age_eligibility/age_eligibility_fields.dart'
+    show AgeEligibilityFields;
+import 'package:ui_lib/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
+    show AgeEligibilityFormFields;
 import 'package:ui_lib/ui_lib.dart';
 
 Finder _input(String id) => find.byWidgetPredicate(

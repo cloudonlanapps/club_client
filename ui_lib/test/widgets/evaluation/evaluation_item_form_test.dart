@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/src/widgets/evaluation/item_form/evaluation_item_form_fields.dart'
+    show EvaluationItemFormFields;
 import 'package:ui_lib/ui_lib.dart';
 
 import 'evaluation_test_helpers.dart';

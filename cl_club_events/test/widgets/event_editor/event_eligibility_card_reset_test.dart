@@ -6,8 +6,9 @@ import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show AgeEligibilityFormFields, SectionEditButton;
+import 'package:ui_lib/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
+    show AgeEligibilityFormFields;
+import 'package:ui_lib/ui_lib.dart' show SectionEditButton;
 
 Event _event({
   EventType type = EventType.camp,

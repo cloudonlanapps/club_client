@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/src/widgets/credit/credit_form_validators.dart'
+    show CreditFormValidators;
 import 'package:ui_lib/ui_lib.dart';
 
 Future<void> _pump(WidgetTester tester, Widget form) async {

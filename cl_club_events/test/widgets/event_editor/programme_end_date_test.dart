@@ -13,11 +13,10 @@ import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/src/widgets/event_schedule/programme_end_date_form_validators.dart'
+    show ProgrammeEndDateFormValidators;
 import 'package:ui_lib/ui_lib.dart'
-    show
-        ProgrammeEndDateForm,
-        ProgrammeEndDateFormState,
-        ProgrammeEndDateFormValidators;
+    show ProgrammeEndDateForm, ProgrammeEndDateFormState;
 
 import '../../support/programme_fixtures.dart';
 import '../../support/recording_schedule_events.dart';

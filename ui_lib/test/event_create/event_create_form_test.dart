@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/src/widgets/event_create/event_create_form_validators.dart'
+    show EventCreateFormValidators;
 import 'package:ui_lib/ui_lib.dart';
 
 Widget _wrap(Widget child) => ShadApp(

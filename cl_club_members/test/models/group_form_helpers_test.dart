@@ -3,9 +3,10 @@ import 'package:cl_remote_store/cl_remote_store.dart'
     show ClGroupsMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ui_lib/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
+    show AgeEligibilityFormFields;
 import 'package:ui_lib/ui_lib.dart'
     show
-        AgeEligibilityFormFields,
         AgeEligibilityFormValues,
         FormAge,
         GroupFormFields,

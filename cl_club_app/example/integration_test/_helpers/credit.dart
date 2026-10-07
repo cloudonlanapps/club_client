@@ -31,8 +31,10 @@ import 'package:club_sdk_2/club_sdk_2.dart' show CreditAccount;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/src/widgets/user_selection_tile.dart'
+    show UserSelectionTile;
 import 'package:ui_lib/ui_lib.dart'
-    show CreditCountChip, CreditFormFields, CreditGrantForm, UserSelectionTile;
+    show CreditCountChip, CreditFormFields, CreditGrantForm;
 
 import 'auth.dart';
 import 'forms.dart';

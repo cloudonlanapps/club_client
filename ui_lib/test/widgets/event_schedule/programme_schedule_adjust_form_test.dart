@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/src/widgets/event_schedule/programme_schedule_adjust_form_validators.dart'
+    show ProgrammeScheduleAdjustFormValidators;
 import 'package:ui_lib/ui_lib.dart';
 
 final _options = [

@@ -7,8 +7,8 @@ import '../../support/form_harness.dart';
 import 'club_identity_form_pump.dart';
 
 // Against the list of club_client#61: ClubLanguageForm has one field, so
-// there is no rule across fields; the field is not marked required, though
-// an empty code is refused; `languages` hides or locks nothing; the form
+// there is no rule across fields; the field is marked required, as an
+// empty code is refused; `languages` hides or locks nothing; the form
 // draws no heading and no button.
 
 typedef _F = ClubLanguageFormFields;
@@ -47,7 +47,7 @@ void main() {
       await _pump(tester);
 
       expect(find.byType(EditableText), findsOneWidget);
-      expect(find.text(_F.languageCodeLabel), findsOneWidget);
+      expect(find.text('${_F.languageCodeLabel} *'), findsOneWidget);
       expect(find.text(_F.languageCodePlaceholder), findsOneWidget);
       expect(
         find.byKey(const ValueKey('clubIdentity.addLanguage')),
@@ -140,7 +140,7 @@ void main() {
         'under the language code id', (tester) async {
       await _pump(tester);
 
-      expect(rowLabels(tester), [_F.languageCodeLabel]);
+      expect(rowLabels(tester), ['${_F.languageCodeLabel} *']);
       expectLabelsAreRows(tester);
       expectNoHostChrome(tester);
       expect(formOf(tester).fields.keys, [_F.languageCodeId]);

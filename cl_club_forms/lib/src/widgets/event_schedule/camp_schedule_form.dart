@@ -42,6 +42,9 @@ class CampScheduleForm extends StatefulWidget {
 class CampScheduleFormState extends State<CampScheduleForm>
     with FormContract<CampScheduleForm> {
   @override
+  bool get focusFirstInvalid => false;
+
+  @override
   Map<String, dynamic> assemble(Map<String, dynamic> values) => {
     CampScheduleFormFields.scheduleId:
         values[CampScheduleFormFields.scheduleId] as CampScheduleData,

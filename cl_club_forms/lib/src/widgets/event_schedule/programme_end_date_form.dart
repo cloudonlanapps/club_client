@@ -49,6 +49,9 @@ class ProgrammeEndDateForm extends StatefulWidget {
 /// [ProgrammeEndDateFormFields].
 class ProgrammeEndDateFormState extends State<ProgrammeEndDateForm>
     with FormContract<ProgrammeEndDateForm> {
+  @override
+  bool get focusFirstInvalid => false;
+
   /// The day chosen now.
   late DateTime? lastDay = widget.initialDay;
 

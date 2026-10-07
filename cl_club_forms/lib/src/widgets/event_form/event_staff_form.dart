@@ -62,6 +62,9 @@ class EventStaffForm extends StatefulWidget {
 class EventStaffFormState extends State<EventStaffForm>
     with FormContract<EventStaffForm> {
   @override
+  bool get focusFirstInvalid => false;
+
+  @override
   Map<String, dynamic> assemble(Map<String, dynamic> values) => {
     EventFormFields.organizerNameId: EventStaffFormValues.organizerUsername(
       values,

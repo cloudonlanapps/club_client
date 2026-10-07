@@ -26,6 +26,11 @@ mixin FormContract<T extends StatefulWidget> on State<T> {
   /// The ids of the fields now showing a message [showErrors] put there.
   final Set<String> refusedFieldIds = <String>{};
 
+  /// Whether [validate] puts the focus on the first invalid field. A form
+  /// made of pickers and custom fields, which have nothing to focus, turns
+  /// it off.
+  bool get focusFirstInvalid => true;
+
   /// The message for a rule across fields that [values] break, or null.
   String? crossFieldError(Map<String, dynamic> values) => null;
 
@@ -35,12 +40,13 @@ mixin FormContract<T extends StatefulWidget> on State<T> {
 
   /// Validates the form. Returns its values, or null when a field or a rule
   /// across fields is broken; the messages then show on the fields and
-  /// inline, and the first invalid field takes the focus.
+  /// inline, and the first invalid field takes the focus
+  /// ([focusFirstInvalid]).
   Map<String, dynamic>? validate() {
     final form = formKey.currentState;
     if (form == null) return null;
     clearFieldErrors();
-    if (!form.saveAndValidate()) {
+    if (!form.saveAndValidate(focusOnInvalid: focusFirstInvalid)) {
       setFormError(null);
       return null;
     }

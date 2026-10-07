@@ -56,6 +56,9 @@ class OneOffScheduleForm extends StatefulWidget {
 /// (`List<SessionInput>`), under the ids of [OneOffScheduleFormFields].
 class OneOffScheduleFormState extends State<OneOffScheduleForm>
     with FormContract<OneOffScheduleForm> {
+  @override
+  bool get focusFirstInvalid => false;
+
   /// The start the sessions are walked from while none is chosen.
   static const ShadTimeOfDay midnight = ShadTimeOfDay(
     hour: 0,

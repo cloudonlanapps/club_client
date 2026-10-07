@@ -70,6 +70,7 @@ class ClubLanguageFormState extends State<ClubLanguageForm>
         children: [
           LabeledFormRow(
             label: ClubLanguageFormFields.languageCodeLabel,
+            required: true,
             field: ShadInputFormField(
               key: ClubLanguageFormFields.languageCodeKey,
               id: ClubLanguageFormFields.languageCodeId,

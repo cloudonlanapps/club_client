@@ -53,6 +53,9 @@ class EventTimetableForm extends StatefulWidget {
 /// [EventTimetableFormFields.sessionsId].
 class EventTimetableFormState extends State<EventTimetableForm>
     with FormContract<EventTimetableForm> {
+  @override
+  bool get focusFirstInvalid => false;
+
   /// Index into `EventTimetableForm.schedules` of the schedule being edited.
   late int selectedIndex =
       widget.initialScheduleIndex ?? widget.schedules.length - 1;

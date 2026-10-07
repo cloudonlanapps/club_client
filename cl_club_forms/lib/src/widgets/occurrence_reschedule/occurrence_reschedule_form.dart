@@ -53,6 +53,9 @@ class OccurrenceRescheduleForm extends StatefulWidget {
 /// [OccurrenceRescheduleFormFields].
 class OccurrenceRescheduleFormState extends State<OccurrenceRescheduleForm>
     with FormContract<OccurrenceRescheduleForm> {
+  @override
+  bool get focusFirstInvalid => false;
+
   /// The form's own field ids. The schedule field's inputs register under
   /// generated ids in the same `ShadForm`; the schedule value already
   /// gathers every one of their edits.

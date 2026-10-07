@@ -62,6 +62,9 @@ class ProgrammeScheduleAdjustForm extends StatefulWidget {
 class ProgrammeScheduleAdjustFormState
     extends State<ProgrammeScheduleAdjustForm>
     with FormContract<ProgrammeScheduleAdjustForm> {
+  @override
+  bool get focusFirstInvalid => false;
+
   /// The From session chosen now.
   late DateTime? from = widget.initialValue.from;
 

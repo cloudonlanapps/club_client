@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ui_lib/ui_lib.dart';
 
 /// Identity-document slots for the logged-in user, ready to hand to
-/// `IdentityDocumentsForm.initialItems`.
+/// `IdentityDocumentsUploader.initialItems`.
 ///
 /// Sources from [clIdentityDocsMasterProvider] keyed by the current
 /// username and maps each `MediaLink` to an [IdentityDocumentSlot]. Returns

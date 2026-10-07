@@ -827,7 +827,8 @@ Future<void> _uploadIdentityDocAndSubmit(WidgetTester tester) async {
   tester.widget<ShadCheckbox>(innerCheckbox).onChanged?.call(true);
   await _settle(tester);
 
-  // Submit enables once a document is uploaded AND privacy is accepted.
+  // Submit enables once a document is uploaded; pressing it validates the
+  // consent ticked above.
   await _waitFor(
     tester,
     () {
@@ -843,7 +844,7 @@ Future<void> _uploadIdentityDocAndSubmit(WidgetTester tester) async {
       return submit.evaluate().isNotEmpty &&
           tester.widget<ShadButton>(submit).onPressed != null;
     },
-    description: 'Submit button to enable after upload + privacy accepted',
+    description: 'Submit button to enable after the upload',
   );
   _invokeShadButton(
     tester,

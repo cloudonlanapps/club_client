@@ -19,7 +19,7 @@ Onboarding zone for users whose status is `registered` or `pending`. Mounted und
 
 ### `/onboarding/submit-documents`
 
-`OnboardingSubmitDocumentsView` hosts the `IdentityDocumentsForm` (from `ui_lib`) wired to `cl_remote_store` master notifiers. The user uploads identity documents, then taps **Submit for review**, which calls `submitForReviewForSelf` and flips status `registered` → `pending`. The router redirect then bounces the user back to `/onboarding/welcome` where the `SubmittedConfirmation` variant renders.
+`OnboardingSubmitDocumentsView` hosts `IdentityDocumentsSubmitBody`, which arranges the step: the intro, `IdentityDocumentsUploader` (from `ui_lib`; each file is saved as it is added or removed, through the `cl_remote_store` master notifiers), `IdentityDocumentsConsentForm` (from `ui_lib`; the privacy checkbox), the **Submit** and **I'll do it later** buttons (`IdentityDocumentsSubmitActions`) and the tips (`IdentityDocumentsUploadTips`). Submit is disabled, with the reason shown, until a document is uploaded; pressing it validates the consent form and then calls `submitForReviewForSelf` and flips status `registered` → `pending`. The router redirect then bounces the user back to `/onboarding/welcome` where the `SubmittedConfirmation` variant renders.
 
 ## Screens and shell
 
@@ -47,7 +47,8 @@ lib/src/
   views/       - OnboardingWelcomeView (three variants), OnboardingSubmitDocumentsView
                  (presentational; never watch auth).
   widgets/     - OnboardingShell, IntroCard, ReapplyVariant,
-                 SubmittedConfirmation, IdentityDocumentsSubmitBody.
+                 SubmittedConfirmation, IdentityDocumentsSubmitBody,
+                 IdentityDocumentsSubmitActions, IdentityDocumentsUploadTips.
 ```
 
 ## Allowed dependencies

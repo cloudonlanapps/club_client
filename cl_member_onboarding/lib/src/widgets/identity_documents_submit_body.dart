@@ -9,8 +9,19 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart';
 
 import '../models/identity_document_upload_errors.dart';
+import '../models/identity_documents_submit_sizes.dart';
+import '../models/identity_documents_submit_strings.dart';
 import '../models/onboarding_write_messages.dart';
+import 'identity_documents_submit_actions.dart';
+import 'identity_documents_upload_tips.dart';
 
+/// The submit-documents step: the member uploads their identity documents,
+/// agrees to the privacy policy and submits the application for review.
+///
+/// Documents are saved as they are added and removed
+/// (`IdentityDocumentsUploader`). Submit is available once one is there; it
+/// validates the consent (`IdentityDocumentsConsentForm`) and then moves the
+/// member to review.
 class IdentityDocumentsSubmitBody extends ConsumerStatefulWidget {
   const IdentityDocumentsSubmitBody({
     required this.currentUser,
@@ -18,7 +29,10 @@ class IdentityDocumentsSubmitBody extends ConsumerStatefulWidget {
     super.key,
   });
 
+  /// The member submitting their documents.
   final UserPrivate currentUser;
+
+  /// The documents already uploaded.
   final List<IdentityDocumentSlot> initialItems;
 
   @override
@@ -26,8 +40,19 @@ class IdentityDocumentsSubmitBody extends ConsumerStatefulWidget {
       IdentityDocumentsSubmitBodyState();
 }
 
+/// State of [IdentityDocumentsSubmitBody].
 class IdentityDocumentsSubmitBodyState
     extends ConsumerState<IdentityDocumentsSubmitBody> {
+  /// Drives the consent form.
+  final GlobalKey<IdentityDocumentsConsentFormState> consentKey =
+      GlobalKey<IdentityDocumentsConsentFormState>();
+
+  /// The documents on the server.
+  late List<IdentityDocumentSlot> items = widget.initialItems;
+
+  /// Whether the application is being sent.
+  bool submitting = false;
+
   Future<IdentityDocumentSlot> handleUpload({
     required List<int> bytes,
     required String filename,
@@ -73,7 +98,11 @@ class IdentityDocumentsSubmitBodyState
         .discard(slot.id);
   }
 
-  Future<void> handleSubmit(Map<String, dynamic> formValue) async {
+  /// Submits the application for review once the member has agreed to the
+  /// privacy policy.
+  Future<void> handleSubmit() async {
+    if (consentKey.currentState?.validate() == null) return;
+    setState(() => submitting = true);
     try {
       // Documents are already attached at upload time, so submit only flips
       // the user's status. The router redirect listens to authStateProvider
@@ -93,34 +122,70 @@ class IdentityDocumentsSubmitBodyState
           ),
         ),
       );
+    } finally {
+      if (mounted) setState(() => submitting = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = isMobileWidth(context);
+    final theme = ShadTheme.of(context);
     return SingleChildScrollView(
       child: Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxWidth: isMobile ? double.infinity : 480,
+            maxWidth: isMobileWidth(context)
+                ? double.infinity
+                : IdentityDocumentsSubmitSizes.maxWidth,
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: IdentityDocumentsForm(
-              initialItems: widget.initialItems,
-              httpHeaders:
-                  ref.watch(imageAuthHeadersProvider).value ?? const {},
-              // Inject via the provider (default: the native dialog) so
-              // integration tests can stub the picker and never open a real OS
-              // file chooser — which they can't drive (#758).
-              picker: ref.watch(imagePickerProvider),
-              onUpload: handleUpload,
-              onDiscard: handleDiscard,
-              onSubmit: handleSubmit,
-              onDoLater: () => unawaited(
-                ref.read(authStateProvider.notifier).logout(),
-              ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: IdentityDocumentsSubmitSizes.sidePadding,
+              vertical: IdentityDocumentsSubmitSizes.endPadding,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  IdentityDocumentsSubmitStrings.intro,
+                  style: theme.textTheme.p,
+                ),
+                const SizedBox(height: IdentityDocumentsSubmitSizes.gap),
+                IdentityDocumentsUploader(
+                  initialItems: widget.initialItems,
+                  enabled: !submitting,
+                  httpHeaders:
+                      ref.watch(imageAuthHeadersProvider).value ?? const {},
+                  // Inject via the provider (default: the native dialog) so
+                  // integration tests can stub the picker and never open a
+                  // real OS file chooser — which they can't drive (#758).
+                  picker: ref.watch(imagePickerProvider),
+                  onUpload: handleUpload,
+                  onDiscard: handleDiscard,
+                  onChanged: (next) => setState(() => items = next),
+                ),
+                const SizedBox(
+                  height: IdentityDocumentsSubmitSizes.sectionGap,
+                ),
+                IdentityDocumentsConsentForm(
+                  key: consentKey,
+                  enabled: !submitting,
+                ),
+                const SizedBox(height: IdentityDocumentsSubmitSizes.gap),
+                IdentityDocumentsSubmitActions(
+                  hasDocument: items.isNotEmpty,
+                  submitting: submitting,
+                  onSubmit: () => unawaited(handleSubmit()),
+                  onDoLater: () => unawaited(
+                    ref.read(authStateProvider.notifier).logout(),
+                  ),
+                ),
+                const SizedBox(
+                  height: IdentityDocumentsSubmitSizes.sectionGap,
+                ),
+                const IdentityDocumentsUploadTips(),
+              ],
             ),
           ),
         ),

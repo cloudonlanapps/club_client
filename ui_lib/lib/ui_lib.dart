@@ -191,14 +191,19 @@ export 'src/widgets/group_form/group_form_validators.dart'
 // Highlight Media
 export 'src/widgets/highlight_media/highlight_media_orchestrator.dart'
     show HighlightMediaOrchestrator;
+// Identity documents (pure UI, no SDK / no Riverpod): the uploader, which
+// saves each file as it is added or removed, and the consent form the host
+// validates before it submits them for review.
+export 'src/widgets/identity_documents/identity_docs_upload_exception.dart'
+    show IdentityDocsUploadException;
 export 'src/widgets/identity_documents/identity_document_slot.dart'
     show IdentityDocumentSlot;
-export 'src/widgets/identity_documents/identity_documents_field.dart'
-    show IdentityDocsUploadException;
-export 'src/widgets/identity_documents/identity_documents_form.dart'
-    show IdentityDocumentsForm;
+export 'src/widgets/identity_documents/identity_documents_consent_form.dart'
+    show IdentityDocumentsConsentForm, IdentityDocumentsConsentFormState;
 export 'src/widgets/identity_documents/identity_documents_picker.dart'
     show IdentityDocumentsPicker, PickedImage, defaultIdentityDocumentsPicker;
+export 'src/widgets/identity_documents/identity_documents_uploader.dart'
+    show IdentityDocumentsUploader;
 // Image upload affordance (cover image replace/remove) — shared by event,
 // venue, and group connected affordances.
 export 'src/widgets/image_upload/image_picker_confirm.dart'

@@ -1,14 +1,12 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/src/constants/identity_documents.dart'
     show kIdentityDocumentMaxBytes;
-import 'package:ui_lib/src/widgets/identity_documents/identity_document_slot.dart'
-    show IdentityDocumentRejectionReason, IdentityDocumentsFormValidators;
-import 'package:ui_lib/src/widgets/identity_documents/identity_documents_form.dart'
-    show kIdentityDocsFieldId, kPrivacyAcceptedFieldId;
+import 'package:ui_lib/src/widgets/identity_documents/identity_document_rejection_reason.dart'
+    show IdentityDocumentRejectionReason;
+import 'package:ui_lib/src/widgets/identity_documents/identity_documents_upload_validators.dart'
+    show IdentityDocumentsUploadValidators;
 import 'package:ui_lib/ui_lib.dart';
 
 const Size _kSurface = Size(1024, 1400);
@@ -74,19 +72,10 @@ Future<void> _setSurface(WidgetTester tester, [Size size = _kSurface]) async {
   addTearDown(() => tester.binding.setSurfaceSize(null));
 }
 
-Future<void> _acceptPrivacy(WidgetTester tester) async {
-  final innerCheckbox = find.descendant(
-    of: find.byType(ShadCheckboxFormField),
-    matching: find.byType(ShadCheckbox),
-  );
-  tester.widget<ShadCheckbox>(innerCheckbox).onChanged?.call(true);
-  await tester.pumpAndSettle();
-}
-
 void main() {
-  group('Issue 383: IdentityDocumentsFormValidators', () {
+  group('Issue 383: IdentityDocumentsUploadValidators', () {
     test('Issue 383: accepts JPG within size cap', () {
-      final r = IdentityDocumentsFormValidators.acceptFile(
+      final r = IdentityDocumentsUploadValidators.acceptFile(
         mimeType: 'image/jpeg',
         sizeBytes: 1024 * 100,
       );
@@ -95,7 +84,7 @@ void main() {
     });
 
     test('Issue 383: rejects unsupported mime type', () {
-      final r = IdentityDocumentsFormValidators.acceptFile(
+      final r = IdentityDocumentsUploadValidators.acceptFile(
         mimeType: 'text/plain',
         sizeBytes: 100,
       );
@@ -104,7 +93,7 @@ void main() {
     });
 
     test('Issue 383: rejects files over the byte cap', () {
-      final r = IdentityDocumentsFormValidators.acceptFile(
+      final r = IdentityDocumentsUploadValidators.acceptFile(
         mimeType: 'image/png',
         sizeBytes: kIdentityDocumentMaxBytes + 1,
       );
@@ -113,7 +102,7 @@ void main() {
     });
 
     test('Issue 383: rejects application/pdf (PDFs not accepted)', () {
-      final r = IdentityDocumentsFormValidators.acceptFile(
+      final r = IdentityDocumentsUploadValidators.acceptFile(
         mimeType: 'application/pdf',
         sizeBytes: 1024,
       );
@@ -122,96 +111,7 @@ void main() {
     });
   });
 
-  group('Issue 383: IdentityDocumentsForm — initial state', () {
-    testWidgets(
-      'Issue 383: renders title, tips, field, checkbox, submit',
-      (tester) async {
-        await _setSurface(tester);
-        final host = _FakeHost();
-        await tester.pumpWidget(
-          _wrap(
-            IdentityDocumentsForm(
-              picker: _FakePicker(const []).pick,
-              onUpload: host.upload,
-              onDiscard: host.discard,
-              onSubmit: (_) async {},
-            ),
-          ),
-        );
-        // Tips accordion title is visible but the bullet body is collapsed
-        // by default — user opens it on demand.
-        expect(find.text('Tips for a clean upload'), findsOneWidget);
-        expect(
-          find.textContaining('Regular or masked Aadhaar'),
-          findsNothing,
-        );
-        expect(find.byType(ShadCheckboxFormField), findsOneWidget);
-        expect(find.text('Submit'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'Issue 383: submit disabled when empty even with privacy checked',
-      (tester) async {
-        await _setSurface(tester);
-        final host = _FakeHost();
-        await tester.pumpWidget(
-          _wrap(
-            IdentityDocumentsForm(
-              picker: _FakePicker(const []).pick,
-              onUpload: host.upload,
-              onDiscard: host.discard,
-              onSubmit: (_) async {},
-            ),
-          ),
-        );
-        await _acceptPrivacy(tester);
-        final btn = tester.widget<ShadButton>(
-          find.ancestor(
-            of: find.text('Submit'),
-            matching: find.byType(ShadButton),
-          ),
-        );
-        expect(btn.onPressed, isNull);
-      },
-    );
-
-    testWidgets(
-      'Issue 383: submit disabled when items present but privacy unchecked',
-      (tester) async {
-        await _setSurface(tester);
-        final host = _FakeHost();
-        await tester.pumpWidget(
-          _wrap(
-            IdentityDocumentsForm(
-              initialItems: const [
-                IdentityDocumentSlot(
-                  id: 'seed-1',
-                  uri: 'https://example.test/seed-1',
-                  mimeType: 'image/jpeg',
-                  sizeBytes: 1024,
-                  fileName: 'seed.jpg',
-                ),
-              ],
-              picker: _FakePicker(const []).pick,
-              onUpload: host.upload,
-              onDiscard: host.discard,
-              onSubmit: (_) async {},
-            ),
-          ),
-        );
-        final btn = tester.widget<ShadButton>(
-          find.ancestor(
-            of: find.text('Submit'),
-            matching: find.byType(ShadButton),
-          ),
-        );
-        expect(btn.onPressed, isNull);
-      },
-    );
-  });
-
-  group('Issue 383: IdentityDocumentsForm — picker lifecycle', () {
+  group('Issue 383: IdentityDocumentsUploader — picker lifecycle', () {
     testWidgets(
       'Issue 383: picking a valid file calls onUpload and adds a card',
       (tester) async {
@@ -222,11 +122,10 @@ void main() {
         ]);
         await tester.pumpWidget(
           _wrap(
-            IdentityDocumentsForm(
+            IdentityDocumentsUploader(
               picker: picker.pick,
               onUpload: host.upload,
               onDiscard: host.discard,
-              onSubmit: (_) async {},
             ),
           ),
         );
@@ -237,7 +136,7 @@ void main() {
     );
 
     testWidgets(
-      'Issue 383: rejected pick (wrong type) shows inline field error',
+      'Issue 383: rejected pick (wrong type) shows the reason under the cards',
       (tester) async {
         await _setSurface(tester);
         final host = _FakeHost();
@@ -246,11 +145,10 @@ void main() {
         ]);
         await tester.pumpWidget(
           _wrap(
-            IdentityDocumentsForm(
+            IdentityDocumentsUploader(
               picker: picker.pick,
               onUpload: host.upload,
               onDiscard: host.discard,
-              onSubmit: (_) async {},
             ),
           ),
         );
@@ -267,7 +165,7 @@ void main() {
     );
 
     testWidgets(
-      'Issue 383: rejected pick (too large) shows inline field error',
+      'Issue 383: rejected pick (too large) shows the reason under the cards',
       (tester) async {
         await _setSurface(tester);
         final host = _FakeHost();
@@ -280,11 +178,10 @@ void main() {
         ]);
         await tester.pumpWidget(
           _wrap(
-            IdentityDocumentsForm(
+            IdentityDocumentsUploader(
               picker: picker.pick,
               onUpload: host.upload,
               onDiscard: host.discard,
-              onSubmit: (_) async {},
             ),
           ),
         );
@@ -304,7 +201,7 @@ void main() {
         final host = _FakeHost();
         await tester.pumpWidget(
           _wrap(
-            IdentityDocumentsForm(
+            IdentityDocumentsUploader(
               initialItems: const [
                 IdentityDocumentSlot(
                   id: 'a',
@@ -322,7 +219,6 @@ void main() {
               picker: _FakePicker(const []).pick,
               onUpload: host.upload,
               onDiscard: host.discard,
-              onSubmit: (_) async {},
             ),
           ),
         );
@@ -331,7 +227,7 @@ void main() {
     );
   });
 
-  group('Issue 383: IdentityDocumentsForm — discard', () {
+  group('Issue 383: IdentityDocumentsUploader — discard', () {
     testWidgets(
       'Issue 383: tapping the X on a card calls onDiscard',
       (tester) async {
@@ -346,12 +242,11 @@ void main() {
         );
         await tester.pumpWidget(
           _wrap(
-            IdentityDocumentsForm(
+            IdentityDocumentsUploader(
               initialItems: const [seed],
               picker: _FakePicker(const []).pick,
               onUpload: host.upload,
               onDiscard: host.discard,
-              onSubmit: (_) async {},
             ),
           ),
         );
@@ -363,102 +258,99 @@ void main() {
     );
   });
 
-  group('Issue 383: IdentityDocumentsForm — submit', () {
+  group('Issue 51: IdentityDocumentsUploader saves on its own', () {
     testWidgets(
-      'Issue 383: with item + privacy, submit returns expected value map',
+      'Issue 51: it has no form, no checkbox and no button',
       (tester) async {
         await _setSurface(tester);
         final host = _FakeHost();
-        Map<String, dynamic>? submitted;
         await tester.pumpWidget(
           _wrap(
-            IdentityDocumentsForm(
+            IdentityDocumentsUploader(
+              picker: _FakePicker(const []).pick,
+              onUpload: host.upload,
+              onDiscard: host.discard,
+            ),
+          ),
+        );
+        expect(find.byType(ShadForm), findsNothing);
+        expect(find.byType(ShadCheckbox), findsNothing);
+        expect(find.byType(ShadButton), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'Issue 51: an upload and a removal each report the documents',
+      (tester) async {
+        await _setSurface(tester);
+        final host = _FakeHost();
+        final reported = <List<IdentityDocumentSlot>>[];
+        await tester.pumpWidget(
+          _wrap(
+            IdentityDocumentsUploader(
+              picker: _FakePicker([
+                _image(mime: 'image/jpeg', size: 1024, filename: 'id.jpg'),
+              ]).pick,
+              onUpload: host.upload,
+              onDiscard: host.discard,
+              onChanged: reported.add,
+            ),
+          ),
+        );
+        await tester.tap(find.byIcon(Icons.add));
+        await tester.pumpAndSettle();
+        expect(reported.last.map((s) => s.id), ['fake-0']);
+
+        await tester.tap(find.byIcon(Icons.close));
+        await tester.pumpAndSettle();
+        expect(host.discardCalls, 1);
+        expect(reported.last, isEmpty);
+      },
+    );
+
+    testWidgets(
+      'Issue 51: disabled, it offers no add card and no remove button',
+      (tester) async {
+        await _setSurface(tester);
+        final host = _FakeHost();
+        await tester.pumpWidget(
+          _wrap(
+            IdentityDocumentsUploader(
+              enabled: false,
               initialItems: const [
                 IdentityDocumentSlot(
-                  id: 'seed-1',
-                  uri: 'https://example.test/seed-1',
+                  id: 'a',
+                  uri: 'https://example.test/a',
                   mimeType: 'image/jpeg',
                   sizeBytes: 1024,
-                  fileName: 'seed.jpg',
                 ),
               ],
               picker: _FakePicker(const []).pick,
               onUpload: host.upload,
               onDiscard: host.discard,
-              onSubmit: (v) async {
-                submitted = v;
-              },
             ),
           ),
         );
-        await _acceptPrivacy(tester);
-        await tester.tap(find.text('Submit'));
-        await tester.pumpAndSettle();
-        expect(submitted, isNotNull);
-        final slots =
-            submitted![kIdentityDocsFieldId] as List<IdentityDocumentSlot>;
-        expect(slots, hasLength(1));
-        expect(slots.first.id, 'seed-1');
-        expect(submitted![kPrivacyAcceptedFieldId], isTrue);
+        expect(find.byIcon(Icons.add), findsNothing);
+        expect(find.byIcon(Icons.close), findsNothing);
       },
     );
 
     testWidgets(
-      'Issue 383: form shows "Submitting…" while onSubmit is in flight',
-      (tester) async {
-        await _setSurface(tester);
-        final host = _FakeHost();
-        final completer = Completer<void>();
-        await tester.pumpWidget(
-          _wrap(
-            IdentityDocumentsForm(
-              initialItems: const [
-                IdentityDocumentSlot(
-                  id: 's',
-                  uri: 'https://example.test/s',
-                  mimeType: 'image/jpeg',
-                  sizeBytes: 1024,
-                ),
-              ],
-              picker: _FakePicker(const []).pick,
-              onUpload: host.upload,
-              onDiscard: host.discard,
-              onSubmit: (_) => completer.future,
-            ),
-          ),
-        );
-        await _acceptPrivacy(tester);
-        await tester.tap(find.text('Submit'));
-        await tester.pump();
-        expect(find.text('Submitting…'), findsOneWidget);
-        expect(find.text('Submit'), findsNothing);
-
-        completer.complete();
-        await tester.pumpAndSettle();
-        expect(find.text('Submit'), findsOneWidget);
-        expect(find.text('Submitting…'), findsNothing);
-      },
-    );
-  });
-
-  group('Issue 383: IdentityDocumentsForm — layout parity', () {
-    testWidgets(
-      'Issue 383: fits a phone-sized viewport (390x844) without overflow',
+      'Issue 51: fits a phone-sized viewport (390x844) without overflow',
       (tester) async {
         await _setSurface(tester, const Size(390, 844));
         final host = _FakeHost();
         await tester.pumpWidget(
           _wrap(
-            IdentityDocumentsForm(
+            IdentityDocumentsUploader(
               picker: _FakePicker(const []).pick,
               onUpload: host.upload,
               onDiscard: host.discard,
-              onSubmit: (_) async {},
             ),
           ),
         );
         expect(tester.takeException(), isNull);
-        expect(find.text('Submit'), findsOneWidget);
       },
     );
   });

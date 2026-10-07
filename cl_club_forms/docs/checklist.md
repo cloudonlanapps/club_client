@@ -4,6 +4,20 @@ For checking the forms by eye in the running app. Each line names a form and
 where it appears. Taken from where the forms are mounted in the code and from
 the app's routes (2026-10-07).
 
+## Seeing a form without the app
+
+`example/` is **Club Forms**, a preview of every form in this list, for
+checking looks without a server or a login:
+
+```bash
+cd cl_club_forms/example && flutter run -d chrome
+```
+
+Pick a form in the sidebar (variants such as the three event types or signing
+up and reapplying are separate entries); it shows bare in one card, with
+made-up sample data. The top bar has **Validate**, which shows the form's
+messages, **Reset**, which mounts it afresh, and the light / dark toggle.
+
 ## On every form
 
 - [ ] Labels sit above their fields, and required fields end in " *".

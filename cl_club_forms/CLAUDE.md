@@ -74,5 +74,17 @@ one when a form moves to another screen.
 
 ## Example
 
-`example/` mounts `SignupForm` and `IdentityDocumentsConsentForm` bare, with
-a stand-in for the host's buttons: `cd example && flutter run -d chrome`.
+`example/` is **Club Forms**, a preview of every form of this package, for
+checking looks without a server: `cd example && flutter run -d chrome`. A
+sidebar lists the forms by family, each variant that looks different as its
+own entry; the main view shows the chosen form bare in one card, with made-up
+sample data. The top bar holds the demo's only controls: **Validate** (calls
+`validate()`, so the form shows its messages), **Reset** (mounts the form
+afresh) and the light / dark toggle.
+
+An entry is data (`example/lib/models/form_demo_entry.dart`): a title, a
+family, the form's type and a builder that takes the form's key. The entries
+are in `example/lib/data/`, one file per family. **A new form gets an entry
+there**: `example/test/form_demo_entries_test.dart` reads the barrel and
+fails for a form with none, and `example/test/form_preview_test.dart` mounts
+every entry at desktop and at phone width.

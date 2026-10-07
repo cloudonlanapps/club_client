@@ -1,25 +1,29 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show
+        EventCreateForm,
+        EventCreateFormState,
+        EventFormType,
+        EventFormTypeLabel,
+        EventVenueOption;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider, clVenuesProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show Venue;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show
-        EventCreateForm,
-        EventCreateFormState,
-        EventFormType,
-        EventFormTypeLabel,
-        EventVenueOption,
-        TitleRow;
+import 'package:ui_lib/ui_lib.dart' show TitleRow;
 
 import '../models/event_create_form_helpers.dart';
+import '../utils/event_create_error.dart';
 
 /// Scaffold-free event creation view for a given [eventType].
 ///
-/// Owns the chrome (title row, Create/Cancel buttons, discard prompt) and the
-/// SDK call; the [EventCreateForm] it hosts stays pure-UI. Navigation is
-/// delegated via [onCreated] and [onCancel] callbacks.
+/// Owns the chrome (title row, Create/Cancel buttons, discard prompt), the
+/// in-flight state and the SDK call; the [EventCreateForm] it hosts stays
+/// pure-UI. Create validates the form and runs the create; a refusal the
+/// server makes about a field goes back on that field, any other failure is
+/// a toast. Navigation is delegated via [onCreated] and [onCancel]
+/// callbacks.
 class EventCreateView extends ConsumerStatefulWidget {
   const EventCreateView({
     required this.eventType,
@@ -40,9 +44,20 @@ class EventCreateViewState extends ConsumerState<EventCreateView> {
   final eventFormKey = GlobalKey<EventCreateFormState>();
   bool isSubmitting = false;
 
-  String get _label => widget.eventType.label;
+  /// What the event type is called in the title, the button and the toasts.
+  String get label => widget.eventType.label;
 
-  Future<void> handleSubmit(Map<String, dynamic> values) async {
+  /// Shown when the create fails with nothing more specific to say.
+  String get failedMessage =>
+      'Could not create ${label.toLowerCase()}. Please try again.';
+
+  /// Validates the form and creates the event; a refusal about a field
+  /// shows on that field.
+  Future<void> create() async {
+    final form = eventFormKey.currentState;
+    if (form == null || isSubmitting) return;
+    final values = form.validate();
+    if (values == null) return;
     setState(() => isSubmitting = true);
     try {
       final created = await EventCreateFormSubmit.create(
@@ -52,18 +67,21 @@ class EventCreateViewState extends ConsumerState<EventCreateView> {
       );
       if (!mounted) return;
       ShadToaster.of(context).show(
-        ShadToast(description: Text('$_label "${created.title}" created.')),
+        ShadToast(description: Text('$label "${created.title}" created.')),
       );
       widget.onCreated();
-    } on Object {
+    } on Object catch (e) {
       if (!mounted) return;
+      final refusal = eventCreateRefusal(e, fallback: failedMessage);
+      if (refusal != null) {
+        eventFormKey.currentState?.showErrors(
+          fieldErrors: refusal.fieldErrors,
+          formError: refusal.formError,
+        );
+        return;
+      }
       ShadToaster.of(context).show(
-        ShadToast.destructive(
-          description: Text(
-            'Could not create ${_label.toLowerCase()}. '
-            'Please try again.',
-          ),
-        ),
+        ShadToast.destructive(description: Text(failedMessage)),
       );
     } finally {
       if (mounted) setState(() => isSubmitting = false);
@@ -122,7 +140,7 @@ class EventCreateViewState extends ConsumerState<EventCreateView> {
       child: Column(
         children: [
           TitleRow(
-            title: 'New $_label',
+            title: 'New $label',
             onBack: isSubmitting ? null : confirmCancel,
           ),
           const Divider(height: 1),
@@ -138,8 +156,7 @@ class EventCreateViewState extends ConsumerState<EventCreateView> {
                     initialValues: buildEventCreateFormInitialValues(
                       widget.eventType,
                     ),
-                    isSubmitting: isSubmitting,
-                    onSubmit: handleSubmit,
+                    enabled: !isSubmitting,
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -151,13 +168,11 @@ class EventCreateViewState extends ConsumerState<EventCreateView> {
                       ),
                       const SizedBox(width: 12),
                       ShadButton.outline(
-                        onPressed: isSubmitting
-                            ? null
-                            : () => eventFormKey.currentState?.handleSubmit(),
+                        onPressed: isSubmitting ? null : create,
                         child: Text(
                           isSubmitting
                               ? 'Creating...'
-                              : 'Create ${_label.toLowerCase()}',
+                              : 'Create ${label.toLowerCase()}',
                         ),
                       ),
                     ],

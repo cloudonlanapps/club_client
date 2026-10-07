@@ -24,6 +24,12 @@
 import 'package:cl_club_events/cl_club_events.dart' show EventDetailsView;
 import 'package:cl_club_events/src/widgets/events_preview/cl_event_gallery.dart'
     show ClEventGallery;
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show AgeEligibilityText, EventFormFields, EventGender;
+import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
+    show AgeEligibilityFormFields;
+import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_validators.dart'
+    show AgeEligibilityFormValidators;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider, clVenuesMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart'
@@ -34,15 +40,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
-    show
-        ActionButton,
-        AgeEligibilityFormFields,
-        AgeEligibilityFormValidators,
-        AgeEligibilityText,
-        EntityCard,
-        EventFormFields,
-        EventGender,
-        SectionEditButton;
+    show ActionButton, EntityCard, SectionEditButton;
 
 import '_helpers/auth.dart';
 import '_helpers/editors.dart';

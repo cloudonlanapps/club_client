@@ -1,3 +1,5 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show AgeEligibilityText, FormAge;
 import 'package:cl_club_members/src/widgets/cards/group_card.dart'
     show GroupMetaLine;
 import 'package:cl_club_members/src/widgets/group_eligibility_section.dart';
@@ -9,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show AgeEligibilityText, FormAge;
+import 'package:ui_lib/ui_lib.dart' show NoLongerEligibleLabel;
 
 Group _group({
   GroupKind kind = GroupKind.semiAuto,
@@ -160,7 +162,7 @@ void main() {
         ),
       ]);
 
-      expect(find.text(AgeEligibilityText.noLongerEligible), findsNWidgets(2));
+      expect(find.text(NoLongerEligibleLabel.text), findsNWidgets(2));
       expect(find.text('2 members no longer eligible'), findsOneWidget);
       // The mark sits in the ineligible member's own row.
       final balaRow = find.ancestor(
@@ -170,7 +172,7 @@ void main() {
       expect(
         find.descendant(
           of: balaRow.first,
-          matching: find.text(AgeEligibilityText.noLongerEligible),
+          matching: find.text(NoLongerEligibleLabel.text),
         ),
         findsOneWidget,
       );
@@ -181,7 +183,7 @@ void main() {
       expect(
         find.descendant(
           of: ashaRow.first,
-          matching: find.text(AgeEligibilityText.noLongerEligible),
+          matching: find.text(NoLongerEligibleLabel.text),
         ),
         findsNothing,
       );
@@ -204,7 +206,7 @@ void main() {
         GroupMember(membername: 'workflow_b'),
       ]);
 
-      expect(find.text(AgeEligibilityText.noLongerEligible), findsNothing);
+      expect(find.text(NoLongerEligibleLabel.text), findsNothing);
       expect(find.textContaining('no longer eligible'), findsNothing);
     });
   });

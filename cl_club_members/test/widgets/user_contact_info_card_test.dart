@@ -1,3 +1,4 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show UserContactForm;
 import 'package:cl_club_members/src/widgets/user_contact_info_card.dart';
 import 'package:cl_member_auth/cl_member_auth.dart'
     show AuthNotifier, authStateProvider;
@@ -8,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show UserContactForm;
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 import '../support/recording_url_launcher.dart';

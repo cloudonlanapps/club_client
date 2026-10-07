@@ -1,3 +1,5 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show AgeEligibilitySummary, GroupEligibilityForm, GroupEligibilityFormState;
 import 'package:cl_club_members/src/models/group_form_helpers.dart'
     show GroupFormSubmit, buildGroupFormInitialValues;
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -6,12 +8,7 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show
-        AgeEligibilitySummary,
-        EditableSectionCard,
-        GroupEligibilityForm,
-        GroupEligibilityFormState;
+import 'package:ui_lib/ui_lib.dart' show EditableSectionCard;
 
 /// Human-readable eligibility section for a group, edited in place.
 ///
@@ -112,21 +109,18 @@ class _GroupEligibilitySectionState
         const ShadToast(description: Text('Eligibility updated.')),
       );
       return true;
-    } on ServerException catch (e) {
+    } on Object catch (e) {
       if (!mounted) return false;
-      final message = switch (e.code) {
-        SdkErrorCode.membersExist =>
-          'This group still has members. Remove them before switching to '
-              'auto.',
-        SdkErrorCode.membersIneligible => _ineligibleMessage(e),
-        _ => 'Could not save. Please try again.',
-      };
-      ShadToaster.of(context).show(
-        ShadToast.destructive(description: Text(message)),
-      );
-      return false;
-    } on Object catch (_) {
-      if (!mounted) return false;
+      // What the server refuses about the mode or the criteria shows on the
+      // form; anything else is a failed save.
+      final refusal = GroupFormSubmit.eligibilityRefusal(e);
+      if (refusal != null) {
+        _formKey.currentState?.showErrors(
+          fieldErrors: refusal.fieldErrors,
+          formError: refusal.formError,
+        );
+        return false;
+      }
       ShadToaster.of(context).show(
         const ShadToast.destructive(
           description: Text('Could not save. Please try again.'),
@@ -134,17 +128,6 @@ class _GroupEligibilitySectionState
       );
       return false;
     }
-  }
-
-  String _ineligibleMessage(ServerException e) {
-    final names =
-        (e.details?['membernames'] as List?)
-            ?.map((n) => n.toString())
-            .toList() ??
-        const <String>[];
-    final namesText = names.isEmpty ? 'some members' : names.join(', ');
-    return "These members don't meet the new criteria: $namesText. "
-        'Remove or update them, then retry.';
   }
 
   static List<String> _buildSentences(Group group) {

@@ -1,7 +1,7 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show EventFormValidators, RenameForm, RenameFormFields, RenameFormState;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show EventFormValidators, RenameForm, RenameFormState;
 
 /// Hosts the shared [RenameForm] in a dialog. Resolves to the trimmed new
 /// title, or `null` on Cancel / dismiss / no-op (title unchanged).
@@ -14,7 +14,9 @@ Future<String?> showEventRenameDialog(
     context: context,
     builder: (dialogContext) {
       void save() {
-        final value = formKey.currentState?.validate();
+        final value =
+            formKey.currentState?.validate()?[RenameFormFields.valueId]
+                as String?;
         if (value == null) return;
         Navigator.of(
           dialogContext,

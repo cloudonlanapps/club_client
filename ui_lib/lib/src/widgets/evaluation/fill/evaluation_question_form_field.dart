@@ -4,7 +4,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../../models/evaluation_answer_value.dart';
 import '../../../models/evaluation_item_value.dart';
 import '../../../utils/evaluation_answer_rules.dart';
-import 'evaluation_fill_form_fields.dart';
+import 'evaluation_fill_fields.dart';
 import 'evaluation_question_fill.dart';
 
 /// One question as a field of the fill form: it holds the answer and, when
@@ -20,7 +20,7 @@ class EvaluationQuestionFormField
     bool enabled = true,
     super.key,
   }) : super(
-         id: EvaluationFillFormFields.idFor(item.id!),
+         id: EvaluationFillFields.idFor(item.id!),
          validator: (answer) => EvaluationAnswerRules.validate(
            item,
            answer ?? const EvaluationAnswerValue(),

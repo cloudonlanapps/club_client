@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/src/utils/evaluation_closing_run.dart'
+    show EvaluationClosingRun;
+import 'package:ui_lib/src/widgets/evaluation/start/evaluation_period_validators.dart'
+    show EvaluationPeriodValidators;
 import 'package:ui_lib/ui_lib.dart';
 
 import 'evaluation_test_helpers.dart';
@@ -129,7 +133,7 @@ void main() {
       await tallSurface(tester);
       await tester.pumpWidget(
         wrapEvaluation(
-          EvaluationFillForm(
+          EvaluationFillBody(
             layout: const [
               EvaluationLayoutEntry.item(yesNoItem),
               EvaluationLayoutEntry.item(_privateQa),
@@ -193,7 +197,7 @@ void main() {
       await tallSurface(tester);
       await tester.pumpWidget(
         wrapEvaluation(
-          EvaluationFillForm(
+          EvaluationFillBody(
             layout: _closingLayout,
             initialAnswers: const {},
             onAnswerChanged: (_, _) {},
@@ -208,21 +212,6 @@ void main() {
   });
 
   group('Issue 173: server refusals inline on the name forms', () {
-    testWidgets('Issue 173: RenameForm shows an error the host sets', (
-      tester,
-    ) async {
-      final key = GlobalKey<RenameFormState>();
-      await tester.pumpWidget(
-        wrapEvaluation(
-          RenameForm(key: key, initialValue: 'Skating', label: 'Name'),
-        ),
-      );
-      await tester.pumpAndSettle();
-      key.currentState!.setError('Name taken.');
-      await tester.pump();
-      expect(find.text('Name taken.'), findsOneWidget);
-    });
-
     testWidgets('Issue 173: the template create form shows a name error the '
         'host sets', (tester) async {
       final key = GlobalKey<EvaluationTemplateCreateFormState>();

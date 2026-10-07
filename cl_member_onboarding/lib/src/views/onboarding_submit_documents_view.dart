@@ -11,8 +11,8 @@ import '../widgets/identity_documents_submit_body.dart';
 
 /// Identity-document submission view (the second onboarding route).
 ///
-/// Wraps `ui_lib/IdentityDocumentsForm` with master-notifier-backed
-/// callbacks. Reached from `/onboarding/welcome` via Continue, or from
+/// Hosts `ui_lib`'s `IdentityDocumentsUploader` and
+/// `IdentityDocumentsConsentForm` with master-notifier-backed callbacks. Reached from `/onboarding/welcome` via Continue, or from
 /// a returning user who lands here directly. After "Submit for review"
 /// the server flips status `registered` → `pending`; the router
 /// redirect then bounces the user back to `/onboarding/welcome`

@@ -18,14 +18,24 @@ a screen in `cl_member_zone` at a route the `cl_club_app` router defines.
   whole `site_media` map; a slot the server refuses as not public says so
   in place. Super-admin only, like the preference endpoint.
 
-- **`ClubIdentityView`** (club_core#20) — the club's name, short name,
-  inquiry email and public contact block (the `club_info` preference the
-  website and the server's email branding and inquiry routing read), as
-  one `ClubIdentityForm` (ui_lib). Translatable fields take a default and
-  optional per-language texts; languages are added by code. Save writes
-  the whole document in one call, over the master's read so keys the form
-  does not edit survive; `club_identity_form_helpers.dart` is the form ↔
-  SDK adapter. Super-admin only.
+- **`ClubIdentityView`** (club_core#20, club_client#58) — the club's name,
+  short name, inquiry email and public contact block (the `club_info`
+  preference the website and the server's email branding and inquiry
+  routing read), in three section cards: **Club** (`ClubDetailsCard`),
+  **Contact** (`ClubContactCard`) and **Address** (`ClubAddressCard`).
+  Each is an `EditableSectionCard` that shows the values that are set and
+  edits them in place with its own form (`ClubDetailsForm`,
+  `ClubContactForm`, `ClubAddressForm`, cl_club_forms) and its own Save.
+  Translatable fields take a default and a text for each language
+  offered: those the stored values already use, plus those added in this
+  visit through a fourth card, **Translations** (`ClubTranslationsCard`,
+  hosting `ClubLanguageForm` and its Add language button). Adding a
+  language stores nothing; a translation is saved with its section. The server replaces the document whole on
+  every write, so a section is saved as the master's read with that
+  section's fields replaced (`ClubIdentityFormSubmit.updateClub` /
+  `updateContact` / `updateAddress` in `club_identity_form_helpers.dart`,
+  the form ↔ SDK adapter): the other sections, and keys no form edits,
+  survive. Super-admin only.
 
 SDK access goes through `cl_remote_store` (`clInquiriesMasterProvider`,
 `clUnhandledInquiryCountProvider`, `clSiteMediaMasterProvider`,

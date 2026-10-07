@@ -1,10 +1,11 @@
 import 'package:cl_club_events/src/models/camp_schedule_form_helpers.dart';
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show CampScheduleData, SessionInput;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadTimeOfDay;
-import 'package:ui_lib/ui_lib.dart' show CampScheduleData, SessionInput;
 
 Event _event({
   required DateTime startTimeUtc,

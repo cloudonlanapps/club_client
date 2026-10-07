@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ui_lib/src/widgets/evaluation/inputs/evaluation_level_buttons.dart'
+    show EvaluationLevelButtons;
+import 'package:ui_lib/src/widgets/evaluation/inputs/evaluation_range_input.dart'
+    show EvaluationRangeInput;
+import 'package:ui_lib/src/widgets/evaluation/inputs/evaluation_star_input.dart'
+    show EvaluationStarInput;
 import 'package:ui_lib/ui_lib.dart';
 
 import 'evaluation_test_helpers.dart';

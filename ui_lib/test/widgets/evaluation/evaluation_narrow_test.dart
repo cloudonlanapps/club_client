@@ -52,7 +52,7 @@ void main() {
       await _narrow(tester);
       await tester.pumpWidget(
         wrapEvaluation(
-          EvaluationFillForm(
+          EvaluationFillBody(
             layout: const [
               ...sampleLayout,
               EvaluationLayoutEntry.item(multiItem),

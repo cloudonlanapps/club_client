@@ -1,69 +1,68 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../utils/credit_action_runner.dart';
-
-/// Hosts one credit form in place, inside the credit view (club_client#41):
-/// its [title], the form, then Cancel and a submit button, with the
-/// in-flight state and a toast when the server refuses. Nothing is pushed
-/// over the view. The form stays pure UI: [validate] reads it through its
-/// key, and [onSubmit] makes the call. [onClose] runs on Cancel and once
-/// the action succeeded.
-class CreditActionPanel extends StatefulWidget {
+/// One credit form shown in place, inside the credit view (club_client#41):
+/// its [title], the [form], then Cancel and a submit button. Nothing is
+/// pushed over the view. `CreditActionForm` drives the form and holds the
+/// in-flight state; this is the chrome around it.
+class CreditActionPanel extends StatelessWidget {
   const CreditActionPanel({
     required this.title,
     required this.form,
-    required this.validate,
+    required this.saving,
     required this.onSubmit,
     required this.onClose,
-    this.submitLabel = 'Save',
+    this.submitLabel = defaultSubmitLabel,
     super.key,
   });
 
+  /// The submit button's text unless the host gives another.
+  static const String defaultSubmitLabel = 'Save';
+
+  /// Gap between the heading, the form and the buttons.
+  static const double sectionGap = 16;
+
+  /// Gap between the two buttons.
+  static const double buttonGap = 8;
+
+  /// The panel's heading.
   final String title;
+
+  /// The credit form.
   final Widget form;
-  final Map<String, dynamic>? Function() validate;
-  final Future<void> Function(Map<String, dynamic> values) onSubmit;
+
+  /// Whether the action is in flight: both buttons are then off.
+  final bool saving;
+
+  /// Validates the form and runs the action.
+  final VoidCallback onSubmit;
+
+  /// Closes the panel, on Cancel.
   final VoidCallback onClose;
+
+  /// The submit button's text.
   final String submitLabel;
-
-  @override
-  State<CreditActionPanel> createState() => CreditActionPanelState();
-}
-
-class CreditActionPanelState extends State<CreditActionPanel> {
-  bool saving = false;
-
-  Future<void> submit() async {
-    final values = widget.validate();
-    if (values == null) return;
-    setState(() => saving = true);
-    final done = await runCreditAction(context, () => widget.onSubmit(values));
-    if (!mounted) return;
-    setState(() => saving = false);
-    if (done) widget.onClose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 16,
+      spacing: sectionGap,
       children: [
-        Text(widget.title, style: ShadTheme.of(context).textTheme.large),
-        widget.form,
+        Text(title, style: ShadTheme.of(context).textTheme.large),
+        form,
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
-          spacing: 8,
+          spacing: buttonGap,
           children: [
             ShadButton.outline(
-              onPressed: saving ? null : widget.onClose,
+              onPressed: saving ? null : onClose,
               child: const Text('Cancel'),
             ),
             ShadButton(
-              onPressed: saving ? null : submit,
-              child: Text(widget.submitLabel),
+              onPressed: saving ? null : onSubmit,
+              child: Text(submitLabel),
             ),
           ],
         ),

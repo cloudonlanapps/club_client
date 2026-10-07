@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lib/src/utils/evaluation_answer_rules.dart';
 import 'package:ui_lib/src/utils/evaluation_choice_values.dart';
+import 'package:ui_lib/src/widgets/evaluation/item_form/evaluation_item_form_validators.dart'
+    show EvaluationItemFormValidators;
 import 'package:ui_lib/ui_lib.dart';
 
 import 'evaluation_test_helpers.dart';

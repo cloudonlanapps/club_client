@@ -10,12 +10,17 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 /// Runs a partial-update call, invalidates the affected providers, and shows a
 /// section-specific success toast (or an error toast). Returns `true` when the
 /// update succeeded so the editor can leave edit mode.
+///
+/// A section whose form can show a server refusal on the field it names
+/// passes [onRefused]: it returns true once it has shown the refusal there,
+/// and no toast follows.
 Future<bool> applyUserUpdate(
   WidgetRef ref,
   BuildContext context,
   String username,
   Future<void> Function(ClUsersMasterNotifier notifier) update, {
   required String successMessage,
+  bool Function(ServerException error)? onRefused,
 }) async {
   try {
     await update(ref.read(clUsersMasterProvider.notifier));
@@ -29,6 +34,7 @@ Future<bool> applyUserUpdate(
     return true;
   } on ServerException catch (e) {
     if (!context.mounted) return false;
+    if (onRefused?.call(e) ?? false) return false;
     ShadToaster.of(context).show(
       ShadToast.destructive(description: Text(profileSaveErrorMessage(e))),
     );

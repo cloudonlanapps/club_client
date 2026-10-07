@@ -12,6 +12,8 @@ dependencies:
     path: ../cl_club_credits
   cl_club_evaluation:
     path: ../cl_club_evaluation
+  cl_club_forms:
+    path: ../cl_club_forms
   cl_member_auth:
     path: ../cl_member_auth
   cl_remote_store:

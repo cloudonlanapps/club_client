@@ -1,6 +1,7 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show TwoColumnGrid;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton, TwoColumnGrid;
+import 'package:ui_lib/ui_lib.dart' show ActionButton;
 
 import '../../models/event_management_action.dart';
 import '../../models/event_management_messages.dart';

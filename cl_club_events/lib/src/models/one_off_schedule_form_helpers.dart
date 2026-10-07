@@ -1,10 +1,14 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show
+        OneOffScheduleData,
+        OneOffScheduleFormFields,
+        OneOffScheduleValue,
+        SessionInput;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadTimeOfDay;
-import 'package:ui_lib/ui_lib.dart'
-    show OneOffScheduleData, OneOffScheduleValue;
 
 import '../utils/session_inputs.dart';
 
@@ -71,6 +75,18 @@ String? oneOffRescheduleLockReason(
   }
   return null;
 }
+
+/// The schedule `OneOffScheduleForm.validate()` returned as [values]: when
+/// the one-off takes place, where, and its split.
+OneOffScheduleValue oneOffScheduleValueOf(Map<String, dynamic> values) =>
+    OneOffScheduleValue(
+      schedule:
+          values[OneOffScheduleFormFields.scheduleId] as OneOffScheduleData,
+      venueId: values[OneOffScheduleFormFields.venueId] as int?,
+      sessions: List<SessionInput>.of(
+        values[OneOffScheduleFormFields.sessionsId] as List<SessionInput>,
+      ),
+    );
 
 /// Bridges `OneOffScheduleForm` to the master's reschedule call.
 class OneOffScheduleFormSubmit {

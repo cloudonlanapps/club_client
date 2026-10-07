@@ -1,20 +1,22 @@
 import 'package:cl_club_credits/cl_club_credits.dart';
+import 'package:cl_club_credits/src/models/credit_action_kind.dart';
+import 'package:cl_club_credits/src/utils/credit_action_error.dart';
 import 'package:cl_club_credits/src/widgets/credit_account_row.dart';
 import 'package:cl_club_credits/src/widgets/credit_action_dialog.dart';
 import 'package:cl_club_credits/src/widgets/credit_action_panel.dart';
 import 'package:cl_club_credits/src/widgets/credit_entry_row.dart';
-import 'package:club_sdk_2/club_sdk_2.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
+import 'package:cl_club_forms/cl_club_forms.dart'
     show
-        CreditCountChip,
         CreditExtendForm,
         CreditFormFields,
         CreditGrantForm,
         CreditReverseForm,
         CreditTransferForm;
+import 'package:club_sdk_2/club_sdk_2.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart' show CreditCountChip;
 
 import 'support/credit_test_scope.dart';
 
@@ -268,6 +270,157 @@ void main() {
         await tester.pumpAndSettle();
       }
       expect(routes.pushed, 2);
+    });
+  });
+
+  group('Issue 54: the credit host drives the forms by the contract', () {
+    const refusedText = 'raw server text';
+
+    Finder field(String id) =>
+        find.byWidgetPredicate((w) => w is ShadInputFormField && w.id == id);
+
+    testWidgets('Issue 54: a refusal about the amount shows on the credits '
+        'field, and Save can be tried again', (tester) async {
+      late StubAccounts stub;
+      await _pumpView(
+        tester,
+        accountsNotifier: () => stub = StubAccounts(_accounts),
+      );
+      await _openPackageAction(tester, 'Reverse');
+      await _enter(tester, CreditFormFields.reasonId, 'mistake');
+      stub.error = const ServerException(
+        statusCode: 422,
+        code: SdkErrorCode.insufficientBalance,
+        message: refusedText,
+      );
+
+      await tester.tap(find.widgetWithText(ShadButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(
+          of: find.byType(CreditReverseForm),
+          matching: find.text('More than remains unspent.'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(ShadToast), findsNothing);
+      expect(find.textContaining(refusedText), findsNothing);
+      expect(find.byType(CreditActionPanel), findsOneWidget);
+
+      stub.error = null;
+      await tester.tap(find.widgetWithText(ShadButton, 'Save'));
+      await tester.pumpAndSettle();
+      expect(stub.actions, ['reverse $_programmeAccount mistake']);
+      _expectStatementShown();
+    });
+
+    testWidgets('Issue 54: a refusal about no field of the form is a toast', (
+      tester,
+    ) async {
+      late StubAccounts stub;
+      await _pumpView(
+        tester,
+        accountsNotifier: () => stub = StubAccounts(_accounts),
+      );
+      await _openPackageAction(tester, 'Reverse');
+      await _enter(tester, CreditFormFields.reasonId, 'mistake');
+      stub.error = const ServerException(
+        statusCode: 422,
+        code: SdkErrorCode.accountClosed,
+        message: refusedText,
+      );
+
+      await tester.tap(find.widgetWithText(ShadButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('This package is closed.'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(CreditReverseForm),
+          matching: find.text('This package is closed.'),
+        ),
+        findsNothing,
+      );
+      expect(find.byType(CreditActionPanel), findsOneWidget);
+    });
+
+    testWidgets('Issue 54: the form is enabled while nothing is in flight', (
+      tester,
+    ) async {
+      await _pumpView(tester);
+      await _openPackageAction(tester, 'Extend');
+
+      expect(
+        tester.widget<CreditExtendForm>(find.byType(CreditExtendForm)).enabled,
+        isTrue,
+      );
+      expect(
+        tester
+            .widget<ShadInputFormField>(field(CreditFormFields.reasonId))
+            .enabled,
+        isTrue,
+      );
+    });
+  });
+
+  group('Issue 54: creditActionRefusedFieldId', () {
+    ServerException refusal(String code) =>
+        ServerException(statusCode: 422, code: code, message: 'raw');
+
+    test('Issue 54: names the amount, the window or the programme', () {
+      expect(
+        creditActionRefusedFieldId(
+          refusal(SdkErrorCode.insufficientBalance),
+          CreditActionKind.reverse,
+        ),
+        CreditFormFields.creditsId,
+      );
+      expect(
+        creditActionRefusedFieldId(
+          refusal(SdkErrorCode.insufficientBalance),
+          CreditActionKind.transfer,
+        ),
+        CreditFormFields.penaltyId,
+      );
+      expect(
+        creditActionRefusedFieldId(
+          refusal(SdkErrorCode.invalidValidityWindow),
+          CreditActionKind.extend,
+        ),
+        CreditFormFields.validUntilId,
+      );
+      expect(
+        creditActionRefusedFieldId(
+          refusal(SdkErrorCode.creditNotApplicable),
+          CreditActionKind.grant,
+        ),
+        CreditFormFields.programmeId,
+      );
+    });
+
+    test('Issue 54: names nothing the form of the action does not have', () {
+      expect(
+        creditActionRefusedFieldId(
+          refusal(SdkErrorCode.invalidValidityWindow),
+          CreditActionKind.reverse,
+        ),
+        isNull,
+      );
+      expect(
+        creditActionRefusedFieldId(
+          refusal(SdkErrorCode.invalidCreditAmount),
+          CreditActionKind.extend,
+        ),
+        isNull,
+      );
+      expect(
+        creditActionRefusedFieldId(
+          refusal(SdkErrorCode.accountClosed),
+          CreditActionKind.transfer,
+        ),
+        isNull,
+      );
     });
   });
 }

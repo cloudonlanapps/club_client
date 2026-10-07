@@ -1,0 +1,28 @@
+name: cl_club_forms
+description: The club's forms — pure-UI ShadForm widgets with their field clusters, validators, field ids and form-local values. No SDK, no Riverpod; the feature packages host them and adapt to the SDK.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.10.0"
+
+dependencies:
+  cl_calendar:
+    git:
+      url: https://github.com/cloudonlanapps/cl_calendar.git
+      ref: 630cffb47201f1c736a77b751cdb3d76ae51dd7a
+  flutter:
+    sdk: flutter
+  shadcn_ui: 0.56.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: 10.3.0
+
+# Local development against the workspace checkouts. Uncomment to build
+# against the working trees; it must stay commented in a commit.
+#dependency_overrides:
+#  cl_calendar:
+#    path: ../../packages/cl_calendar

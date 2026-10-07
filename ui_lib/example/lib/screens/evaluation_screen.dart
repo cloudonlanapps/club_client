@@ -1,3 +1,4 @@
+import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart';
@@ -80,7 +81,7 @@ const _sample = [
 
 class _EvaluationScreenState extends State<EvaluationScreen> {
   final _createKey = GlobalKey<EvaluationTemplateCreateFormState>();
-  final _fillKey = GlobalKey<EvaluationFillFormState>();
+  final _fillKey = GlobalKey<EvaluationFillBodyState>();
   final _answers = <int, EvaluationAnswerValue>{};
   String _status = '';
 
@@ -145,7 +146,9 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
         actions: [
           ShadButton(
             onPressed: () {
-              final value = formKey.currentState?.validate();
+              final value =
+                  formKey.currentState?.validate()?[RenameFormFields.valueId]
+                      as String?;
               if (value != null) Navigator.of(dialogContext).pop(value);
             },
             child: const Text('Save'),
@@ -195,7 +198,7 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              EvaluationFillForm(
+              EvaluationFillBody(
                 key: _fillKey,
                 layout: _sample,
                 initialAnswers: _answers,

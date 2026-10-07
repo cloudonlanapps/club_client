@@ -93,10 +93,11 @@ lib/src/
 
 ## Rules this package keeps
 
-- **Forms live in `ui_lib`** (form rule 17): `EvaluationItemForm`,
-  `EvaluationTemplateCreateForm`, `EvaluationLayoutEditor`,
-  `EvaluationFillForm`, `EvaluationReadBody`, `EvaluationStartForm`,
-  `EvaluationPeriodForm`, `RenameForm`. The dialogs hosting them are here.
+- **Evaluation's pure UI lives in `ui_lib`** (the exception in form rule
+  17): `EvaluationItemForm`, `EvaluationTemplateCreateForm`,
+  `EvaluationLayoutEditor`, `EvaluationFillBody`, `EvaluationReadBody`,
+  `EvaluationStartForm`, `EvaluationPeriodForm`. `RenameForm` comes from
+  `cl_club_forms`. The dialogs hosting them are here.
 - **A copy keeps its origin's answer domain.** The item form derives choice
   values from labels; `EvaluationItemAdapter.keepOrigin` puts the origin's
   values back by position (and remaps the coach-note rule), so relabelling a
@@ -111,7 +112,7 @@ lib/src/
 - **Drafts autosave, so the draft action is "Finalize"** and status `saved`
   reads "Finalized" (the coach view lists Drafts, Finalized, Published,
   then New). The server's status and call stay `saved` / `saveEvaluation`.
-  Finalize checks the form first (`EvaluationFillFormState.validateForSave`),
+  Finalize checks the form first (`EvaluationFillBodyState.validateForSave`),
   after flushing pending answers; the server's `INCOMPLETE` item ids go to
   `markIncomplete`. A reopened draft (one with answers) validates on open.
 - **The owner's editor**, top to bottom: Back (no confirmation), the head

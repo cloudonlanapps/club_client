@@ -78,13 +78,14 @@ class StubSiteMedia extends ClSiteMediaMasterNotifier {
 }
 
 /// A club identity master that serves [saved], records saves, and refuses
-/// a save with [refuseWith] when set.
+/// a save with [refuseWith], or fails it with [failWith], when set.
 class StubClubIdentity extends ClClubIdentityMasterNotifier {
   StubClubIdentity(this.saved);
 
   ClubIdentity saved;
   final List<ClubIdentity> saves = [];
   ServerException? refuseWith;
+  Error? failWith;
 
   @override
   Future<ClubIdentity> build() async => saved;
@@ -93,6 +94,8 @@ class StubClubIdentity extends ClClubIdentityMasterNotifier {
   Future<ClubIdentity> save(ClubIdentity identity) async {
     final refusal = refuseWith;
     if (refusal != null) throw refusal;
+    final failure = failWith;
+    if (failure != null) throw failure;
     saves.add(identity);
     saved = identity;
     state = AsyncData(identity);

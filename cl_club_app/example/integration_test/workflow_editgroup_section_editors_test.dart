@@ -18,6 +18,7 @@
 //   5. Coach (read-only viewer) re-opens the group and sees the updated prose.
 //   6. Cleanup: admin deletes the group; sudo soft-deletes the actors.
 
+import 'package:cl_club_forms/cl_club_forms.dart' show GroupGender, GroupMode;
 import 'package:cl_club_members/src/models/group_list_filter.dart'
     show GroupListFilter;
 import 'package:cl_club_members/src/providers/group_list_filter.dart'
@@ -33,8 +34,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show ActionButton, ErrorView, GroupGender, GroupMode;
+import 'package:ui_lib/ui_lib.dart' show ActionButton, ErrorView;
 
 import '_helpers/auth.dart';
 import '_helpers/editors.dart';

@@ -1,6 +1,8 @@
 import 'package:cl_club_events/src/widgets/funded_user_selection_dialog.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show PickerUser, UserSelectionTile;
+import 'package:ui_lib/src/widgets/user_selection_tile.dart'
+    show UserSelectionTile;
+import 'package:ui_lib/ui_lib.dart' show PickerUser;
 
 import '../support/credit_scope.dart';
 

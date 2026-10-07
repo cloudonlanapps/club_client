@@ -9,8 +9,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ui_lib/ui_lib.dart'
     show
         EvaluationAnswerValue,
-        EvaluationFillForm,
-        EvaluationFillFormState,
+        EvaluationFillBody,
+        EvaluationFillBodyState,
         EvaluationItemValue,
         EvaluationLayoutEntry;
 
@@ -69,8 +69,8 @@ class EvaluationEditBody extends ConsumerStatefulWidget {
 /// State of [EvaluationEditBody]: the fill form and the autosave.
 class EvaluationEditBodyState extends ConsumerState<EvaluationEditBody> {
   /// The fill form.
-  final GlobalKey<EvaluationFillFormState> fillKey =
-      GlobalKey<EvaluationFillFormState>();
+  final GlobalKey<EvaluationFillBodyState> fillKey =
+      GlobalKey<EvaluationFillBodyState>();
 
   /// The evaluations master, kept for writes that outlive the view.
   late final ClEvaluationsMasterNotifier notifier;
@@ -172,7 +172,7 @@ class EvaluationEditBodyState extends ConsumerState<EvaluationEditBody> {
           status: e.status,
         ),
         EvaluationPeriodCard(evaluation: e),
-        EvaluationFillForm(
+        EvaluationFillBody(
           key: fillKey,
           layout: layout,
           initialAnswers: EvaluationAnswerAdapter.toValues(e.answers),

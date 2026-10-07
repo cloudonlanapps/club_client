@@ -1,10 +1,10 @@
 import 'package:cl_club_events/src/models/programme_schedule_form_helpers.dart';
 import 'package:cl_club_events/src/utils/programme_schedule_sessions.dart';
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show ProgrammeScheduleAdjustValue, SessionInput;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadTimeOfDay;
-import 'package:ui_lib/ui_lib.dart'
-    show ProgrammeScheduleAdjustValue, SessionInput;
 
 import '../support/programme_fixtures.dart';
 import '../support/recording_schedule_events.dart';

@@ -4,7 +4,7 @@ import 'package:cl_club_events/src/widgets/enrollment_tile.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show AgeEligibilityText;
+import 'package:ui_lib/ui_lib.dart' show NoLongerEligibleLabel;
 
 import '../support/credit_scope.dart';
 
@@ -28,7 +28,7 @@ void main() {
       await tester.pumpWidget(_tile(eligible: false));
       await tester.pumpAndSettle();
 
-      expect(find.text(AgeEligibilityText.noLongerEligible), findsOneWidget);
+      expect(find.text(NoLongerEligibleLabel.text), findsOneWidget);
       expect(find.text('Programme Member'), findsOneWidget);
       expect(find.text('programme_member'), findsOneWidget);
     });
@@ -37,7 +37,7 @@ void main() {
       await tester.pumpWidget(_tile(eligible: true));
       await tester.pumpAndSettle();
 
-      expect(find.text(AgeEligibilityText.noLongerEligible), findsNothing);
+      expect(find.text(NoLongerEligibleLabel.text), findsNothing);
       expect(find.text('Programme Member'), findsOneWidget);
     });
 
@@ -71,7 +71,7 @@ void main() {
         {for (final t in tiles) t.username: t.eligible},
         {'outgrown': false, 'matching': true},
       );
-      expect(find.text(AgeEligibilityText.noLongerEligible), findsOneWidget);
+      expect(find.text(NoLongerEligibleLabel.text), findsOneWidget);
     });
   });
 }

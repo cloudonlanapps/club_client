@@ -19,7 +19,7 @@ unit-test-all:
     set -u
     pkgs=(cl_club_admin cl_club_app cl_club_branding cl_club_communication \
           cl_club_credits cl_club_evaluation \
-          cl_club_events \
+          cl_club_events cl_club_forms \
           cl_club_members cl_club_website \
           cl_club_venues cl_member_auth cl_member_onboarding cl_member_zone \
           cl_remote_store cl_server_config ui_lib \

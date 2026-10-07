@@ -8,6 +8,8 @@ environment:
   flutter: ">=3.10.0"
 
 dependencies:
+  cl_club_forms:
+    path: ../cl_club_forms
   cl_remote_store:
     path: ../cl_remote_store
   cl_server_config:

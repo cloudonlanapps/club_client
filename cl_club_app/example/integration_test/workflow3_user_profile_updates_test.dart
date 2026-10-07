@@ -51,6 +51,9 @@
 //     --dart-define=SUDO_USERNAME=sudo
 
 import 'package:cl_club_app/cl_club_app.dart';
+import 'package:cl_club_forms/cl_club_forms.dart' show SignupGender;
+import 'package:cl_club_forms/src/widgets/read_only_field.dart'
+    show ReadOnlyField;
 import 'package:cl_club_members/src/views/user_profile_view.dart'
     show AddressCard, PersonalDetailsCard;
 import 'package:cl_club_members/src/widgets/user_contact_info_card.dart';
@@ -65,12 +68,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
-    show
-        ActionButton,
-        PickedImage,
-        ReadOnlyField,
-        SectionEditButton,
-        SignupGender;
+    show ActionButton, PickedImage, SectionEditButton;
 
 import '_helpers/capabilities.dart';
 import '_helpers/pump.dart' show pumpApp;
@@ -827,7 +825,8 @@ Future<void> _uploadIdentityDocAndSubmit(WidgetTester tester) async {
   tester.widget<ShadCheckbox>(innerCheckbox).onChanged?.call(true);
   await _settle(tester);
 
-  // Submit enables once a document is uploaded AND privacy is accepted.
+  // Submit enables once a document is uploaded; pressing it validates the
+  // consent ticked above.
   await _waitFor(
     tester,
     () {
@@ -843,7 +842,7 @@ Future<void> _uploadIdentityDocAndSubmit(WidgetTester tester) async {
       return submit.evaluate().isNotEmpty &&
           tester.widget<ShadButton>(submit).onPressed != null;
     },
-    description: 'Submit button to enable after upload + privacy accepted',
+    description: 'Submit button to enable after the upload',
   );
   _invokeShadButton(
     tester,
@@ -1782,19 +1781,44 @@ Future<void> _submitFormContaining(
     findsOneWidget,
     reason: 'expected one ShadForm enclosing field "$fieldId"',
   );
-  final submit = find.descendant(
-    of: formFinder,
-    matching: find.widgetWithText(ShadButton, label),
-  );
-  expect(
-    submit,
-    findsOneWidget,
-    reason: 'expected one "$label" ShadButton inside the form',
-  );
-  final btn = tester.widget<ShadButton>(submit);
+  final btn = _submitButtonBeside(formFinder.evaluate().single, label);
   expect(btn.onPressed, isNotNull, reason: '"$label" button should be enabled');
   btn.onPressed!.call();
   await _settle(tester);
+}
+
+/// The ShadButton labelled [label] that belongs to the form at [form]: the
+/// one closest to it in the widget tree. A form owns no buttons; its host
+/// draws them beside it, so the button and the form share a near ancestor,
+/// which a same-labelled button elsewhere on the page (the public navbar's
+/// "Sign in") does not.
+ShadButton _submitButtonBeside(Element form, String label) {
+  final around = <Element>[form];
+  form.visitAncestorElements((ancestor) {
+    around.add(ancestor);
+    return true;
+  });
+  ShadButton? nearest;
+  var nearestDistance = around.length;
+  for (final candidate in find.widgetWithText(ShadButton, label).evaluate()) {
+    var distance = around.length;
+    candidate.visitAncestorElements((ancestor) {
+      final index = around.indexOf(ancestor);
+      if (index < 0) return true;
+      distance = index;
+      return false;
+    });
+    if (distance < nearestDistance) {
+      nearest = candidate.widget as ShadButton;
+      nearestDistance = distance;
+    }
+  }
+  expect(
+    nearest,
+    isNotNull,
+    reason: 'expected a "$label" ShadButton beside the form',
+  );
+  return nearest!;
 }
 
 void _setShadFormValues(WidgetTester tester, Map<String, dynamic> values) {

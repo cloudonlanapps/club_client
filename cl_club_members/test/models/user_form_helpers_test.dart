@@ -1,9 +1,12 @@
+import 'dart:io';
+
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show SignupGender, UserFormFields;
 import 'package:cl_club_members/src/models/user_form_helpers.dart';
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClUsersMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show SignupGender;
 
 /// Records the phone and emergency contact the adapter sends.
 class _RecordingNotifier extends ClUsersMasterNotifier {
@@ -71,28 +74,36 @@ Map<String, dynamic> _createValues({
   required String phone,
   String emergencyContactPhone = '',
 }) => {
-  'username': 'robin',
-  'email': 'robin@example.test',
-  'useDefaultPassword': true,
-  'phone': phone,
-  'dateOfBirthUtc': DateTime(2010, 3, 4),
-  'gender': SignupGender.female,
-  'firstName': 'Robin',
-  'emergencyContactName': emergencyContactPhone.isEmpty ? '' : 'Sam',
-  'emergencyContactRelation': emergencyContactPhone.isEmpty ? null : 'Parent',
-  'emergencyContactPhone': emergencyContactPhone,
+  UserFormFields.usernameId: 'robin',
+  UserFormFields.emailId: 'robin@example.test',
+  UserFormFields.useDefaultPasswordId: true,
+  UserFormFields.phoneId: phone,
+  UserFormFields.dateOfBirthUtcId: DateTime(2010, 3, 4),
+  UserFormFields.genderId: SignupGender.female,
+  UserFormFields.firstNameId: 'Robin',
+  UserFormFields.emergencyContactNameId: emergencyContactPhone.isEmpty
+      ? ''
+      : 'Sam',
+  UserFormFields.emergencyContactRelationId: emergencyContactPhone.isEmpty
+      ? null
+      : 'Parent',
+  UserFormFields.emergencyContactPhoneId: emergencyContactPhone,
 };
 
 Map<String, dynamic> _contactValues({
   required String phone,
   String emergencyContactPhone = '',
 }) => {
-  'email': 'robin@example.test',
-  'phone': phone,
-  'emergencyContactName': emergencyContactPhone.isEmpty ? '' : 'Sam',
-  'emergencyContactRelation': emergencyContactPhone.isEmpty ? null : 'Parent',
-  'emergencyContactPhone': emergencyContactPhone,
-  'medicalInfo': '',
+  UserFormFields.emailId: 'robin@example.test',
+  UserFormFields.phoneId: phone,
+  UserFormFields.emergencyContactNameId: emergencyContactPhone.isEmpty
+      ? ''
+      : 'Sam',
+  UserFormFields.emergencyContactRelationId: emergencyContactPhone.isEmpty
+      ? null
+      : 'Parent',
+  UserFormFields.emergencyContactPhoneId: emergencyContactPhone,
+  UserFormFields.medicalInfoId: '',
 };
 
 void main() {
@@ -202,5 +213,32 @@ void main() {
         expect(notifier.emergencyContact, isNull);
       },
     );
+  });
+
+  group('Issue 59: the user adapter speaks the forms by their named ids', () {
+    test('Issue 59: the initial values carry every id the user forms '
+        'read', () {
+      final values = buildUserFormInitialValues(null);
+
+      expect(
+        values.keys.toSet(),
+        {
+          ...UserFormFields.userIds,
+        }..removeAll([
+          UserFormFields.useDefaultPasswordId,
+          UserFormFields.assignAdminId,
+          UserFormFields.assignCoachId,
+        ]),
+      );
+    });
+
+    test('Issue 59: no bare string field id is left in the adapter', () {
+      final source = File(
+        'lib/src/models/user_form_helpers.dart',
+      ).readAsStringSync();
+      expect(RegExp(r"""\[['"]\w+['"]\]""").hasMatch(source), isFalse);
+      expect(RegExp(r"""maybe\(['"]""").hasMatch(source), isFalse);
+      expect(RegExp(r"""containsKey\(['"]""").hasMatch(source), isFalse);
+    });
   });
 }

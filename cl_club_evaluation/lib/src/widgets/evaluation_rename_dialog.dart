@@ -1,10 +1,11 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show RenameForm, RenameFormFields, RenameFormState;
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show RenameForm, RenameFormState;
 
 import '../constants/evaluation_view_strings.dart';
 
-/// Asks for one name — a template's — in a dialog hosting the ui_lib
+/// Asks for one name — a template's — in a dialog hosting the cl_club_forms
 /// `RenameForm`, seeded with [initial], and writes it with [onSave], which
 /// resolves to `null` once saved or to the refusal to show under the field
 /// (e.g. a name already taken), keeping the dialog open. Resolves to the
@@ -19,7 +20,8 @@ Future<String?> showEvaluationRenameDialog(
 }) {
   final formKey = GlobalKey<RenameFormState>();
   Future<void> save(BuildContext dialogContext) async {
-    final value = formKey.currentState?.validate();
+    final value =
+        formKey.currentState?.validate()?[RenameFormFields.valueId] as String?;
     if (value == null) return;
     if (value == initial) {
       Navigator.of(dialogContext).pop();
@@ -30,7 +32,9 @@ Future<String?> showEvaluationRenameDialog(
     if (refusal == null) {
       Navigator.of(dialogContext).pop(value);
     } else {
-      formKey.currentState?.setError(refusal);
+      formKey.currentState?.showErrors(
+        fieldErrors: {RenameFormFields.valueId: refusal},
+      );
     }
   }
 

@@ -1,16 +1,17 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show
+        CampScheduleData,
+        CampScheduleForm,
+        CampScheduleFormFields,
+        CampScheduleFormState,
+        EventTimetableFormValidators;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider, clOccurrencesProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show
-        CampScheduleData,
-        CampScheduleForm,
-        CampScheduleFormState,
-        EditableSectionCard,
-        EventTimetableFormValidators;
+import 'package:ui_lib/ui_lib.dart' show EditableSectionCard;
 
 import '../../models/camp_schedule_form_helpers.dart';
 import '../../models/stale_version_message.dart';
@@ -58,6 +59,9 @@ class CampScheduleSectionState extends ConsumerState<CampScheduleSection> {
   /// Set by the pre-edit check when the admin agreed to discard the series'
   /// per-occurrence overrides; forwarded to the reschedule so it clears them.
   bool _resetOverrides = false;
+
+  /// Whether a save is in flight: the form's fields are then off.
+  bool saving = false;
 
   /// Per-occurrence daily duration of the event as currently stored.
   int get _currentDurationMinutes =>
@@ -108,7 +112,8 @@ class CampScheduleSectionState extends ConsumerState<CampScheduleSection> {
   bool _isOverride(Occurrence o) =>
       o.isRescheduled || o.status == OccurrenceStatus.cancelled;
 
-  Future<bool> _save(CampScheduleData data) async {
+  Future<bool> _save(Map<String, dynamic> values) async {
+    final data = values[CampScheduleFormFields.scheduleId] as CampScheduleData;
     // Changing the daily duration clears the session split (the form resets it
     // on a duration change). Remind the admin before committing so they don't
     // silently lose a timetable they meant to keep.
@@ -118,7 +123,12 @@ class CampScheduleSectionState extends ConsumerState<CampScheduleSection> {
       if (proceed != true) return false; // stay in edit mode to re-add sessions
     }
     // `_resetOverrides` reflects the admin's decision from the pre-edit check.
-    return _commit(data, resetOverrides: _resetOverrides);
+    setState(() => saving = true);
+    try {
+      return await _commit(data, resetOverrides: _resetOverrides);
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
   }
 
   /// Commits the reschedule (a single atomic call carrying the window and the
@@ -127,7 +137,8 @@ class CampScheduleSectionState extends ConsumerState<CampScheduleSection> {
   /// rejects the whole change with `OCCURRENCE_OVERRIDES_PRESENT` (atomically,
   /// so nothing is applied); we then ask whether to discard those edits and
   /// retry once with `resetOverrides: true`. A stale version (#68) closes the
-  /// editor on the reloaded camp and says who changed it and when.
+  /// editor on the reloaded camp and says who changed it and when. A split
+  /// the server refuses shows on the schedule field.
   Future<bool> _commit(
     CampScheduleData data, {
     required bool resetOverrides,
@@ -163,6 +174,12 @@ class CampScheduleSectionState extends ConsumerState<CampScheduleSection> {
         return _commit(data, resetOverrides: true);
       }
       if (!mounted) return false;
+      if (e.code == SdkErrorCode.invalidSessionsTotal) {
+        _formKey.currentState?.showErrors(
+          fieldErrors: {CampScheduleFormFields.scheduleId: _messageFor(e)},
+        );
+        return false;
+      }
       ShadToaster.of(context).show(
         ShadToast.destructive(description: Text(_messageFor(e))),
       );
@@ -327,7 +344,7 @@ class CampScheduleSectionState extends ConsumerState<CampScheduleSection> {
   Widget build(BuildContext context) {
     final event = widget.event;
     final hint = widget.lockReason;
-    return EditableSectionCard<CampScheduleData>(
+    return EditableSectionCard<Map<String, dynamic>>(
       title: 'Schedule',
       leadingIcon: LucideIcons.calendarClock,
       canEdit: widget.canEdit,
@@ -346,6 +363,7 @@ class CampScheduleSectionState extends ConsumerState<CampScheduleSection> {
       editBuilder: () => CampScheduleForm(
         key: _formKey,
         initialValue: buildCampScheduleInitialValues(event),
+        enabled: !saving,
       ),
       onValidate: () => _formKey.currentState?.validate(),
       isDirty: () => _formKey.currentState?.isDirty ?? false,

@@ -1,16 +1,18 @@
 import 'dart:developer' as developer;
 
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show LoginFormFields, LoginFormState;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show LoginForm;
 
 import '../providers/auth.dart';
 import '../utils/login_error_messages.dart';
 import 'account_blocked_view.dart';
 import 'account_left_view.dart';
 import 'loading_indicator.dart';
+import 'login_panel.dart';
 
 /// Login view — no Scaffold, returns content body only.
 ///
@@ -56,9 +58,25 @@ class LoginView extends ConsumerStatefulWidget {
   ConsumerState<LoginView> createState() => LoginViewState();
 }
 
+/// State of [LoginView]: holds the form's key and the in-flight flag.
 class LoginViewState extends ConsumerState<LoginView> {
+  /// Key of the sign-in form.
+  final formKey = GlobalKey<LoginFormState>();
+
+  /// Whether a sign-in is in flight.
   bool isSubmitting = false;
 
+  /// The Sign in action: validates the form and signs in with its values.
+  Future<void> submit() async {
+    final values = formKey.currentState?.validate();
+    if (values == null) return;
+    await handleLogin(
+      values[LoginFormFields.usernameId] as String,
+      values[LoginFormFields.passwordId] as String,
+    );
+  }
+
+  /// Signs in and reports the outcome.
   Future<void> handleLogin(String username, String password) async {
     setState(() => isSubmitting = true);
 
@@ -122,9 +140,10 @@ class LoginViewState extends ConsumerState<LoginView> {
               if (user != null) {
                 return const LoadingIndicator(message: 'Redirecting…');
               }
-              return LoginForm(
+              return LoginPanel(
+                formKey: formKey,
                 isSubmitting: isSubmitting,
-                onSubmit: handleLogin,
+                onSubmit: submit,
                 onForgotPassword: widget.onNavigateToForgotPassword,
                 onSignUp: widget.onNavigateToSignup,
               );
@@ -159,9 +178,10 @@ class LoginViewState extends ConsumerState<LoginView> {
                       ),
                     ),
                   ),
-                  LoginForm(
+                  LoginPanel(
+                    formKey: formKey,
                     isSubmitting: isSubmitting,
-                    onSubmit: handleLogin,
+                    onSubmit: submit,
                     onForgotPassword: widget.onNavigateToForgotPassword,
                     onSignUp: widget.onNavigateToSignup,
                   ),

@@ -1,5 +1,12 @@
 import 'dart:async';
 
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show
+        TwoColumnGrid,
+        UserAddressForm,
+        UserAddressFormState,
+        UserPersonalDetailsForm,
+        UserPersonalDetailsFormState;
 import 'package:cl_club_members/src/models/user_form_helpers.dart'
     show UserFormSubmit, buildUserFormInitialValues;
 import 'package:cl_club_members/src/utils/admin_user_actions.dart';
@@ -28,12 +35,7 @@ import 'package:ui_lib/ui_lib.dart'
         LoadingView,
         ReadOnlyField,
         ThemedMarkdown,
-        TitleRow,
-        TwoColumnGrid,
-        UserAddressForm,
-        UserAddressFormState,
-        UserPersonalDetailsForm,
-        UserPersonalDetailsFormState;
+        TitleRow;
 
 /// Admin-aware wrapper around [UserProfileView].
 ///

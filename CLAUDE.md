@@ -24,8 +24,8 @@ submodule.
 `cl_calendar` and `cl_gallery_viewer` are not carried here. Both are git
 dependencies pinned by SHA, for the same reason; the workspace holds one
 checkout of each under `packages/`, and the commented `dependency_overrides`
-block in `cl_club_events`, `cl_club_website` and `ui_lib` points at it for
-local work.
+block in `cl_club_events`, `cl_club_forms`, `cl_club_website` and `ui_lib`
+points at it for local work.
 
 The SDK is not carried here either. The package `club_sdk_2` lives in the
 public repo `cloudonlanapps/club_sdk` (#65) and every package that uses it takes
@@ -148,7 +148,7 @@ Transfer show their form inside the view (`CreditActionForm.inPlace` in a
 statement, which return when the form closes. The view pushes no dialog and
 opens nothing when it mounts, so from a chip inside a dialog the deepest stack
 is that dialog and the sheet. `CreditActionForm` is the one connected host of
-the four `ui_lib` forms; `CreditActionDialog` hosts Add credit for the "+"
+the four `cl_club_forms` credit forms; `CreditActionDialog` hosts Add credit for the "+"
 chip only.
 
 Rules: actions credit forbids are greyed out up front — `ActionItem.reason`
@@ -183,7 +183,7 @@ the bundled block that `clubMain()` / `websiteMain()` load from
 the apps' shells and the website.
 
 A hardcoded club name, asset path or URL in any package here is a bug — it makes
-the package unusable for the other club. `ui_lib` additionally stays Riverpod-free
+the package unusable for the other club. `ui_lib` and `cl_club_forms` additionally stay Riverpod-free
 (see the form rules below), so widgets there take plain parameters and their
 provider-backed wrappers live in `cl_club_branding` or the feature packages.
 
@@ -427,7 +427,7 @@ own isolated server.
 
 6. **Set keyboard types on every text field.** Phone → `TextInputType.phone`, email → `emailAddress`, pincode → `number`, names → `name`, address → `streetAddress`. Small effort, big mobile UX impact.
 
-7. **Translate at the boundary, not in the form.** The form speaks flat UI fields and form-local value types. The SDK speaks typed domain models. An adapter layer bridges them — merging, assembling, denormalizing (`''` → `null`). The form never imports domain model classes for assembly. The shared forms in `ui_lib` are SDK-free precedents: `SignupForm` and `UserForm` both live in `ui_lib` (zero `club_sdk_2` dependency), expose form-local types (`SignupGender`, `FormAddress`), and leave SDK ↔ form adaptation to the caller (e.g. `cl_club_members` `user_form_helpers.dart`, `cl_member_auth` `signup_view.dart`).
+7. **Translate at the boundary, not in the form.** The form speaks flat UI fields and form-local value types. The SDK speaks typed domain models. An adapter layer bridges them — merging, assembling, denormalizing (`''` → `null`). The form never imports domain model classes for assembly. The shared forms in `cl_club_forms` are SDK-free precedents: `SignupForm` and `UserForm` both live in `cl_club_forms` (zero `club_sdk_2` dependency), expose form-local types (`SignupGender`, `FormAddress`), and leave SDK ↔ form adaptation to the caller (e.g. `cl_club_members` `user_form_helpers.dart`, `cl_member_auth` `signup_view.dart`).
 
 8. **isDirty from the framework.** Compare `ShadForm.initialValue` vs `ShadForm.value` using `mapEquals`. Normalize initial values (`null` → `''` for text fields) so comparison works cleanly.
 
@@ -439,36 +439,46 @@ own isolated server.
 
 12. **Prefer the 24-hour `ShadTimePicker` over the `.period` variant** for any time that round-trips through storage. `.period` returns `hour` in 1-12 with `period` set separately; converting both ways is error-prone (silent overlap-detection failures, "13 AM" gibberish on re-render). The default 24-hour picker keeps `hour` as 0-23 directly, so storage and display agree.
 
-13. **Stack labels above fields, even on wide layouts.** Inline labels never line up cleanly when adjacent controls have heterogeneous widths (date picker, time picker, plain input). One stacked pattern reads cleanly on every viewport. Wrap each row in a `LabeledFormRow`-style helper so individual fields don't repeat the layout.
+13. **Label every field with `LabeledFormRow`, the label stacked above the field, even on wide layouts.** It is the one way a form labels a field, composite fields included (`cl_club_forms` `widgets/form/`): it decides the label's style, marks a required field (`required: true`) and sets the gap to the field. A field does not use its own `label:`. Inline labels never line up cleanly when adjacent controls have heterogeneous widths (date picker, time picker, plain input); one stacked pattern reads cleanly on every viewport.
 
-14. **Use `Column.spacing` for inter-row gaps**, not interleaved `SizedBox(height: N)` children. Single source of truth at the layout boundary; gaps stay consistent without manual maintenance.
+14. **Gaps come from `FormSpacing`, through `Column.spacing`.** A form stacks its rows in a `FormBody`, which applies `FormSpacing.rowGap`; a group of rows is set off with `FormSpacing.sectionGap`; `LabeledFormRow` applies `FormSpacing.labelGap`. No number in a form's `spacing:`, and no interleaved `SizedBox(height: N)` between rows. One source for every form, so the gaps cannot drift apart.
 
 15. **Two-column form grids must collapse to a single column on narrow surfaces** via `LayoutBuilder`. Pixel-perfect alignment between unrelated controls inside a 2-column layout is unattainable on mobile widths.
 
-16. **Self-contained feature folders may duplicate tiny generic helpers.** When a multi-file feature (e.g. `events_editor/event_schedule/`) only consumes a small generic helper such as `FormFieldLabel`, copying it into the feature folder is acceptable so the folder ships as a self-contained unit. The original stays at `widgets/` root for its other consumers — duplication only makes sense for small, stable helpers; promote to a shared location if it grows.
+16. **Self-contained feature folders may duplicate tiny generic helpers.** When a multi-file feature (e.g. `events_editor/event_schedule/`) only consumes a small generic helper such as `ReadOnlyField`, copying it into the feature folder is acceptable so the folder ships as a self-contained unit. The original stays at `widgets/` root for its other consumers — duplication only makes sense for small, stable helpers; promote to a shared location if it grows.
 
-17. **Every `ShadForm` lives in `ui_lib`; its dialog/screen lives in the feature package.** A form is a pure-UI widget — SDK-free, no Riverpod — that speaks flat form values and form-local types (`SignupGender`, `GroupMode`, `GroupGender`, `FormAddress`, …) and exposes its field-id constants. It never imports `club_sdk_2`. The consuming package hosts it: a connected view/screen wires providers + the SDK call, and any **dialog is built in the feature** (`showShadDialog` wrapping the form), never in `ui_lib`. This keeps a form reusable outside a dialog. Precedents: `SignupForm`/`SignupView`, `LoginForm`/`LoginView`, `ChangePasswordForm`/`ChangePasswordView`, plus the SDK-free `RenameForm`, `LocationEditForm`, `VenueCreateForm`, `GroupCreateForm`, `GroupEligibilityForm`, and the `UserPersonalDetailsForm`/`UserContactForm`/`UserAddressForm` section editors.
+17. **Every `ShadForm` lives in `cl_club_forms`; its dialog/screen lives in the feature package.** (Evaluation's four forms are the exception: they stay in `ui_lib` with the rest of evaluation's UI, whose models they share.) `cl_club_forms` and `ui_lib` do not depend on each other; a feature package uses both. A form is a pure-UI widget — SDK-free, no Riverpod — that speaks flat form values and form-local types (`SignupGender`, `GroupMode`, `GroupGender`, `FormAddress`, …) and exposes its field-id constants. It never imports `club_sdk_2`. The consuming package hosts it: a connected view/screen wires providers + the SDK call, and any **dialog is built in the feature** (`showShadDialog` wrapping the form), never in `cl_club_forms`. This keeps a form reusable outside a dialog. Precedents: `SignupForm`/`SignupView`, `LoginForm`/`LoginView`, `ChangePasswordForm`/`ChangePasswordView`, plus the SDK-free `RenameForm`, `LocationEditForm`, `VenueCreateForm`, `GroupCreateForm`, `GroupEligibilityForm`, and the `UserPersonalDetailsForm`/`UserContactForm`/`UserAddressForm` section editors.
 
 18. **One adapter per form, in the consuming package, with consistent names.** The SDK ↔ form boundary is a single adapter mirroring the form's flat `Map<String, dynamic>`:
     - `build<X>FormInitialValues(SdkModel?)` → `Map` — SDK → form (`null` = create defaults).
     - `<X>FormSubmit.create({values, notifier})` / `.update({values, …})` — form → SDK. Section editors get partial `update<Section>(...)` methods that send **only** their fields (others left untouched). Name the section method after the section it edits (`updatePersonalDetails`, `updateContact`, `updateAddress`, `updateEligibility`, `updateLocation`, …) — **even when an entity has exactly one editable section**, so the name reads as a partial and never collides with a full `update`.
-    - `<X>FormValidators` — pure validators, in `ui_lib` next to the form. A rename dialog reuses the same `<X>FormValidators.name`; do not re-implement the rule inline.
+    - `<X>FormValidators` — pure validators, in `cl_club_forms` next to the form. A rename dialog reuses the same `<X>FormValidators.name`; do not re-implement the rule inline.
     - **No exceptions for small forms.** Every section form routes through this adapter — there is no shortcut for a two-field form (e.g. `LocationEditForm`). The connected card must never call a notifier mutation directly; it goes through `<X>FormSubmit.update<Section>`.
     See `cl_club_members/lib/src/models/{user,group}_form_helpers.dart` and `cl_club_venues/lib/src/models/venue_form_helpers.dart`.
 
 19. **Create uses one full form; editing is section-by-section — never a separate edit route.** A `<X>CreateForm` gathers everything for creation. Editing an existing entity happens in place on its profile/detail view: each section (rename, eligibility, location, address, contact, …) has its own small editor opened in a dialog, calling a partial-update adapter method. There is **no `/…/:id/edit` route** for any entity — venues, groups, and users all edit section-by-section.
 
-20. **The host drives the form through a `GlobalKey<XFormState>`; the form owns no buttons or dialog.** A section editor exposes `validate()` returning the section's partial `Map<String, dynamic>` (or `null` when invalid); a full create form exposes `handleSubmit()` + `isDirty`. The host's Save action calls into the state and decides what to do with the result. Cross-field rules (age band, password match, "at least one name", an auto/semi-auto group needs ≥1 criterion) run inside `validate()` / `handleSubmit()` and surface as an **inline form-level message** (return `null`), never a toast from inside the form. A single-value dialog (rename, location) resolves to `null` when the value is unchanged, so an unmodified Save is a no-op. (For the full create forms, `isDirty` — rule 8 — drives the discard prompt via `PopScope`.)
+20. **One contract: the host drives the form through a `GlobalKey<XFormState>`; the form owns no title, no buttons, no dialog and no width of its own.** Every form's state mixes in `FormContract` (`cl_club_forms` `widgets/form/`), which gives the host:
+    - `validate()` — the form's values as a `Map<String, dynamic>`, or `null` when invalid. A section editor returns its section's partial map.
+    - `isDirty` — whether anything changed (rule 8). It drives the discard prompt of a create view via `PopScope`, and lets an unmodified Save be a no-op.
+    - `showErrors(fieldErrors, formError)` — what the server refused, put back on the fields by id and inline.
+    - `enabled` — a parameter of the widget; the host turns it off while it saves.
+
+    The host's Save action calls `validate()`, runs the save itself, holds the in-flight state, and calls `showErrors` when the server refuses a value. A form has no `onSubmit` callback, no `handleSubmit()` and no `isSubmitting`. Cross-field rules (age band, password match, "at least one name", an auto/semi-auto group needs ≥1 criterion) are the form's `crossFieldError` and surface as an **inline form-level message** (`validate()` returns `null`), never a toast from inside the form. A form that wants Enter to submit takes a plain `onSubmitted` callback, which the host points at its Save action.
 
 21. **A section editor sends only its own fields.** Its adapter method (`update<Section>`) passes a SDK `ValueGetter` *only* for the fields that section edits — the SDK treats a `null` getter as "no change". Never reuse the full-form `update` for a section, or the omitted fields get cleared on the server. Protected fields (date of birth, gender) are gated by `canEdit*` flags **and** omitted from the returned map when not editable, so the server's protected-field guard isn't tripped.
+
+22. **A form, or a control that saves on its own: never both in one widget.** A control may save directly only when its value is complete after one interaction and needs no check against another field: a toggle, a rating, a picked file. Everything else is a field of a form, and reaches the server only after `validate()`. A group of controls that each save on their own is not a form, whatever its layout, and is not named one (`IdentityDocumentsUploader`, `EvaluationFillBody`). When an action needs both — files and a consent, answers and a completeness check — the host arranges the direct-save widget and the form side by side and gates the action on both.
+
+23. **Field ids are named constants.** Each form has a `<X>FormFields` class of `static const String` ids (`EventCreateFormFields.titleId`); the form, its adapter and its tests use them. No bare string id.
 
 ## Section-wise Editors (shared inline pattern)
 
 Editing an existing entity happens **section-by-section, inline, in place** — never via a dialog/popover and never via a `/…/:id/edit` route. All section editors are built on one shared, SDK-free primitive in `ui_lib`; do not hand-roll the chrome, the edit pencil, or a dialog host per feature.
 
-1. **Use `EditableSectionCard<T>` for every structured section.** It is the canonical chrome (a titled `ShadCard`) and owns the read↔edit toggle, validation gating, no-op detection, and the in-flight saving state. The host supplies: read-mode content (`read`), the inline form (`editBuilder`, built only while editing so its `GlobalKey` attaches only in edit mode), `onValidate` (reads the form's state → partial value or `null`), `isDirty`, and `onSave(value) → Future<bool>`. `T` is the form's `validate()` return type (`Map<String, dynamic>` for the multi-field forms, `LocationEditResult`, …).
+1. **Use `EditableSectionCard<T>` for every structured section.** It is the canonical chrome (a titled `ShadCard`) and owns the read↔edit toggle, validation gating, no-op detection, and the in-flight saving state. The host supplies: read-mode content (`read`), the inline form (`editBuilder`, built only while editing so its `GlobalKey` attaches only in edit mode), `onValidate` (reads the form's state → partial value or `null`), `isDirty`, and `onSave(value) → Future<bool>`. `T` is the form's `validate()` return type: `Map<String, dynamic>`, for every form (rule 20).
 
-2. **The form is the SDK-free `ui_lib` widget; the SDK call lives in the host.** `EditableSectionCard` and the section forms (`UserPersonalDetailsForm`, `UserContactForm`, `UserAddressForm`, `GroupEligibilityForm`, `LocationEditForm`, …) never import `club_sdk_2`. The connected card (a `ConsumerStatefulWidget` in the feature package — e.g. `PersonalDetailsCard`, `GroupEligibilitySection`, `VenueLocationCard`) holds the `GlobalKey`, calls the `update<Section>` adapter inside `onSave`, shows the toast, invalidates providers, and returns `true`/`false`. Returning `false` keeps the card in edit mode for a retry.
+2. **The form is the SDK-free `cl_club_forms` widget; the SDK call lives in the host.** `EditableSectionCard` (in `ui_lib`) and the section forms (`UserPersonalDetailsForm`, `UserContactForm`, `UserAddressForm`, `GroupEligibilityForm`, `LocationEditForm`, …) never import `club_sdk_2`. The connected card (a `ConsumerStatefulWidget` in the feature package — e.g. `PersonalDetailsCard`, `GroupEligibilitySection`, `VenueLocationCard`) holds the `GlobalKey`, calls the `update<Section>` adapter inside `onSave`, shows the toast, invalidates providers, and returns `true`/`false`. Returning `false` keeps the card in edit mode for a retry.
 
 3. **No-op via the form's `isDirty`.** Every section form exposes `bool get isDirty` (compare `ShadForm.initialValue`/seeded initial values vs current value, à la `UserForm`/`GroupCreateForm`). Wire it to `EditableSectionCard.isDirty`; an unmodified Save then just closes the editor without an SDK call (rule 20).
 

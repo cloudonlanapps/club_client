@@ -1,18 +1,17 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show
+        EventVenueOption,
+        OneOffScheduleForm,
+        OneOffScheduleFormFields,
+        OneOffScheduleFormState,
+        OneOffScheduleFormValidators;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider, clVenuesProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show
-        EditableSectionCard,
-        EventTimetableFormValidators,
-        EventVenueOption,
-        OneOffScheduleForm,
-        OneOffScheduleFormState,
-        OneOffScheduleFormValidators,
-        OneOffScheduleValue;
+import 'package:ui_lib/ui_lib.dart' show EditableSectionCard;
 
 import '../../models/one_off_schedule_form_helpers.dart';
 import '../../models/stale_version_message.dart';
@@ -53,11 +52,26 @@ class OneOffRescheduleSectionState
     extends ConsumerState<OneOffRescheduleSection> {
   final formKey = GlobalKey<OneOffScheduleFormState>();
 
-  Future<bool> save(OneOffScheduleValue value) async {
+  /// Whether a save is in flight: the form's fields are then off.
+  bool saving = false;
+
+  /// Saves the move, with the form's fields off meanwhile.
+  Future<bool> save(Map<String, dynamic> values) async {
+    setState(() => saving = true);
+    try {
+      return await commit(values);
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
+  /// Sends the move. True closes the editor; a refusal about a field shows
+  /// on that field, the postpone-only rule inline, and both keep it open.
+  Future<bool> commit(Map<String, dynamic> values) async {
     try {
       await OneOffScheduleFormSubmit.updateSchedule(
         event: widget.event,
-        value: value,
+        value: oneOffScheduleValueOf(values),
         notifier: ref.read(clEventsMasterProvider.notifier),
       );
       showToast(
@@ -74,15 +88,14 @@ class OneOffRescheduleSectionState
       );
       return true;
     } on ServerException catch (e) {
-      if (e.code == SdkErrorCode.invalidSessionsTotal) {
-        formKey.currentState?.showSessionsError(
-          EventTimetableFormValidators.totalMismatchMessage,
-        );
+      final fieldId = refusedFieldId(e);
+      if (fieldId != null) {
+        formKey.currentState?.showErrors(fieldErrors: {fieldId: failureOf(e)});
         return false;
       }
       if (e.code == SdkErrorCode.postponeOnly) {
-        formKey.currentState?.showFormError(
-          OneOffScheduleFormValidators.postponeOnlyMessage,
+        formKey.currentState?.showErrors(
+          formError: OneOffScheduleFormValidators.postponeOnlyMessage,
         );
         return false;
       }
@@ -93,6 +106,15 @@ class OneOffRescheduleSectionState
       return false;
     }
   }
+
+  /// The id of the form's field the refusal [e] is about, or `null` when
+  /// it is about none of them.
+  String? refusedFieldId(ServerException e) => switch (e.code) {
+    SdkErrorCode.invalidSessionsTotal => OneOffScheduleFormFields.sessionsId,
+    SdkErrorCode.venueNotFound => OneOffScheduleFormFields.venueId,
+    SdkErrorCode.beyondSchedulingHorizon => OneOffScheduleFormFields.scheduleId,
+    _ => null,
+  };
 
   String failureOf(Object error) =>
       scheduleSaveErrorMessage(error, fallback: oneOffScheduleFailedMessage);
@@ -111,7 +133,7 @@ class OneOffRescheduleSectionState
               )
               .valueOrNull
         : null;
-    return EditableSectionCard<OneOffScheduleValue>(
+    return EditableSectionCard<Map<String, dynamic>>(
       title: 'Schedule',
       leadingIcon: LucideIcons.calendarClock,
       canEdit: widget.canEdit,
@@ -125,6 +147,7 @@ class OneOffRescheduleSectionState
             EventVenueOption(id: venue.id, name: venue.name),
         ],
         notBefore: event.startTimeUtc,
+        enabled: !saving,
       ),
       onValidate: () => formKey.currentState?.validate(),
       isDirty: () => formKey.currentState?.isDirty ?? false,

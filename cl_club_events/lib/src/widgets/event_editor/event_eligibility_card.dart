@@ -1,11 +1,12 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show EventEligibilityForm, EventEligibilityFormState;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show Event;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show EditableSectionCard, EventEligibilityForm, EventEligibilityFormState;
+import 'package:ui_lib/ui_lib.dart' show EditableSectionCard;
 
 import '../../models/camp_event_form_helpers.dart'
     show EventFormSubmit, buildEventFormInitialValues;
@@ -33,7 +34,11 @@ class EventEligibilityCard extends ConsumerStatefulWidget {
 class EventEligibilityCardState extends ConsumerState<EventEligibilityCard> {
   final formKey = GlobalKey<EventEligibilityFormState>();
 
+  /// Whether a save is in flight: the form's fields are then off.
+  bool saving = false;
+
   Future<bool> save(Map<String, dynamic> values) async {
+    setState(() => saving = true);
     try {
       await EventFormSubmit.updateEligibility(
         event: widget.event,
@@ -59,6 +64,8 @@ class EventEligibilityCardState extends ConsumerState<EventEligibilityCard> {
         ),
       );
       return false;
+    } finally {
+      if (mounted) setState(() => saving = false);
     }
   }
 
@@ -74,6 +81,7 @@ class EventEligibilityCardState extends ConsumerState<EventEligibilityCard> {
       editBuilder: () => EventEligibilityForm(
         key: formKey,
         initialValues: initialValues,
+        enabled: !saving,
         // The card's Reset shows only while the form holds a value.
         onChanged: () => setState(() {}),
       ),

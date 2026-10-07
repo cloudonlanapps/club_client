@@ -1,9 +1,13 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show
+        EventTimetableFormFields,
+        EventTimetableValue,
+        SessionInput,
+        TimetableScheduleOption;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadTimeOfDay;
-import 'package:ui_lib/ui_lib.dart'
-    show EventTimetableValue, TimetableScheduleOption;
 
 import '../utils/session_inputs.dart';
 
@@ -71,6 +75,16 @@ List<TimetableScheduleOption> buildEventTimetableSchedules(
   }
   return [buildEventTimetableSchedule(event)];
 }
+
+/// The correction `EventTimetableForm.validate()` returned as [values]: the
+/// chosen schedule's id and its new split.
+EventTimetableValue eventTimetableValueOf(Map<String, dynamic> values) =>
+    EventTimetableValue(
+      scheduleId: values[EventTimetableFormFields.scheduleId] as int?,
+      sessions: List<SessionInput>.of(
+        values[EventTimetableFormFields.sessionsId] as List<SessionInput>,
+      ),
+    );
 
 /// Bridges `EventTimetableForm` to the master's timetable corrections.
 class EventTimetableFormSubmit {

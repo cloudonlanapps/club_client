@@ -1,10 +1,4 @@
-import 'package:cl_remote_store/cl_remote_store.dart'
-    show clCreditAccountsMasterProvider, clEventsMasterProvider;
-import 'package:club_sdk_2/club_sdk_2.dart'
-    show CreditAccount, Event, EventType;
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ui_lib/ui_lib.dart'
+import 'package:cl_club_forms/cl_club_forms.dart'
     show
         CreditExtendForm,
         CreditExtendFormState,
@@ -15,15 +9,28 @@ import 'package:ui_lib/ui_lib.dart'
         CreditReverseFormState,
         CreditTransferForm,
         CreditTransferFormState;
+import 'package:cl_remote_store/cl_remote_store.dart'
+    show clCreditAccountsMasterProvider, clEventsMasterProvider;
+import 'package:club_sdk_2/club_sdk_2.dart'
+    show CreditAccount, Event, EventType, ServerException;
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/credit_action_kind.dart';
 import '../models/credit_form_helpers.dart';
+import '../utils/credit_action_error.dart';
+import '../utils/credit_action_runner.dart';
 import 'credit_action_dialog.dart';
 import 'credit_action_panel.dart';
 
-/// One admin credit action (club_core#101), connected: the `ui_lib` form of
-/// its [kind], and the call it makes through [username]'s accounts master,
-/// which bumps `creditsVersion` so every credit view refreshes itself.
+/// One admin credit action (club_core#101), connected: the `cl_club_forms`
+/// form of its [kind], and the call it makes through [username]'s accounts
+/// master, which bumps `creditsVersion` so every credit view refreshes
+/// itself.
+///
+/// It drives the form: Save validates it, the fields are off while the call
+/// is in flight, and a refusal the server makes about a field shows on that
+/// field; any other refusal is a toast.
 ///
 /// [CreditActionForm.inPlace] shows it inside the credit view;
 /// [CreditActionForm.dialog] is the content of a dialog, for Add credit
@@ -95,12 +102,62 @@ class CreditActionFormState extends ConsumerState<CreditActionForm> {
         trial: widget.trial,
       );
 
+  /// Whether the action is in flight.
+  bool saving = false;
+
+  /// The values of the form shown, or null when it is invalid.
   Map<String, dynamic>? validate() => switch (widget.kind) {
     CreditActionKind.grant => grantKey.currentState?.validate(),
     CreditActionKind.extend => extendKey.currentState?.validate(),
     CreditActionKind.reverse => reverseKey.currentState?.validate(),
     CreditActionKind.transfer => transferKey.currentState?.validate(),
   };
+
+  /// Shows [fieldErrors] on the fields of the form shown.
+  void showErrors(Map<String, String> fieldErrors) => switch (widget.kind) {
+    CreditActionKind.grant => grantKey.currentState?.showErrors(
+      fieldErrors: fieldErrors,
+    ),
+    CreditActionKind.extend => extendKey.currentState?.showErrors(
+      fieldErrors: fieldErrors,
+    ),
+    CreditActionKind.reverse => reverseKey.currentState?.showErrors(
+      fieldErrors: fieldErrors,
+    ),
+    CreditActionKind.transfer => transferKey.currentState?.showErrors(
+      fieldErrors: fieldErrors,
+    ),
+  };
+
+  /// Shows [refusal] on the field it is about. False when it is about none
+  /// of the form's fields, which leaves it to a toast.
+  bool showRefusal(ServerException refusal) {
+    final fieldId = creditActionRefusedFieldId(refusal, widget.kind);
+    if (fieldId == null) return false;
+    showErrors({fieldId: creditActionErrorMessage(refusal)});
+    return true;
+  }
+
+  /// Validates the form and runs the action; closes once it succeeded.
+  Future<void> save() async {
+    final values = validate();
+    if (values == null || saving) return;
+    setState(() => saving = true);
+    final done = await runCreditAction(
+      context,
+      () => submit(values),
+      onRefused: showRefusal,
+    );
+    if (!mounted) return;
+    setState(() => saving = false);
+    if (!done) return;
+    final onClose = widget.onClose;
+    if (onClose == null) {
+      Navigator.of(context).pop(true);
+    } else {
+      onClose();
+    }
+  }
 
   Future<void> submit(Map<String, dynamic> values) {
     final notifier = ref.read(
@@ -147,21 +204,26 @@ class CreditActionFormState extends ConsumerState<CreditActionForm> {
               CreditProgrammeOption(id: e.id, title: e.title),
         ]..sort((a, b) => a.title.compareTo(b.title)),
         initialValues: grantInitialValues,
+        today: today,
+        enabled: !saving,
       ),
       CreditActionKind.extend => CreditExtendForm(
         key: extendKey,
         currentValidUntil: DateUtils.dateOnly(
           account!.validUntilUtc.toLocal(),
         ),
+        enabled: !saving,
       ),
       CreditActionKind.reverse => CreditReverseForm(
         key: reverseKey,
         unspent: account!.balance,
+        enabled: !saving,
       ),
       CreditActionKind.transfer => CreditTransferForm(
         key: transferKey,
         balance: account!.balance,
         today: today,
+        enabled: !saving,
       ),
     };
     final onClose = widget.onClose;
@@ -169,15 +231,15 @@ class CreditActionFormState extends ConsumerState<CreditActionForm> {
       return CreditActionDialog(
         title: widget.kind.title,
         form: form,
-        validate: validate,
-        onSubmit: submit,
+        saving: saving,
+        onSubmit: save,
       );
     }
     return CreditActionPanel(
       title: widget.kind.title,
       form: form,
-      validate: validate,
-      onSubmit: submit,
+      saving: saving,
+      onSubmit: save,
       onClose: onClose,
     );
   }

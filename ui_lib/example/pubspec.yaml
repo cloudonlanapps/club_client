@@ -7,6 +7,9 @@ environment:
   flutter: ">=3.10.0"
 
 dependencies:
+  # The evaluation demo hosts a rename dialog, as the evaluation screens do.
+  cl_club_forms:
+    path: ../../cl_club_forms
   flutter:
     sdk: flutter
   shadcn_ui: 0.56.1

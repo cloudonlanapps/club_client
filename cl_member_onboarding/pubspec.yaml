@@ -10,6 +10,8 @@ environment:
 dependencies:
   cl_club_branding:
     path: ../cl_club_branding
+  cl_club_forms:
+    path: ../cl_club_forms
   cl_member_auth:
     path: ../cl_member_auth
   cl_remote_store:

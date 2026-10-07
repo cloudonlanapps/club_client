@@ -1,3 +1,12 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show
+        LocationEditForm,
+        LocationEditFormState,
+        RenameForm,
+        RenameFormFields,
+        RenameFormState,
+        TwoColumnGrid,
+        VenueFormValidators;
 import 'package:cl_member_auth/cl_member_auth.dart'
     show authStateProvider, imageAuthHeadersProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -21,16 +30,9 @@ import 'package:ui_lib/ui_lib.dart'
         EditableSectionCard,
         ImageUploadAffordance,
         LoadingView,
-        LocationEditForm,
-        LocationEditFormState,
-        LocationEditResult,
         MapEmbed,
-        RenameForm,
-        RenameFormState,
         ThemedMarkdown,
         TitleRow,
-        TwoColumnGrid,
-        VenueFormValidators,
         pickAndConfirmImage;
 
 import '../models/venue_form_helpers.dart' show VenueFormSubmit;
@@ -343,11 +345,11 @@ class VenueLocationCard extends ConsumerStatefulWidget {
 class VenueLocationCardState extends ConsumerState<VenueLocationCard> {
   final _formKey = GlobalKey<LocationEditFormState>();
 
-  Future<bool> _save(LocationEditResult result) async {
+  Future<bool> _save(Map<String, dynamic> values) async {
     try {
       await VenueFormSubmit.updateLocation(
         venueId: widget.venue.id,
-        result: result,
+        values: values,
         notifier: ref.read(clVenuesMasterProvider.notifier),
       );
       if (!mounted) return true;
@@ -376,7 +378,7 @@ class VenueLocationCardState extends ConsumerState<VenueLocationCard> {
     final hasMap = mapUri != null && mapUri.trim().isNotEmpty;
     final isMobile = MediaQuery.sizeOf(context).width < 700;
 
-    return EditableSectionCard<LocationEditResult>(
+    return EditableSectionCard<Map<String, dynamic>>(
       title: 'Location',
       leadingIcon: LucideIcons.map,
       canEdit: widget.canEdit,
@@ -694,7 +696,9 @@ Future<String?> _showVenueRenameDialog(
     context: context,
     builder: (dialogContext) {
       void save() {
-        final value = formKey.currentState?.validate();
+        final value =
+            formKey.currentState?.validate()?[RenameFormFields.valueId]
+                as String?;
         if (value == null) return;
         Navigator.of(
           dialogContext,

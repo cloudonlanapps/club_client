@@ -1,6 +1,6 @@
-import 'package:club_sdk_2/club_sdk_2.dart' show SdkErrorCode, ServerException;
-import 'package:ui_lib/ui_lib.dart'
+import 'package:cl_club_forms/cl_club_forms.dart'
     show EventTimetableFormValidators, OneOffScheduleFormValidators;
+import 'package:club_sdk_2/club_sdk_2.dart' show SdkErrorCode, ServerException;
 
 import 'event_save_error.dart';
 

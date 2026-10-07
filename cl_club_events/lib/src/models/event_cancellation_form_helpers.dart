@@ -1,9 +1,9 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show EventCancellationFormFields, EventCancellationSession;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier;
 import 'package:cl_server_config/cl_server_config.dart' show DateTimeFormat;
 import 'package:club_sdk_2/club_sdk_2.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show EventCancellationFormFields, EventCancellationSession;
 
 /// SDK ↔ `EventCancellationForm` adapter (club_client#40).
 ///

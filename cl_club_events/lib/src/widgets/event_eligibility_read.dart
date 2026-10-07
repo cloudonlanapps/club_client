@@ -1,8 +1,8 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show AgeEligibilitySummary;
 import 'package:cl_remote_store/cl_remote_store.dart' show formAgeFromSdk;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show AgeEligibilitySummary;
 
 /// Read view of an event's eligibility, shared by the editor's Eligibility
 /// card and the preview: the gender line, then the age sentence with the

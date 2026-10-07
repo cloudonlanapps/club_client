@@ -4,18 +4,14 @@
 /// `serverConfigProvider` in its `ProviderScope` with the API base URL.
 library;
 
+// Pure-UI signup primitives live in cl_club_forms; re-export for callers
+// that want to embed the form themselves (rare — most use SignupView
+// below).
+export 'package:cl_club_forms/cl_club_forms.dart'
+    show SignupForm, SignupGender, UsernameAvailabilityField;
 // Re-export server config so consumers can access it via cl_member_auth
 export 'package:cl_server_config/cl_server_config.dart'
     show ServerConfig, serverConfigProvider;
-// Pure-UI signup primitives now live in ui_lib; re-export for callers
-// that want to embed the form themselves (rare — most use SignupView
-// below).
-export 'package:ui_lib/ui_lib.dart'
-    show
-        SignupForm,
-        SignupGender,
-        SignupSubmitResult,
-        UsernameAvailabilityField;
 
 // Models
 export 'src/models/auth_session.dart' show AuthSession;

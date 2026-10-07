@@ -4,6 +4,14 @@ import 'package:cl_club_events/src/widgets/event_editor/event_schedule_section.d
 import 'package:cl_club_events/src/widgets/event_editor/programme_adjust_schedule_dialog.dart';
 import 'package:cl_club_events/src/widgets/event_editor/programme_schedule_actions.dart';
 import 'package:cl_club_events/src/widgets/event_editor/programme_schedule_read.dart';
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show
+        ProgrammeScheduleAdjustForm,
+        ProgrammeScheduleAdjustFormFields,
+        ProgrammeScheduleAdjustFormState,
+        ProgrammeScheduleData;
+import 'package:cl_club_forms/src/widgets/event_schedule/event_venue_select_field.dart'
+    show EventVenueSelectField;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventSchedulesProvider, clEventsMasterProvider, clVenuesProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -11,11 +19,6 @@ import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show
-        ProgrammeScheduleAdjustForm,
-        ProgrammeScheduleAdjustFormState,
-        ProgrammeScheduleData;
 
 import '../../support/programme_fixtures.dart';
 import '../../support/recording_schedule_events.dart';
@@ -74,7 +77,7 @@ ProgrammeScheduleAdjustFormState _form(WidgetTester tester) =>
 Future<void> _pickTuesdayAndSaturday(WidgetTester tester) async {
   final form = _form(tester);
   form.formKey.currentState!.setFieldValue<ProgrammeScheduleData>(
-    ProgrammeScheduleAdjustForm.scheduleId,
+    ProgrammeScheduleAdjustFormFields.scheduleId,
     form.widget.initialValue.schedule.copyWith(
       weekdays: {DateTime.tuesday, DateTime.saturday},
     ),
@@ -137,7 +140,7 @@ void main() {
 
       await _openAdjust(tester);
       _form(tester).formKey.currentState!.setFieldValue<DateTime>(
-        ProgrammeScheduleAdjustForm.fromId,
+        ProgrammeScheduleAdjustFormFields.fromId,
         options[2],
       );
       await _pickTuesdayAndSaturday(tester);
@@ -164,7 +167,7 @@ void main() {
 
       await _openAdjust(tester);
       _form(tester).formKey.currentState!.setFieldValue<DateTime>(
-        ProgrammeScheduleAdjustForm.fromId,
+        ProgrammeScheduleAdjustFormFields.fromId,
         programmeAdjustFromOptions(
           event,
         ).first.add(const Duration(minutes: 45)),
@@ -331,4 +334,50 @@ void main() {
       expect(find.textContaining('clears that end date'), findsNothing);
     },
   );
+
+  testWidgets('Issue 54: a refusal about a field shows on that field of the '
+      'Adjust Schedule form, and Save can be tried again', (tester) async {
+    final events = await _pump(tester, programmeFixture());
+    events.error = const ServerException(
+      statusCode: 404,
+      code: SdkErrorCode.venueNotFound,
+      message: 'raw server text',
+    );
+
+    await _openAdjust(tester);
+    await _pickTuesdayAndSaturday(tester);
+    await _save(tester);
+
+    expect(
+      find.descendant(
+        of: find.byType(EventVenueSelectField),
+        matching: find.textContaining('That venue no longer exists'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('raw server text'), findsNothing);
+    expect(find.byType(ProgrammeAdjustScheduleDialog), findsOneWidget);
+
+    expect(events.futureUpdates, hasLength(1), reason: 'the refused attempt');
+
+    events.error = null;
+    await _save(tester);
+    expect(events.futureUpdates, hasLength(2), reason: 'the second attempt');
+    expect(find.byType(ProgrammeAdjustScheduleDialog), findsNothing);
+  });
+
+  test('Issue 54: programmeScheduleAdjustValueOf reads the form values', () {
+    final schedule = buildProgrammeScheduleInitialValues(programmeFixture());
+    final from = DateTime.utc(2030, 5, 14, 12);
+
+    final value = programmeScheduleAdjustValueOf({
+      ProgrammeScheduleAdjustFormFields.fromId: from,
+      ProgrammeScheduleAdjustFormFields.scheduleId: schedule,
+      ProgrammeScheduleAdjustFormFields.venueId: 9,
+    });
+
+    expect(value.from, from);
+    expect(value.schedule, schedule);
+    expect(value.venueId, 9);
+  });
 }

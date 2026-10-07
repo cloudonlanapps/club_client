@@ -1,11 +1,11 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show TwoColumnGrid;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEvaluationsMasterProvider, evaluationIncompleteItemIds;
 import 'package:club_sdk_2/club_sdk_2.dart' show EvaluationStaffView;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show ActionButton, ConfirmDialog, TwoColumnGrid;
+import 'package:ui_lib/ui_lib.dart' show ActionButton, ConfirmDialog;
 
 import '../constants/evaluation_view_sizes.dart';
 import '../constants/evaluation_view_strings.dart';

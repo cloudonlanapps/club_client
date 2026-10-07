@@ -110,6 +110,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  cl_club_forms:
+    dependency: transitive
+    description:
+      path: "../../cl_club_forms"
+      relative: true
+    source: path
+    version: "0.1.0"
   cl_club_members:
     dependency: transitive
     description:

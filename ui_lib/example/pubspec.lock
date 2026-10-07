@@ -82,6 +82,13 @@ packages:
       url: "https://github.com/cloudonlanapps/cl_calendar.git"
     source: git
     version: "0.0.1"
+  cl_club_forms:
+    dependency: "direct main"
+    description:
+      path: "../../cl_club_forms"
+      relative: true
+    source: path
+    version: "0.1.0"
   cl_gallery_viewer:
     dependency: transitive
     description:

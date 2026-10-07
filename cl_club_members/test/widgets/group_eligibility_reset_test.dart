@@ -1,3 +1,10 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show GroupFormFields;
+import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_fields.dart'
+    show AgeEligibilityFields;
+import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
+    show AgeEligibilityFormFields;
+import 'package:cl_club_members/src/models/group_form_helpers.dart'
+    show GroupFormSubmit;
 import 'package:cl_club_members/src/views/group_create_view.dart';
 import 'package:cl_club_members/src/widgets/group_eligibility_section.dart';
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -7,12 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show
-        AgeEligibilityFields,
-        AgeEligibilityFormFields,
-        GroupFormFields,
-        SectionEditButton;
+import 'package:ui_lib/ui_lib.dart' show SectionEditButton;
 
 Group _group({
   GroupKind kind = GroupKind.semiAuto,
@@ -56,6 +58,10 @@ class _Sent {
 
 /// Records the group writes the hosts send.
 class _RecordingGroups extends ClGroupsMasterNotifier {
+  _RecordingGroups({this.refusal});
+
+  /// When set, every write is recorded and then refused with it.
+  final Exception? refusal;
   final Group answer = _group();
   final List<_Sent> created = [];
   final List<_Sent> updated = [];
@@ -84,6 +90,8 @@ class _RecordingGroups extends ClGroupsMasterNotifier {
         sentEveryGetter: true,
       ),
     );
+    final refused = refusal;
+    if (refused != null) throw refused;
     return answer;
   }
 
@@ -109,6 +117,8 @@ class _RecordingGroups extends ClGroupsMasterNotifier {
         sentEveryGetter: minAge != null && maxAge != null && gender != null,
       ),
     );
+    final refused = refusal;
+    if (refused != null) throw refused;
     return answer;
   }
 }
@@ -117,12 +127,13 @@ Future<_RecordingGroups> _pump(
   WidgetTester tester,
   Widget child, {
   List<GroupMember> members = const [],
+  Exception? refusal,
 }) async {
   tester.view.physicalSize = const Size(1200, 2400);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  final groups = _RecordingGroups();
+  final groups = _RecordingGroups(refusal: refusal);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -140,12 +151,14 @@ Future<_RecordingGroups> _pumpSection(
   WidgetTester tester,
   Group group, {
   List<GroupMember> members = const [],
+  Exception? refusal,
 }) => _pump(
   tester,
   SingleChildScrollView(
     child: GroupEligibilitySection(group: group, canEdit: true),
   ),
   members: members,
+  refusal: refusal,
 );
 
 Finder _input(String id) => find.byWidgetPredicate(
@@ -374,6 +387,90 @@ void main() {
       expect(sent.maxAge, isNull);
       expect(sent.strictAge, isFalse);
       expect(sent.semiAuto, isNull, reason: 'Manual');
+    });
+  });
+
+  group('Issue 55: the hosts drive the group forms', () {
+    const membersExist = ServerException(
+      statusCode: 422,
+      code: SdkErrorCode.membersExist,
+      message: 'refused',
+    );
+    const invertedBand = ServerException(
+      statusCode: 422,
+      code: SdkErrorCode.invalidState,
+      message: 'refused',
+    );
+
+    testWidgets('Issue 55: the create view shows the title, and Create '
+        'group with no name creates nothing', (tester) async {
+      final groups = await _pump(
+        tester,
+        GroupCreateView(onCreated: () {}, onCancel: () {}),
+      );
+      expect(find.text('Creating new group'), findsOneWidget);
+
+      await _tap(tester, 'Create group');
+
+      expect(groups.created, isEmpty);
+      expect(find.text('Group name is required'), findsOneWidget);
+    });
+
+    testWidgets('Issue 55: an auto group with no criterion is refused '
+        'inline by the form and nothing is created', (tester) async {
+      final groups = await _pump(
+        tester,
+        GroupCreateView(onCreated: () {}, onCancel: () {}),
+      );
+      await tester.enterText(_input(GroupFormFields.nameId), 'Juniors');
+      await _pickMode(tester, from: 'Manual', mode: 'Auto');
+
+      await _tap(tester, 'Create group');
+
+      expect(groups.created, isEmpty);
+      expect(find.textContaining('at least one criterion'), findsOneWidget);
+    });
+
+    testWidgets('Issue 55: a create the server refuses for its age band '
+        'shows the refusal on the form, and the view stays', (tester) async {
+      var createdCalls = 0;
+      final groups = await _pump(
+        tester,
+        GroupCreateView(onCreated: () => createdCalls++, onCancel: () {}),
+        refusal: invertedBand,
+      );
+      await tester.enterText(_input(GroupFormFields.nameId), 'Juniors');
+      await _pickMode(tester, from: 'Manual', mode: 'Auto');
+      await tester.enterText(
+        _input(AgeEligibilityFormFields.maxAgeYearsId),
+        '12',
+      );
+      await tester.pumpAndSettle();
+
+      await _tap(tester, 'Create group');
+
+      expect(groups.created, hasLength(1));
+      expect(createdCalls, 0);
+      expect(find.text(GroupFormSubmit.invertedBandMessage), findsOneWidget);
+      expect(find.text('Create group'), findsOneWidget);
+    });
+
+    testWidgets('Issue 55: a switch to auto the server refuses because the '
+        'group has members shows on the Mode field, and the editor stays '
+        'open', (tester) async {
+      final groups = await _pumpSection(
+        tester,
+        _group(gender: Gender.female),
+        refusal: membersExist,
+      );
+      await _openEditor(tester);
+      await _pickMode(tester, from: 'Semi-auto', mode: 'Auto');
+
+      await _tap(tester, 'Save');
+
+      expect(groups.updated, hasLength(1));
+      expect(find.text(GroupFormSubmit.membersExistMessage), findsOneWidget);
+      expect(find.text('Save'), findsOneWidget);
     });
   });
 }

@@ -1,14 +1,19 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show VenueCreateForm, VenueCreateFormState;
 import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show TitleRow, VenueCreateForm, VenueCreateFormState;
+import 'package:ui_lib/ui_lib.dart' show TitleRow;
 
 import '../models/venue_form_helpers.dart';
 import '../utils/venue_write_messages.dart';
 
 /// Scaffold-free venue creation view.
+///
+/// Hosts [VenueCreateForm]: it owns the title and the actions, validates the
+/// form from Create venue, runs the create, holds the in-flight flag, and
+/// puts a server refusal of a field back on that field.
 /// Navigation is delegated via [onCreated] and [onCancel] callbacks.
 class VenueCreateView extends ConsumerStatefulWidget {
   const VenueCreateView({
@@ -28,6 +33,14 @@ class VenueCreateViewState extends ConsumerState<VenueCreateView> {
   final venueFormKey = GlobalKey<VenueCreateFormState>();
   bool isSubmitting = false;
 
+  /// Validates the form and, when it is valid, creates the venue.
+  Future<void> submit() async {
+    final values = venueFormKey.currentState?.validate();
+    if (values == null) return;
+    await handleSubmit(values);
+  }
+
+  /// Creates the venue from the form's valid [values].
   Future<void> handleSubmit(Map<String, dynamic> values) async {
     setState(() => isSubmitting = true);
     try {
@@ -42,6 +55,13 @@ class VenueCreateViewState extends ConsumerState<VenueCreateView> {
       widget.onCreated();
     } on Object catch (e) {
       if (!mounted) return;
+      // A field the server refused shows the refusal on itself; anything
+      // else is a failed create.
+      final fieldErrors = VenueFormSubmit.createFieldErrors(e);
+      if (fieldErrors.isNotEmpty) {
+        venueFormKey.currentState?.showErrors(fieldErrors: fieldErrors);
+        return;
+      }
       ShadToaster.of(context).show(
         ShadToast.destructive(
           description: Text(
@@ -110,8 +130,7 @@ class VenueCreateViewState extends ConsumerState<VenueCreateView> {
                       VenueCreateForm(
                         key: venueFormKey,
                         initialValues: buildVenueFormInitialValues(null),
-                        isSubmitting: isSubmitting,
-                        onSubmit: handleSubmit,
+                        enabled: !isSubmitting,
                       ),
                       const SizedBox(height: 16),
                       Row(
@@ -123,10 +142,7 @@ class VenueCreateViewState extends ConsumerState<VenueCreateView> {
                           ),
                           const SizedBox(width: 12),
                           ShadButton.outline(
-                            onPressed: isSubmitting
-                                ? null
-                                : () =>
-                                      venueFormKey.currentState?.handleSubmit(),
+                            onPressed: isSubmitting ? null : submit,
                             child: Text(
                               isSubmitting ? 'Creating...' : 'Create venue',
                             ),

@@ -40,6 +40,14 @@ abstract final class MemberWriteMessages {
   /// Creating a user.
   static const createUserFailed = 'Could not create user.';
 
+  /// Creating a user whose username another account has; shown on the
+  /// username field.
+  static const usernameTaken = 'That username is already taken.';
+
+  /// Creating a user whose email another account has; shown on the email
+  /// field.
+  static const emailRegistered = 'That email is already registered.';
+
   /// Approving, sending back or blocking an application under review.
   static const reviewDecisionFailed = 'Could not record the decision.';
 

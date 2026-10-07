@@ -1,7 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/src/widgets/evaluation/inputs/evaluation_coach_note_input.dart'
+    show EvaluationCoachNoteInput;
+import 'package:ui_lib/src/widgets/evaluation/inputs/evaluation_level_buttons.dart'
+    show EvaluationLevelButtons;
+import 'package:ui_lib/src/widgets/evaluation/inputs/evaluation_multiple_choice_input.dart'
+    show EvaluationMultipleChoiceInput;
+import 'package:ui_lib/src/widgets/evaluation/inputs/evaluation_number_input.dart'
+    show EvaluationNumberInput;
+import 'package:ui_lib/src/widgets/evaluation/inputs/evaluation_range_input.dart'
+    show EvaluationRangeInput;
+import 'package:ui_lib/src/widgets/evaluation/inputs/evaluation_single_choice_input.dart'
+    show EvaluationSingleChoiceInput;
+import 'package:ui_lib/src/widgets/evaluation/inputs/evaluation_star_input.dart'
+    show EvaluationStarInput;
 import 'package:ui_lib/src/widgets/evaluation/inputs/evaluation_star_painter.dart';
+import 'package:ui_lib/src/widgets/evaluation/inputs/evaluation_text_answer_input.dart'
+    show EvaluationTextAnswerInput;
+import 'package:ui_lib/src/widgets/evaluation/inputs/evaluation_yes_no_input.dart'
+    show EvaluationYesNoInput;
 import 'package:ui_lib/ui_lib.dart';
 
 import 'evaluation_test_helpers.dart';

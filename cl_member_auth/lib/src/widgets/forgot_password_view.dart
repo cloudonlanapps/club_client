@@ -1,15 +1,21 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show ForgotPasswordFormFields, ForgotPasswordFormState;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ForgotPasswordForm;
 
+import '../constants/auth_view_sizes.dart';
+import '../constants/auth_view_strings.dart';
 import '../providers/auth.dart';
+import 'forgot_password_confirmation_panel.dart';
+import 'forgot_password_panel.dart';
 
 /// Connected self-service "forgot password" view — no Scaffold.
 ///
-/// Wraps the SDK-free [ForgotPasswordForm] and wires it to
-/// [authStateProvider]. The server never reveals whether the email matches a
-/// member, so on success this view shows a deliberately speculative
+/// Hosts the SDK-free `ForgotPasswordForm` with its heading, its Send
+/// action and the link back to sign in, and wires it to
+/// [authStateProvider]. The server never reveals whether the email matches
+/// a member, so on success this view shows a deliberately speculative
 /// confirmation rather than asserting an email was sent.
 class ForgotPasswordView extends ConsumerStatefulWidget {
   const ForgotPasswordView({
@@ -30,32 +36,47 @@ class ForgotPasswordView extends ConsumerStatefulWidget {
   ConsumerState<ForgotPasswordView> createState() => ForgotPasswordViewState();
 }
 
+/// State of [ForgotPasswordView]: holds the form's key, the in-flight flag
+/// and whether the request went out.
 class ForgotPasswordViewState extends ConsumerState<ForgotPasswordView> {
+  /// Key of the forgot-password form.
+  final formKey = GlobalKey<ForgotPasswordFormState>();
+
+  /// Whether a request is in flight.
   bool isSubmitting = false;
+
+  /// Whether a request went out; swaps the form for the confirmation.
   bool requestSent = false;
 
-  Future<void> _handleSubmit(String email) async {
+  /// The Send action: validates the form and requests the reset.
+  Future<void> submit() async {
+    final values = formKey.currentState?.validate();
+    if (values == null) return;
+    final email = values[ForgotPasswordFormFields.emailId] as String;
+
     setState(() => isSubmitting = true);
     var success = false;
     try {
-      if (widget.onResetPassword != null) {
-        await widget.onResetPassword!(email);
+      final override = widget.onResetPassword;
+      if (override != null) {
+        await override(email);
       } else {
         await ref.read(authStateProvider.notifier).resetPassword(email);
       }
       success = true;
     } on Object catch (_) {
-      _showError('Could not send the reset email. Please try again.');
+      showError(AuthViewStrings.resetFailed);
     } finally {
       if (mounted) setState(() => isSubmitting = false);
     }
     if (success && mounted) setState(() => requestSent = true);
   }
 
-  void _showError(String msg) {
+  /// Shows [message] as a failure toast.
+  void showError(String message) {
     if (!mounted) return;
     ShadToaster.of(context).show(
-      ShadToast.destructive(description: Text(msg)),
+      ShadToast.destructive(description: Text(message)),
     );
   }
 
@@ -63,50 +84,21 @@ class ForgotPasswordViewState extends ConsumerState<ForgotPasswordView> {
   Widget build(BuildContext context) {
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
+        constraints: const BoxConstraints(maxWidth: AuthViewSizes.maxWidth),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AuthViewSizes.padding),
           child: requestSent
-              ? _ConfirmationPanel(onNavigateToLogin: widget.onNavigateToLogin)
-              : ForgotPasswordForm(
+              ? ForgotPasswordConfirmationPanel(
+                  onNavigateToLogin: widget.onNavigateToLogin,
+                )
+              : ForgotPasswordPanel(
+                  formKey: formKey,
                   isSubmitting: isSubmitting,
-                  onSubmit: _handleSubmit,
+                  onSubmit: submit,
                   onBack: widget.onNavigateToLogin,
                 ),
         ),
       ),
-    );
-  }
-}
-
-/// Speculative confirmation shown after a reset request — never confirms the
-/// email exists.
-class _ConfirmationPanel extends StatelessWidget {
-  const _ConfirmationPanel({required this.onNavigateToLogin});
-
-  final VoidCallback onNavigateToLogin;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text('Check your email', style: theme.textTheme.h3),
-        const SizedBox(height: 12),
-        Text(
-          'If your email is in our member list, you will receive an email '
-          'with a new password. If you have not received it within 24 hours, '
-          'please contact an admin.',
-          style: theme.textTheme.p,
-        ),
-        const SizedBox(height: 20),
-        ShadButton(
-          onPressed: onNavigateToLogin,
-          child: const Text('Back to sign in'),
-        ),
-      ],
     );
   }
 }

@@ -16,7 +16,7 @@ class ContactSubjectOptions {
   factory ContactSubjectOptions.fromMap(Map<String, dynamic> map) {
     return ContactSubjectOptions(
       registration: map['registration'] as String? ?? 'Registration Inquiry',
-      programs: map['programs'] as String? ?? 'Program Information',
+      programs: map['programs'] as String? ?? 'Programme Information',
       facility: map['facility'] as String? ?? 'Facility Rental',
       sponsorship: map['sponsorship'] as String? ?? 'Sponsorship',
       other: map['other'] as String? ?? 'Other',

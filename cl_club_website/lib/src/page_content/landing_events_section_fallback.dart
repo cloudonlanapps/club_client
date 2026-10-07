@@ -23,11 +23,11 @@ abstract final class LandingEventsSectionFallback {
     ),
     EventType.programme => (
       badge: 'TRAINING SESSIONS',
-      title: 'Programs For Everyone',
+      title: 'Programmes For Everyone',
       description:
           'From beginners to competitive athletes, ages 5 to adults. Expert '
           'coaching with 4 experienced coaches per batch.',
-      buttonText: 'Explore All Programs',
+      buttonText: 'Explore All Programmes',
     ),
     EventType.oneOff => (
       badge: 'CLUB EVENTS',

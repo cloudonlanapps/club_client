@@ -81,4 +81,170 @@ void main() {
       expect(const FormTranslatedText('', {'mr': 'x'}).isEmpty, isFalse);
     });
   });
+
+  group('Issue 61: ClubIdentityFormValidators.phone', () {
+    const message =
+        'Use the international format: + and the country code, '
+        'digits only (e.g. +919876543210)';
+
+    test('Issue 61: an empty or blank phone passes', () {
+      expect(ClubIdentityFormValidators.phone(''), isNull);
+      expect(ClubIdentityFormValidators.phone('   '), isNull);
+    });
+
+    test('Issue 61: the shortest and the longest E.164 numbers pass', () {
+      expect(ClubIdentityFormValidators.phone('+12'), isNull);
+      expect(ClubIdentityFormValidators.phone('+123456789012345'), isNull);
+    });
+
+    test('Issue 61: one digit, or sixteen, is refused', () {
+      expect(ClubIdentityFormValidators.phone('+1'), message);
+      expect(ClubIdentityFormValidators.phone('+1234567890123456'), message);
+    });
+
+    test('Issue 61: a number without +, with a leading zero, or with '
+        'anything but digits is refused', () {
+      for (final phone in [
+        '919876543210',
+        '+0919876543210',
+        '+91-9876543210',
+        '+91 9876543210',
+        '+91(98)76543210',
+        '+91x9876543210',
+        '++919876543210',
+      ]) {
+        expect(ClubIdentityFormValidators.phone(phone), message, reason: phone);
+      }
+    });
+  });
+
+  group('Issue 61: ClubIdentityFormValidators.email', () {
+    const message = 'Enter a valid email address';
+
+    test('Issue 61: an empty or blank email passes', () {
+      expect(ClubIdentityFormValidators.email(''), isNull);
+      expect(ClubIdentityFormValidators.email('  '), isNull);
+    });
+
+    test('Issue 61: an address is read with the spaces around it trimmed', () {
+      expect(ClubIdentityFormValidators.email(' desk@club.example '), isNull);
+    });
+
+    test('Issue 61: no @, two @, no dot in the domain, an empty part or a '
+        'space inside is refused', () {
+      for (final email in [
+        'desk.club.example',
+        'desk@@club.example',
+        'desk@help@club.example',
+        'desk@club',
+        'desk@',
+        'desk@.example',
+        'desk@club.',
+        'de sk@club.example',
+      ]) {
+        expect(ClubIdentityFormValidators.email(email), message, reason: email);
+      }
+    });
+  });
+
+  group('Issue 61: ClubIdentityFormValidators.url', () {
+    const message = 'Enter the full link, starting with https://';
+
+    test('Issue 61: an empty or blank link passes', () {
+      expect(ClubIdentityFormValidators.url(''), isNull);
+      expect(ClubIdentityFormValidators.url('  '), isNull);
+    });
+
+    test('Issue 61: http and https links with a host pass, trimmed', () {
+      expect(ClubIdentityFormValidators.url('http://club.example'), isNull);
+      expect(
+        ClubIdentityFormValidators.url(' https://club.example/a?b=c '),
+        isNull,
+      );
+    });
+
+    test('Issue 61: a link without a scheme, with another scheme or '
+        'without a host is refused', () {
+      for (final url in [
+        'club.example',
+        'www.club.example/page',
+        '//club.example',
+        'mailto:desk@club.example',
+        'ftp://club.example',
+        'https://',
+        'https:///page',
+      ]) {
+        expect(ClubIdentityFormValidators.url(url), message, reason: url);
+      }
+    });
+  });
+
+  group('Issue 61: ClubIdentityFormValidators.languageCode', () {
+    const message =
+        'Use a two- or three-letter language code in lowercase, '
+        'e.g. mr or hi';
+
+    test('Issue 61: two or three lowercase letters pass, trimmed', () {
+      expect(ClubIdentityFormValidators.languageCode('hi'), isNull);
+      expect(ClubIdentityFormValidators.languageCode('kok'), isNull);
+      expect(ClubIdentityFormValidators.languageCode(' mr '), isNull);
+    });
+
+    test('Issue 61: an empty code is refused: this field is not optional', () {
+      expect(ClubIdentityFormValidators.languageCode(''), message);
+      expect(ClubIdentityFormValidators.languageCode('  '), message);
+    });
+
+    test('Issue 61: one letter, four letters, capitals, digits or a region '
+        'are refused', () {
+      for (final code in [
+        'm',
+        'mara',
+        'Mr',
+        'MR',
+        'm1',
+        '12',
+        'pt-BR',
+        'm r',
+      ]) {
+        expect(
+          ClubIdentityFormValidators.languageCode(code),
+          message,
+          reason: code,
+        );
+      }
+    });
+  });
+
+  group('Issue 61: ClubIdentityFormValidators.newLanguageCode', () {
+    test('Issue 61: a well-formed code that is not listed passes, with '
+        'nothing listed too', () {
+      expect(
+        ClubIdentityFormValidators.newLanguageCode('hi', const ['mr', 'kok']),
+        isNull,
+      );
+      expect(
+        ClubIdentityFormValidators.newLanguageCode('hi', const []),
+        isNull,
+      );
+    });
+
+    test('Issue 61: a listed code is refused by name, the spaces around it '
+        'trimmed first', () {
+      expect(
+        ClubIdentityFormValidators.newLanguageCode(' kok ', const [
+          'mr',
+          'kok',
+        ]),
+        'kok is already offered',
+      );
+    });
+
+    test('Issue 61: the shape is checked before the list', () {
+      expect(
+        ClubIdentityFormValidators.newLanguageCode('MR', const ['MR']),
+        contains('two- or three-letter'),
+      );
+    });
+  });
 }

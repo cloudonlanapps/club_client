@@ -102,6 +102,7 @@ Future<RouteStack> _openPicker(
   WidgetTester tester,
   Widget picker, {
   Size surface = const Size(900, 1400),
+  UserPrivate? viewer,
 }) async {
   final ledger = Ledger();
   final routes = RouteStack();
@@ -112,7 +113,7 @@ Future<RouteStack> _openPicker(
       overrides: [
         creditSystemProvider.overrideWithValue(true),
         authStateProvider.overrideWith(
-          () => StubAuth(person('an_admin', admin: true)),
+          () => StubAuth(viewer ?? person('an_admin', admin: true)),
         ),
         clEventsMasterProvider.overrideWith(
           () => StubEvents({
@@ -291,6 +292,38 @@ void main() {
         expect(find.bySemanticsLabel('Credit 0'), findsOneWidget);
         final plus = find.bySemanticsLabel('Add credit');
         expect(tester.getTopRight(plus).dx, lessThanOrEqualTo(_phone.width));
+      });
+    });
+
+    group('Issue 49: "+" in $name is for admins only', () {
+      testWidgets('Issue 49: $name shows "+" to an admin', (tester) async {
+        await _openPicker(
+          tester,
+          picker,
+          viewer: person('an_admin', admin: true),
+        );
+
+        expect(find.bySemanticsLabel('Credit 0'), findsOneWidget);
+        expect(find.bySemanticsLabel('Add credit'), findsOneWidget);
+      });
+
+      testWidgets('Issue 49: $name shows a coach who organizes the '
+          'programme the zero chip and no "+"', (tester) async {
+        final routes = await _openPicker(
+          tester,
+          picker,
+          viewer: person(staffOrganizer, coach: true),
+        );
+
+        expect(find.bySemanticsLabel('Add credit'), findsNothing);
+        final zero = find.bySemanticsLabel('Credit 0');
+        expect(zero, findsOneWidget);
+
+        // The zero chip still opens the credit sheet.
+        await tester.tap(zero);
+        await tester.pumpAndSettle();
+        expect(routes.depth, 2);
+        expect(find.byType(CreditView), findsOneWidget);
       });
     });
   }

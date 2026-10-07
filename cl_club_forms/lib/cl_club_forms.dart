@@ -68,8 +68,8 @@ export 'src/widgets/event_form/event_form_fields.dart'
     show EventFormFields, EventGender;
 export 'src/widgets/event_form/event_form_validators.dart'
     show EventFormValidators;
-export 'src/widgets/event_form/organizer_coaches_editor.dart'
-    show OrganizerCoachesEditor, OrganizerCoachesEditorState;
+export 'src/widgets/event_form/event_staff_form.dart'
+    show EventStaffForm, EventStaffFormState;
 // Event schedule forms (pure UI, no SDK / no Riverpod). Form-local typed
 // values; the host translates to/from SDK types at the boundary.
 export 'src/widgets/event_schedule/camp_schedule_form.dart'

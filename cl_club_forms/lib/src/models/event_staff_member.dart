@@ -1,13 +1,13 @@
 import 'package:flutter/widgets.dart';
 
-/// An organizer or a coach as the event staff editor shows one: form-local,
-/// so the editor needs no picker or SDK type. The host maps to and from its
+/// An organizer or a coach as `EventStaffForm` shows one: form-local,
+/// so the form needs no picker or SDK type. The host maps to and from its
 /// own.
 @immutable
 class EventStaffMember {
   const EventStaffMember({required this.username, required this.displayName});
 
-  /// Identifies the member; what the editor returns.
+  /// Identifies the member; what the form returns.
   final String username;
 
   /// The member's name as shown.

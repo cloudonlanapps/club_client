@@ -1,7 +1,7 @@
 import 'dart:typed_data' show Uint8List;
 
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show OrganizerCoachesEditor, OrganizerCoachesEditorState;
+    show EventStaffForm, EventStaffFormState;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         clEventsMasterProvider,
@@ -244,7 +244,7 @@ class OrganizerCoachesSection extends ConsumerStatefulWidget {
 
 class OrganizerCoachesSectionState
     extends ConsumerState<OrganizerCoachesSection> {
-  final _editorKey = GlobalKey<OrganizerCoachesEditorState>();
+  final _editorKey = GlobalKey<EventStaffFormState>();
 
   PickerUser _pickerFor(String username, Map<String, UserInfo>? master) {
     final info = master?[username];
@@ -403,12 +403,11 @@ class OrganizerCoachesSectionState
               ),
         ],
       ),
-      editBuilder: () => OrganizerCoachesEditor(
+      editBuilder: () => EventStaffForm(
         key: _editorKey,
-        initialOrganizer: eventStaffMemberOf(
-          organizer ??
-              const PickerUser(username: '', displayName: 'Unassigned'),
-        ),
+        initialOrganizer: organizer == null
+            ? null
+            : eventStaffMemberOf(organizer),
         initialCoaches: [for (final c in coaches) eventStaffMemberOf(c)],
         onPickOrganizer: () async {
           final picked = await _pickOrganizer();

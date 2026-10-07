@@ -1,5 +1,5 @@
 /// Form-local field IDs and value types shared by the event section editors
-/// (`EventEligibilityForm`, `OrganizerCoachesEditor`).
+/// (`EventEligibilityForm`, `EventStaffForm`).
 ///
 /// All SDK-free: the caller's adapter (`cl_club_events`
 /// `camp_event_form_helpers`) maps these to/from the `club_sdk_2` `Event`,

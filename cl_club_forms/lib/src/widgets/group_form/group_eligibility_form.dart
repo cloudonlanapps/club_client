@@ -24,7 +24,8 @@ class GroupEligibilityForm extends StatefulWidget {
   });
 
   /// Form values keyed by [GroupFormFields]; must carry the
-  /// [GroupFormFields.modeId] entry.
+  /// [GroupFormFields.modeId] entry. Gender is [GroupGender.any] when left
+  /// out.
   final Map<String, dynamic> initialValues;
 
   /// When true (group already has members), mode + criteria are read-only.
@@ -45,8 +46,9 @@ class GroupEligibilityForm extends StatefulWidget {
   State<GroupEligibilityForm> createState() => GroupEligibilityFormState();
 }
 
-/// State of [GroupEligibilityForm]. Its values are the mode, the gender and
-/// the age cluster's entries, as the fields hold them.
+/// State of [GroupEligibilityForm]. Its values are the mode, the gender
+/// (never null: [GroupGender.any] is no gender criterion) and the age
+/// cluster's entries, as the fields hold them.
 class GroupEligibilityFormState extends State<GroupEligibilityForm>
     with FormContract<GroupEligibilityForm> {
   @override
@@ -80,7 +82,7 @@ class GroupEligibilityFormState extends State<GroupEligibilityForm>
 
     return ShadForm(
       key: formKey,
-      initialValue: widget.initialValues,
+      initialValue: GroupEligibilityFields.seeded(widget.initialValues),
       onChanged: widget.onChanged,
       child: FormBody(
         error: formError,

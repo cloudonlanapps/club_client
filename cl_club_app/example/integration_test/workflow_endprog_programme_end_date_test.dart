@@ -15,7 +15,7 @@
 //  1. The admin opens the programme: its Schedule block reads "No end
 //     date". Adjust end date opens the dialog; they pick the day five days
 //     ahead, read the last session it gives, type a reason and save. The
-//     block shows the end date, and the programme is still on the Programs
+//     block shows the end date, and the programme is still on the Programmes
 //     list.
 //  2. They move the end to a later day, then to an earlier one.
 //  3. They clear it: the block reads "No end date" again.
@@ -193,7 +193,7 @@ void main() {
       expect(state.event.untilTimeUtc, _cutoffAfter(_kFirstLastDay));
       _expectSessionsStopAt(state.sessions, _cutoffAfter(_kFirstLastDay));
 
-      // The programme is still on the Programs list.
+      // The programme is still on the Programmes list.
       await _openDetail(tester);
 
       // ─── 2. Later, then earlier ───────────────────────────────────────
@@ -281,7 +281,7 @@ void _expectSessionsStopAt(List<Occurrence> sessions, DateTime cutoff) {
   }
 }
 
-/// Opens the programme from the Programs list, as an admin does.
+/// Opens the programme from the Programmes list, as an admin does.
 Future<void> _openDetail(WidgetTester tester) async {
   await go(tester, '/memberzone/events/programmes');
   final card = find.byWidgetPredicate(
@@ -290,7 +290,7 @@ Future<void> _openDetail(WidgetTester tester) async {
   await waitFor(
     tester,
     () => card.evaluate().isNotEmpty,
-    description: '"$_kProgramme" on the Programs list',
+    description: '"$_kProgramme" on the Programmes list',
   );
   tester.widget<EntityCard>(card.first).onTap!.call();
   await settle(tester);

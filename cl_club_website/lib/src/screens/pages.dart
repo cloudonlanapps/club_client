@@ -113,7 +113,7 @@ class TrainingSessionsPage extends ConsumerWidget {
           loading: () => const LoadingContent(),
           error: (e, _) => ErrorContent(
             error: e.toString(),
-            title: 'Failed to load programs',
+            title: 'Failed to load programmes',
           ),
         ),
       ),

@@ -36,7 +36,7 @@ void main() {
         EventEligibilityForm(
           key: key,
           initialValues: {
-            EventFormFields.genderId: null,
+            EventFormFields.genderId: EventGender.any,
             ...AgeEligibilityFormValues.initial(),
           },
         ),
@@ -46,7 +46,7 @@ void main() {
 
     final values = key.currentState!.validate();
     expect(values, isNotNull);
-    expect(values![EventFormFields.genderId], isNull);
+    expect(values![EventFormFields.genderId], EventGender.any);
     expect(AgeEligibilityFormValues.minAge(values), isNull);
     expect(key.currentState!.isDirty, isFalse);
   });
@@ -61,7 +61,7 @@ void main() {
         EventEligibilityForm(
           key: key,
           initialValues: {
-            EventFormFields.genderId: EventGender.male,
+            EventFormFields.genderId: EventGender.boys,
             ...AgeEligibilityFormValues.initial(
               minAge: const FormAge(years: 5),
               maxAge: const FormAge(years: 18),
@@ -74,7 +74,7 @@ void main() {
 
     final values = key.currentState!.validate();
     expect(values, isNotNull);
-    expect(values![EventFormFields.genderId], EventGender.male);
+    expect(values![EventFormFields.genderId], EventGender.boys);
     expect(key.currentState!.isDirty, isFalse);
   });
 
@@ -112,7 +112,7 @@ void main() {
         _wrap(
           EventEligibilityForm(
             initialValues: {
-              EventFormFields.genderId: null,
+              EventFormFields.genderId: EventGender.any,
               ...AgeEligibilityFormValues.initial(),
             },
           ),
@@ -146,7 +146,7 @@ void main() {
         EventEligibilityForm(
           key: key,
           initialValues: {
-            EventFormFields.genderId: null,
+            EventFormFields.genderId: EventGender.any,
             ...AgeEligibilityFormValues.initial(),
           },
         ),
@@ -291,7 +291,7 @@ void main() {
           EventEligibilityForm(
             key: key,
             initialValues: {
-              EventFormFields.genderId: null,
+              EventFormFields.genderId: EventGender.any,
               ...AgeEligibilityFormValues.initial(),
             },
             enabled: enabled,

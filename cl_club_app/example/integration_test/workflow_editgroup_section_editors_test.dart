@@ -151,7 +151,7 @@ void main() {
       await tapSectionPencil(tester, _eligibilityCard);
       setShadFormValues(tester, {
         'mode': GroupMode.semiAuto,
-        'gender': GroupGender.female,
+        'gender': GroupGender.girls,
       });
       await tester.pump();
       await saveInlineEditor(tester);

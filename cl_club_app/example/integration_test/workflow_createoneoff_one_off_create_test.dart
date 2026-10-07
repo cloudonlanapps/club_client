@@ -1,12 +1,12 @@
 // workflow_createoneoff: one-off events for staff, per club (club_core#122).
 //
 // The example app's club.json runs camps, programmes and one-off events, so
-// staff see a One-Off Events list. This drives the one-off side:
+// staff see a One-off Events list. This drives the one-off side:
 //
 //   * an admin (the super-admin `sudo`) creates a one-off event through the
-//     One-Off Events list's "+ New Event" form (the schedule keeps its
+//     One-off Events list's "+ New One-off" form (the schedule keeps its
 //     seeded default: the next hour);
-//   * the event is listed under One-Off Events, and its enrollment screen
+//   * the event is listed under One-off Events, and its enrollment screen
 //     opens from the card and resolves it by id.
 //
 // Cleanup: the event is soft-deleted via the master notifier (the create
@@ -57,7 +57,7 @@ void main() {
 
   testWidgets(
     'an admin creates a one-off event via the UI and reaches its '
-    'enrollments from One-Off Events',
+    'enrollments from One-off Events',
     (tester) async {
       await tester.binding.setSurfaceSize(const Size(1600, 4000));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -80,7 +80,7 @@ void main() {
       expect(oneOff.venueId, venueId);
       expect(oneOff.rrule, isNull, reason: 'a one-off does not recur');
 
-      // ─── Its enrollment screen opens from One-Off Events ───────────────
+      // ─── Its enrollment screen opens from One-off Events ───────────────
       await navigateToEnrollmentManagementViaUi(
         tester,
         eventTitle: _kOneOff,

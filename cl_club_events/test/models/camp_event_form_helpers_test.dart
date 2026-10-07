@@ -51,6 +51,7 @@ void main() {
       expect(values[EventFormFields.descriptionId], '');
       expect(values[EventFormFields.organizerNameId], '');
       expect(values[EventFormFields.coachNamesId], const <String>[]);
+      expect(values[EventFormFields.genderId], EventGender.any);
     });
 
     test('Issue 678: maps gender, age band, and organizer from event', () {
@@ -68,7 +69,7 @@ void main() {
         ),
       );
 
-      expect(values[EventFormFields.genderId], EventGender.female);
+      expect(values[EventFormFields.genderId], EventGender.girls);
       expect(AgeEligibilityFormValues.minAge(values), const FormAge(years: 5));
       expect(
         AgeEligibilityFormValues.maxAge(values),
@@ -101,7 +102,8 @@ void main() {
       () {
         final values = buildEventFormInitialValues(_event());
 
-        expect(values[EventFormFields.genderId], isNull);
+        // Since #78 no gender criterion is the entry Any, never null.
+        expect(values[EventFormFields.genderId], EventGender.any);
         expect(values[EventFormFields.organizerNameId], '');
         expect(values[EventFormFields.coachNamesId], const <String>[]);
       },
@@ -110,7 +112,7 @@ void main() {
 
   group('Issue 33: EventFormSubmit.updateEligibility', () {
     Map<String, dynamic> form({
-      EventGender? gender,
+      EventGender gender = EventGender.any,
       String minYears = '',
       String maxYears = '',
       bool strict = false,
@@ -135,7 +137,8 @@ void main() {
         expect(sent.minAge!(), const Age(years: 5));
         expect(sent.maxAge!(), const Age(years: 18));
         expect(sent.strictAge, isTrue);
-        expect(sent.gender!(), isNull);
+        // Gender stayed on Any, as the event has it: not sent (#78).
+        expect(sent.gender, isNull);
         expect(notifier.corrections, isEmpty);
       },
     );
@@ -147,7 +150,7 @@ void main() {
           minAge: const Age(years: 5),
           maxAge: const Age(years: 18),
         ),
-        values: form(minYears: '5', gender: EventGender.female),
+        values: form(minYears: '5', gender: EventGender.girls),
         notifier: notifier,
       );
 
@@ -210,6 +213,140 @@ void main() {
         expect(notifier.updates.single.maxAge!(), const Age(years: 12));
       },
     );
+  });
+
+  group('Issue 78: the event adapter maps Any, Boys and Girls', () {
+    Map<String, dynamic> form(EventGender gender, {String maxYears = ''}) => {
+      EventFormFields.genderId: gender,
+      ...AgeEligibilityFormValues.initial(),
+      AgeEligibilityFormFields.maxAgeYearsId: maxYears,
+    };
+
+    Future<_Sent> save(Event event, Map<String, dynamic> values) async {
+      final notifier = _RecordingNotifier(event);
+      await EventFormSubmit.updateEligibility(
+        event: event,
+        values: values,
+        notifier: notifier,
+      );
+      return [...notifier.updates, ...notifier.corrections].single;
+    }
+
+    test('Issue 78: a stored gender shows as Boys, Girls or Any', () {
+      expect(
+        {
+          for (final g in <Gender?>[null, ...Gender.values])
+            g: EventFormSubmit.genderToForm(g),
+        },
+        {
+          null: EventGender.any,
+          Gender.male: EventGender.boys,
+          Gender.female: EventGender.girls,
+          Gender.other: EventGender.any,
+          Gender.preferNotToSay: EventGender.any,
+        },
+      );
+      for (final g in <Gender?>[null, ...Gender.values]) {
+        expect(
+          buildEventFormInitialValues(
+            _event(gender: g),
+          )[EventFormFields.genderId],
+          EventFormSubmit.genderToForm(g),
+          reason: '$g',
+        );
+      }
+    });
+
+    test('Issue 78: Any stores no gender, Boys male and Girls female', () {
+      expect(
+        {for (final g in EventGender.values) g: EventFormSubmit.genderToSdk(g)},
+        {
+          EventGender.any: null,
+          EventGender.boys: Gender.male,
+          EventGender.girls: Gender.female,
+        },
+      );
+    });
+
+    test('Issue 78: Boys or Girls picked on an open event is sent', () async {
+      expect(
+        (await save(_event(), form(EventGender.boys))).gender!(),
+        Gender.male,
+      );
+      expect(
+        (await save(_event(), form(EventGender.girls))).gender!(),
+        Gender.female,
+      );
+    });
+
+    test('Issue 78: Any picked on a boys or girls event sends no gender '
+        'criterion', () async {
+      for (final stored in [Gender.male, Gender.female]) {
+        final sent = await save(_event(gender: stored), form(EventGender.any));
+
+        expect(sent.gender, isNotNull, reason: 'a getter, so it clears');
+        expect(sent.gender!(), isNull);
+      }
+    });
+
+    test('Issue 78: a stored other criterion is not sent when Gender is '
+        'untouched', () async {
+      for (final stored in [Gender.other, Gender.preferNotToSay]) {
+        final event = _event(gender: stored);
+        final values = {
+          ...buildEventFormInitialValues(event),
+          AgeEligibilityFormFields.maxAgeYearsId: '12',
+        };
+        expect(values[EventFormFields.genderId], EventGender.any);
+
+        final sent = await save(event, values);
+
+        expect(sent.gender, isNull, reason: '$stored stays as stored');
+        expect(sent.maxAge!(), const Age(years: 12));
+      }
+    });
+
+    test('Issue 78: a stored other criterion is replaced when an entry is '
+        'picked', () async {
+      final event = _event(gender: Gender.other);
+
+      expect(
+        (await save(event, form(EventGender.girls))).gender!(),
+        Gender.female,
+      );
+      expect(
+        (await save(event, form(EventGender.boys))).gender!(),
+        Gender.male,
+      );
+    });
+
+    test('Issue 78: an unchanged Boys or Girls is not sent either, on a '
+        'camp or a programme', () async {
+      for (final type in [EventType.camp, EventType.programme]) {
+        final event = _event(type: type, gender: Gender.male);
+        final sent = await save(
+          event,
+          form(EventGender.boys, maxYears: '12'),
+        );
+
+        expect(sent.gender, isNull, reason: '$type');
+        expect(sent.maxAge!(), const Age(years: 12));
+      }
+    });
+
+    test("Issue 78: a programme's changed gender goes with the "
+        'correction', () async {
+      final programme = _event(type: EventType.programme, gender: Gender.male);
+      final notifier = _RecordingNotifier(programme);
+      await EventFormSubmit.updateEligibility(
+        event: programme,
+        values: form(EventGender.any),
+        notifier: notifier,
+      );
+
+      expect(notifier.updates, isEmpty);
+      expect(notifier.corrections.single.gender!(), isNull);
+    });
   });
 }
 

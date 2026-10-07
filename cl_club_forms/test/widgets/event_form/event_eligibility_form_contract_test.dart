@@ -26,7 +26,7 @@ const String _maxDays = AgeEligibilityFormFields.maxAgeDaysId;
 const String _strict = AgeEligibilityFormFields.strictAgeId;
 
 Map<String, dynamic> _seeded({
-  EventGender? gender,
+  EventGender gender = EventGender.any,
   FormAge? minAge,
   FormAge? maxAge,
   bool strictAge = false,
@@ -122,22 +122,91 @@ void main() {
 
     testWidgets('Issue 61: the gender select offers every gender and reads '
         '"Any gender" while none is chosen', (tester) async {
+      // Since #78 "none chosen" is the entry Any, shown like the others.
       await _pump(tester);
-      expect(find.text('Any gender'), findsOneWidget);
+      expect(find.text('Any'), findsOneWidget);
+      expect(find.text('Any gender'), findsNothing);
 
-      await tester.tap(find.text('Any gender'));
+      await tester.tap(find.text('Any'));
       await tester.pumpAndSettle();
 
-      for (final gender in EventGender.values) {
-        expect(find.text(gender.label), findsOneWidget, reason: gender.label);
-      }
+      // The open list, plus the field itself showing Any.
+      expect(find.text('Any'), findsNWidgets(2));
+      expect(find.text('Boys'), findsOneWidget);
+      expect(find.text('Girls'), findsOneWidget);
     });
 
     testWidgets('Issue 61: a seeded gender shows by its label', (tester) async {
-      await _pump(tester, initial: _seeded(gender: EventGender.preferNotToSay));
+      await _pump(tester, initial: _seeded(gender: EventGender.girls));
 
-      expect(find.text('Prefer not to say'), findsOneWidget);
+      expect(find.text('Girls'), findsOneWidget);
+      expect(find.text('Any'), findsNothing);
+    });
+
+    testWidgets('Issue 78: the event Gender offers exactly Any, Boys and '
+        'Girls, with Any chosen by default', (tester) async {
+      // No gender among the initial values at all: Any is still chosen.
+      final form = await _pump(
+        tester,
+        initial: AgeEligibilityFormValues.initial(),
+      );
+
+      expect(form.formKey.currentState!.value[_genderId], EventGender.any);
+      expect(form.isDirty, isFalse);
+      expect(form.hasValue, isFalse);
+      expect(find.text('Any'), findsOneWidget);
       expect(find.text('Any gender'), findsNothing);
+
+      await tester.tap(find.text('Any'));
+      await tester.pumpAndSettle();
+
+      final options = tester
+          .widgetList<ShadOption<EventGender>>(
+            find.byType(ShadOption<EventGender>),
+          )
+          .map((o) => o.value)
+          .toList();
+      expect(options, [EventGender.any, EventGender.boys, EventGender.girls]);
+      expect([for (final g in options) g.label], ['Any', 'Boys', 'Girls']);
+      for (final label in ['Male', 'Female', 'Other', 'Prefer not to say']) {
+        expect(find.text(label), findsNothing, reason: label);
+      }
+    });
+
+    testWidgets('Issue 78: Boys or Girls, then Any again, validates to no '
+        'gender criterion', (tester) async {
+      for (final picked in [EventGender.boys, EventGender.girls]) {
+        final form = await _pump(tester);
+
+        await _pickGender(tester, 'Any', picked.label);
+        expect(form.validate()![_genderId], picked);
+        expect(form.hasValue, isTrue);
+        expect(form.isDirty, isTrue);
+
+        await _pickGender(tester, picked.label, 'Any');
+        final values = form.validate()!;
+        expect(values[_genderId], EventGender.any);
+        expect(EventGender.of(values).isCriterion, isFalse);
+        expect(form.hasValue, isFalse);
+        expect(form.isDirty, isFalse);
+
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
+    });
+
+    testWidgets('Issue 78: an event seeded with a gender can be put back to '
+        'Any, which holds no value', (tester) async {
+      final form = await _pump(
+        tester,
+        initial: _seeded(gender: EventGender.girls),
+      );
+      expect(form.hasValue, isTrue);
+
+      await _pickGender(tester, 'Girls', 'Any');
+
+      expect(form.validate()![_genderId], EventGender.any);
+      expect(form.hasValue, isFalse);
+      expect(form.isDirty, isTrue);
     });
   });
 
@@ -241,7 +310,7 @@ void main() {
       final form = await _pump(tester);
 
       expect(form.validate(), {
-        _genderId: null,
+        _genderId: EventGender.any,
         _minYears: '',
         _minMonths: '',
         _minDays: '',
@@ -256,7 +325,7 @@ void main() {
       tester,
     ) async {
       final initial = _seeded(
-        gender: EventGender.female,
+        gender: EventGender.girls,
         minAge: const FormAge(years: 5, months: 6),
         maxAge: const FormAge(years: 18, days: 2),
         strictAge: true,
@@ -276,9 +345,9 @@ void main() {
         'validate', (tester) async {
       final form = await _pump(tester);
 
-      await _pickGender(tester, 'Any gender', 'Female');
+      await _pickGender(tester, 'Any', 'Girls');
 
-      expect(form.validate()![_genderId], EventGender.female);
+      expect(form.validate()![_genderId], EventGender.girls);
       expect(form.hasValue, isTrue);
     });
 
@@ -287,7 +356,7 @@ void main() {
       expect(EventEligibilityForm.holdsValue(_seeded()), isFalse);
       expect(EventEligibilityForm.holdsValue(const {}), isFalse);
       expect(
-        EventEligibilityForm.holdsValue(_seeded(gender: EventGender.other)),
+        EventEligibilityForm.holdsValue(_seeded(gender: EventGender.boys)),
         isTrue,
       );
       expect(
@@ -331,14 +400,14 @@ void main() {
         'again', (tester) async {
       final form = await _pump(
         tester,
-        initial: _seeded(gender: EventGender.male),
+        initial: _seeded(gender: EventGender.boys),
       );
       expect(form.isDirty, isFalse);
 
-      await _pickGender(tester, 'Male', 'Female');
+      await _pickGender(tester, 'Boys', 'Girls');
       expect(form.isDirty, isTrue);
 
-      await _pickGender(tester, 'Female', 'Male');
+      await _pickGender(tester, 'Girls', 'Boys');
       expect(form.isDirty, isFalse);
     });
 
@@ -366,7 +435,7 @@ void main() {
       final afterText = changes;
       expect(afterText, greaterThan(0));
 
-      await _pickGender(tester, 'Any gender', 'Other');
+      await _pickGender(tester, 'Any', 'Girls');
       final afterSelect = changes;
       expect(afterSelect, greaterThan(afterText));
 
@@ -428,9 +497,9 @@ void main() {
         onChanged: () => changes++,
       );
 
-      await tester.tap(find.text('Any gender'), warnIfMissed: false);
+      await tester.tap(find.text('Any'), warnIfMissed: false);
       await tester.pumpAndSettle();
-      expect(find.text('Female'), findsNothing);
+      expect(find.text('Girls'), findsNothing);
 
       await tester.tap(find.byType(ShadCheckbox), warnIfMissed: false);
       await tester.tap(
@@ -455,21 +524,21 @@ void main() {
         tester,
         EventEligibilityForm(
           initialValues: _seeded(
-            gender: EventGender.preferNotToSay,
+            gender: EventGender.girls,
             minAge: const FormAge(years: 150, months: 11, days: 30),
             maxAge: const FormAge(years: 150, months: 11, days: 30),
             strictAge: true,
           ),
         ),
       );
-      expect(find.text('Prefer not to say'), findsOneWidget);
+      expect(find.text('Girls'), findsOneWidget);
     });
 
     testWidgets('Issue 61: it draws no button: Reset and Save are the '
         "host's", (tester) async {
       await _pump(
         tester,
-        initial: _seeded(gender: EventGender.male, strictAge: true),
+        initial: _seeded(gender: EventGender.boys, strictAge: true),
       );
 
       expectNoHostChrome(tester);

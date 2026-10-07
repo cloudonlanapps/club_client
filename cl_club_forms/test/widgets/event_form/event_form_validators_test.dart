@@ -135,15 +135,34 @@ void main() {
     });
   });
 
+  group('Issue 78: EventGender', () {
+    test('Issue 78: EventGender is Any, Boys and Girls, and only Boys and '
+        'Girls are criteria', () {
+      expect(EventGender.values, [
+        EventGender.any,
+        EventGender.boys,
+        EventGender.girls,
+      ]);
+      expect(
+        [for (final g in EventGender.values) g.isCriterion],
+        [false, true, true],
+      );
+      expect(EventGender.of(const {}), EventGender.any);
+      expect(
+        EventGender.of(const {EventFormFields.genderId: EventGender.boys}),
+        EventGender.boys,
+      );
+    });
+  });
+
   group('Issue 61: EventGender', () {
     test('Issue 61: every gender has the label the select shows', () {
       expect(
         {for (final g in EventGender.values) g: g.label},
         {
-          EventGender.male: 'Male',
-          EventGender.female: 'Female',
-          EventGender.other: 'Other',
-          EventGender.preferNotToSay: 'Prefer not to say',
+          EventGender.any: 'Any',
+          EventGender.boys: 'Boys',
+          EventGender.girls: 'Girls',
         },
       );
     });

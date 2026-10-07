@@ -237,7 +237,7 @@ void main() {
     expect(_text(tester, AgeEligibilityFormFields.minAgeYearsId), isEmpty);
     expect(_text(tester, AgeEligibilityFormFields.maxAgeYearsId), isEmpty);
     expect(tester.widget<ShadCheckbox>(find.byType(ShadCheckbox)).value, false);
-    expect(find.text('Any gender'), findsOneWidget);
+    expect(find.text('Any'), findsOneWidget);
     expect(events.sent, isEmpty);
   });
 
@@ -280,7 +280,9 @@ void main() {
 
     final sent = events.sent.single;
     expect(sent.verb, 'correction');
-    expect(sent.gender!(), isNull);
+    // The programme had no gender and Reset leaves Gender on Any: unchanged,
+    // so it is not sent (club_client#78).
+    expect(sent.gender, isNull);
     expect(sent.minAge!(), isNull);
     expect(sent.maxAge!(), isNull);
     expect(sent.strictAge, isFalse);

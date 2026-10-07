@@ -1,14 +1,14 @@
 // workflow_createprog: programmes for staff, per club (club_core#115).
 //
 // The example app's club.json runs camps and programmes, so staff see a
-// Programs list beside Camps. This drives the programme side end to end:
+// Programmes list beside Camps. This drives the programme side end to end:
 //
 //   * an admin (the super-admin `sudo`) creates a programme through the
-//     Programs list's "+ New Program" form, and its schedule round-trips;
-//   * the programme is listed under Programs, and its enrollment screen
+//     Programmes list's "+ New Programme" form, and its schedule round-trips;
+//   * the programme is listed under Programmes, and its enrollment screen
 //     opens from the card and resolves the programme (its title, not a bare
 //     id) — the screen credit gating lives on;
-//   * a coach sees the programme in Programs and its sessions in the staff
+//   * a coach sees the programme in Programmes and its sessions in the staff
 //     occurrence feed (Today / Club Calendar).
 //
 // Cleanup: the programme is soft-deleted via the master notifier (the create
@@ -63,7 +63,7 @@ void main() {
   }
 
   testWidgets(
-    'an admin creates a programme via the UI; staff reach it from Programs, '
+    'an admin creates a programme via the UI; staff reach it from Programmes, '
     'its enrollments and the occurrence feed',
     (tester) async {
       await tester.binding.setSurfaceSize(const Size(1600, 4000));
@@ -107,7 +107,7 @@ void main() {
         reason: 'the default start is the next whole hour',
       );
 
-      // ─── Phase 2: its enrollment screen opens from the Programs list ───
+      // ─── Phase 2: its enrollment screen opens from the Programmes list ───
       await navigateToEnrollmentManagementViaUi(
         tester,
         eventTitle: _kProgramme,
@@ -123,7 +123,7 @@ void main() {
       );
       await logout(tester);
 
-      // ─── Phase 3: a coach sees it in Programs and the occurrence feed ──
+      // ─── Phase 3: a coach sees it in Programmes and the occurrence feed ──
       await loginViaUi(tester, _kCoach, _kPwd);
       await go(tester, '/memberzone/events/programmes');
       await waitFor(
@@ -135,7 +135,7 @@ void main() {
             )
             .evaluate()
             .isNotEmpty,
-        description: "the programme on the coach's Programs list",
+        description: "the programme on the coach's Programmes list",
       );
       final key = (
         from: programme.startTimeUtc.subtract(const Duration(minutes: 1)),

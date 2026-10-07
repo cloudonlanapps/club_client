@@ -163,7 +163,7 @@ void main() {
       );
 
       await tapSectionPencil(tester, _sectionCard(_kEligibilityTitle));
-      setShadFormValues(tester, {EventFormFields.genderId: EventGender.female});
+      setShadFormValues(tester, {EventFormFields.genderId: EventGender.girls});
       await enterTextById(
         tester,
         AgeEligibilityFormFields.minAgeYearsId,

@@ -122,7 +122,7 @@ Future<void> _fill(WidgetTester tester) async {
 }
 
 Future<void> _create(WidgetTester tester) async {
-  await tester.tap(find.text('Create event'));
+  await tester.tap(find.text('Create one-off'));
   await tester.pumpAndSettle();
 }
 
@@ -133,8 +133,8 @@ void main() {
     ) async {
       await _pump(tester);
 
-      expect(find.text('New Event'), findsOneWidget);
-      expect(find.text('Create event'), findsOneWidget);
+      expect(find.text('New One-off'), findsOneWidget);
+      expect(find.text('Create one-off'), findsOneWidget);
       expect(
         find.descendant(
           of: find.byType(EventCreateForm),
@@ -166,7 +166,7 @@ void main() {
 
       expect(host.events.created, ['Open day']);
       expect(host.createdCalls, 1);
-      expect(find.text('Event "Open day" created.'), findsOneWidget);
+      expect(find.text('One-off "Open day" created.'), findsOneWidget);
     });
 
     testWidgets('Issue 54: a venue the server refuses shows on the venue and '
@@ -219,7 +219,7 @@ void main() {
       await _create(tester);
 
       expect(
-        find.text('Could not create event. Please try again.'),
+        find.text('Could not create one-off. Please try again.'),
         findsOneWidget,
       );
       expect(
@@ -234,7 +234,7 @@ void main() {
   });
 
   group('Issue 54: eventCreateRefusal', () {
-    const fallback = 'Could not create event. Please try again.';
+    const fallback = 'Could not create one-off. Please try again.';
 
     test('Issue 54: names the field a refusal is about', () {
       expect(

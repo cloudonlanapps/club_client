@@ -64,12 +64,12 @@ class NotFoundPage extends StatelessWidget {
     switch (key) {
       case 'program':
         return const NotFoundLabels(
-          pageTitle: 'Program Not Found',
-          title: 'Program Not Found',
+          pageTitle: 'Programme Not Found',
+          title: 'Programme Not Found',
           description:
-              "The program you're looking for doesn't exist or has been "
+              "The programme you're looking for doesn't exist or has been "
               'removed.',
-          buttonText: 'View All Programs',
+          buttonText: 'View All Programmes',
           buttonRoute: '/public/programs',
         );
       case 'camp':

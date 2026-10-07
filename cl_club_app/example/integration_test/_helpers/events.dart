@@ -33,13 +33,13 @@ import 'pump.dart';
       ),
       EventType.programme => (
         path: '/memberzone/events/programmes',
-        create: '+ New Program',
-        submit: 'Create program',
+        create: '+ New Programme',
+        submit: 'Create programme',
       ),
       EventType.oneOff => (
         path: '/memberzone/events/one-off',
-        create: '+ New Event',
-        submit: 'Create event',
+        create: '+ New One-off',
+        submit: 'Create one-off',
       ),
     };
 

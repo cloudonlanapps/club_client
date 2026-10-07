@@ -192,7 +192,7 @@ void main() {
           initialValues: {
             ...GroupCreateForm.emptyValues,
             GroupFormFields.modeId: GroupMode.auto,
-            GroupFormFields.genderId: GroupGender.female,
+            GroupFormFields.genderId: GroupGender.girls,
           },
         ),
       );

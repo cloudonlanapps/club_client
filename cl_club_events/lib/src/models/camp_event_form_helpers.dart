@@ -14,32 +14,16 @@ import 'package:club_sdk_2/club_sdk_2.dart'
 /// translation. Mirrors `user_form_helpers.dart` / `group_form_helpers.dart` /
 /// `venue_form_helpers.dart`.
 
-/// Form-local [EventGender] → SDK [Gender].
-Gender? _genderToSdk(EventGender? g) => switch (g) {
-  EventGender.male => Gender.male,
-  EventGender.female => Gender.female,
-  EventGender.other => Gender.other,
-  EventGender.preferNotToSay => Gender.preferNotToSay,
-  null => null,
-};
-
-/// SDK [Gender] → form-local [EventGender].
-EventGender? _genderToForm(Gender? g) => switch (g) {
-  Gender.male => EventGender.male,
-  Gender.female => EventGender.female,
-  Gender.other => EventGender.other,
-  Gender.preferNotToSay => EventGender.preferNotToSay,
-  null => null,
-};
-
 /// Builds initial form values from an existing [Event] (null = create
 /// defaults). Text fields normalize `null` → `''` and list fields → `const []`
-/// so each form's `isDirty` comparison works cleanly.
+/// so each form's `isDirty` comparison works cleanly. Gender is never null:
+/// an event with no gender criterion holds [EventGender.any].
 Map<String, dynamic> buildEventFormInitialValues(Event? event) {
   if (event == null) {
     return {
       EventFormFields.titleId: '',
       EventFormFields.descriptionId: '',
+      EventFormFields.genderId: EventGender.any,
       ...AgeEligibilityFormValues.initial(),
       EventFormFields.organizerNameId: '',
       EventFormFields.coachNamesId: const <String>[],
@@ -48,7 +32,7 @@ Map<String, dynamic> buildEventFormInitialValues(Event? event) {
   return {
     EventFormFields.titleId: event.title,
     EventFormFields.descriptionId: event.description,
-    EventFormFields.genderId: _genderToForm(event.gender),
+    EventFormFields.genderId: EventFormSubmit.genderToForm(event.gender),
     ...AgeEligibilityFormValues.initial(
       minAge: formAgeFromSdk(event.minAge),
       maxAge: formAgeFromSdk(event.maxAge),
@@ -68,6 +52,23 @@ Map<String, dynamic> buildEventFormInitialValues(Event? event) {
 /// are left out entirely (the notifier treats an absent value as "no change").
 class EventFormSubmit {
   const EventFormSubmit._();
+
+  /// The Gender entry an event's stored [gender] shows as: Boys for male,
+  /// Girls for female, Any for none. A criterion the field does not offer
+  /// (`other`, `preferNotToSay`, set through the API) shows as Any too.
+  static EventGender genderToForm(Gender? gender) => switch (gender) {
+    Gender.male => EventGender.boys,
+    Gender.female => EventGender.girls,
+    Gender.other || Gender.preferNotToSay || null => EventGender.any,
+  };
+
+  /// What the picked [gender] stores: male for Boys, female for Girls, and
+  /// `null` (no gender criterion) for Any.
+  static Gender? genderToSdk(EventGender gender) => switch (gender) {
+    EventGender.boys => Gender.male,
+    EventGender.girls => Gender.female,
+    EventGender.any => null,
+  };
 
   /// Rename (management section) — `title` is a direct field on the server.
   static Future<Event> updateTitle({
@@ -91,6 +92,11 @@ class EventFormSubmit {
   /// `strictAge`); no dates are sent, the server works the window out. An
   /// emptied age clears that bound.
   ///
+  /// The gender is sent only when the form's differs from the entry
+  /// [event]'s stored gender shows as ([genderToForm]): a stored criterion
+  /// the field does not offer, which shows as Any, is then kept by a save
+  /// that leaves Gender alone. A changed gender is sent, Any as `null`.
+  ///
   /// A programme's eligibility is a correction (`correctionOnEvent`); a
   /// camp's or one-off's goes through `updateEvent`. The server refuses the
   /// other verb for each type.
@@ -99,8 +105,10 @@ class EventFormSubmit {
     required Map<String, dynamic> values,
     required ClEventsMasterNotifier notifier,
   }) {
-    Gender? gender() =>
-        _genderToSdk(values[EventFormFields.genderId] as EventGender?);
+    final picked = EventGender.of(values);
+    final gender = picked == genderToForm(event.gender)
+        ? null
+        : () => genderToSdk(picked);
     Age? minAge() => sdkAgeFromForm(AgeEligibilityFormValues.minAge(values));
     Age? maxAge() => sdkAgeFromForm(AgeEligibilityFormValues.maxAge(values));
     final strictAge = AgeEligibilityFormValues.strictAge(values);

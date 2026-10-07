@@ -154,9 +154,9 @@ void main() {
       expect(
         {for (final type in EventFormType.values) type: type.label},
         {
-          EventFormType.programme: 'Program',
+          EventFormType.programme: 'Programme',
           EventFormType.camp: 'Camp',
-          EventFormType.oneOff: 'Event',
+          EventFormType.oneOff: 'One-off',
         },
       );
     });

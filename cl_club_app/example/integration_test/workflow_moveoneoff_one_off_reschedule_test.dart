@@ -10,7 +10,7 @@
 // ago.
 //
 // Steps (UI):
-//  1. The admin opens the upcoming one-off from the One-Off Events list and
+//  1. The admin opens the upcoming one-off from the One-off Events list and
 //     opens the Schedule block's editor: the one-off schedule form.
 //  2. They move it two days later and an hour later in the day, to the other
 //     venue, split into "Warm-up" (30 min) and "Match" (90 min), and save.
@@ -284,7 +284,7 @@ final Finder _scheduleCard = find.ancestor(
   matching: find.byType(ShadCard),
 );
 
-/// Opens the one-off titled [title] from the One-Off Events list, as an
+/// Opens the one-off titled [title] from the One-off Events list, as an
 /// admin does.
 Future<void> _openDetail(WidgetTester tester, {required String title}) async {
   await go(tester, '/memberzone/events/one-off');
@@ -294,7 +294,7 @@ Future<void> _openDetail(WidgetTester tester, {required String title}) async {
   await waitFor(
     tester,
     () => card.evaluate().isNotEmpty,
-    description: '"$title" on the One-Off Events list',
+    description: '"$title" on the One-off Events list',
   );
   tester.widget<EntityCard>(card.first).onTap!.call();
   await settle(tester);

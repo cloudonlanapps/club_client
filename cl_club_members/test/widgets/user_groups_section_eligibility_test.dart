@@ -8,8 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show AgeEligibilityText, NoLongerEligibleLabel;
+import 'package:ui_lib/ui_lib.dart' show NoLongerEligibleLabel;
 
 const _member = 'workflow_member';
 
@@ -121,7 +120,7 @@ void main() {
       expect(
         find.descendant(
           of: label,
-          matching: find.text(AgeEligibilityText.noLongerEligible),
+          matching: find.text(NoLongerEligibleLabel.text),
         ),
         findsOneWidget,
       );

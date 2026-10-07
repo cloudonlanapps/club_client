@@ -1,3 +1,5 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show AgeEligibilitySummary, GroupEligibilityForm, GroupEligibilityFormState;
 import 'package:cl_club_members/src/models/group_form_helpers.dart'
     show GroupFormSubmit, buildGroupFormInitialValues;
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -6,12 +8,7 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show
-        AgeEligibilitySummary,
-        EditableSectionCard,
-        GroupEligibilityForm,
-        GroupEligibilityFormState;
+import 'package:ui_lib/ui_lib.dart' show EditableSectionCard;
 
 /// Human-readable eligibility section for a group, edited in place.
 ///

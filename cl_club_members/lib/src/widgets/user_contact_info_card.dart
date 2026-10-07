@@ -1,3 +1,5 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show UserContactForm, UserContactFormState;
 import 'package:cl_club_members/src/models/user_form_helpers.dart'
     show UserFormSubmit, buildUserFormInitialValues;
 import 'package:cl_club_members/src/utils/apply_user_update.dart';
@@ -12,12 +14,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'package:ui_lib/ui_lib.dart'
-    show
-        EditableSectionCard,
-        EmailContact,
-        PhoneContact,
-        UserContactForm,
-        UserContactFormState;
+    show EditableSectionCard, EmailContact, PhoneContact;
 
 /// A member's contact section on their profile — username, email, phone,
 /// emergency contact, medical info. Edits in place; the username is shown but

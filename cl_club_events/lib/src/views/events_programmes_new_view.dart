@@ -1,6 +1,6 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show EventFormType;
 import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
 import 'package:flutter/widgets.dart';
-import 'package:ui_lib/ui_lib.dart' show EventFormType;
 
 import 'event_create_view.dart';
 

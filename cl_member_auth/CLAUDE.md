@@ -83,7 +83,7 @@ Views (`LoginView`, `SignupView`, `ForgotPasswordView`, `ChangePasswordView`) re
 | `ChangePasswordView` | `onSuccess()`, `onCancel()` | `onChangePassword(currentPassword, newPassword)` |
 | `ForgotPasswordView` | `onNavigateToLogin()` | `onResetPassword(email)` |
 
-The pure-UI forms behind these connected views live in `ui_lib` (`LoginForm`,
+The pure-UI forms behind these connected views live in `cl_club_forms` (`LoginForm`,
 `ChangePasswordForm`, `SignupForm`, `ForgotPasswordForm`) — SDK-free,
 callback-driven. The views here wire them to `authStateProvider` and translate
 SDK errors. Self-service password reset calls

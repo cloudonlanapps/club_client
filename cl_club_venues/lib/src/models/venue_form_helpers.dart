@@ -1,7 +1,8 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show LocationEditResult, VenueCreateForm;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClVenuesMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart' show Venue;
-import 'package:ui_lib/ui_lib.dart' show LocationEditResult, VenueCreateForm;
 
 /// SDK adapter for the venue create form — the one place that bridges the
 /// form's flat `Map<String, dynamic>` to the `cl_remote_store` create call.

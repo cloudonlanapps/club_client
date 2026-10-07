@@ -1,3 +1,8 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show GroupFormFields;
+import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_fields.dart'
+    show AgeEligibilityFields;
+import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
+    show AgeEligibilityFormFields;
 import 'package:cl_club_members/src/views/group_create_view.dart';
 import 'package:cl_club_members/src/widgets/group_eligibility_section.dart';
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -7,11 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/src/widgets/age_eligibility/age_eligibility_fields.dart'
-    show AgeEligibilityFields;
-import 'package:ui_lib/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
-    show AgeEligibilityFormFields;
-import 'package:ui_lib/ui_lib.dart' show GroupFormFields, SectionEditButton;
+import 'package:ui_lib/ui_lib.dart' show SectionEditButton;
 
 Group _group({
   GroupKind kind = GroupKind.semiAuto,

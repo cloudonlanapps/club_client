@@ -1,8 +1,8 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show AgeEligibilityFormValues, GroupFormFields, GroupGender, GroupMode;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClGroupsMasterNotifier, formAgeFromSdk, sdkAgeFromForm;
 import 'package:club_sdk_2/club_sdk_2.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show AgeEligibilityFormValues, GroupFormFields, GroupGender, GroupMode;
 
 /// SDK adapter for the group forms — the one place that bridges the forms'
 /// flat `Map<String, dynamic>` (keyed by `GroupFormFields`, with form-local

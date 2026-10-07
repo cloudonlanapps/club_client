@@ -24,8 +24,8 @@ submodule.
 `cl_calendar` and `cl_gallery_viewer` are not carried here. Both are git
 dependencies pinned by SHA, for the same reason; the workspace holds one
 checkout of each under `packages/`, and the commented `dependency_overrides`
-block in `cl_club_events`, `cl_club_website` and `ui_lib` points at it for
-local work.
+block in `cl_club_events`, `cl_club_forms`, `cl_club_website` and `ui_lib`
+points at it for local work.
 
 The SDK is not carried here either. The package `club_sdk_2` lives in the
 public repo `cloudonlanapps/club_sdk` (#65) and every package that uses it takes
@@ -148,7 +148,7 @@ Transfer show their form inside the view (`CreditActionForm.inPlace` in a
 statement, which return when the form closes. The view pushes no dialog and
 opens nothing when it mounts, so from a chip inside a dialog the deepest stack
 is that dialog and the sheet. `CreditActionForm` is the one connected host of
-the four `ui_lib` forms; `CreditActionDialog` hosts Add credit for the "+"
+the four `cl_club_forms` credit forms; `CreditActionDialog` hosts Add credit for the "+"
 chip only.
 
 Rules: actions credit forbids are greyed out up front — `ActionItem.reason`
@@ -183,7 +183,7 @@ the bundled block that `clubMain()` / `websiteMain()` load from
 the apps' shells and the website.
 
 A hardcoded club name, asset path or URL in any package here is a bug — it makes
-the package unusable for the other club. `ui_lib` additionally stays Riverpod-free
+the package unusable for the other club. `ui_lib` and `cl_club_forms` additionally stay Riverpod-free
 (see the form rules below), so widgets there take plain parameters and their
 provider-backed wrappers live in `cl_club_branding` or the feature packages.
 
@@ -427,7 +427,7 @@ own isolated server.
 
 6. **Set keyboard types on every text field.** Phone → `TextInputType.phone`, email → `emailAddress`, pincode → `number`, names → `name`, address → `streetAddress`. Small effort, big mobile UX impact.
 
-7. **Translate at the boundary, not in the form.** The form speaks flat UI fields and form-local value types. The SDK speaks typed domain models. An adapter layer bridges them — merging, assembling, denormalizing (`''` → `null`). The form never imports domain model classes for assembly. The shared forms in `ui_lib` are SDK-free precedents: `SignupForm` and `UserForm` both live in `ui_lib` (zero `club_sdk_2` dependency), expose form-local types (`SignupGender`, `FormAddress`), and leave SDK ↔ form adaptation to the caller (e.g. `cl_club_members` `user_form_helpers.dart`, `cl_member_auth` `signup_view.dart`).
+7. **Translate at the boundary, not in the form.** The form speaks flat UI fields and form-local value types. The SDK speaks typed domain models. An adapter layer bridges them — merging, assembling, denormalizing (`''` → `null`). The form never imports domain model classes for assembly. The shared forms in `cl_club_forms` are SDK-free precedents: `SignupForm` and `UserForm` both live in `cl_club_forms` (zero `club_sdk_2` dependency), expose form-local types (`SignupGender`, `FormAddress`), and leave SDK ↔ form adaptation to the caller (e.g. `cl_club_members` `user_form_helpers.dart`, `cl_member_auth` `signup_view.dart`).
 
 8. **isDirty from the framework.** Compare `ShadForm.initialValue` vs `ShadForm.value` using `mapEquals`. Normalize initial values (`null` → `''` for text fields) so comparison works cleanly.
 
@@ -447,12 +447,12 @@ own isolated server.
 
 16. **Self-contained feature folders may duplicate tiny generic helpers.** When a multi-file feature (e.g. `events_editor/event_schedule/`) only consumes a small generic helper such as `FormFieldLabel`, copying it into the feature folder is acceptable so the folder ships as a self-contained unit. The original stays at `widgets/` root for its other consumers — duplication only makes sense for small, stable helpers; promote to a shared location if it grows.
 
-17. **Every `ShadForm` lives in `ui_lib`; its dialog/screen lives in the feature package.** A form is a pure-UI widget — SDK-free, no Riverpod — that speaks flat form values and form-local types (`SignupGender`, `GroupMode`, `GroupGender`, `FormAddress`, …) and exposes its field-id constants. It never imports `club_sdk_2`. The consuming package hosts it: a connected view/screen wires providers + the SDK call, and any **dialog is built in the feature** (`showShadDialog` wrapping the form), never in `ui_lib`. This keeps a form reusable outside a dialog. Precedents: `SignupForm`/`SignupView`, `LoginForm`/`LoginView`, `ChangePasswordForm`/`ChangePasswordView`, plus the SDK-free `RenameForm`, `LocationEditForm`, `VenueCreateForm`, `GroupCreateForm`, `GroupEligibilityForm`, and the `UserPersonalDetailsForm`/`UserContactForm`/`UserAddressForm` section editors.
+17. **Every `ShadForm` lives in `cl_club_forms`; its dialog/screen lives in the feature package.** (Evaluation's four forms are the exception: they stay in `ui_lib` with the rest of evaluation's UI, whose models they share.) `cl_club_forms` and `ui_lib` do not depend on each other; a feature package uses both. A form is a pure-UI widget — SDK-free, no Riverpod — that speaks flat form values and form-local types (`SignupGender`, `GroupMode`, `GroupGender`, `FormAddress`, …) and exposes its field-id constants. It never imports `club_sdk_2`. The consuming package hosts it: a connected view/screen wires providers + the SDK call, and any **dialog is built in the feature** (`showShadDialog` wrapping the form), never in `cl_club_forms`. This keeps a form reusable outside a dialog. Precedents: `SignupForm`/`SignupView`, `LoginForm`/`LoginView`, `ChangePasswordForm`/`ChangePasswordView`, plus the SDK-free `RenameForm`, `LocationEditForm`, `VenueCreateForm`, `GroupCreateForm`, `GroupEligibilityForm`, and the `UserPersonalDetailsForm`/`UserContactForm`/`UserAddressForm` section editors.
 
 18. **One adapter per form, in the consuming package, with consistent names.** The SDK ↔ form boundary is a single adapter mirroring the form's flat `Map<String, dynamic>`:
     - `build<X>FormInitialValues(SdkModel?)` → `Map` — SDK → form (`null` = create defaults).
     - `<X>FormSubmit.create({values, notifier})` / `.update({values, …})` — form → SDK. Section editors get partial `update<Section>(...)` methods that send **only** their fields (others left untouched). Name the section method after the section it edits (`updatePersonalDetails`, `updateContact`, `updateAddress`, `updateEligibility`, `updateLocation`, …) — **even when an entity has exactly one editable section**, so the name reads as a partial and never collides with a full `update`.
-    - `<X>FormValidators` — pure validators, in `ui_lib` next to the form. A rename dialog reuses the same `<X>FormValidators.name`; do not re-implement the rule inline.
+    - `<X>FormValidators` — pure validators, in `cl_club_forms` next to the form. A rename dialog reuses the same `<X>FormValidators.name`; do not re-implement the rule inline.
     - **No exceptions for small forms.** Every section form routes through this adapter — there is no shortcut for a two-field form (e.g. `LocationEditForm`). The connected card must never call a notifier mutation directly; it goes through `<X>FormSubmit.update<Section>`.
     See `cl_club_members/lib/src/models/{user,group}_form_helpers.dart` and `cl_club_venues/lib/src/models/venue_form_helpers.dart`.
 
@@ -468,7 +468,7 @@ Editing an existing entity happens **section-by-section, inline, in place** — 
 
 1. **Use `EditableSectionCard<T>` for every structured section.** It is the canonical chrome (a titled `ShadCard`) and owns the read↔edit toggle, validation gating, no-op detection, and the in-flight saving state. The host supplies: read-mode content (`read`), the inline form (`editBuilder`, built only while editing so its `GlobalKey` attaches only in edit mode), `onValidate` (reads the form's state → partial value or `null`), `isDirty`, and `onSave(value) → Future<bool>`. `T` is the form's `validate()` return type (`Map<String, dynamic>` for the multi-field forms, `LocationEditResult`, …).
 
-2. **The form is the SDK-free `ui_lib` widget; the SDK call lives in the host.** `EditableSectionCard` and the section forms (`UserPersonalDetailsForm`, `UserContactForm`, `UserAddressForm`, `GroupEligibilityForm`, `LocationEditForm`, …) never import `club_sdk_2`. The connected card (a `ConsumerStatefulWidget` in the feature package — e.g. `PersonalDetailsCard`, `GroupEligibilitySection`, `VenueLocationCard`) holds the `GlobalKey`, calls the `update<Section>` adapter inside `onSave`, shows the toast, invalidates providers, and returns `true`/`false`. Returning `false` keeps the card in edit mode for a retry.
+2. **The form is the SDK-free `cl_club_forms` widget; the SDK call lives in the host.** `EditableSectionCard` (in `ui_lib`) and the section forms (`UserPersonalDetailsForm`, `UserContactForm`, `UserAddressForm`, `GroupEligibilityForm`, `LocationEditForm`, …) never import `club_sdk_2`. The connected card (a `ConsumerStatefulWidget` in the feature package — e.g. `PersonalDetailsCard`, `GroupEligibilitySection`, `VenueLocationCard`) holds the `GlobalKey`, calls the `update<Section>` adapter inside `onSave`, shows the toast, invalidates providers, and returns `true`/`false`. Returning `false` keeps the card in edit mode for a retry.
 
 3. **No-op via the form's `isDirty`.** Every section form exposes `bool get isDirty` (compare `ShadForm.initialValue`/seeded initial values vs current value, à la `UserForm`/`GroupCreateForm`). Wire it to `EditableSectionCard.isDirty`; an unmodified Save then just closes the editor without an SDK call (rule 20).
 

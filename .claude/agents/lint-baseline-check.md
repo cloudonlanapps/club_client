@@ -34,6 +34,7 @@ Top-level packages in this repository:
 - `app`
 - `cl_club_communication`
 - `cl_club_events`
+- `cl_club_forms`
 - `cl_club_members`
 - `cl_club_venues`
 - `cl_member_auth`

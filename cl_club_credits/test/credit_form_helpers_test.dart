@@ -1,9 +1,9 @@
 import 'package:cl_club_credits/src/models/credit_form_helpers.dart';
+import 'package:cl_club_forms/cl_club_forms.dart' show CreditFormFields;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clCreditAccountsMasterProvider;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show CreditFormFields;
 
 import 'support/credit_test_scope.dart';
 

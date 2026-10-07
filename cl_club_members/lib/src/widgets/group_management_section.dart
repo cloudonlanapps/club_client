@@ -1,8 +1,9 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show TwoColumnGrid;
 import 'package:cl_club_members/src/utils/admin_group_actions.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton, TwoColumnGrid;
+import 'package:ui_lib/ui_lib.dart' show ActionButton;
 
 class GroupManagementSection extends StatelessWidget {
   const GroupManagementSection({

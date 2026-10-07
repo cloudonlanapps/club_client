@@ -1,4 +1,4 @@
-/// Text of the identity-document uploader and the consent form.
+/// Text of the identity-document uploader.
 abstract final class IdentityDocumentsStrings {
   /// Label of the add card once a first image is there.
   static const String addBackSide = 'Add back side';
@@ -18,17 +18,4 @@ abstract final class IdentityDocumentsStrings {
 
   /// Stands in for a file with no name.
   static const String unnamedImage = 'Image';
-
-  /// The consent line, before the link.
-  static const String consentLead = 'I agree to the ';
-
-  /// The link in the consent line.
-  static const String consentLink = 'Privacy Policy';
-
-  /// The consent line, after the link.
-  static const String consentTail = '.';
-
-  /// Shown on the checkbox when the form is validated without it.
-  static const String consentRequired =
-      'Please agree to the Privacy Policy to continue.';
 }

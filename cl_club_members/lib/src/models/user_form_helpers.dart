@@ -1,8 +1,9 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show FormAddress, SignupGender, UserFormAssembly;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClUsersMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart' show Address, Gender, UserPrivate;
-import 'package:ui_lib/ui_lib.dart'
-    show FormAddress, PhoneNumber, SignupGender, UserFormAssembly;
+import 'package:ui_lib/ui_lib.dart' show PhoneNumber;
 
 /// Default password applied when an admin creates a user with the
 /// "Use default password" toggle on. Admins are expected to know this

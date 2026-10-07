@@ -1,9 +1,9 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show OccurrenceRescheduleFormFields, OneOffScheduleData;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadTimeOfDay;
-import 'package:ui_lib/ui_lib.dart'
-    show OccurrenceRescheduleFormFields, OneOffScheduleData;
 
 import 'stale_version_message.dart';
 

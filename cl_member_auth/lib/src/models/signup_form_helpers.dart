@@ -1,7 +1,8 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show SignupGender, SignupSubmitResult;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show AuthSource, Gender, SdkErrorCode, ServerException;
-import 'package:ui_lib/ui_lib.dart'
-    show PhoneNumber, SignupGender, SignupSubmitResult;
+import 'package:ui_lib/ui_lib.dart' show PhoneNumber;
 
 /// Form → SDK adapter for `SignupForm` (which lives SDK-free in `ui_lib`).
 abstract final class SignupFormSubmit {

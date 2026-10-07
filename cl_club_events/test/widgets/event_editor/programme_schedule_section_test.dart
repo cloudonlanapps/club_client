@@ -4,6 +4,11 @@ import 'package:cl_club_events/src/widgets/event_editor/event_schedule_section.d
 import 'package:cl_club_events/src/widgets/event_editor/programme_adjust_schedule_dialog.dart';
 import 'package:cl_club_events/src/widgets/event_editor/programme_schedule_actions.dart';
 import 'package:cl_club_events/src/widgets/event_editor/programme_schedule_read.dart';
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show
+        ProgrammeScheduleAdjustForm,
+        ProgrammeScheduleAdjustFormState,
+        ProgrammeScheduleData;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventSchedulesProvider, clEventsMasterProvider, clVenuesProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -11,11 +16,6 @@ import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show
-        ProgrammeScheduleAdjustForm,
-        ProgrammeScheduleAdjustFormState,
-        ProgrammeScheduleData;
 
 import '../../support/programme_fixtures.dart';
 import '../../support/recording_schedule_events.dart';

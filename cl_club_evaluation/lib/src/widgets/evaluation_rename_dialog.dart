@@ -1,6 +1,7 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show RenameForm, RenameFormState;
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show RenameForm, RenameFormState;
 
 import '../constants/evaluation_view_strings.dart';
 

@@ -8,6 +8,8 @@
 //   * waitForEvent / waitForVenueId — read the masters the mounted tree
 //     watches until the created row appears.
 
+import 'package:cl_club_forms/src/widgets/event_schedule/weekday_selector.dart'
+    show WeekdayChip;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider, clVenuesMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show Event, EventType;
@@ -15,8 +17,6 @@ import 'package:flutter/material.dart' show Icons;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/src/widgets/event_schedule/weekday_selector.dart'
-    show WeekdayChip;
 import 'package:ui_lib/ui_lib.dart' show ActionButton, ActionIcon;
 
 import 'auth.dart';

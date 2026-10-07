@@ -1,5 +1,7 @@
 import 'dart:typed_data' show Uint8List;
 
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show OrganizerCoachesEditor, OrganizerCoachesEditorState;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         clEventsMasterProvider,
@@ -18,14 +20,13 @@ import 'package:ui_lib/ui_lib.dart'
         EditableMarkdown,
         EditableSectionCard,
         ImageUploadAffordance,
-        OrganizerCoachesEditor,
-        OrganizerCoachesEditorState,
         PickedImage,
         PickerUser,
         pickImageReportingErrors,
         showUserSelectionDialog;
 
 import '../../models/camp_event_form_helpers.dart' show EventFormSubmit;
+import '../../models/event_staff_form_helpers.dart';
 import '../../utils/event_save_error.dart';
 import '../events_preview/cl_event_audit_info.dart';
 import '../events_preview/cl_event_enrolments_summary.dart';
@@ -404,12 +405,19 @@ class OrganizerCoachesSectionState
       ),
       editBuilder: () => OrganizerCoachesEditor(
         key: _editorKey,
-        initialOrganizer:
-            organizer ??
-            const PickerUser(username: '', displayName: 'Unassigned'),
-        initialCoaches: coaches,
-        onPickOrganizer: _pickOrganizer,
-        onPickCoaches: _pickCoaches,
+        initialOrganizer: eventStaffMemberOf(
+          organizer ??
+              const PickerUser(username: '', displayName: 'Unassigned'),
+        ),
+        initialCoaches: [for (final c in coaches) eventStaffMemberOf(c)],
+        onPickOrganizer: () async {
+          final picked = await _pickOrganizer();
+          return picked == null ? null : eventStaffMemberOf(picked);
+        },
+        onPickCoaches: (exclude) async {
+          final picked = await _pickCoaches(exclude);
+          return picked?.map(eventStaffMemberOf).toList();
+        },
       ),
       onValidate: () => _editorKey.currentState?.validate(),
       isDirty: () => _editorKey.currentState?.isDirty ?? false,

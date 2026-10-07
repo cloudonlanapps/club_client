@@ -1,3 +1,5 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show GroupCreateForm, GroupCreateFormState, GroupFormFields;
 import 'package:cl_club_members/src/models/group_form_helpers.dart';
 import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -6,13 +8,7 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show
-        ConfirmDialog,
-        GroupCreateForm,
-        GroupCreateFormState,
-        GroupFormFields,
-        TitleRow;
+import 'package:ui_lib/ui_lib.dart' show ConfirmDialog, TitleRow;
 
 /// Admin create-group content view. No Scaffold — the host provides the shell.
 class GroupCreateView extends ConsumerStatefulWidget {

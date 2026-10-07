@@ -1,3 +1,5 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show GroupFormValidators, RenameForm, RenameFormState;
 import 'package:cl_club_members/src/utils/group_hard_delete_error_message.dart';
 import 'package:cl_club_members/src/widgets/add_member_dialog.dart';
 import 'package:cl_club_members/src/widgets/group_eligibility_section.dart';
@@ -25,11 +27,8 @@ import 'package:ui_lib/ui_lib.dart'
         ConfirmDialog,
         CredentialedNetworkImage,
         EditableMarkdown,
-        GroupFormValidators,
         ImageUploadAffordance,
         LoadingView,
-        RenameForm,
-        RenameFormState,
         ThemedMarkdown,
         TitleRow,
         pickAndConfirmImage;

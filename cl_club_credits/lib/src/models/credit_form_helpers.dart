@@ -1,8 +1,9 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show CreditFormFields, CreditGrantForm;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClCreditAccountsMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show CreditAccount, CreditTransferResult;
-import 'package:ui_lib/ui_lib.dart' show CreditFormFields, CreditGrantForm;
 
 /// SDK ↔ credit form adapter (club_core#101): the forms speak flat values
 /// with local dates; the SDK takes UTC instants and typed arguments.

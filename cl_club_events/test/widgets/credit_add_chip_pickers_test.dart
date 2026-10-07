@@ -1,6 +1,8 @@
 import 'package:cl_club_credits/cl_club_credits.dart' show CreditView;
 import 'package:cl_club_events/src/widgets/assign_trial_dialog.dart';
 import 'package:cl_club_events/src/widgets/funded_user_selection_dialog.dart';
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show CreditFormFields, CreditGrantForm;
 import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:cl_remote_store/src/utils/bump_credits_version.dart';
@@ -11,8 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/src/widgets/user_selection_tile.dart'
     show UserSelectionTile;
-import 'package:ui_lib/ui_lib.dart'
-    show CreditCountChip, CreditFormFields, CreditGrantForm, PickerUser;
+import 'package:ui_lib/ui_lib.dart' show CreditCountChip, PickerUser;
 
 import '../support/credit_scope.dart';
 

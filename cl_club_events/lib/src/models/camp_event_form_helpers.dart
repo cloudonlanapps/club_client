@@ -1,9 +1,9 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show AgeEligibilityFormValues, EventFormFields, EventGender;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier, formAgeFromSdk, sdkAgeFromForm;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show Age, Event, EventType, Gender, Visibility;
-import 'package:ui_lib/ui_lib.dart'
-    show AgeEligibilityFormValues, EventFormFields, EventGender;
 
 /// SDK ↔ form adapter for the camp-event section editors — the one place that
 /// bridges the forms' flat `Map<String, dynamic>` (keyed by [EventFormFields],

@@ -25,6 +25,13 @@
 import 'package:cl_club_events/cl_club_events.dart' show EventDetailsView;
 import 'package:cl_club_events/src/models/one_off_schedule_form_helpers.dart'
     show oneOffStartedMessage;
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show
+        EventTimetableForm,
+        OneOffScheduleData,
+        OneOffScheduleForm,
+        OneOffScheduleFormState,
+        SessionInput;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart'
@@ -35,14 +42,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show
-        EntityCard,
-        EventTimetableForm,
-        OneOffScheduleData,
-        OneOffScheduleForm,
-        OneOffScheduleFormState,
-        SessionInput;
+import 'package:ui_lib/ui_lib.dart' show EntityCard;
 
 import '_helpers/auth.dart';
 import '_helpers/editors.dart';

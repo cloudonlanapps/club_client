@@ -212,21 +212,6 @@ void main() {
   });
 
   group('Issue 173: server refusals inline on the name forms', () {
-    testWidgets('Issue 173: RenameForm shows an error the host sets', (
-      tester,
-    ) async {
-      final key = GlobalKey<RenameFormState>();
-      await tester.pumpWidget(
-        wrapEvaluation(
-          RenameForm(key: key, initialValue: 'Skating', label: 'Name'),
-        ),
-      );
-      await tester.pumpAndSettle();
-      key.currentState!.setError('Name taken.');
-      await tester.pump();
-      expect(find.text('Name taken.'), findsOneWidget);
-    });
-
     testWidgets('Issue 173: the template create form shows a name error the '
         'host sets', (tester) async {
       final key = GlobalKey<EvaluationTemplateCreateFormState>();

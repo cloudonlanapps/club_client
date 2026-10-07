@@ -1,7 +1,8 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show SignupGender;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClUsersMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart' show Gender, UserPrivate;
-import 'package:ui_lib/ui_lib.dart' show PhoneNumber, SignupGender;
+import 'package:ui_lib/ui_lib.dart' show PhoneNumber;
 
 /// Form → SDK adapter for the reapply form (`SignupForm`, which lives
 /// SDK-free in `ui_lib`).

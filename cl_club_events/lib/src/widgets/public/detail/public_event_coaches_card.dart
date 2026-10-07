@@ -23,8 +23,7 @@ class PublicEventCoachesCard extends StatelessWidget {
   /// Carried over from the site as it was (#53). It is one club's copy in a
   /// club-neutral package, and moves to the host's strings when this package
   /// is localised.
-  static const String noCoachesText =
-      'Coaches to be announced';
+  static const String noCoachesText = 'Coaches to be announced';
 
   final PublicEventView event;
   final EventDetailCoachLabels labels;

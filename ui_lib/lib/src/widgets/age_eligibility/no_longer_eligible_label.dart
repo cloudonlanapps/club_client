@@ -2,10 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 
 import '../status_badge.dart';
-import 'age_eligibility_text.dart';
 
 /// The one mark for a member the server reports as no longer meeting an
-/// event's or a group's criteria: [AgeEligibilityText.noLongerEligible] in a
+/// event's or a group's criteria: [NoLongerEligibleLabel.text] in a
 /// thin outline, with no colour of its own.
 ///
 /// Every list that marks such a member mounts this, so the mark looks the
@@ -14,10 +13,13 @@ import 'age_eligibility_text.dart';
 class NoLongerEligibleLabel extends StatelessWidget {
   const NoLongerEligibleLabel({super.key});
 
+  /// What the mark says.
+  static const String text = 'No longer eligible';
+
   @override
   Widget build(BuildContext context) {
     return const StatusBadge(
-      label: AgeEligibilityText.noLongerEligible,
+      label: text,
       icon: LucideIcons.userX,
     );
   }

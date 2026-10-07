@@ -1,6 +1,6 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show SessionInput;
 import 'package:club_sdk_2/club_sdk_2.dart' show EventSession;
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadTimeOfDay;
-import 'package:ui_lib/ui_lib.dart' show SessionInput;
 
 /// SDK ↔ form translation of an occurrence's named sessions, shared by the
 /// camp schedule editor and the timetable editor.

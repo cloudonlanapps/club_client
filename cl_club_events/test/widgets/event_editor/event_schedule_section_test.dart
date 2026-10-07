@@ -1,6 +1,13 @@
 import 'package:cl_club_events/src/models/camp_schedule_form_helpers.dart'
     show campStartedMessage;
 import 'package:cl_club_events/src/widgets/event_editor/event_schedule_section.dart';
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show
+        CampScheduleForm,
+        EventTimetableForm,
+        EventTimetableFormState,
+        EventTimetableFormValidators,
+        SessionInput;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         ClEventsMasterNotifier,
@@ -12,14 +19,7 @@ import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show
-        CampScheduleForm,
-        EventTimetableForm,
-        EventTimetableFormState,
-        EventTimetableFormValidators,
-        SectionEditButton,
-        SessionInput;
+import 'package:ui_lib/ui_lib.dart' show SectionEditButton;
 
 Event _event(EventType type, {required DateTime startUtc}) => Event(
   id: 1,

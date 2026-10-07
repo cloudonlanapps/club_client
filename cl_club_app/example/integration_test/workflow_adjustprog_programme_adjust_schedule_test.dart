@@ -30,6 +30,11 @@ import 'package:cl_club_events/src/widgets/event_editor/programme_schedule_actio
     show ProgrammeScheduleActions;
 import 'package:cl_club_events/src/widgets/event_editor/programme_schedule_read.dart'
     show programmeNextScheduleLine;
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show
+        ProgrammeScheduleAdjustForm,
+        ProgrammeScheduleAdjustFormState,
+        ProgrammeScheduleData;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show Event, EventType, Gender, SecureClient, Visibility;
 import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
@@ -37,12 +42,7 @@ import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show
-        EntityCard,
-        ProgrammeScheduleAdjustForm,
-        ProgrammeScheduleAdjustFormState,
-        ProgrammeScheduleData;
+import 'package:ui_lib/ui_lib.dart' show EntityCard;
 
 import '_helpers/auth.dart';
 import '_helpers/forms.dart';

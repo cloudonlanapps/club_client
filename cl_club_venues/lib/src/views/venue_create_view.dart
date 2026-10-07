@@ -1,9 +1,10 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show VenueCreateForm, VenueCreateFormState;
 import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show TitleRow, VenueCreateForm, VenueCreateFormState;
+import 'package:ui_lib/ui_lib.dart' show TitleRow;
 
 import '../models/venue_form_helpers.dart';
 import '../utils/venue_write_messages.dart';

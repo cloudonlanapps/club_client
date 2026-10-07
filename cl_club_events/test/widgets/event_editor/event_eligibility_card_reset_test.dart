@@ -1,4 +1,6 @@
 import 'package:cl_club_events/src/widgets/event_editor/event_eligibility_card.dart';
+import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
+    show AgeEligibilityFormFields;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier, clEventsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -6,8 +8,6 @@ import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
-    show AgeEligibilityFormFields;
 import 'package:ui_lib/ui_lib.dart' show SectionEditButton;
 
 Event _event({

@@ -1,11 +1,12 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show EventEligibilityForm, EventEligibilityFormState;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show Event;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show EditableSectionCard, EventEligibilityForm, EventEligibilityFormState;
+import 'package:ui_lib/ui_lib.dart' show EditableSectionCard;
 
 import '../../models/camp_event_form_helpers.dart'
     show EventFormSubmit, buildEventFormInitialValues;

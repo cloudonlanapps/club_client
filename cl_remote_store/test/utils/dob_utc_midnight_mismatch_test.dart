@@ -10,10 +10,10 @@
 // passed through the form submit floor, must satisfy the eligibility check
 // at both inclusive boundaries — and fail one day outside either.
 
+import 'package:cl_club_forms/cl_club_forms.dart' show UserFormAssembly;
 import 'package:cl_remote_store/src/utils/event_eligibility.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show UserFormAssembly;
 
 Event _ageWindow({
   required DateTime dobOnOrAfterUtc,

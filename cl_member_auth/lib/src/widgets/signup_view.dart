@@ -1,8 +1,8 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show SignupForm;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show defaultCountryCodeProvider, identityVerificationProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ui_lib/ui_lib.dart' show SignupForm;
 
 import '../models/signup_form_helpers.dart';
 import '../providers/client.dart';

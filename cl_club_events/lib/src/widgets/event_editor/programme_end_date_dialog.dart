@@ -1,11 +1,11 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show ProgrammeEndDateForm, ProgrammeEndDateFormState;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show ProgrammeEndDateForm, ProgrammeEndDateFormState;
 
 import '../../models/programme_schedule_form_helpers.dart';
 import '../../utils/programme_end_date.dart';

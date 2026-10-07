@@ -1,7 +1,7 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show SignupGender;
 import 'package:cl_member_auth/src/models/signup_form_helpers.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show SignupGender;
 
 /// Records the phone a registration carried, or refuses it with [refusal].
 class _RecordingAuth extends Fake implements AuthSource {

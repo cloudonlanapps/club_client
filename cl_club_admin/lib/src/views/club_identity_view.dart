@@ -1,11 +1,12 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show ClubIdentityForm, ClubIdentityFormState;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clClubIdentityMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show ClubIdentity, UserPrivate;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show ClubIdentityForm, ClubIdentityFormState, LoadingView, TitleRow;
+import 'package:ui_lib/ui_lib.dart' show LoadingView, TitleRow;
 
 import '../models/club_identity_form_helpers.dart';
 import '../widgets/club_identity_save_bar.dart';

@@ -1,10 +1,11 @@
 import 'package:cl_club_credits/cl_club_credits.dart';
 import 'package:cl_club_credits/src/widgets/credit_action_dialog.dart';
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show CreditFormFields, CreditGrantForm;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show CreditCountChip, CreditFormFields, CreditGrantForm;
+import 'package:ui_lib/ui_lib.dart' show CreditCountChip;
 
 import 'support/credit_test_scope.dart';
 

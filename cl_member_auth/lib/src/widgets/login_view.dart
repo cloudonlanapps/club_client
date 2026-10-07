@@ -1,10 +1,10 @@
 import 'dart:developer' as developer;
 
+import 'package:cl_club_forms/cl_club_forms.dart' show LoginForm;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show LoginForm;
 
 import '../providers/auth.dart';
 import '../utils/login_error_messages.dart';

@@ -33,6 +33,8 @@ import 'package:cl_club_events/src/widgets/event_editor/programme_end_date_dialo
     show ProgrammeEndDateDialog;
 import 'package:cl_club_events/src/widgets/event_editor/programme_schedule_actions.dart'
     show ProgrammeScheduleActions;
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show ProgrammeEndDateForm, ProgrammeEndDateFormState;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show
         Event,
@@ -47,8 +49,7 @@ import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show EntityCard, ProgrammeEndDateForm, ProgrammeEndDateFormState;
+import 'package:ui_lib/ui_lib.dart' show EntityCard;
 
 import '_helpers/auth.dart';
 import '_helpers/forms.dart';

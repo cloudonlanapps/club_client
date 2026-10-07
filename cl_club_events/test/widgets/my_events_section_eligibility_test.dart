@@ -9,8 +9,7 @@ import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show AgeEligibilityText, NoLongerEligibleLabel;
+import 'package:ui_lib/ui_lib.dart' show NoLongerEligibleLabel;
 
 /// The Events section of a member's profile as staff see it marks the
 /// events the member no longer matches (club_client#43); a member's own
@@ -162,7 +161,7 @@ void main() {
       expect(
         find.descendant(
           of: label,
-          matching: find.text(AgeEligibilityText.noLongerEligible),
+          matching: find.text(NoLongerEligibleLabel.text),
         ),
         findsOneWidget,
       );

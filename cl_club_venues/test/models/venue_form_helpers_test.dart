@@ -1,7 +1,7 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show VenueCreateForm;
 import 'package:cl_club_venues/src/models/venue_form_helpers.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show VenueCreateForm;
 
 void main() {
   group('buildVenueFormInitialValues', () {

@@ -18,6 +18,10 @@
 //   just app-test-one app_test_server1.conf \
 //       workflow_grp_group_management_test.dart
 
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show AgeEligibilityText, GroupGender, GroupMode;
+import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
+    show AgeEligibilityFormFields;
 import 'package:cl_club_members/src/models/group_list_filter.dart'
     show GroupListFilter, GroupTypeFilter;
 import 'package:cl_club_members/src/providers/group_list_filter.dart'
@@ -36,15 +40,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
-    show AgeEligibilityFormFields;
 import 'package:ui_lib/ui_lib.dart'
-    show
-        ActionButton,
-        AgeEligibilityText,
-        GroupGender,
-        GroupMode,
-        UserSelectionDialogContent;
+    show ActionButton, NoLongerEligibleLabel, UserSelectionDialogContent;
 
 import '_helpers/audit_log.dart';
 import '_helpers/auth.dart';
@@ -314,7 +311,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.text(AgeEligibilityText.noLongerEligible),
+        find.text(NoLongerEligibleLabel.text),
         findsNothing,
         reason: 'A is inside the band',
       );
@@ -330,13 +327,10 @@ void main() {
       await _backToGroupListAndOpen(tester, _kGroupSemi);
       await waitFor(
         tester,
-        () => find
-            .text(AgeEligibilityText.noLongerEligible)
-            .evaluate()
-            .isNotEmpty,
+        () => find.text(NoLongerEligibleLabel.text).evaluate().isNotEmpty,
         description: 'member A to be marked as no longer eligible',
       );
-      expect(find.text(AgeEligibilityText.noLongerEligible), findsOneWidget);
+      expect(find.text(NoLongerEligibleLabel.text), findsOneWidget);
       expect(find.text('1 member no longer eligible'), findsOneWidget);
       await sudo.users.updateUser(
         _kMemberA,
@@ -348,7 +342,7 @@ void main() {
         tester,
         () =>
             find.text('@$_kMemberA').evaluate().isNotEmpty &&
-            find.text(AgeEligibilityText.noLongerEligible).evaluate().isEmpty,
+            find.text(NoLongerEligibleLabel.text).evaluate().isEmpty,
         description: 'member A to be listed without the mark again',
       );
       expect(find.textContaining('no longer eligible'), findsNothing);

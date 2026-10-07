@@ -1,17 +1,17 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show
+        EventCreateForm,
+        EventCreateFormState,
+        EventFormType,
+        EventFormTypeLabel,
+        EventVenueOption;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider, clVenuesProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show Venue;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show
-        EventCreateForm,
-        EventCreateFormState,
-        EventFormType,
-        EventFormTypeLabel,
-        EventVenueOption,
-        TitleRow;
+import 'package:ui_lib/ui_lib.dart' show TitleRow;
 
 import '../models/event_create_form_helpers.dart';
 

@@ -1,12 +1,12 @@
 import 'package:cl_club_events/src/models/camp_event_form_helpers.dart';
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show AgeEligibilityFormValues, EventFormFields, EventGender, FormAge;
+import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
+    show AgeEligibilityFormFields;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
-    show AgeEligibilityFormFields;
-import 'package:ui_lib/ui_lib.dart'
-    show AgeEligibilityFormValues, EventFormFields, EventGender, FormAge;
 
 Event _event({
   EventType type = EventType.camp,

@@ -1,8 +1,8 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show ChangePasswordForm;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ChangePasswordForm;
 
 import '../providers/auth.dart';
 

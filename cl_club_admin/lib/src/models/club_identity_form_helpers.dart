@@ -9,11 +9,12 @@
 /// to the deployment's name).
 library;
 
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show ClubIdentityForm, FormTranslatedText;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClClubIdentityMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show ClubContactDetails, ClubIdentity, LocalizedText;
-import 'package:ui_lib/ui_lib.dart' show ClubIdentityForm, FormTranslatedText;
 
 /// Builds the form's initial values from [identity] (empty when `null`).
 Map<String, dynamic> buildClubIdentityFormInitialValues(

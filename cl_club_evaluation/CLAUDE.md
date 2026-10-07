@@ -93,10 +93,11 @@ lib/src/
 
 ## Rules this package keeps
 
-- **Forms live in `ui_lib`** (form rule 17): `EvaluationItemForm`,
-  `EvaluationTemplateCreateForm`, `EvaluationLayoutEditor`,
-  `EvaluationFillBody`, `EvaluationReadBody`, `EvaluationStartForm`,
-  `EvaluationPeriodForm`, `RenameForm`. The dialogs hosting them are here.
+- **Evaluation's pure UI lives in `ui_lib`** (the exception in form rule
+  17): `EvaluationItemForm`, `EvaluationTemplateCreateForm`,
+  `EvaluationLayoutEditor`, `EvaluationFillBody`, `EvaluationReadBody`,
+  `EvaluationStartForm`, `EvaluationPeriodForm`. `RenameForm` comes from
+  `cl_club_forms`. The dialogs hosting them are here.
 - **A copy keeps its origin's answer domain.** The item form derives choice
   values from labels; `EvaluationItemAdapter.keepOrigin` puts the origin's
   values back by position (and remaps the coach-note rule), so relabelling a

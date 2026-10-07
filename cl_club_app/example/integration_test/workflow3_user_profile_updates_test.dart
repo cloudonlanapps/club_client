@@ -51,6 +51,7 @@
 //     --dart-define=SUDO_USERNAME=sudo
 
 import 'package:cl_club_app/cl_club_app.dart';
+import 'package:cl_club_forms/cl_club_forms.dart' show SignupGender;
 import 'package:cl_club_members/src/views/user_profile_view.dart'
     show AddressCard, PersonalDetailsCard;
 import 'package:cl_club_members/src/widgets/user_contact_info_card.dart';
@@ -65,12 +66,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
-    show
-        ActionButton,
-        PickedImage,
-        ReadOnlyField,
-        SectionEditButton,
-        SignupGender;
+    show ActionButton, PickedImage, ReadOnlyField, SectionEditButton;
 
 import '_helpers/capabilities.dart';
 import '_helpers/pump.dart' show pumpApp;

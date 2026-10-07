@@ -21,7 +21,7 @@ a screen in `cl_member_zone` at a route the `cl_club_app` router defines.
 - **`ClubIdentityView`** (club_core#20) — the club's name, short name,
   inquiry email and public contact block (the `club_info` preference the
   website and the server's email branding and inquiry routing read), as
-  one `ClubIdentityForm` (ui_lib). Translatable fields take a default and
+  one `ClubIdentityForm` (cl_club_forms). Translatable fields take a default and
   optional per-language texts; languages are added by code. Save writes
   the whole document in one call, over the master's read so keys the form
   does not edit survive; `club_identity_form_helpers.dart` is the form ↔

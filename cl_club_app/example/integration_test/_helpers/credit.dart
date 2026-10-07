@@ -25,6 +25,8 @@ import 'package:cl_club_credits/src/widgets/credit_action_panel.dart'
 import 'package:cl_club_credits/src/widgets/credit_chip.dart' show CreditChip;
 import 'package:cl_club_credits/src/widgets/credit_entry_row.dart'
     show CreditEntryRow;
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show CreditFormFields, CreditGrantForm;
 import 'package:cl_club_members/src/widgets/profile_credit_line.dart'
     show ProfileCreditLine;
 import 'package:club_sdk_2/club_sdk_2.dart' show CreditAccount;
@@ -33,8 +35,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/src/widgets/user_selection_tile.dart'
     show UserSelectionTile;
-import 'package:ui_lib/ui_lib.dart'
-    show CreditCountChip, CreditFormFields, CreditGrantForm;
+import 'package:ui_lib/ui_lib.dart' show CreditCountChip;
 
 import 'auth.dart';
 import 'forms.dart';

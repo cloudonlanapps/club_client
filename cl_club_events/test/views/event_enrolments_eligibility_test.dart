@@ -10,7 +10,7 @@ import 'package:cl_remote_store/cl_remote_store.dart'
         clUsersMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show AgeEligibilityText;
+import 'package:ui_lib/ui_lib.dart' show NoLongerEligibleLabel;
 
 import '../support/credit_scope.dart';
 
@@ -80,7 +80,7 @@ Finder _tile(String username) => find.byWidgetPredicate(
 
 Finder _markIn(String username) => find.descendant(
   of: _tile(username),
-  matching: find.text(AgeEligibilityText.noLongerEligible),
+  matching: find.text(NoLongerEligibleLabel.text),
 );
 
 void main() {
@@ -101,7 +101,7 @@ void main() {
 
       expect(_tile(_matching), findsOneWidget);
       expect(_markIn(_matching), findsNothing);
-      expect(find.text(AgeEligibilityText.noLongerEligible), findsOneWidget);
+      expect(find.text(NoLongerEligibleLabel.text), findsOneWidget);
     });
 
     testWidgets('Issue 42: nobody is marked while the records are not known', (
@@ -110,7 +110,7 @@ void main() {
       await _pump(tester, _NoRecords.new);
 
       expect(_tile(_outgrown), findsOneWidget);
-      expect(find.text(AgeEligibilityText.noLongerEligible), findsNothing);
+      expect(find.text(NoLongerEligibleLabel.text), findsNothing);
     });
 
     testWidgets('Issue 42: the marked member keeps the admin actions', (

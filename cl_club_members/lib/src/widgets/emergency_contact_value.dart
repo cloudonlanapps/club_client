@@ -1,7 +1,7 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show UserFormAssembly;
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show PhoneContact, PhoneNumber, UserFormAssembly;
+import 'package:ui_lib/ui_lib.dart' show PhoneContact, PhoneNumber;
 
 /// A member's emergency contact on their profile.
 ///

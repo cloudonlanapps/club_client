@@ -1,3 +1,4 @@
+import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:cl_member_auth/cl_member_auth.dart';
 import 'package:cl_member_onboarding/src/models/identity_documents_submit_strings.dart';
 import 'package:cl_member_onboarding/src/widgets/identity_documents_submit_body.dart';

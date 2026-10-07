@@ -4,7 +4,6 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'admin_user_review_form_screen.dart';
 import 'evaluation_screen.dart';
 import 'identity_documents_screen.dart';
-import 'signup_form_screen.dart';
 
 class _NavEntry {
   const _NavEntry({required this.title, required this.builder});
@@ -16,17 +15,13 @@ class _NavEntry {
 const List<_NavEntry> _navEntries = [
   _NavEntry(title: 'Identity documents', builder: _identityDocsBuilder),
   _NavEntry(title: 'Admin user review form', builder: _adminUserReviewBuilder),
-  _NavEntry(title: 'Signup form', builder: _signupBuilder),
   _NavEntry(title: 'Evaluation forms', builder: _evaluationBuilder),
-  // Future forms slot in here.
 ];
 
 Widget _identityDocsBuilder(BuildContext _) => const IdentityDocumentsScreen();
 
 Widget _adminUserReviewBuilder(BuildContext _) =>
     const AdminUserReviewFormScreen();
-
-Widget _signupBuilder(BuildContext _) => const SignupFormScreen();
 
 Widget _evaluationBuilder(BuildContext _) => const SingleChildScrollView(
   padding: EdgeInsets.all(16),

@@ -1,3 +1,4 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show UserForm, UserFormState;
 import 'package:cl_club_members/src/models/user_form_helpers.dart';
 import 'package:cl_club_members/src/widgets/default_password_dialog.dart';
 import 'package:cl_member_auth/cl_member_auth.dart'
@@ -8,8 +9,7 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart'
-    show ConfirmDialog, TitleRow, UserForm, UserFormState;
+import 'package:ui_lib/ui_lib.dart' show ConfirmDialog, TitleRow;
 
 import '../utils/member_write_messages.dart';
 

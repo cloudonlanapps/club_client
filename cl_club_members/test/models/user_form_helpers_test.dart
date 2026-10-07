@@ -1,9 +1,9 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show SignupGender;
 import 'package:cl_club_members/src/models/user_form_helpers.dart';
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClUsersMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show SignupGender;
 
 /// Records the phone and emergency contact the adapter sends.
 class _RecordingNotifier extends ClUsersMasterNotifier {

@@ -1,9 +1,10 @@
 import 'package:cl_club_events/src/models/event_timetable_form_helpers.dart';
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show EventTimetableValue, SessionInput;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show EventTimetableValue, SessionInput;
 
 Event _event(EventType type, {List<EventSession>? sessions}) => Event(
   id: 1,

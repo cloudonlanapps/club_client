@@ -62,13 +62,6 @@ void main() {
   });
 
   group('Issue 50: the barrel exports only what other packages use', () {
-    test('Issue 50: the unused weekdayNames constant is gone', () {
-      final source = File(
-        'lib/src/widgets/event_schedule/weekday_selector.dart',
-      ).readAsStringSync();
-      expect(source, isNot(contains('weekdayNames ')));
-    });
-
     test('Issue 50: every export names what it exports', () {
       final exports = _barrelExports();
       expect(exports, isNotEmpty);

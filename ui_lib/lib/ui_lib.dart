@@ -101,10 +101,10 @@ export 'src/widgets/credit/credit_transfer_form.dart'
 export 'src/widgets/date_day_label.dart' show DateDayLabel;
 export 'src/widgets/detail_row.dart' show DetailRow;
 export 'src/widgets/error_view.dart' show ErrorTone, ErrorView;
-export 'src/widgets/evaluation/fill/evaluation_fill_form.dart'
-    show EvaluationFillForm, EvaluationFillFormState;
-export 'src/widgets/evaluation/fill/evaluation_fill_form_fields.dart'
-    show EvaluationFillFormFields;
+export 'src/widgets/evaluation/fill/evaluation_fill_body.dart'
+    show EvaluationFillBody, EvaluationFillBodyState;
+export 'src/widgets/evaluation/fill/evaluation_fill_fields.dart'
+    show EvaluationFillFields;
 export 'src/widgets/evaluation/inputs/evaluation_answer_input.dart'
     show EvaluationAnswerInput;
 export 'src/widgets/evaluation/item_form/evaluation_item_form.dart'

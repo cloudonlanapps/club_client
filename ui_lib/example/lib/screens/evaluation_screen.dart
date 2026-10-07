@@ -80,7 +80,7 @@ const _sample = [
 
 class _EvaluationScreenState extends State<EvaluationScreen> {
   final _createKey = GlobalKey<EvaluationTemplateCreateFormState>();
-  final _fillKey = GlobalKey<EvaluationFillFormState>();
+  final _fillKey = GlobalKey<EvaluationFillBodyState>();
   final _answers = <int, EvaluationAnswerValue>{};
   String _status = '';
 
@@ -195,7 +195,7 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              EvaluationFillForm(
+              EvaluationFillBody(
                 key: _fillKey,
                 layout: _sample,
                 initialAnswers: _answers,

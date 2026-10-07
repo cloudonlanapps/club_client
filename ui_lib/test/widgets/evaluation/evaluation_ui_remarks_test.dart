@@ -133,7 +133,7 @@ void main() {
       await tallSurface(tester);
       await tester.pumpWidget(
         wrapEvaluation(
-          EvaluationFillForm(
+          EvaluationFillBody(
             layout: const [
               EvaluationLayoutEntry.item(yesNoItem),
               EvaluationLayoutEntry.item(_privateQa),
@@ -197,7 +197,7 @@ void main() {
       await tallSurface(tester);
       await tester.pumpWidget(
         wrapEvaluation(
-          EvaluationFillForm(
+          EvaluationFillBody(
             layout: _closingLayout,
             initialAnswers: const {},
             onAnswerChanged: (_, _) {},

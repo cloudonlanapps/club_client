@@ -7,7 +7,7 @@ import 'evaluation_test_helpers.dart';
 class _Host {
   final changes = <(int, EvaluationAnswerValue)>[];
   final evidenceFor = <int>[];
-  final key = GlobalKey<EvaluationFillFormState>();
+  final key = GlobalKey<EvaluationFillBodyState>();
 
   Future<void> pump(
     WidgetTester tester, {
@@ -18,7 +18,7 @@ class _Host {
     await tallSurface(tester);
     await tester.pumpWidget(
       wrapEvaluation(
-        EvaluationFillForm(
+        EvaluationFillBody(
           key: key,
           layout: sampleLayout,
           initialAnswers: answers,
@@ -37,7 +37,7 @@ class _Host {
 }
 
 void main() {
-  group('Issue 173: EvaluationFillForm', () {
+  group('Issue 173: EvaluationFillBody', () {
     testWidgets('Issue 173: renders sections, questions and info text', (
       tester,
     ) async {

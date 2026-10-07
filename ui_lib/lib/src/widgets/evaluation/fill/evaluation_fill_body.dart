@@ -8,28 +8,30 @@ import '../../../utils/evaluation_answer_rules.dart';
 import '../common/evaluation_layout_view.dart';
 import '../common/evaluation_markdown_text.dart';
 import '../common/evaluation_private_shade.dart';
-import 'evaluation_fill_form_fields.dart';
+import 'evaluation_fill_fields.dart';
 import 'evaluation_question_form_field.dart';
 
-/// Pure-UI form filling an evaluation against its template's [layout] (no
-/// SDK, no Riverpod). Sections show as titled cards; each question is one
-/// ShadForm field (keyed by [EvaluationFillFormFields.idFor]) with its answer
+/// Fills an evaluation against its template's [layout] (pure UI: no SDK,
+/// no Riverpod). Not a form in the sense of the form rules: nothing is
+/// collected and submitted together, each answer is reported as it changes
+/// and the host saves it at once. Sections show as titled cards; each question is one
+/// ShadForm field (keyed by [EvaluationFillFields.idFor]) with its answer
 /// input, a coach note where the item shows a comment area, and the host's
 /// [evidenceBuilder] slot where the item allows evidence.
 ///
-/// The form owns the answers once seeded with [initialAnswers]; every change
-/// is reported through [onAnswerChanged] so the host can autosave (give the
-/// form a new key to reload). A draft may have gaps: the host calls
-/// [EvaluationFillFormState.validateForSave] only before saving — or, with
+/// The widget owns the answers once seeded with [initialAnswers]; every
+/// change is reported through [onAnswerChanged] so the host can autosave
+/// (give the widget a new key to reload). A draft may have gaps: the host calls
+/// [EvaluationFillBodyState.validateForSave] only before saving — or, with
 /// [validateOnOpen], at once too, so a reopened draft shows its gaps (each
 /// clears as it is filled). [readOnly] shows a saved or published
 /// evaluation without inputs that respond, its private items greyed (what
-/// the member will not see); an editable form shows them normally. The run
+/// the member will not see); an editable one shows them normally. The run
 /// of Q & A items closing the layout shows last, outside any section, in
 /// one untitled card. Every item in [layout] must carry its id.
-class EvaluationFillForm extends StatefulWidget {
+class EvaluationFillBody extends StatefulWidget {
   /// Fills [layout], seeded with [initialAnswers] keyed by item id.
-  const EvaluationFillForm({
+  const EvaluationFillBody({
     required this.layout,
     required this.initialAnswers,
     required this.onAnswerChanged,
@@ -59,11 +61,12 @@ class EvaluationFillForm extends StatefulWidget {
   final bool validateOnOpen;
 
   @override
-  State<EvaluationFillForm> createState() => EvaluationFillFormState();
+  State<EvaluationFillBody> createState() => EvaluationFillBodyState();
 }
 
-/// State of [EvaluationFillForm]: the form holding every answer.
-class EvaluationFillFormState extends State<EvaluationFillForm> {
+/// State of [EvaluationFillBody]: holds every answer, in a `ShadForm` so
+/// each question can show what still blocks saving.
+class EvaluationFillBodyState extends State<EvaluationFillBody> {
   /// The form.
   final GlobalKey<ShadFormState> formKey = GlobalKey<ShadFormState>();
 
@@ -74,7 +77,7 @@ class EvaluationFillFormState extends State<EvaluationFillForm> {
       for (final item in EvaluationLayoutEntry.flatten(widget.layout))
         if (item.kind.isQuestion)
           item.id!:
-              values[EvaluationFillFormFields.idFor(item.id!)]
+              values[EvaluationFillFields.idFor(item.id!)]
                   as EvaluationAnswerValue? ??
               const EvaluationAnswerValue(),
     };
@@ -117,7 +120,7 @@ class EvaluationFillFormState extends State<EvaluationFillForm> {
   void markIncomplete(Iterable<int> itemIds) {
     final fields = formKey.currentState?.fields ?? const {};
     for (final id in itemIds) {
-      fields[EvaluationFillFormFields.idFor(id)]?.setError(
+      fields[EvaluationFillFields.idFor(id)]?.setError(
         EvaluationStrings.incomplete,
       );
     }
@@ -130,7 +133,7 @@ class EvaluationFillFormState extends State<EvaluationFillForm> {
       key: formKey,
       initialValue: {
         for (final MapEntry(:key, :value) in widget.initialAnswers.entries)
-          EvaluationFillFormFields.idFor(key): value,
+          EvaluationFillFields.idFor(key): value,
       },
       child: EvaluationLayoutView(
         layout: widget.layout,

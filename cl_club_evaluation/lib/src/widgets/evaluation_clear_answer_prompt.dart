@@ -4,8 +4,8 @@ import 'package:ui_lib/ui_lib.dart'
     show
         ConfirmDialog,
         EvaluationAnswerValue,
-        EvaluationFillFormFields,
-        EvaluationFillFormState,
+        EvaluationFillBodyState,
+        EvaluationFillFields,
         EvaluationItemValue;
 
 import '../constants/evaluation_view_strings.dart';
@@ -19,7 +19,7 @@ import '../models/evaluation_answer_submit.dart';
 /// closed) such a write is skipped.
 Future<bool> confirmClearAnswer(
   BuildContext? context, {
-  required EvaluationFillFormState? fill,
+  required EvaluationFillBodyState? fill,
   required EvaluationStaffView evaluation,
   required EvaluationItemValue item,
   required EvaluationAnswerValue answer,
@@ -42,7 +42,7 @@ Future<bool> confirmClearAnswer(
   if (!clear) {
     final saved = evaluation.answerFor(item.id!);
     fill?.formKey.currentState?.setFieldValue<EvaluationAnswerValue>(
-      EvaluationFillFormFields.idFor(item.id!),
+      EvaluationFillFields.idFor(item.id!),
       saved == null
           ? const EvaluationAnswerValue()
           : EvaluationAnswerAdapter.toValue(saved),

@@ -84,7 +84,7 @@ Future<void> createVenueViaUi(
   if (mapUri != null) await enterTextById(tester, 'mapUri', mapUri);
 
   // The "Create venue" button lives outside the ShadForm (the create-view
-  // wires it up via venueFormKey.currentState?.handleSubmit()), so we
+  // owns it and validates the form through its key), so we
   // can't reach it through submitFormContaining. Tapping by label is
   // unambiguous on this screen.
   final submit = find.widgetWithText(ShadButton, 'Create venue');

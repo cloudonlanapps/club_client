@@ -19,7 +19,9 @@ void main() {
 
     // Field shows the initial value (not blank).
     expect(find.text('U12 Boys'), findsOneWidget);
-    expect(key.currentState!.validate(), 'U12 Boys');
+    expect(key.currentState!.validate(), {
+      RenameFormFields.valueId: 'U12 Boys',
+    });
   });
 
   testWidgets('default validator rejects empty input', (tester) async {
@@ -62,7 +64,9 @@ void main() {
       _wrap(RenameForm(key: key, initialValue: 'Skating', label: 'Name')),
     );
     await tester.pumpAndSettle();
-    key.currentState!.setError('Name taken.');
+    key.currentState!.showErrors(
+      fieldErrors: {RenameFormFields.valueId: 'Name taken.'},
+    );
     await tester.pump();
     expect(find.text('Name taken.'), findsOneWidget);
   });

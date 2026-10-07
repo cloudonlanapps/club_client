@@ -1,3 +1,5 @@
+import '../age_eligibility/age_eligibility_form_validators.dart';
+import '../age_eligibility/age_eligibility_form_values.dart';
 import '../common_form_validators.dart';
 import 'group_form_fields.dart';
 
@@ -20,5 +22,25 @@ class GroupFormValidators {
           '${mode.label.toLowerCase()} group.';
     }
     return null;
+  }
+
+  /// Cross-field rule of the whole eligibility block, shared by the create
+  /// form and the eligibility editor: the age band is valid, and a
+  /// criteria-driven mode has at least one criterion. Returns the message to
+  /// show inline, or `null` when [values] are valid.
+  ///
+  /// A manual group has no criteria, so its hidden age inputs are not
+  /// checked.
+  static String? eligibility(Map<String, dynamic> values) {
+    final mode =
+        values[GroupFormFields.modeId] as GroupMode? ?? GroupMode.manual;
+    if (!mode.usesCriteria) return null;
+    final gender = values[GroupFormFields.genderId] as GroupGender?;
+    return AgeEligibilityFormValidators.band(values) ??
+        criteriaForMode(
+          mode,
+          hasAnyCriterion:
+              AgeEligibilityFormValues.hasAgeBound(values) || gender != null,
+        );
   }
 }

@@ -112,8 +112,11 @@ export 'src/widgets/group_form/group_form_validators.dart'
 // The privacy consent a member gives with their identity documents
 export 'src/widgets/identity_documents/identity_documents_consent_form.dart'
     show IdentityDocumentsConsentForm, IdentityDocumentsConsentFormState;
-export 'src/widgets/location_edit_form.dart'
-    show LocationEditForm, LocationEditFormState, LocationEditResult;
+// Location section editor: an address and a map link
+export 'src/widgets/location_edit/location_edit_form.dart'
+    show LocationEditForm, LocationEditFormState;
+export 'src/widgets/location_edit/location_edit_form_fields.dart'
+    show LocationEditFormFields;
 export 'src/widgets/login_form.dart' show LoginForm;
 // Occurrence reschedule form (pure UI, no SDK / no Riverpod). Reuses the
 // one-off schedule field + a venue select; the host adapter diffs against the
@@ -122,7 +125,9 @@ export 'src/widgets/occurrence_reschedule/occurrence_reschedule_form.dart'
     show OccurrenceRescheduleForm, OccurrenceRescheduleFormState;
 export 'src/widgets/occurrence_reschedule/occurrence_reschedule_form_fields.dart'
     show OccurrenceRescheduleFormFields;
-export 'src/widgets/rename_form.dart' show RenameForm, RenameFormState;
+// The single-text form behind every rename dialog
+export 'src/widgets/rename/rename_form.dart' show RenameForm, RenameFormState;
+export 'src/widgets/rename/rename_form_fields.dart' show RenameFormFields;
 // Signup form (pure UI, no SDK / no Riverpod)
 export 'src/widgets/signup/signup_form.dart'
     show SignupForm, SignupGender, SignupSubmitResult;
@@ -141,5 +146,6 @@ export 'src/widgets/user_form/user_personal_details_form.dart'
 // Venue create form (pure UI, no SDK / no Riverpod)
 export 'src/widgets/venue_form/venue_create_form.dart'
     show VenueCreateForm, VenueCreateFormState;
+export 'src/widgets/venue_form/venue_form_fields.dart' show VenueFormFields;
 export 'src/widgets/venue_form/venue_form_validators.dart'
     show VenueFormValidators;

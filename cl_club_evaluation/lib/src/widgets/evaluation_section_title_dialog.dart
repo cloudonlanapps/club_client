@@ -1,22 +1,24 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show RenameForm, RenameFormState;
+    show RenameForm, RenameFormFields, RenameFormState;
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show ConfirmDialog, EvaluationOutlineEdit;
 
 import '../constants/evaluation_view_strings.dart';
 
-/// Asks for a section's title in a dialog hosting the ui_lib `RenameForm`
-/// (`null` [title] for a new section). Resolves to the trimmed title, to a
-/// delete — offered for an existing section, asked first; its items stay,
-/// outside any section — or to `null` when cancelled or unchanged.
+/// Asks for a section's title in a dialog hosting the cl_club_forms
+/// `RenameForm` (`null` [title] for a new section). Resolves to the trimmed
+/// title, to a delete — offered for an existing section, asked first; its
+/// items stay, outside any section — or to `null` when cancelled or
+/// unchanged.
 Future<EvaluationOutlineEdit<String>?> showEvaluationSectionTitleDialog(
   BuildContext context,
   String? title,
 ) {
   final formKey = GlobalKey<RenameFormState>();
   void save(BuildContext dialogContext) {
-    final value = formKey.currentState?.validate();
+    final value =
+        formKey.currentState?.validate()?[RenameFormFields.valueId] as String?;
     if (value == null) return;
     Navigator.of(
       dialogContext,

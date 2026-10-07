@@ -1,22 +1,25 @@
-import 'package:flutter/foundation.dart' show mapEquals;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import 'group_create_form.dart' show groupEligibilityError;
+import '../form/form_body.dart';
+import '../form/form_contract.dart';
 import 'group_eligibility_fields.dart';
 import 'group_form_fields.dart';
+import 'group_form_validators.dart';
 
 /// Pure-UI editor for a group's membership mode + eligibility criteria.
 ///
-/// Wraps the shared [GroupEligibilityFields] in its own `ShadForm`. Host-
-/// agnostic: a caller (e.g. `cl_club_members`) embeds it in a dialog and drives
-/// it through a `GlobalKey<GroupEligibilityFormState>`, calling
-/// [GroupEligibilityFormState.validate] from the Save action.
+/// Wraps the shared [GroupEligibilityFields] in its own `ShadForm`. The form
+/// owns no buttons: a caller (e.g. `cl_club_members`) embeds it in a section
+/// card and drives it through a `GlobalKey<GroupEligibilityFormState>` —
+/// `validate()` from its Save action, `showErrors()` with what the server
+/// refuses ([FormContract]).
 class GroupEligibilityForm extends StatefulWidget {
   const GroupEligibilityForm({
     required this.initialValues,
     this.criteriaLocked = false,
     this.onChanged,
+    this.enabled = true,
     super.key,
   });
 
@@ -31,6 +34,9 @@ class GroupEligibilityForm extends StatefulWidget {
   /// can re-read [GroupEligibilityFormState.hasValue].
   final VoidCallback? onChanged;
 
+  /// Whether the fields respond; the host turns it off while it saves.
+  final bool enabled;
+
   /// Whether [values] hold any criterion of a criteria-driven mode.
   static bool holdsValue(Map<String, dynamic> values) =>
       GroupEligibilityFields.holdsValue(values);
@@ -39,23 +45,13 @@ class GroupEligibilityForm extends StatefulWidget {
   State<GroupEligibilityForm> createState() => GroupEligibilityFormState();
 }
 
-class GroupEligibilityFormState extends State<GroupEligibilityForm> {
-  final formKey = GlobalKey<ShadFormState>();
-  String? _formError;
-
-  /// Validates (including cross-field checks). Returns the form values when
-  /// valid, else `null` (and surfaces an inline error).
-  Map<String, dynamic>? validate() {
-    final form = formKey.currentState;
-    if (form == null || !form.saveAndValidate()) return null;
-    final values = form.value;
-    final error = groupEligibilityError(values);
-    if (error != null) {
-      setState(() => _formError = error);
-      return null;
-    }
-    return values;
-  }
+/// State of [GroupEligibilityForm]. Its values are the mode, the gender and
+/// the age cluster's entries, as the fields hold them.
+class GroupEligibilityFormState extends State<GroupEligibilityForm>
+    with FormContract<GroupEligibilityForm> {
+  @override
+  String? crossFieldError(Map<String, dynamic> values) =>
+      GroupFormValidators.eligibility(values);
 
   /// Whether the form holds criteria a [reset] would empty. Never while the
   /// criteria are locked.
@@ -73,20 +69,11 @@ class GroupEligibilityFormState extends State<GroupEligibilityForm> {
     final form = formKey.currentState;
     if (form == null || widget.criteriaLocked) return;
     GroupEligibilityFields.reset(form);
-    if (_formError != null) setState(() => _formError = null);
-  }
-
-  /// Whether any field differs from the initial values the form was seeded
-  /// with. Mirrors `UserForm`/`GroupCreateForm`'s framework-driven check.
-  bool get isDirty {
-    final form = formKey.currentState;
-    if (form == null) return false;
-    return !mapEquals(form.initialValue, form.value);
+    setFormError(null);
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
     final initialMode =
         widget.initialValues[GroupFormFields.modeId] as GroupMode? ??
         GroupMode.manual;
@@ -95,23 +82,14 @@ class GroupEligibilityFormState extends State<GroupEligibilityForm> {
       key: formKey,
       initialValue: widget.initialValues,
       onChanged: widget.onChanged,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
+      child: FormBody(
+        error: formError,
         children: [
           GroupEligibilityFields(
             initialMode: initialMode,
             criteriaLocked: widget.criteriaLocked,
+            enabled: widget.enabled,
           ),
-          if (_formError != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              _formError!,
-              style: theme.textTheme.small.copyWith(
-                color: theme.colorScheme.destructive,
-              ),
-            ),
-          ],
         ],
       ),
     );

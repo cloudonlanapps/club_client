@@ -1,5 +1,5 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show EventFormValidators, RenameForm, RenameFormState;
+    show EventFormValidators, RenameForm, RenameFormFields, RenameFormState;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
@@ -14,7 +14,9 @@ Future<String?> showEventRenameDialog(
     context: context,
     builder: (dialogContext) {
       void save() {
-        final value = formKey.currentState?.validate();
+        final value =
+            formKey.currentState?.validate()?[RenameFormFields.valueId]
+                as String?;
         if (value == null) return;
         Navigator.of(
           dialogContext,

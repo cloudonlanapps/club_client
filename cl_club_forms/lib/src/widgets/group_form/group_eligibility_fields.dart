@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../constants/form_spacing.dart';
 import '../../constants/form_strings.dart';
 import '../age_eligibility/age_eligibility_fields.dart';
 import '../age_eligibility/age_eligibility_form_values.dart';
+import '../form/labeled_form_row.dart';
 import 'group_form_fields.dart';
+import 'group_membership_heading.dart';
 
 /// Shared eligibility field cluster — a [GroupMode] selector plus the age
-/// band ([AgeEligibilityFields]) and gender criteria. **Internal to ui_lib**
-/// (not exported): it is the reusable body embedded by both
+/// band ([AgeEligibilityFields]) and gender criteria. **Internal to
+/// cl_club_forms** (not exported): it is the reusable body embedded by both
 /// `GroupCreateForm` and `GroupEligibilityForm`, each under its own
 /// `ShadForm`.
 ///
@@ -26,14 +29,25 @@ class GroupEligibilityFields extends StatefulWidget {
     required this.initialMode,
     this.criteriaLocked = false,
     this.showReset = false,
+    this.enabled = true,
     super.key,
   });
 
+  /// The mode the selector starts on.
   final GroupMode initialMode;
+
+  /// Whether the mode and the criteria are read-only because the group
+  /// already has members.
   final bool criteriaLocked;
 
   /// Whether the cluster shows its own Reset action.
   final bool showReset;
+
+  /// Whether the fields respond; false while the host saves.
+  final bool enabled;
+
+  /// Heading of the criteria group.
+  static const String criteriaTitle = 'Eligibility criteria';
 
   /// Whether [values] hold any criterion of a criteria-driven mode: a
   /// gender, an age or a ticked Strict age check. A Manual group holds none.
@@ -59,13 +73,16 @@ class GroupEligibilityFields extends StatefulWidget {
   State<GroupEligibilityFields> createState() => GroupEligibilityFieldsState();
 }
 
+/// State of [GroupEligibilityFields]: the mode the selector shows, which
+/// decides whether the criteria group is mounted.
 class GroupEligibilityFieldsState extends State<GroupEligibilityFields> {
-  late GroupMode _mode = widget.initialMode;
+  /// The mode currently selected.
+  late GroupMode mode = widget.initialMode;
 
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    final criteriaEnabled = _mode.usesCriteria && !widget.criteriaLocked;
+    final editable = widget.enabled && !widget.criteriaLocked;
     final form = ShadForm.of(context);
     final resettable =
         widget.showReset &&
@@ -74,61 +91,71 @@ class GroupEligibilityFieldsState extends State<GroupEligibilityFields> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      spacing: FormSpacing.sectionGap,
       children: [
-        Text('Membership', style: theme.textTheme.h4),
-        const SizedBox(height: 4),
-        Text(
-          widget.criteriaLocked
-              ? 'Mode cannot be changed — the group already has members.'
-              : 'Manual: add members by hand. Semi-auto / Auto: members are '
-                    'matched from the criteria below.',
-          style: theme.textTheme.muted,
-        ),
-        const SizedBox(height: 12),
-        ShadSelectFormField<GroupMode>(
-          id: GroupFormFields.modeId,
-          initialValue: widget.initialMode,
-          enabled: !widget.criteriaLocked,
-          label: const Text('Mode'),
-          options: [
-            for (final m in GroupMode.values)
-              ShadOption(value: m, child: Text(m.label)),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          spacing: FormSpacing.rowGap,
+          children: [
+            GroupMembershipHeading(criteriaLocked: widget.criteriaLocked),
+            LabeledFormRow(
+              label: 'Mode',
+              field: ShadSelectFormField<GroupMode>(
+                id: GroupFormFields.modeId,
+                initialValue: widget.initialMode,
+                enabled: editable,
+                options: [
+                  for (final m in GroupMode.values)
+                    ShadOption(value: m, child: Text(m.label)),
+                ],
+                selectedOptionBuilder: (context, value) => Text(value.label),
+                onChanged: (value) {
+                  if (value != null && value != mode) {
+                    setState(() => mode = value);
+                  }
+                },
+              ),
+            ),
           ],
-          selectedOptionBuilder: (context, value) => Text(value.label),
-          onChanged: (value) {
-            if (value != null && value != _mode) {
-              setState(() => _mode = value);
-            }
-          },
         ),
-        if (_mode.usesCriteria) ...[
-          const SizedBox(height: 16),
-          Text('Eligibility criteria', style: theme.textTheme.small),
-          const SizedBox(height: 8),
-          AgeEligibilityFields(enabled: criteriaEnabled),
-          const SizedBox(height: 12),
-          ShadSelectFormField<GroupGender>(
-            id: GroupFormFields.genderId,
-            label: const Text('Gender'),
-            placeholder: const Text('Any gender'),
-            enabled: criteriaEnabled,
-            options: [
-              for (final g in GroupGender.values)
-                ShadOption(value: g, child: Text(g.label)),
+        if (mode.usesCriteria)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            spacing: FormSpacing.rowGap,
+            children: [
+              Text(
+                GroupEligibilityFields.criteriaTitle,
+                style: theme.textTheme.small,
+              ),
+              AgeEligibilityFields(enabled: editable),
+              LabeledFormRow(
+                label: 'Gender',
+                field: ShadSelectFormField<GroupGender>(
+                  id: GroupFormFields.genderId,
+                  placeholder: const Text('Any gender'),
+                  enabled: editable,
+                  options: [
+                    for (final g in GroupGender.values)
+                      ShadOption(value: g, child: Text(g.label)),
+                  ],
+                  selectedOptionBuilder: (context, value) => Text(value.label),
+                ),
+              ),
             ],
-            selectedOptionBuilder: (context, value) => Text(value.label),
           ),
-        ],
-        if (resettable) ...[
-          const SizedBox(height: 12),
+        if (resettable)
           Align(
             alignment: Alignment.centerRight,
             child: ShadButton.outline(
-              onPressed: () => GroupEligibilityFields.reset(form),
+              onPressed: widget.enabled
+                  ? () => GroupEligibilityFields.reset(form)
+                  : null,
               child: const Text(FormStrings.reset),
             ),
           ),
-        ],
       ],
     );
   }

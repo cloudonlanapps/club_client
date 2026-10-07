@@ -7,8 +7,8 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 /// SDK adapter for the group forms — the one place that bridges the forms'
 /// flat `Map<String, dynamic>` (keyed by `GroupFormFields`, with form-local
 /// `GroupMode` / `GroupGender` values) to the `cl_remote_store` create/update
-/// calls. The form widgets in `ui_lib` are SDK-free; this helper owns the
-/// translation. Mirrors `user_form_helpers.dart` / `venue_form_helpers.dart`.
+/// calls. The form widgets in `cl_club_forms` are SDK-free; this helper owns
+/// the translation. Mirrors `user_form_helpers.dart` / `venue_form_helpers.dart`.
 
 /// SDK [Gender] → form-local [GroupGender].
 GroupGender? _genderToForm(Gender? g) => switch (g) {
@@ -72,6 +72,7 @@ Map<String, dynamic> buildGroupFormInitialValues(Group? group) {
       GroupFormFields.nameId: '',
       GroupFormFields.descriptionId: '',
       GroupFormFields.modeId: GroupMode.manual,
+      GroupFormFields.genderId: null,
       GroupFormFields.addMeId: false,
       ...AgeEligibilityFormValues.initial(),
     };
@@ -89,9 +90,74 @@ Map<String, dynamic> buildGroupFormInitialValues(Group? group) {
   };
 }
 
-/// Bridges group form values to the SDK create/update calls.
+/// What a refused write says to a group form, in the shape of the form's
+/// `showErrors`: a message per field id, and the form-level message.
+typedef GroupFormRefusal = ({
+  Map<String, String> fieldErrors,
+  String? formError,
+});
+
+/// Bridges group form values to the SDK create/update calls, and the
+/// server's refusals back to the forms.
 class GroupFormSubmit {
   const GroupFormSubmit._();
+
+  /// Shown inline when the server refuses a minimum age above the maximum.
+  static const String invertedBandMessage =
+      'Minimum age must not be greater than maximum age.';
+
+  /// Shown on the mode when the server refuses a switch to auto while the
+  /// group has members.
+  static const String membersExistMessage =
+      'This group still has members. Remove them before switching to auto.';
+
+  /// What the create form shows for [error], or `null` when the refusal
+  /// names nothing the form holds (the host then reports a failed create).
+  static GroupFormRefusal? createRefusal(Object error) {
+    if (error is! ServerException) return null;
+    return switch (error.code) {
+      SdkErrorCode.invalidState => (
+        fieldErrors: const {},
+        formError: invertedBandMessage,
+      ),
+      _ => null,
+    };
+  }
+
+  /// What the eligibility editor shows for [error], or `null` when the
+  /// refusal names nothing the form holds (the host then reports a failed
+  /// save).
+  static GroupFormRefusal? eligibilityRefusal(Object error) {
+    if (error is! ServerException) return null;
+    return switch (error.code) {
+      SdkErrorCode.membersExist => (
+        fieldErrors: const {GroupFormFields.modeId: membersExistMessage},
+        formError: null,
+      ),
+      SdkErrorCode.membersIneligible => (
+        fieldErrors: const {},
+        formError: membersIneligibleMessage(error),
+      ),
+      SdkErrorCode.invalidState => (
+        fieldErrors: const {},
+        formError: invertedBandMessage,
+      ),
+      _ => null,
+    };
+  }
+
+  /// Names the members the new criteria would leave out, from the refusal's
+  /// `membernames`.
+  static String membersIneligibleMessage(ServerException error) {
+    final names =
+        (error.details?['membernames'] as List?)
+            ?.map((n) => n.toString())
+            .toList() ??
+        const <String>[];
+    final namesText = names.isEmpty ? 'some members' : names.join(', ');
+    return "These members don't meet the new criteria: $namesText. "
+        'Remove or update them, then retry.';
+  }
 
   /// Create a new group from the create form's values.
   static Future<Group> create({

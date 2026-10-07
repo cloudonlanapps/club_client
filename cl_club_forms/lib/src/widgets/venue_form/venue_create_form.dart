@@ -1,143 +1,130 @@
-import 'package:flutter/foundation.dart' show mapEquals;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../constants/form_spacing.dart';
+import '../form/form_body.dart';
+import '../form/form_contract.dart';
+import '../form/labeled_form_row.dart';
+import 'venue_form_fields.dart';
 import 'venue_form_validators.dart';
 
 /// Pure-UI venue creation form (no SDK / no Riverpod).
 ///
-/// Speaks flat form values: the caller supplies [initialValues] and receives a
-/// `Map<String, dynamic>` on submit, which its adapter translates to the SDK
-/// create call. Field IDs are exposed as constants so the adapter can read the
-/// returned map without string literals.
+/// Speaks flat form values keyed by [VenueFormFields]: the caller supplies
+/// [initialValues] and its adapter translates what `validate()` returns to
+/// the SDK create call.
+///
+/// The form owns no title or buttons: the host drives it through a
+/// `GlobalKey<VenueCreateFormState>` — `validate()` from its Create action,
+/// `isDirty` for the discard prompt, `showErrors()` with what the server
+/// refuses ([FormContract]).
 ///
 /// Create-only by design — venues are edited section-by-section on the venue
 /// profile, never through a full edit form.
 class VenueCreateForm extends StatefulWidget {
   const VenueCreateForm({
-    required this.onSubmit,
     this.initialValues,
-    this.isSubmitting = false,
+    this.enabled = true,
     super.key,
   });
-
-  /// Called with the flat form values when validation passes.
-  final Future<void> Function(Map<String, dynamic> values) onSubmit;
 
   /// Optional starting values; defaults to empty fields with toggles off.
   final Map<String, dynamic>? initialValues;
 
-  final bool isSubmitting;
-
-  // Field IDs — referenced by the caller's adapter.
-  static const String nameId = 'name';
-  static const String addressId = 'address';
-  static const String descriptionId = 'description';
-  static const String mapUriId = 'mapUri';
-  static const String isDefaultId = 'isDefault';
-  static const String isFeaturedId = 'isFeatured';
+  /// Whether the fields respond; the host turns it off while it saves.
+  final bool enabled;
 
   /// Default form values for a fresh venue.
   static Map<String, dynamic> get emptyValues => {
-    nameId: '',
-    addressId: '',
-    descriptionId: '',
-    mapUriId: '',
-    isDefaultId: false,
-    isFeaturedId: false,
+    VenueFormFields.nameId: '',
+    VenueFormFields.addressId: '',
+    VenueFormFields.descriptionId: '',
+    VenueFormFields.mapUriId: '',
+    VenueFormFields.isDefaultId: false,
+    VenueFormFields.isFeaturedId: false,
   };
 
   @override
   State<VenueCreateForm> createState() => VenueCreateFormState();
 }
 
-class VenueCreateFormState extends State<VenueCreateForm> {
-  final formKey = GlobalKey<ShadFormState>();
-
-  Map<String, dynamic> get _initial =>
+/// State of [VenueCreateForm]. Its values are the six [VenueFormFields]
+/// entries as the fields hold them.
+class VenueCreateFormState extends State<VenueCreateForm>
+    with FormContract<VenueCreateForm> {
+  /// What the form starts with.
+  Map<String, dynamic> get initialValues =>
       widget.initialValues ?? VenueCreateForm.emptyValues;
-
-  bool get isDirty {
-    formKey.currentState?.save();
-    final current = formKey.currentState?.value ?? {};
-    final initial = formKey.currentState?.initialValue ?? {};
-    return !mapEquals(_normalize(initial), _normalize(current));
-  }
-
-  Map<String, dynamic> _normalize(Map<String, dynamic> map) {
-    return map.map((key, value) {
-      if (value is String && value.trim().isEmpty) return MapEntry(key, null);
-      return MapEntry(key, value);
-    });
-  }
-
-  Future<void> handleSubmit() async {
-    final form = formKey.currentState;
-    if (form == null || !form.saveAndValidate()) return;
-    await widget.onSubmit(form.value);
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
+    final initial = initialValues;
     return ShadForm(
       key: formKey,
-      initialValue: _initial,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      initialValue: initial,
+      child: FormBody(
+        error: formError,
         children: [
-          ShadInputFormField(
-            id: VenueCreateForm.nameId,
-            label: const Text('Venue name'),
-            keyboardType: TextInputType.name,
-            autocorrect: false,
-            enableSuggestions: false,
-            enabled: !widget.isSubmitting,
-            validator: VenueFormValidators.name,
+          LabeledFormRow(
+            label: 'Venue name',
+            required: true,
+            field: ShadInputFormField(
+              id: VenueFormFields.nameId,
+              keyboardType: TextInputType.name,
+              autocorrect: false,
+              enableSuggestions: false,
+              enabled: widget.enabled,
+              validator: VenueFormValidators.name,
+            ),
           ),
-          const SizedBox(height: 12),
-          ShadInputFormField(
-            id: VenueCreateForm.addressId,
-            label: const Text('Address'),
-            keyboardType: TextInputType.streetAddress,
-            enabled: !widget.isSubmitting,
+          LabeledFormRow(
+            label: 'Address',
+            field: ShadInputFormField(
+              id: VenueFormFields.addressId,
+              keyboardType: TextInputType.streetAddress,
+              enabled: widget.enabled,
+            ),
           ),
-          const SizedBox(height: 12),
-          ShadInputFormField(
-            id: VenueCreateForm.descriptionId,
-            label: const Text('Description'),
-            keyboardType: TextInputType.multiline,
-            minLines: 2,
-            maxLines: 4,
-            enabled: !widget.isSubmitting,
+          LabeledFormRow(
+            label: 'Description',
+            field: ShadInputFormField(
+              id: VenueFormFields.descriptionId,
+              keyboardType: TextInputType.multiline,
+              minLines: 2,
+              maxLines: 4,
+              enabled: widget.enabled,
+            ),
           ),
-          const SizedBox(height: 12),
-          ShadInputFormField(
-            id: VenueCreateForm.mapUriId,
-            label: const Text('Map link'),
-            keyboardType: TextInputType.url,
-            autocorrect: false,
-            enableSuggestions: false,
-            enabled: !widget.isSubmitting,
+          LabeledFormRow(
+            label: 'Map link',
+            field: ShadInputFormField(
+              id: VenueFormFields.mapUriId,
+              keyboardType: TextInputType.url,
+              autocorrect: false,
+              enableSuggestions: false,
+              enabled: widget.enabled,
+            ),
           ),
-          const SizedBox(height: 16),
           // Toggles wrap so the two switch/label pairs flow to a second line
           // on narrow widths instead of overflowing horizontally.
           Wrap(
-            spacing: 24,
-            runSpacing: 12,
+            spacing: FormSpacing.sectionGap,
+            runSpacing: FormSpacing.rowGap,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               ShadSwitchFormField(
-                id: VenueCreateForm.isDefaultId,
-                initialValue: _initial[VenueCreateForm.isDefaultId] as bool,
-                enabled: !widget.isSubmitting,
+                id: VenueFormFields.isDefaultId,
+                initialValue:
+                    initial[VenueFormFields.isDefaultId] as bool? ?? false,
+                enabled: widget.enabled,
                 inputLabel: Text('Default venue', style: theme.textTheme.small),
               ),
               ShadSwitchFormField(
-                id: VenueCreateForm.isFeaturedId,
-                initialValue: _initial[VenueCreateForm.isFeaturedId] as bool,
-                enabled: !widget.isSubmitting,
+                id: VenueFormFields.isFeaturedId,
+                initialValue:
+                    initial[VenueFormFields.isFeaturedId] as bool? ?? false,
+                enabled: widget.enabled,
                 inputLabel: Text('Featured', style: theme.textTheme.small),
               ),
             ],

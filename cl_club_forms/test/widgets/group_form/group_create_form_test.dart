@@ -26,7 +26,7 @@ void main() {
     tester,
   ) async {
     await _setSurface(tester);
-    await tester.pumpWidget(_wrap(GroupCreateForm(onSubmit: (_) async {})));
+    await tester.pumpWidget(_wrap(const GroupCreateForm()));
     await tester.pumpAndSettle();
 
     expect(find.text('Mode'), findsOneWidget);
@@ -38,7 +38,7 @@ void main() {
     tester,
   ) async {
     await _setSurface(tester);
-    await tester.pumpWidget(_wrap(GroupCreateForm(onSubmit: (_) async {})));
+    await tester.pumpWidget(_wrap(const GroupCreateForm()));
     await tester.pumpAndSettle();
 
     // Open the mode select (shows the current value "Manual") and pick "Auto".
@@ -56,15 +56,7 @@ void main() {
   ) async {
     await _setSurface(tester);
     final formKey = GlobalKey<GroupCreateFormState>();
-    Map<String, dynamic>? submitted;
-    await tester.pumpWidget(
-      _wrap(
-        GroupCreateForm(
-          key: formKey,
-          onSubmit: (values) async => submitted = values,
-        ),
-      ),
-    );
+    await tester.pumpWidget(_wrap(GroupCreateForm(key: formKey)));
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -73,33 +65,25 @@ void main() {
       ),
       'U12 Boys',
     );
-    await formKey.currentState!.handleSubmit();
+    final submitted = formKey.currentState!.validate();
     await tester.pumpAndSettle();
 
     expect(submitted, isNotNull);
     expect(submitted![GroupFormFields.nameId], 'U12 Boys');
-    expect(submitted![GroupFormFields.modeId], GroupMode.manual);
-    expect(submitted![GroupFormFields.addMeId], false);
+    expect(submitted[GroupFormFields.modeId], GroupMode.manual);
+    expect(submitted[GroupFormFields.addMeId], false);
   });
 
   testWidgets('blocks submit when the name is empty', (tester) async {
     await _setSurface(tester);
     final formKey = GlobalKey<GroupCreateFormState>();
-    var submitCount = 0;
-    await tester.pumpWidget(
-      _wrap(
-        GroupCreateForm(
-          key: formKey,
-          onSubmit: (_) async => submitCount++,
-        ),
-      ),
-    );
+    await tester.pumpWidget(_wrap(GroupCreateForm(key: formKey)));
     await tester.pumpAndSettle();
 
-    await formKey.currentState!.handleSubmit();
+    final values = formKey.currentState!.validate();
     await tester.pumpAndSettle();
 
-    expect(submitCount, 0);
+    expect(values, isNull);
   });
 
   testWidgets('accepts and submits initial values (not defaults)', (
@@ -107,7 +91,6 @@ void main() {
   ) async {
     await _setSurface(tester);
     final formKey = GlobalKey<GroupCreateFormState>();
-    Map<String, dynamic>? submitted;
     await tester.pumpWidget(
       _wrap(
         GroupCreateForm(
@@ -118,19 +101,18 @@ void main() {
             GroupFormFields.modeId: GroupMode.manual,
             GroupFormFields.addMeId: true,
           },
-          onSubmit: (values) async => submitted = values,
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    await formKey.currentState!.handleSubmit();
+    final submitted = formKey.currentState!.validate();
     await tester.pumpAndSettle();
 
     expect(submitted, isNotNull);
     expect(submitted![GroupFormFields.nameId], 'U10 Girls');
     // addMe reflects the passed initial value, not the `false` default.
-    expect(submitted![GroupFormFields.addMeId], true);
+    expect(submitted[GroupFormFields.addMeId], true);
   });
 
   testWidgets('isDirty is false initially and true after a field change', (
@@ -148,7 +130,6 @@ void main() {
             GroupFormFields.modeId: GroupMode.manual,
             GroupFormFields.addMeId: false,
           },
-          onSubmit: (_) async {},
         ),
       ),
     );
@@ -189,7 +170,6 @@ void main() {
             ...GroupCreateForm.emptyValues,
             GroupFormFields.modeId: GroupMode.semiAuto,
           },
-          onSubmit: (_) async {},
         ),
       ),
     );
@@ -208,7 +188,6 @@ void main() {
   ) async {
     await _setSurface(tester);
     final formKey = GlobalKey<GroupCreateFormState>();
-    Map<String, dynamic>? submitted;
     await tester.pumpWidget(
       _wrap(
         GroupCreateForm(
@@ -219,7 +198,6 @@ void main() {
             GroupFormFields.modeId: GroupMode.semiAuto,
             GroupFormFields.genderId: null,
           },
-          onSubmit: (values) async => submitted = values,
         ),
       ),
     );
@@ -230,7 +208,7 @@ void main() {
     await tester.enterText(input(AgeEligibilityFormFields.maxAgeYearsId), '18');
     await tester.tap(find.byType(ShadCheckbox));
     await tester.pumpAndSettle();
-    await formKey.currentState!.handleSubmit();
+    final submitted = formKey.currentState!.validate();
     await tester.pumpAndSettle();
 
     expect(submitted, isNotNull);
@@ -239,17 +217,16 @@ void main() {
       const FormAge(years: 5),
     );
     expect(
-      AgeEligibilityFormValues.maxAge(submitted!),
+      AgeEligibilityFormValues.maxAge(submitted),
       const FormAge(years: 18),
     );
-    expect(AgeEligibilityFormValues.strictAge(submitted!), isTrue);
+    expect(AgeEligibilityFormValues.strictAge(submitted), isTrue);
   });
 
   testWidgets('Issue 33: a minimum above the maximum shows the inline '
       'message and does not submit', (tester) async {
     await _setSurface(tester);
     final formKey = GlobalKey<GroupCreateFormState>();
-    var submitCount = 0;
     await tester.pumpWidget(
       _wrap(
         GroupCreateForm(
@@ -259,7 +236,6 @@ void main() {
             GroupFormFields.nameId: 'Juniors',
             GroupFormFields.modeId: GroupMode.auto,
           },
-          onSubmit: (_) async => submitCount++,
         ),
       ),
     );
@@ -268,10 +244,10 @@ void main() {
     await tester.enterText(input(AgeEligibilityFormFields.minAgeYearsId), '18');
     await tester.enterText(input(AgeEligibilityFormFields.maxAgeYearsId), '5');
     await tester.pumpAndSettle();
-    await formKey.currentState!.handleSubmit();
+    final values = formKey.currentState!.validate();
     await tester.pumpAndSettle();
 
-    expect(submitCount, 0);
+    expect(values, isNull);
     expect(find.text(AgeEligibilityFormValidators.bandMessage), findsOneWidget);
   });
 
@@ -280,7 +256,6 @@ void main() {
   ) async {
     await _setSurface(tester);
     final formKey = GlobalKey<GroupCreateFormState>();
-    var submitCount = 0;
     await tester.pumpWidget(
       _wrap(
         GroupCreateForm(
@@ -290,21 +265,19 @@ void main() {
             GroupFormFields.nameId: 'Juniors',
             GroupFormFields.modeId: GroupMode.auto,
           },
-          onSubmit: (_) async => submitCount++,
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    await formKey.currentState!.handleSubmit();
+    expect(formKey.currentState!.validate(), isNull);
     await tester.pumpAndSettle();
-    expect(submitCount, 0);
     expect(find.textContaining('at least one criterion'), findsOneWidget);
 
     await tester.enterText(input(AgeEligibilityFormFields.maxAgeYearsId), '12');
     await tester.pumpAndSettle();
-    await formKey.currentState!.handleSubmit();
+    expect(formKey.currentState!.validate(), isNotNull);
     await tester.pumpAndSettle();
-    expect(submitCount, 1);
+    expect(find.textContaining('at least one criterion'), findsNothing);
   });
 }

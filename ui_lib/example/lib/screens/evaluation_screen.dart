@@ -146,7 +146,9 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
         actions: [
           ShadButton(
             onPressed: () {
-              final value = formKey.currentState?.validate();
+              final value =
+                  formKey.currentState?.validate()?[RenameFormFields.valueId]
+                      as String?;
               if (value != null) Navigator.of(dialogContext).pop(value);
             },
             child: const Text('Save'),

@@ -1,9 +1,11 @@
-import 'package:flutter/foundation.dart' show mapEquals;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../age_eligibility/age_eligibility_form_validators.dart';
+import '../../constants/form_spacing.dart';
 import '../age_eligibility/age_eligibility_form_values.dart';
+import '../form/form_body.dart';
+import '../form/form_contract.dart';
+import '../form/labeled_form_row.dart';
 import 'group_eligibility_fields.dart';
 import 'group_form_fields.dart';
 import 'group_form_validators.dart';
@@ -12,27 +14,32 @@ import 'group_form_validators.dart';
 ///
 /// Name + description + the shared [GroupEligibilityFields] cluster + the
 /// create-only "add me" switch. Speaks flat form values; the caller's adapter
-/// (`cl_club_members` `group_form_helpers`) maps the returned map to the SDK
-/// create call.
+/// (`cl_club_members` `group_form_helpers`) maps what `validate()` returns to
+/// the SDK create call.
+///
+/// The form owns no title or buttons: the host drives it through a
+/// `GlobalKey<GroupCreateFormState>` — `validate()` from its Create action,
+/// `isDirty` for the discard prompt, `showErrors()` with what the server
+/// refuses ([FormContract]).
 class GroupCreateForm extends StatefulWidget {
   const GroupCreateForm({
-    required this.onSubmit,
-    this.title,
     this.initialValues,
-    this.isSubmitting = false,
+    this.enabled = true,
     super.key,
   });
 
-  final Future<void> Function(Map<String, dynamic> values) onSubmit;
-  final String? title;
+  /// Optional starting values; defaults to [emptyValues].
   final Map<String, dynamic>? initialValues;
-  final bool isSubmitting;
+
+  /// Whether the fields respond; the host turns it off while it saves.
+  final bool enabled;
 
   /// Default values for a fresh group: manual mode, nothing else set.
   static Map<String, dynamic> get emptyValues => {
     GroupFormFields.nameId: '',
     GroupFormFields.descriptionId: '',
     GroupFormFields.modeId: GroupMode.manual,
+    GroupFormFields.genderId: null,
     GroupFormFields.addMeId: false,
     ...AgeEligibilityFormValues.initial(),
   };
@@ -41,135 +48,85 @@ class GroupCreateForm extends StatefulWidget {
   State<GroupCreateForm> createState() => GroupCreateFormState();
 }
 
-class GroupCreateFormState extends State<GroupCreateForm> {
-  final formKey = GlobalKey<ShadFormState>();
-  String? _formError;
-
-  Map<String, dynamic> get _initial =>
+/// State of [GroupCreateForm]. Its values are the [GroupFormFields] entries
+/// and the age cluster's, as the fields hold them.
+class GroupCreateFormState extends State<GroupCreateForm>
+    with FormContract<GroupCreateForm> {
+  /// What the form starts with.
+  Map<String, dynamic> get initialValues =>
       widget.initialValues ?? GroupCreateForm.emptyValues;
 
-  bool get isDirty {
-    formKey.currentState?.save();
-    final current = formKey.currentState?.value ?? {};
-    final initial = formKey.currentState?.initialValue ?? {};
-    return !mapEquals(_normalize(initial), _normalize(current));
-  }
-
-  Map<String, dynamic> _normalize(Map<String, dynamic> map) {
-    return map.map((key, value) {
-      if (value is String && value.trim().isEmpty) return MapEntry(key, null);
-      return MapEntry(key, value);
-    });
-  }
-
-  /// Whether the eligibility block holds criteria a [reset] would empty.
-  bool get hasValue {
-    final form = formKey.currentState;
-    return form != null && GroupEligibilityFields.holdsValue(form.value);
-  }
-
-  /// Empties the eligibility block and sets the mode to Manual; the name,
-  /// the description and the "add me" switch are left as they are.
-  void reset() {
-    final form = formKey.currentState;
-    if (form == null) return;
-    GroupEligibilityFields.reset(form);
-    if (_formError != null) setState(() => _formError = null);
-  }
-
-  Future<void> handleSubmit() async {
-    final form = formKey.currentState;
-    if (form == null || !form.validate()) return;
-    form.save();
-    final values = form.value;
-
-    final error = groupEligibilityError(values);
-    if (error != null) {
-      setState(() => _formError = error);
-      return;
-    }
-    setState(() => _formError = null);
-    await widget.onSubmit(values);
-  }
+  @override
+  String? crossFieldError(Map<String, dynamic> values) =>
+      GroupFormValidators.eligibility(values);
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final initial = initialValues;
     final initialMode =
-        _initial[GroupFormFields.modeId] as GroupMode? ?? GroupMode.manual;
+        initial[GroupFormFields.modeId] as GroupMode? ?? GroupMode.manual;
 
     return ShadForm(
       key: formKey,
-      initialValue: _initial,
+      initialValue: initial,
       // Rebuilds the eligibility block, whose Reset shows only while it
       // holds a value.
       onChanged: () => setState(() {}),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        spacing: FormSpacing.sectionGap,
         children: [
-          if (widget.title != null) ...[
-            Text(widget.title!, style: theme.textTheme.h4),
-            const SizedBox(height: 16),
-          ],
-          ShadInputFormField(
-            id: GroupFormFields.nameId,
-            label: const Text('Group Name'),
-            placeholder: const Text('e.g., U12 Boys'),
-            keyboardType: TextInputType.name,
-            autocorrect: false,
-            enableSuggestions: false,
-            enabled: !widget.isSubmitting,
-            validator: GroupFormValidators.name,
-          ),
-          const SizedBox(height: 12),
-          ShadInputFormField(
-            id: GroupFormFields.descriptionId,
-            label: const Text('Description'),
-            placeholder: const Text('Optional description'),
-            keyboardType: TextInputType.multiline,
-            maxLines: 3,
-            enabled: !widget.isSubmitting,
-          ),
-          const SizedBox(height: 16),
-          GroupEligibilityFields(initialMode: initialMode, showReset: true),
-          const SizedBox(height: 16),
-          ShadSwitchFormField(
-            id: GroupFormFields.addMeId,
-            initialValue: _initial[GroupFormFields.addMeId] as bool? ?? false,
-            enabled: !widget.isSubmitting,
-            inputLabel: const Text('Add me into the group'),
-            inputSublabel: const Text(
-              'Automatically enroll yourself as a member after the group '
-              'is created.',
-            ),
-          ),
-          if (_formError != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              _formError!,
-              style: theme.textTheme.small.copyWith(
-                color: theme.colorScheme.destructive,
+          FormBody(
+            children: [
+              LabeledFormRow(
+                label: 'Group Name',
+                required: true,
+                field: ShadInputFormField(
+                  id: GroupFormFields.nameId,
+                  placeholder: const Text('e.g., U12 Boys'),
+                  keyboardType: TextInputType.name,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  enabled: widget.enabled,
+                  validator: GroupFormValidators.name,
+                ),
               ),
-            ),
-          ],
+              LabeledFormRow(
+                label: 'Description',
+                field: ShadInputFormField(
+                  id: GroupFormFields.descriptionId,
+                  placeholder: const Text('Optional description'),
+                  keyboardType: TextInputType.multiline,
+                  maxLines: 3,
+                  enabled: widget.enabled,
+                ),
+              ),
+            ],
+          ),
+          GroupEligibilityFields(
+            initialMode: initialMode,
+            showReset: true,
+            enabled: widget.enabled,
+          ),
+          FormBody(
+            error: formError,
+            children: [
+              ShadSwitchFormField(
+                id: GroupFormFields.addMeId,
+                initialValue:
+                    initial[GroupFormFields.addMeId] as bool? ?? false,
+                enabled: widget.enabled,
+                inputLabel: const Text('Add me into the group'),
+                inputSublabel: const Text(
+                  'Automatically enroll yourself as a member after the group '
+                  'is created.',
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
-}
-
-/// Cross-field eligibility validation shared by the create form and the
-/// eligibility editor. Returns an error message, or `null` when valid.
-///
-/// A manual group has no criteria, so its hidden age inputs are not checked.
-String? groupEligibilityError(Map<String, dynamic> values) {
-  final mode = values[GroupFormFields.modeId] as GroupMode? ?? GroupMode.manual;
-  if (!mode.usesCriteria) return null;
-  final gender = values[GroupFormFields.genderId] as GroupGender?;
-  return AgeEligibilityFormValidators.band(values) ??
-      GroupFormValidators.criteriaForMode(
-        mode,
-        hasAnyCriterion:
-            AgeEligibilityFormValues.hasAgeBound(values) || gender != null,
-      );
 }

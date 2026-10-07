@@ -21,22 +21,20 @@ void main() {
   ) async {
     await _setSurface(tester);
     final key = GlobalKey<VenueCreateFormState>();
-    var submits = 0;
     await tester.pumpWidget(
       _wrap(
         VenueCreateForm(
           key: key,
           initialValues: VenueCreateForm.emptyValues,
-          onSubmit: (_) async => submits++,
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    await key.currentState!.handleSubmit();
+    final values = key.currentState!.validate();
     await tester.pumpAndSettle();
 
-    expect(submits, 0, reason: 'empty name must fail validation');
+    expect(values, isNull, reason: 'empty name must fail validation');
     expect(find.text('Venue name is required'), findsOneWidget);
   });
 
@@ -45,7 +43,6 @@ void main() {
   ) async {
     await _setSurface(tester);
     final key = GlobalKey<VenueCreateFormState>();
-    Map<String, dynamic>? submitted;
     await tester.pumpWidget(
       _wrap(
         VenueCreateForm(
@@ -58,20 +55,19 @@ void main() {
             'isDefault': true,
             'isFeatured': false,
           },
-          onSubmit: (values) async => submitted = values,
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    await key.currentState!.handleSubmit();
+    final submitted = key.currentState!.validate();
     await tester.pumpAndSettle();
 
     expect(submitted, isNotNull);
     expect(submitted!['name'], 'Main Arena');
-    expect(submitted!['address'], '1 Rink Rd');
+    expect(submitted['address'], '1 Rink Rd');
     // The toggle reflects the passed initial value, not the `false` default.
-    expect(submitted!['isDefault'], true);
+    expect(submitted['isDefault'], true);
   });
 
   testWidgets('isDirty is false initially and true after a field change', (
@@ -91,7 +87,6 @@ void main() {
             'isDefault': false,
             'isFeatured': false,
           },
-          onSubmit: (_) async {},
         ),
       ),
     );

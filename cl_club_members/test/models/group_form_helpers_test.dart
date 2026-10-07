@@ -269,4 +269,74 @@ void main() {
       expect(sent.semiAuto, isNull);
     });
   });
+
+  group('Issue 55: what a refused write says to the group forms', () {
+    ServerException refusal(String code, {Map<String, dynamic>? details}) =>
+        ServerException(
+          statusCode: 422,
+          code: code,
+          message: 'refused',
+          details: details,
+        );
+
+    test('Issue 55: a switch to auto refused because the group has members '
+        'is shown on the mode', () {
+      final shown = GroupFormSubmit.eligibilityRefusal(
+        refusal(SdkErrorCode.membersExist),
+      );
+
+      expect(shown!.fieldErrors, {
+        GroupFormFields.modeId: GroupFormSubmit.membersExistMessage,
+      });
+      expect(shown.formError, isNull);
+    });
+
+    test('Issue 55: criteria that leave members out are shown inline, with '
+        'their names', () {
+      final shown = GroupFormSubmit.eligibilityRefusal(
+        refusal(
+          SdkErrorCode.membersIneligible,
+          details: {
+            'membernames': ['asha', 'ravi'],
+          },
+        ),
+      );
+
+      expect(shown!.fieldErrors, isEmpty);
+      expect(
+        shown.formError,
+        "These members don't meet the new criteria: asha, ravi. "
+        'Remove or update them, then retry.',
+      );
+    });
+
+    test('Issue 55: an age band the server refuses is shown inline on both '
+        'forms', () {
+      final error = refusal(SdkErrorCode.invalidState);
+
+      expect(
+        GroupFormSubmit.createRefusal(error)!.formError,
+        GroupFormSubmit.invertedBandMessage,
+      );
+      expect(
+        GroupFormSubmit.eligibilityRefusal(error)!.formError,
+        GroupFormSubmit.invertedBandMessage,
+      );
+    });
+
+    test('Issue 55: any other failure names nothing on the form', () {
+      expect(GroupFormSubmit.createRefusal(refusal('INTERNAL')), isNull);
+      expect(GroupFormSubmit.createRefusal(StateError('x')), isNull);
+      expect(GroupFormSubmit.eligibilityRefusal(refusal('INTERNAL')), isNull);
+      expect(GroupFormSubmit.eligibilityRefusal(StateError('x')), isNull);
+    });
+
+    test('Issue 55: the create defaults carry every key the form holds, so '
+        'a fresh form is not dirty', () {
+      final values = buildGroupFormInitialValues(null);
+
+      expect(values.containsKey(GroupFormFields.genderId), isTrue);
+      expect(values[GroupFormFields.genderId], isNull);
+    });
+  });
 }

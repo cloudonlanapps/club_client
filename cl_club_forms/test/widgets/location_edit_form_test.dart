@@ -25,8 +25,8 @@ void main() {
 
     final result = key.currentState!.validate();
     expect(result, isNotNull);
-    expect(result!.address, '1 Rink Rd');
-    expect(result.mapUri, 'https://maps.example/x');
+    expect(result![LocationEditFormFields.addressId], '1 Rink Rd');
+    expect(result[LocationEditFormFields.mapUriId], 'https://maps.example/x');
   });
 
   testWidgets('returns empty strings when started blank', (tester) async {
@@ -43,6 +43,9 @@ void main() {
     await tester.pumpAndSettle();
 
     final result = key.currentState!.validate();
-    expect(result, const LocationEditResult(address: '', mapUri: ''));
+    expect(result, {
+      LocationEditFormFields.addressId: '',
+      LocationEditFormFields.mapUriId: '',
+    });
   });
 }

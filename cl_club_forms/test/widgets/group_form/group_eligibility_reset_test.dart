@@ -3,6 +3,8 @@ import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_fields
     show AgeEligibilityFields;
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
     show AgeEligibilityFormFields;
+import 'package:cl_club_forms/src/widgets/group_form/group_eligibility_fields.dart'
+    show GroupEligibilityFields;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -200,23 +202,20 @@ void main() {
   });
 
   group('Issue 34: group create', () {
-    Future<(GroupCreateFormState, List<Map<String, dynamic>>)> pumpCreate(
-      WidgetTester tester,
-    ) async {
-      final submitted = <Map<String, dynamic>>[];
+    Future<GroupCreateFormState> pumpCreate(WidgetTester tester) async {
       final key = GlobalKey<GroupCreateFormState>();
-      await _pumpHost(
-        tester,
-        GroupCreateForm(key: key, onSubmit: (v) async => submitted.add(v)),
-      );
-      return (key.currentState!, submitted);
+      await _pumpHost(tester, GroupCreateForm(key: key));
+      return key.currentState!;
     }
+
+    bool holdsValue(GroupCreateFormState form) =>
+        GroupEligibilityFields.holdsValue(form.formKey.currentState!.value);
 
     testWidgets('Issue 34: no Reset on a fresh Manual group, nor on a '
         'criteria mode with nothing filled', (tester) async {
-      final (form, _) = await pumpCreate(tester);
+      final form = await pumpCreate(tester);
       expect(find.text('Reset'), findsNothing);
-      expect(form.hasValue, isFalse);
+      expect(holdsValue(form), isFalse);
 
       await _pickMode(tester, from: GroupMode.manual, mode: GroupMode.auto);
 
@@ -226,7 +225,7 @@ void main() {
 
     testWidgets('Issue 34: Reset appears inside the eligibility block once a '
         'criterion is set', (tester) async {
-      final (form, _) = await pumpCreate(tester);
+      final form = await pumpCreate(tester);
       await _pickMode(tester, from: GroupMode.manual, mode: GroupMode.auto);
 
       await tester.enterText(
@@ -237,7 +236,7 @@ void main() {
 
       final reset = find.text('Reset');
       expect(reset, findsOneWidget);
-      expect(form.hasValue, isTrue);
+      expect(holdsValue(form), isTrue);
       // Inside the block: under the criteria, above the "add me" switch.
       expect(
         tester.getTopLeft(reset).dy,
@@ -251,7 +250,7 @@ void main() {
 
     testWidgets('Issue 34: pressing Reset empties the criteria, sets the '
         'mode to Manual, hides the button and keeps the name', (tester) async {
-      final (form, submitted) = await pumpCreate(tester);
+      final form = await pumpCreate(tester);
       await tester.enterText(_input(GroupFormFields.nameId), 'Juniors');
       await _pickMode(tester, from: GroupMode.manual, mode: GroupMode.auto);
       await tester.enterText(
@@ -267,12 +266,11 @@ void main() {
       expect(find.text('Reset'), findsNothing);
       expect(find.text(AgeEligibilityFields.minAgeTitle), findsNothing);
       expect(find.text(GroupMode.manual.label), findsOneWidget);
-      expect(form.hasValue, isFalse);
+      expect(holdsValue(form), isFalse);
 
-      await form.handleSubmit();
+      final values = form.validate()!;
       await tester.pumpAndSettle();
 
-      final values = submitted.single;
       expect(values[GroupFormFields.nameId], 'Juniors');
       expect(values[GroupFormFields.modeId], GroupMode.manual);
       expect(values[GroupFormFields.genderId], isNull);

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 /// A form-local text value with optional per-language variants: the value a
-/// translatable field of `ClubIdentityForm` edits.
+/// translatable field of a club identity section form edits.
 ///
 /// Owned by the form so it stays SDK-free; the host's adapter translates it
 /// to and from the SDK's localized text at the boundary.

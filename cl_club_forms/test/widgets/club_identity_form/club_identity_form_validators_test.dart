@@ -50,6 +50,21 @@ void main() {
       expect(ClubIdentityFormValidators.languageCode('marathi'), isNotNull);
       expect(ClubIdentityFormValidators.languageCode('pt-BR'), isNotNull);
     });
+
+    test('Issue 58: a language code already listed is refused', () {
+      expect(
+        ClubIdentityFormValidators.newLanguageCode(' hi ', const ['mr']),
+        isNull,
+      );
+      expect(
+        ClubIdentityFormValidators.newLanguageCode('mr', const ['mr']),
+        'mr is already offered',
+      );
+      expect(
+        ClubIdentityFormValidators.newLanguageCode('Marathi', const []),
+        contains('two- or three-letter'),
+      );
+    });
   });
 
   group('Issue 20: FormTranslatedText', () {

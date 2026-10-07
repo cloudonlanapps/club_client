@@ -2,19 +2,24 @@
 //
 // A super-admin (`sudo`), from the sidebar's Admin section:
 //
-//   * sees the stored club_info (seeded through the SDK with keys the form
-//     does not edit, in the document and in its contact block);
-//   * enters a phone that is not E.164 — Save is refused in place and
-//     nothing is written;
-//   * fixes it, fills the short name, inquiry email and city, adds a
-//     language code and a tagline with a translation in it, and saves;
+//   * sees the stored club_info (seeded through the SDK with keys the
+//     forms do not edit, in the document and in its contact block) in three
+//     section cards — Club, Contact, Address — none of them open for
+//     editing;
+//   * opens Contact and enters a phone that is not E.164 — Save is refused
+//     in place and nothing is written;
+//   * fixes it and saves Contact; adds a language code in the
+//     Translations card, which writes nothing; opens Club, fills the short
+//     name, the inquiry email and the tagline with a translation in that
+//     language, and saves; opens Address, fills the city, and saves — each
+//     section on its own (club_client#58);
 //   * finds the document written as the website and the server read it
 //     (the public club info), the unedited keys carried through;
 //   * opens Contact us and finds the saved phone and city there: the app
 //     reads the edit without a restart (club_core#53);
-//   * clears what it filled and saves, which is the UI cleanup: those
-//     fields are gone from the document again, and Contact us falls back
-//     to the bundled city while keeping the server's phone.
+//   * clears what it filled, section by section, which is the UI cleanup:
+//     those fields are gone from the document again, and Contact us falls
+//     back to the bundled city while keeping the server's phone.
 //
 // The original club_info is put back through the SDK at the end (a
 // never-written club_info reads null, which the server will not store, so
@@ -32,6 +37,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart' show SectionEditButton;
 
 import '_helpers/auth.dart';
 import '_helpers/forms.dart';
@@ -54,7 +60,10 @@ const _kName = 'workflow_clubinfo Club';
 const _kBundledCity = 'Example City';
 const _kBundledStatePostal = 'Example State, 000000';
 
-/// What the test seeds: a name, a phone, and keys the form does not edit.
+/// The language the test adds in the Translations card.
+const _kLanguage = 'mr';
+
+/// What the test seeds: a name, a phone, and keys the forms do not edit.
 const Map<String, dynamic> _kSeed = {
   'name': _kName,
   'workflow_clubinfo_extra': {'kept': true},
@@ -63,6 +72,11 @@ const Map<String, dynamic> _kSeed = {
     'workflow_clubinfo_note': 'kept',
   },
 };
+
+/// The three section cards of the club details screen.
+const Key _kClubSection = ValueKey('clubIdentity.section.club');
+const Key _kContactSection = ValueKey('clubIdentity.section.contact');
+const Key _kAddressSection = ValueKey('clubIdentity.section.address');
 
 Finder _field(String id) => find.byKey(ValueKey('clubIdentity.$id'));
 
@@ -88,6 +102,55 @@ Future<void> _press(WidgetTester tester, String key) async {
   await settle(tester);
 }
 
+/// Opens [section] for editing, as a tap on its pencil would, and waits
+/// for [firstFieldId]'s input.
+Future<void> _edit(
+  WidgetTester tester,
+  Key section,
+  String firstFieldId,
+) async {
+  final pencil = find.descendant(
+    of: find.byKey(section),
+    matching: find.byType(SectionEditButton),
+  );
+  expect(pencil, findsOneWidget, reason: 'the pencil of $section');
+  tester.widget<SectionEditButton>(pencil).onTap();
+  await settle(tester);
+  await waitFor(
+    tester,
+    () => _field(firstFieldId).evaluate().isNotEmpty,
+    description: '$section to open for editing',
+  );
+}
+
+/// Presses Save in [section].
+Future<void> _pressSave(WidgetTester tester, Key section) async {
+  invokeShadButton(
+    tester,
+    find.descendant(
+      of: find.byKey(section),
+      matching: find.widgetWithText(ShadButton, 'Save'),
+    ),
+    reason: 'Save of $section',
+  );
+  await settle(tester);
+}
+
+/// Presses Save in [section] and waits for it to leave edit mode, which it
+/// does once the section is stored: [firstFieldId]'s input is gone.
+Future<void> _save(
+  WidgetTester tester,
+  Key section,
+  String firstFieldId,
+) async {
+  await _pressSave(tester, section);
+  await waitFor(
+    tester,
+    () => _field(firstFieldId).evaluate().isEmpty,
+    description: 'the save of $section to finish',
+  );
+}
+
 /// Opens the sidebar entry [label], as a tap on it would.
 Future<void> _openFromSidebar(WidgetTester tester, String label) async {
   final entry = find.widgetWithText(SidebarItem, label);
@@ -106,21 +169,15 @@ Future<void> _expectOnContactScreen(WidgetTester tester, String text) async {
   );
 }
 
-/// Opens Club details and waits for the stored club name in the form.
+/// Opens Club details and waits for the stored club name in the Club card.
 Future<void> _openClubDetails(WidgetTester tester) async {
   await _openFromSidebar(tester, 'Club details');
   await waitFor(
     tester,
     () => find.text(_kName).evaluate().isNotEmpty,
-    description: 'the stored club name in the form',
+    description: 'the stored club name in the Club card',
   );
 }
-
-bool _saveEnabled(WidgetTester tester) =>
-    tester
-        .widget<ShadButton>(find.byKey(const ValueKey('clubIdentity.save')))
-        .onPressed !=
-    null;
 
 Future<Map<String, dynamic>> _stored(SecureClient client) async {
   final value = (await client.admin.getPreference(_kPreference)).value;
@@ -155,29 +212,61 @@ void main() {
 
         // --- Open the screen from the sidebar's Admin section. --------------
         await _openClubDetails(tester);
-        expect(_saveEnabled(tester), isFalse);
+        // Three sections, each read-only until its pencil is tapped.
+        for (final section in [
+          _kClubSection,
+          _kContactSection,
+          _kAddressSection,
+        ]) {
+          expect(find.byKey(section), findsOneWidget, reason: '$section');
+        }
+        expect(_field('name'), findsNothing);
+        expect(_field('phoneNumber'), findsNothing);
+        expect(find.widgetWithText(ShadButton, 'Save'), findsNothing);
 
         // --- A phone that is not E.164 is refused in place. -----------------
+        await _edit(tester, _kContactSection, 'phoneNumber');
         await _enter(tester, 'phoneNumber', '98765 43210');
-        await _press(tester, 'clubIdentity.save');
+        await _pressSave(tester, _kContactSection);
         expect(find.textContaining('international format'), findsOneWidget);
         expect((await _stored(client))['contact'], _kSeed['contact']);
 
-        // --- Fill in, add a language, save. ---------------------------------
+        // --- Fill in and save, one section at a time. -----------------------
         await _enter(tester, 'phoneNumber', '+919876543210');
-        await _enter(tester, 'shortName', 'WFC');
-        await _enter(tester, 'inquiryEmail', 'workflow_clubinfo@example.com');
-        await _enter(tester, 'addLanguage', 'mr');
+        await _save(tester, _kContactSection, 'phoneNumber');
+        // Contact alone was written: the rest is as seeded.
+        final afterContact = await _stored(client);
+        expect(afterContact.containsKey('shortName'), isFalse);
+        expect(afterContact['contact'], {
+          ...(_kSeed['contact'] as Map<String, dynamic>),
+          'phoneNumber': '+919876543210',
+        });
+
+        // Adding a language writes nothing; the tagline then takes a text
+        // in it.
+        await _enter(tester, 'addLanguage', _kLanguage);
         await _press(tester, 'clubIdentity.addLanguage.add');
-        await _enter(tester, 'tagline', 'workflow_clubinfo tagline');
-        await _enter(tester, 'tagline@mr', 'workflow_clubinfo tagline mr');
-        await _enter(tester, 'city', 'workflow_clubinfo city');
-        await _press(tester, 'clubIdentity.save');
+        expect(await _stored(client), afterContact);
+
+        await _edit(tester, _kClubSection, 'name');
         await waitFor(
           tester,
-          () => !_saveEnabled(tester),
-          description: 'the save to finish',
+          () => _field('tagline@$_kLanguage').evaluate().isNotEmpty,
+          description: 'the tagline input in the added language',
         );
+        await _enter(tester, 'shortName', 'WFC');
+        await _enter(tester, 'inquiryEmail', 'workflow_clubinfo@example.com');
+        await _enter(tester, 'tagline', 'workflow_clubinfo tagline');
+        await _enter(
+          tester,
+          'tagline@$_kLanguage',
+          'workflow_clubinfo tagline mr',
+        );
+        await _save(tester, _kClubSection, 'name');
+
+        await _edit(tester, _kAddressSection, 'city');
+        await _enter(tester, 'city', 'workflow_clubinfo city');
+        await _save(tester, _kAddressSection, 'city');
 
         // --- The website's read carries the document as written. ------------
         var published = (await client.public.getPublicClubInfo()).clubInfo;
@@ -190,7 +279,7 @@ void main() {
           'phoneNumber': '+919876543210',
           'tagline': {
             'default': 'workflow_clubinfo tagline',
-            'mr': 'workflow_clubinfo tagline mr',
+            _kLanguage: 'workflow_clubinfo tagline mr',
           },
           'city': 'workflow_clubinfo city',
         });
@@ -205,21 +294,19 @@ void main() {
 
         // --- Cleanup through the UI: clear what was filled in, save. ---------
         await _openClubDetails(tester);
+        await _edit(tester, _kClubSection, 'name');
         for (final id in [
           'shortName',
           'inquiryEmail',
-          'tagline@mr',
+          'tagline@$_kLanguage',
           'tagline',
-          'city',
         ]) {
           await _enter(tester, id, '');
         }
-        await _press(tester, 'clubIdentity.save');
-        await waitFor(
-          tester,
-          () => !_saveEnabled(tester),
-          description: 'the clearing save to finish',
-        );
+        await _save(tester, _kClubSection, 'name');
+        await _edit(tester, _kAddressSection, 'city');
+        await _enter(tester, 'city', '');
+        await _save(tester, _kAddressSection, 'city');
         published = (await client.public.getPublicClubInfo()).clubInfo;
         expect(published.containsKey('shortName'), isFalse);
         expect(published.containsKey('inquiryEmail'), isFalse);

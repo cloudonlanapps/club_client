@@ -24,11 +24,26 @@ export 'src/widgets/age_eligibility/age_eligibility_text.dart'
     show AgeEligibilityText;
 export 'src/widgets/age_eligibility/form_age.dart' show FormAge;
 export 'src/widgets/change_password_form.dart' show ChangePasswordForm;
-// Club identity form (pure UI, no SDK / no Riverpod): the club's name,
-// inquiry email and public contact block, translatable fields as
-// FormTranslatedText.
-export 'src/widgets/club_identity_form/club_identity_form.dart'
-    show ClubIdentityForm, ClubIdentityFormState;
+// Club identity section forms (pure UI, no SDK / no Riverpod): the club's
+// details, its contact block and its address, translatable fields as
+// FormTranslatedText; and the one-field form that adds a language to
+// translate them into.
+export 'src/widgets/club_identity_form/club_address_form.dart'
+    show ClubAddressForm, ClubAddressFormState;
+export 'src/widgets/club_identity_form/club_address_form_fields.dart'
+    show ClubAddressFormFields;
+export 'src/widgets/club_identity_form/club_contact_form.dart'
+    show ClubContactForm, ClubContactFormState;
+export 'src/widgets/club_identity_form/club_contact_form_fields.dart'
+    show ClubContactFormFields;
+export 'src/widgets/club_identity_form/club_details_form.dart'
+    show ClubDetailsForm, ClubDetailsFormState;
+export 'src/widgets/club_identity_form/club_details_form_fields.dart'
+    show ClubDetailsFormFields;
+export 'src/widgets/club_identity_form/club_language_form.dart'
+    show ClubLanguageForm, ClubLanguageFormState;
+export 'src/widgets/club_identity_form/club_language_form_fields.dart'
+    show ClubLanguageFormFields;
 export 'src/widgets/credit/credit_extend_form.dart'
     show CreditExtendForm, CreditExtendFormState;
 export 'src/widgets/credit/credit_form_fields.dart' show CreditFormFields;

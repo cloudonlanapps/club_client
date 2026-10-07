@@ -1,4 +1,5 @@
-/// Validators for `ClubIdentityForm` (club_core#20).
+/// Validators shared by the club identity section forms (`ClubDetailsForm`,
+/// `ClubContactForm`, `ClubLanguageForm`; club_core#20).
 ///
 /// Every field of the club's identity is optional — an empty value is left
 /// out of the document and the reader falls back — so each validator passes
@@ -62,5 +63,13 @@ class ClubIdentityFormValidators {
           'e.g. mr or hi';
     }
     return null;
+  }
+
+  /// A language code to add to [listed]: a [languageCode] that is not
+  /// already there.
+  static String? newLanguageCode(String value, List<String> listed) {
+    final t = value.trim();
+    return languageCode(t) ??
+        (listed.contains(t) ? '$t is already offered' : null);
   }
 }

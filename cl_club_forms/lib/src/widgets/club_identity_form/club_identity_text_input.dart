@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-/// One text input of `ClubIdentityForm`, registered with the enclosing
-/// `ShadForm` under [id] and keyed `clubIdentity.<id>` so tests and the
-/// integration suite can reach it.
+import '../form/labeled_form_row.dart';
+
+/// One labelled text input of a club identity section form, registered with
+/// the enclosing `ShadForm` under [id] and keyed `clubIdentity.<id>` so
+/// tests and the integration suite can reach it. Its initial text is the
+/// form's initial value for [id].
 class ClubIdentityTextInput extends StatelessWidget {
   const ClubIdentityTextInput({
     required this.id,
     required this.label,
-    required this.initialValue,
     required this.keyboardType,
     this.validator,
     this.description,
@@ -16,12 +18,28 @@ class ClubIdentityTextInput extends StatelessWidget {
     super.key,
   });
 
+  /// What the key of every input starts with; the field id follows.
+  static const String keyPrefix = 'clubIdentity.';
+
+  /// Fewest lines of a [multiline] input.
+  static const int multilineMinLines = 2;
+
+  /// Most lines of a [multiline] input.
+  static const int multilineMaxLines = 4;
+
+  /// The key of the input registered under [id].
+  static Key keyOf(String id) => ValueKey('$keyPrefix$id');
+
   /// The form field id.
   final String id;
 
+  /// The label above the input.
   final String label;
-  final String initialValue;
+
+  /// The keyboard the input asks for.
   final TextInputType keyboardType;
+
+  /// Checks the text; null when the field takes any.
   final String? Function(String)? validator;
 
   /// Help shown under the input.
@@ -33,17 +51,18 @@ class ClubIdentityTextInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final help = description;
-    return ShadInputFormField(
-      key: ValueKey('clubIdentity.$id'),
-      id: id,
-      label: Text(label),
-      description: help == null ? null : Text(help),
-      initialValue: initialValue,
-      keyboardType: multiline ? TextInputType.multiline : keyboardType,
-      minLines: multiline ? 2 : null,
-      maxLines: multiline ? 4 : 1,
-      autocorrect: keyboardType == TextInputType.text,
-      validator: validator,
+    return LabeledFormRow(
+      label: label,
+      field: ShadInputFormField(
+        key: keyOf(id),
+        id: id,
+        description: help == null ? null : Text(help),
+        keyboardType: multiline ? TextInputType.multiline : keyboardType,
+        minLines: multiline ? multilineMinLines : null,
+        maxLines: multiline ? multilineMaxLines : 1,
+        autocorrect: keyboardType == TextInputType.text,
+        validator: validator,
+      ),
     );
   }
 }

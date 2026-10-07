@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../event_schedule/labeled_form_row.dart';
+import '../form/labeled_form_row.dart';
 import 'credit_date_field.dart';
 import 'credit_form_body.dart';
 import 'credit_form_fields.dart';

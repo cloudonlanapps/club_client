@@ -45,10 +45,13 @@ evaluation's UI, whose models they share.
 
 ```
 lib/src/
-  constants/  - values shared by the forms (breakpoint, common labels).
+  constants/  - values shared by the forms: FormSpacing (every gap), the
+                breakpoint, common labels.
   models/     - form-local values a form takes or returns.
   widgets/    - one folder per form family: the form, its field cluster,
                 field ids, validators and values.
+                widgets/form/ holds what every form is built from:
+                LabeledFormRow, FormBody and the FormContract mixin.
 ```
 
 Besides the forms, the package carries two things that travel with them:

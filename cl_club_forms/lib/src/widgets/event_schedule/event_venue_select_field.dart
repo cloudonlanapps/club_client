@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../event_create/event_create_form_fields.dart' show EventVenueOption;
-import 'labeled_form_row.dart';
+import '../form/labeled_form_row.dart';
 
 /// The labelled venue picker of a schedule editor: a `ShadForm` select over
 /// [venues] whose value is the chosen venue's id.

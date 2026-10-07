@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-/// Form-row helper that renders a label above its field.
+import '../../constants/form_spacing.dart';
+
+/// One labelled row of a form: the label above its field.
 ///
-/// One consistent layout for every screen size: the label sits on its own
-/// line, with the field stretched below. Avoids the inline-label pattern
-/// because the form's mixed control widths (date picker, time picker,
-/// shad input) never line up cleanly when labels share their row.
+/// The one way a form labels a field, composite fields included, so every
+/// form has the same label style, the same required mark and the same gap.
+/// The label sits on its own line with the field stretched below, on every
+/// screen size: a label sharing its row never lines up across the forms'
+/// mixed control widths (date picker, time picker, input).
 class LabeledFormRow extends StatelessWidget {
   const LabeledFormRow({
     required this.field,
@@ -26,7 +29,11 @@ class LabeledFormRow extends StatelessWidget {
   /// Custom label widget (e.g. a tap-to-toggle row of Texts). Takes
   /// precedence over [label].
   final Widget? labelChild;
+
+  /// The field the label belongs to.
   final Widget field;
+
+  /// Whether the field must be filled; marks a plain [label].
   final bool required;
 
   @override
@@ -42,7 +49,7 @@ class LabeledFormRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
-      spacing: 8,
+      spacing: FormSpacing.labelGap,
       children: [
         Align(alignment: Alignment.centerLeft, child: labelWidget),
         field,

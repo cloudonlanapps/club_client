@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../models/one_off_schedule_data.dart';
-import 'labeled_form_row.dart';
+import '../form/labeled_form_row.dart';
 import 'two_column_grid.dart';
 
 /// `ShadForm`-compatible field for one-off event schedule.

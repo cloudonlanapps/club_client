@@ -439,9 +439,9 @@ own isolated server.
 
 12. **Prefer the 24-hour `ShadTimePicker` over the `.period` variant** for any time that round-trips through storage. `.period` returns `hour` in 1-12 with `period` set separately; converting both ways is error-prone (silent overlap-detection failures, "13 AM" gibberish on re-render). The default 24-hour picker keeps `hour` as 0-23 directly, so storage and display agree.
 
-13. **Stack labels above fields, even on wide layouts.** Inline labels never line up cleanly when adjacent controls have heterogeneous widths (date picker, time picker, plain input). One stacked pattern reads cleanly on every viewport. Wrap each row in a `LabeledFormRow`-style helper so individual fields don't repeat the layout.
+13. **Label every field with `LabeledFormRow`, the label stacked above the field, even on wide layouts.** It is the one way a form labels a field, composite fields included (`cl_club_forms` `widgets/form/`): it decides the label's style, marks a required field (`required: true`) and sets the gap to the field. A field does not use its own `label:`. Inline labels never line up cleanly when adjacent controls have heterogeneous widths (date picker, time picker, plain input); one stacked pattern reads cleanly on every viewport.
 
-14. **Use `Column.spacing` for inter-row gaps**, not interleaved `SizedBox(height: N)` children. Single source of truth at the layout boundary; gaps stay consistent without manual maintenance.
+14. **Gaps come from `FormSpacing`, through `Column.spacing`.** A form stacks its rows in a `FormBody`, which applies `FormSpacing.rowGap`; a group of rows is set off with `FormSpacing.sectionGap`; `LabeledFormRow` applies `FormSpacing.labelGap`. No number in a form's `spacing:`, and no interleaved `SizedBox(height: N)` between rows. One source for every form, so the gaps cannot drift apart.
 
 15. **Two-column form grids must collapse to a single column on narrow surfaces** via `LayoutBuilder`. Pixel-perfect alignment between unrelated controls inside a 2-column layout is unattainable on mobile widths.
 
@@ -458,9 +458,19 @@ own isolated server.
 
 19. **Create uses one full form; editing is section-by-section — never a separate edit route.** A `<X>CreateForm` gathers everything for creation. Editing an existing entity happens in place on its profile/detail view: each section (rename, eligibility, location, address, contact, …) has its own small editor opened in a dialog, calling a partial-update adapter method. There is **no `/…/:id/edit` route** for any entity — venues, groups, and users all edit section-by-section.
 
-20. **The host drives the form through a `GlobalKey<XFormState>`; the form owns no buttons or dialog.** A section editor exposes `validate()` returning the section's partial `Map<String, dynamic>` (or `null` when invalid); a full create form exposes `handleSubmit()` + `isDirty`. The host's Save action calls into the state and decides what to do with the result. Cross-field rules (age band, password match, "at least one name", an auto/semi-auto group needs ≥1 criterion) run inside `validate()` / `handleSubmit()` and surface as an **inline form-level message** (return `null`), never a toast from inside the form. A single-value dialog (rename, location) resolves to `null` when the value is unchanged, so an unmodified Save is a no-op. (For the full create forms, `isDirty` — rule 8 — drives the discard prompt via `PopScope`.)
+20. **One contract: the host drives the form through a `GlobalKey<XFormState>`; the form owns no title, no buttons, no dialog and no width of its own.** Every form's state mixes in `FormContract` (`cl_club_forms` `widgets/form/`), which gives the host:
+    - `validate()` — the form's values as a `Map<String, dynamic>`, or `null` when invalid. A section editor returns its section's partial map.
+    - `isDirty` — whether anything changed (rule 8). It drives the discard prompt of a create view via `PopScope`, and lets an unmodified Save be a no-op.
+    - `showErrors(fieldErrors, formError)` — what the server refused, put back on the fields by id and inline.
+    - `enabled` — a parameter of the widget; the host turns it off while it saves.
+
+    The host's Save action calls `validate()`, runs the save itself, holds the in-flight state, and calls `showErrors` when the server refuses a value. A form has no `onSubmit` callback, no `handleSubmit()` and no `isSubmitting`. Cross-field rules (age band, password match, "at least one name", an auto/semi-auto group needs ≥1 criterion) are the form's `crossFieldError` and surface as an **inline form-level message** (`validate()` returns `null`), never a toast from inside the form. A form that wants Enter to submit takes a plain `onSubmitted` callback, which the host points at its Save action.
 
 21. **A section editor sends only its own fields.** Its adapter method (`update<Section>`) passes a SDK `ValueGetter` *only* for the fields that section edits — the SDK treats a `null` getter as "no change". Never reuse the full-form `update` for a section, or the omitted fields get cleared on the server. Protected fields (date of birth, gender) are gated by `canEdit*` flags **and** omitted from the returned map when not editable, so the server's protected-field guard isn't tripped.
+
+22. **A form, or a control that saves on its own: never both in one widget.** A control may save directly only when its value is complete after one interaction and needs no check against another field: a toggle, a rating, a picked file. Everything else is a field of a form, and reaches the server only after `validate()`. A group of controls that each save on their own is not a form, whatever its layout, and is not named one (`IdentityDocumentsUploader`, `EvaluationFillBody`). When an action needs both — files and a consent, answers and a completeness check — the host arranges the direct-save widget and the form side by side and gates the action on both.
+
+23. **Field ids are named constants.** Each form has a `<X>FormFields` class of `static const String` ids (`EventCreateFormFields.titleId`); the form, its adapter and its tests use them. No bare string id.
 
 ## Section-wise Editors (shared inline pattern)
 

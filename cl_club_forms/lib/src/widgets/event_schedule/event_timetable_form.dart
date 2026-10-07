@@ -5,9 +5,9 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../models/event_timetable_value.dart';
 import '../../models/session_input.dart';
 import '../../models/timetable_schedule_option.dart';
+import '../form/labeled_form_row.dart';
 import 'event_timetable_form_validators.dart';
 import 'event_timetable_sessions_field.dart';
-import 'labeled_form_row.dart';
 
 /// Pure-UI editor that corrects an event's timetable — how each occurrence
 /// is split into named sessions — without moving any date.

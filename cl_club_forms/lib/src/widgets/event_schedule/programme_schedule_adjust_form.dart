@@ -4,8 +4,8 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../models/programme_schedule_adjust_value.dart';
 import '../../models/programme_schedule_data.dart';
 import '../event_create/event_create_form_fields.dart' show EventVenueOption;
+import '../form/labeled_form_row.dart';
 import 'event_venue_select_field.dart';
-import 'labeled_form_row.dart';
 import 'programme_schedule_adjust_form_validators.dart';
 import 'programme_schedule_fields.dart';
 

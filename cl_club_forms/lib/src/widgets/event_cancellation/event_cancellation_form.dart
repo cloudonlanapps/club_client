@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../event_schedule/labeled_form_row.dart';
+import '../form/form_body.dart';
+import '../form/form_contract.dart';
+import '../form/labeled_form_row.dart';
 import 'event_cancellation_form_fields.dart';
 import 'event_cancellation_form_validators.dart';
 import 'event_cancellation_session.dart';
@@ -12,8 +14,8 @@ import 'event_cancellation_session.dart';
 /// none to choose).
 ///
 /// The form owns no buttons or dialog: the host drives it through a
-/// `GlobalKey<EventCancellationFormState>` and calls
-/// [EventCancellationFormState.validate] from its confirm action.
+/// `GlobalKey<EventCancellationFormState>` — `validate()` from its confirm
+/// action, `showErrors()` with what the server refuses ([FormContract]).
 class EventCancellationForm extends StatefulWidget {
   const EventCancellationForm({
     this.sessions = const [],
@@ -29,30 +31,24 @@ class EventCancellationForm extends StatefulWidget {
   /// Hint shown in the empty reason field.
   final String reasonPlaceholder;
 
+  /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
 
   @override
   State<EventCancellationForm> createState() => EventCancellationFormState();
 }
 
-class EventCancellationFormState extends State<EventCancellationForm> {
-  final formKey = GlobalKey<ShadFormState>();
-
-  /// Validates the fields. Returns the flat form values
-  /// (`{fromSessionId: DateTime?, reasonId: String}`, the reason trimmed),
-  /// or `null` when invalid.
-  Map<String, dynamic>? validate() {
-    final form = formKey.currentState;
-    if (form == null || !form.saveAndValidate()) return null;
-    final reason =
-        (form.value[EventCancellationFormFields.reasonId] as String?)?.trim() ??
-        '';
-    return {
-      EventCancellationFormFields.fromSessionId:
-          form.value[EventCancellationFormFields.fromSessionId] as DateTime?,
-      EventCancellationFormFields.reasonId: reason,
-    };
-  }
+/// State of [EventCancellationForm]. Its values are
+/// `{fromSessionId: DateTime?, reasonId: String}`, the reason trimmed.
+class EventCancellationFormState extends State<EventCancellationForm>
+    with FormContract<EventCancellationForm> {
+  @override
+  Map<String, dynamic> assemble(Map<String, dynamic> values) => {
+    EventCancellationFormFields.fromSessionId:
+        values[EventCancellationFormFields.fromSessionId] as DateTime?,
+    EventCancellationFormFields.reasonId:
+        (values[EventCancellationFormFields.reasonId] as String?)?.trim() ?? '',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -64,10 +60,8 @@ class EventCancellationFormState extends State<EventCancellationForm> {
           EventCancellationFormFields.fromSessionId: sessions.first.start,
         EventCancellationFormFields.reasonId: '',
       },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 12,
+      child: FormBody(
+        error: formError,
         children: [
           if (sessions.isNotEmpty)
             LabeledFormRow(

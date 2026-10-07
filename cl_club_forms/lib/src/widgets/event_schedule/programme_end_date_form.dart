@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../models/programme_end_date_value.dart';
-import 'labeled_form_row.dart';
+import '../form/labeled_form_row.dart';
 import 'programme_end_date_form_validators.dart';
 
 /// Pure-UI editor of a programme's end date: the last day it runs on, any

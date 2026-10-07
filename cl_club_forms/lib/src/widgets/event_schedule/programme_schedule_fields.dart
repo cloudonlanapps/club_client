@@ -4,7 +4,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../models/programme_schedule_data.dart';
 import '../../models/session_input.dart';
-import 'labeled_form_row.dart';
+import '../form/labeled_form_row.dart';
 import 'session_split_field.dart';
 import 'two_column_grid.dart';
 import 'weekday_selector.dart';

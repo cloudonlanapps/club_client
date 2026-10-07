@@ -5,10 +5,10 @@ import '../../models/camp_schedule_data.dart';
 import '../../models/one_off_schedule_data.dart';
 import '../../models/programme_schedule_data.dart';
 import '../event_schedule/camp_schedule_fields.dart';
-import '../event_schedule/labeled_form_row.dart';
 import '../event_schedule/one_off_schedule_fields.dart';
 import '../event_schedule/programme_schedule_fields.dart';
 import '../event_schedule/two_column_grid.dart';
+import '../form/labeled_form_row.dart';
 import 'event_create_form_fields.dart';
 import 'event_create_form_validators.dart';
 

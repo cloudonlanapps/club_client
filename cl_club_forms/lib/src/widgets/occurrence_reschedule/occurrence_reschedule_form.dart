@@ -3,9 +3,9 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../models/one_off_schedule_data.dart';
 import '../event_create/event_create_form_fields.dart' show EventVenueOption;
-import '../event_schedule/labeled_form_row.dart';
 import '../event_schedule/one_off_schedule_fields.dart';
 import '../event_schedule/two_column_grid.dart';
+import '../form/labeled_form_row.dart';
 import 'occurrence_reschedule_form_fields.dart';
 
 /// Pure-UI form to reschedule a single camp occurrence (no SDK / no Riverpod).

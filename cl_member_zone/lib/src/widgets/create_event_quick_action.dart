@@ -81,6 +81,6 @@ class CreateEventQuickActionState extends State<CreateEventQuickAction> {
 /// The popover entry naming what [type]'s create flow makes.
 String createEventLabel(EventType type) => switch (type) {
   EventType.camp => 'New Camp',
-  EventType.programme => 'New Program',
-  EventType.oneOff => 'New Event',
+  EventType.programme => 'New Programme',
+  EventType.oneOff => 'New One-off',
 };

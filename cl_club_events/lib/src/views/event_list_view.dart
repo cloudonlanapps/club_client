@@ -49,22 +49,22 @@ class EventListViewState extends ConsumerState<EventListView> {
   EventFilter filter = const EventFilter();
 
   String get typeLabel => switch (widget.eventType) {
-    EventType.programme => 'Programs',
+    EventType.programme => 'Programmes',
     EventType.camp => 'Camps',
-    EventType.oneOff => 'One-Off Events',
+    EventType.oneOff => 'One-off Events',
   };
 
   String get createLabel => switch (widget.eventType) {
-    EventType.programme => '+ New Program',
+    EventType.programme => '+ New Programme',
     EventType.camp => '+ New Camp',
-    EventType.oneOff => '+ New Event',
+    EventType.oneOff => '+ New One-off',
   };
 
   String get searchPlaceholder => 'Search ${typeLabel.toLowerCase()}...';
 
   String get emptyMessage => switch (widget.eventType) {
     EventType.camp => 'Camps are yet to be announced.',
-    EventType.programme => 'No programs found.',
+    EventType.programme => 'No programmes found.',
     EventType.oneOff => 'No one-off events found.',
   };
 

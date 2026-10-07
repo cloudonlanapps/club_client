@@ -131,7 +131,7 @@ class AppSidebar extends StatelessWidget {
     if (eventTypes.contains(EventType.programme))
       const NavItem(
         icon: LucideIcons.trophy,
-        label: 'Programs',
+        label: 'Programmes',
         path: '/events/programmes',
         section: 'Club Management',
         coachOrAdmin: true,
@@ -147,7 +147,7 @@ class AppSidebar extends StatelessWidget {
     if (eventTypes.contains(EventType.oneOff))
       const NavItem(
         icon: LucideIcons.calendarCheck,
-        label: 'One-Off Events',
+        label: 'One-off Events',
         path: '/events/one-off',
         section: 'Club Management',
         coachOrAdmin: true,

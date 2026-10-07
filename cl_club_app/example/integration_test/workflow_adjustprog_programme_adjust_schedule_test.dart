@@ -10,7 +10,7 @@
 // days ago.
 //
 // Steps (UI):
-//  1. The admin opens the programme from the Programs list and taps Adjust
+//  1. The admin opens the programme from the Programmes list and taps Adjust
 //     Schedule in its Schedule block: the editor opens on the present
 //     schedule, from the next session.
 //  2. They pick the third upcoming session as From, change the days to
@@ -293,7 +293,7 @@ void main() {
   );
 }
 
-/// Opens the programme titled [title] from the Programs list, as an admin
+/// Opens the programme titled [title] from the Programmes list, as an admin
 /// does.
 Future<void> _openDetail(WidgetTester tester, {required String title}) async {
   await go(tester, '/memberzone/events/programmes');
@@ -303,7 +303,7 @@ Future<void> _openDetail(WidgetTester tester, {required String title}) async {
   await waitFor(
     tester,
     () => card.evaluate().isNotEmpty,
-    description: '"$title" on the Programs list',
+    description: '"$title" on the Programmes list',
   );
   tester.widget<EntityCard>(card.first).onTap!.call();
   await settle(tester);

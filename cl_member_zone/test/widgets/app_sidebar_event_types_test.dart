@@ -44,7 +44,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Camps'), findsOneWidget);
-      expect(find.text('Programs'), findsNothing);
+      expect(find.text('Programmes'), findsNothing);
     });
 
     testWidgets('Issue 115: programmes appear when the club runs them', (
@@ -54,8 +54,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Camps'), findsOneWidget);
-      expect(find.text('Programs'), findsOneWidget);
-      expect(find.text('One-Off Events'), findsNothing);
+      expect(find.text('Programmes'), findsOneWidget);
+      expect(find.text('One-off Events'), findsNothing);
     });
 
     testWidgets('Issue 122: one-off events appear when the club runs them', (
@@ -64,7 +64,7 @@ void main() {
       await tester.pumpWidget(_wrap(EventType.values.toSet()));
       await tester.pumpAndSettle();
 
-      expect(find.text('One-Off Events'), findsOneWidget);
+      expect(find.text('One-off Events'), findsOneWidget);
     });
   });
 }

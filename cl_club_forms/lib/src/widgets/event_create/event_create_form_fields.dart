@@ -9,9 +9,9 @@ enum EventFormType { programme, camp, oneOff }
 /// Display label for an [EventFormType] (used in headings and toasts).
 extension EventFormTypeLabel on EventFormType {
   String get label => switch (this) {
-    EventFormType.programme => 'Program',
+    EventFormType.programme => 'Programme',
     EventFormType.camp => 'Camp',
-    EventFormType.oneOff => 'Event',
+    EventFormType.oneOff => 'One-off',
   };
 }
 

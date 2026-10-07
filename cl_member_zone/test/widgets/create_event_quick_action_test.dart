@@ -44,7 +44,7 @@ void main() {
       expect(chosen, isEmpty);
       expect(find.text('New Camp'), findsOneWidget);
 
-      await tester.tap(find.text('New Program'));
+      await tester.tap(find.text('New Programme'));
       await tester.pumpAndSettle();
 
       expect(chosen, [EventType.programme]);

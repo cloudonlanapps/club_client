@@ -41,7 +41,7 @@ class StatusBadge extends StatelessWidget {
       const StatusBadge(label: 'Left', icon: LucideIcons.logOut);
   factory StatusBadge.programme() => const StatusBadge(label: 'Programme');
   factory StatusBadge.camp() => const StatusBadge(label: 'Camp');
-  factory StatusBadge.oneOff() => const StatusBadge(label: 'One-Off');
+  factory StatusBadge.oneOff() => const StatusBadge(label: 'One-off');
 
   final String label;
   final IconData? icon;

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:cl_club_events/src/widgets/event_editor/event_rename_dialog.dart';
+import 'package:cl_club_evaluation/src/widgets/evaluation_rename_dialog.dart';
 import 'package:cl_club_forms/cl_club_forms.dart' show RenameFormFields;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -24,9 +24,11 @@ Future<({List<String?> results, List<String> saved})> _open(
         body: Builder(
           builder: (context) => ShadButton(
             onPressed: () async => results.add(
-              await showEventRenameDialog(
+              await showEvaluationRenameDialog(
                 context,
-                _initial,
+                title: 'Rename template',
+                label: 'Name',
+                initial: _initial,
                 onSave: (name) async {
                   saved.add(name);
                   return onSave?.call(name);
@@ -66,34 +68,40 @@ Future<void> _save(WidgetTester tester) async {
 }
 
 void main() {
-  group('Issue 95: the event rename dialog saves while it is open', () {
-    testWidgets('Issue 95: a refused name leaves the event rename dialog open '
-        'with the typed name and the message on the field', (tester) async {
-      final host = await _open(tester, onSave: (_) async => _refused);
+  group('Issue 95: the evaluation rename dialog saves while it is open', () {
+    testWidgets(
+      'Issue 95: a refused name leaves the evaluation rename dialog open '
+      'with the typed name and the message on the field',
+      (tester) async {
+        final host = await _open(tester, onSave: (_) async => _refused);
 
-      await tester.enterText(_field(), 'Winter Camp');
-      await _save(tester);
+        await tester.enterText(_field(), 'Winter Camp');
+        await _save(tester);
 
-      expect(host.saved, ['Winter Camp']);
-      expect(host.results, isEmpty);
-      expect(find.text(_refused), findsOneWidget);
-      expect(find.text('Winter Camp'), findsOneWidget);
-      expect(tester.widget<ShadInputFormField>(_field()).enabled, isTrue);
-    });
-
-    testWidgets('Issue 95: a saved name closes the event rename dialog and '
-        'resolves to it, trimmed', (tester) async {
-      final host = await _open(tester);
-
-      await tester.enterText(_field(), '  Winter Camp ');
-      await _save(tester);
-
-      expect(host.saved, ['Winter Camp']);
-      expect(host.results, ['Winter Camp']);
-    });
+        expect(host.saved, ['Winter Camp']);
+        expect(host.results, isEmpty);
+        expect(find.text(_refused), findsOneWidget);
+        expect(find.text('Winter Camp'), findsOneWidget);
+        expect(tester.widget<ShadInputFormField>(_field()).enabled, isTrue);
+      },
+    );
 
     testWidgets(
-      'Issue 95: an unchanged name sends no save from the event rename '
+      'Issue 95: a saved name closes the evaluation rename dialog and '
+      'resolves to it, trimmed',
+      (tester) async {
+        final host = await _open(tester);
+
+        await tester.enterText(_field(), '  Winter Camp ');
+        await _save(tester);
+
+        expect(host.saved, ['Winter Camp']);
+        expect(host.results, ['Winter Camp']);
+      },
+    );
+
+    testWidgets(
+      'Issue 95: an unchanged name sends no save from the evaluation rename '
       'dialog and resolves to null',
       (tester) async {
         final host = await _open(tester);
@@ -106,7 +114,7 @@ void main() {
     );
 
     testWidgets(
-      'Issue 95: while the event rename dialog saves, the form is off '
+      'Issue 95: while the evaluation rename dialog saves, the form is off '
       'and Save, Cancel and Enter do nothing; one save is sent',
       (
         tester,
@@ -141,7 +149,7 @@ void main() {
     );
 
     testWidgets(
-      'Issue 95: Enter pressed twice in the event rename dialog sends '
+      'Issue 95: Enter pressed twice in the evaluation rename dialog sends '
       'one save',
       (tester) async {
         final answer = Completer<String?>();
@@ -163,21 +171,5 @@ void main() {
         expect(_button(tester, 'Cancel').onPressed, isNotNull);
       },
     );
-  });
-
-  group('Issue 55: the event rename dialog reads the form values', () {
-    testWidgets('Issue 55: Save on an empty name keeps the dialog open with '
-        'the message on the field', (tester) async {
-      final host = await _open(tester);
-      expect(find.text('Event name *'), findsOneWidget);
-
-      await tester.enterText(_field(), '');
-      await _save(tester);
-
-      expect(host.saved, isEmpty);
-      expect(host.results, isEmpty);
-      expect(find.text('Rename event'), findsOneWidget);
-      expect(find.textContaining('required'), findsOneWidget);
-    });
   });
 }

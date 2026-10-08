@@ -1,5 +1,7 @@
 import 'package:cl_club_events/src/models/event_management_messages.dart';
 import 'package:cl_club_events/src/widgets/event_editor/event_management_section.dart';
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show RenameForm, RenameFormFields;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier, clEventsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -70,6 +72,27 @@ class _RecordingEvents extends ClEventsMasterNotifier {
 
   @override
   Future<void> hardDeleteEvent(int eventId) async => record('delete($eventId)');
+
+  @override
+  Future<Event> updateEvent(
+    int eventId, {
+    int? version,
+    String? title,
+    String? description,
+    Visibility? visibility,
+    String? organizerName,
+    List<String>? Function()? coachNames,
+    Gender? Function()? gender,
+    Age? Function()? minAge,
+    Age? Function()? maxAge,
+    bool? strictAge,
+    bool? isFeatured,
+    List<String>? Function()? galleryUris,
+    List<EventSession>? Function()? sessions,
+  }) async {
+    record('rename($eventId, $title)');
+    return event;
+  }
 }
 
 typedef _Pumped = ({_RecordingEvents events, List<String> left});
@@ -295,6 +318,51 @@ void main() {
         findsOneWidget,
       );
       expect(find.textContaining('raw server text'), findsNothing);
+    });
+  });
+
+  group('Issue 95: Rename', () {
+    Finder nameField() => find.byWidgetPredicate(
+      (w) => w is ShadInputFormField && w.id == RenameFormFields.valueId,
+    );
+
+    Future<void> rename(WidgetTester tester, String title) async {
+      await tester.tap(_button(EventManagementMessages.rename));
+      await tester.pumpAndSettle();
+      await tester.enterText(nameField(), title);
+      await tester.tap(find.widgetWithText(ShadButton, 'Save'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Issue 95: a refused event rename leaves the dialog open '
+        'with the typed name and the message on the field', (tester) async {
+      final pumped = await _pump(tester, user: admin);
+      pumped.events.refusal = Exception('refused');
+
+      await rename(tester, 'Winter Camp');
+
+      expect(pumped.events.calls, ['rename(1, Winter Camp)']);
+      expect(nameField(), findsOneWidget);
+      expect(find.text('Winter Camp'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(RenameForm),
+          matching: find.text(EventManagementMessages.renameFailed),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text(EventManagementMessages.renamed), findsNothing);
+    });
+
+    testWidgets('Issue 95: a saved event rename closes the dialog and says '
+        'so', (tester) async {
+      final pumped = await _pump(tester, user: admin);
+
+      await rename(tester, 'Winter Camp');
+
+      expect(pumped.events.calls, ['rename(1, Winter Camp)']);
+      expect(nameField(), findsNothing);
+      expect(find.text(EventManagementMessages.renamed), findsOneWidget);
     });
   });
 }

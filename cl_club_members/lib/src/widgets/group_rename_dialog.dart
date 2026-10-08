@@ -1,56 +1,55 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show EventFormValidators, RenameForm, RenameFormFields, RenameFormState;
+    show GroupFormValidators, RenameForm, RenameFormFields, RenameFormState;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-/// Asks for an event's new title in an [EventRenameDialog], seeded with
-/// [initialTitle], and writes it with [onSave], which resolves to `null` once
+/// Asks for a group's new name in a [GroupRenameDialog], seeded with
+/// [initialName], and writes it with [onSave], which resolves to `null` once
 /// saved or to the refusal to show under the field, keeping the dialog open.
-/// Resolves to the saved title, trimmed, or `null` on Cancel / dismiss /
-/// no-op (title unchanged, no write).
-Future<String?> showEventRenameDialog(
+/// Resolves to the saved name, trimmed, or `null` on Cancel / dismiss /
+/// no-op (name unchanged, no write).
+Future<String?> showGroupRenameDialog(
   BuildContext context,
-  String initialTitle, {
-  required Future<String?> Function(String title) onSave,
+  String initialName, {
+  required Future<String?> Function(String name) onSave,
 }) {
   return showShadDialog<String?>(
     context: context,
-    builder: (_) =>
-        EventRenameDialog(initialTitle: initialTitle, onSave: onSave),
+    builder: (_) => GroupRenameDialog(initialName: initialName, onSave: onSave),
   );
 }
 
-/// The dialog of [showEventRenameDialog]: the shared [RenameForm] with
+/// The dialog of [showGroupRenameDialog]: the shared [RenameForm] with
 /// Cancel and Save. It stays open while [onSave] runs, with the form off and
-/// Save, Cancel and Enter doing nothing, and closes only once the title is
+/// Save, Cancel and Enter doing nothing, and closes only once the name is
 /// saved.
-class EventRenameDialog extends StatefulWidget {
-  const EventRenameDialog({
-    required this.initialTitle,
+class GroupRenameDialog extends StatefulWidget {
+  const GroupRenameDialog({
+    required this.initialName,
     required this.onSave,
     super.key,
   });
 
-  /// The title the field starts with.
-  final String initialTitle;
+  /// The name the field starts with.
+  final String initialName;
 
-  /// Writes the title: `null` once saved, else the refusal to show under
+  /// Writes the name: `null` once saved, else the refusal to show under
   /// the field.
-  final Future<String?> Function(String title) onSave;
+  final Future<String?> Function(String name) onSave;
 
   @override
-  State<EventRenameDialog> createState() => EventRenameDialogState();
+  State<GroupRenameDialog> createState() => GroupRenameDialogState();
 }
 
-/// State of [EventRenameDialog].
-class EventRenameDialogState extends State<EventRenameDialog> {
+/// State of [GroupRenameDialog].
+class GroupRenameDialogState extends State<GroupRenameDialog> {
   /// Drives the hosted form.
   final GlobalKey<RenameFormState> formKey = GlobalKey<RenameFormState>();
 
   /// Whether a save is in flight.
   bool isSaving = false;
 
-  /// Saves the typed title, once: closes when it is unchanged or saved, and
+  /// Saves the typed name, once: closes when it is unchanged or saved, and
   /// puts a refusal on the field.
   Future<void> save() async {
     if (isSaving) return;
@@ -58,7 +57,7 @@ class EventRenameDialogState extends State<EventRenameDialog> {
         formKey.currentState?.validate()?[RenameFormFields.valueId] as String?;
     if (value == null) return;
     final navigator = Navigator.of(context);
-    if (value == widget.initialTitle.trim()) {
+    if (value == widget.initialName.trim()) {
       navigator.pop();
       return;
     }
@@ -78,7 +77,7 @@ class EventRenameDialogState extends State<EventRenameDialog> {
   @override
   Widget build(BuildContext context) {
     return ShadDialog(
-      title: const Text('Rename event'),
+      title: const Text('Rename group'),
       actions: [
         ShadButton.outline(
           onPressed: isSaving ? null : () => Navigator.of(context).pop(),
@@ -93,10 +92,10 @@ class EventRenameDialogState extends State<EventRenameDialog> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: RenameForm(
           key: formKey,
-          initialValue: widget.initialTitle,
-          label: 'Event name',
-          placeholder: 'e.g., Summer Skating Camp',
-          validator: EventFormValidators.title,
+          initialValue: widget.initialName,
+          label: 'Group Name',
+          placeholder: 'e.g., U12 Boys',
+          validator: GroupFormValidators.name,
           enabled: !isSaving,
           onSubmitted: save,
         ),

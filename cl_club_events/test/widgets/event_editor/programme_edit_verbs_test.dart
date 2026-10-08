@@ -1,6 +1,6 @@
 // A programme is corrected, never updated: the server offers `updateEvent`
 // to camps and one-offs only (club_client#118).
-import 'package:cl_club_events/src/widgets/event_editor/editable_event_body.dart'
+import 'package:cl_club_events/src/widgets/event_editor/event_flags_card.dart'
     show EventFlagsCard;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier, clEventsMasterProvider;

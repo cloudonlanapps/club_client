@@ -63,7 +63,7 @@ void main() {
     skip: skipUnlessDayApart,
   );
 
-  test('Issue 120: at noon the derived schedule names the rule\'s days', () {
+  test("Issue 120: at noon the derived schedule names the rule's days", () {
     final view = testEventView(
       testPublicEvent(
         type: EventType.programme,

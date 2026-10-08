@@ -2,6 +2,8 @@ import 'package:cl_club_forms/cl_club_forms.dart'
     show RenameForm, RenameFormFields, RenameFormState;
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart'
+    show SavingDialogCloseIcon, SavingDialogScope;
 
 import '../constants/evaluation_view_strings.dart';
 
@@ -99,25 +101,29 @@ class EvaluationRenameDialogState extends State<EvaluationRenameDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return ShadDialog(
-      title: Text(widget.title),
-      actions: [
-        ShadButton.outline(
-          onPressed: isSaving ? null : () => Navigator.of(context).pop(),
-          child: const Text(EvaluationViewStrings.cancel),
+    return SavingDialogScope(
+      saving: isSaving,
+      child: ShadDialog(
+        closeIcon: SavingDialogCloseIcon(saving: isSaving),
+        title: Text(widget.title),
+        actions: [
+          ShadButton.outline(
+            onPressed: isSaving ? null : () => Navigator.of(context).pop(),
+            child: const Text(EvaluationViewStrings.cancel),
+          ),
+          ShadButton(
+            onPressed: isSaving ? null : save,
+            child: const Text(EvaluationViewStrings.save),
+          ),
+        ],
+        child: RenameForm(
+          key: formKey,
+          initialValue: widget.initial ?? '',
+          label: widget.label,
+          validator: widget.validator,
+          enabled: !isSaving,
+          onSubmitted: save,
         ),
-        ShadButton(
-          onPressed: isSaving ? null : save,
-          child: const Text(EvaluationViewStrings.save),
-        ),
-      ],
-      child: RenameForm(
-        key: formKey,
-        initialValue: widget.initial ?? '',
-        label: widget.label,
-        validator: widget.validator,
-        enabled: !isSaving,
-        onSubmitted: save,
       ),
     );
   }

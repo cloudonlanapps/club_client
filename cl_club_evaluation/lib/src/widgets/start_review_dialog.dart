@@ -5,7 +5,11 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
-    show EvaluationStartForm, EvaluationStartFormState;
+    show
+        EvaluationStartForm,
+        EvaluationStartFormState,
+        SavingDialogCloseIcon,
+        SavingDialogScope;
 
 import '../constants/evaluation_view_sizes.dart';
 import '../constants/evaluation_view_strings.dart';
@@ -111,36 +115,40 @@ class StartReviewDialogState extends ConsumerState<StartReviewDialog> {
       username: w.username,
       eventId: w.eventId,
     );
-    return ShadDialog(
-      title: const Text(EvaluationViewStrings.startReview),
-      constraints: const BoxConstraints(
-        maxWidth: EvaluationViewSizes.dialogWidth,
-      ),
-      actions: [
-        ShadButton.outline(
-          onPressed: creating ? null : () => Navigator.of(context).pop(),
-          child: const Text(EvaluationViewStrings.cancel),
+    return SavingDialogScope(
+      saving: creating,
+      child: ShadDialog(
+        closeIcon: SavingDialogCloseIcon(saving: creating),
+        title: const Text(EvaluationViewStrings.startReview),
+        constraints: const BoxConstraints(
+          maxWidth: EvaluationViewSizes.dialogWidth,
         ),
-        ShadButton(
-          enabled: !creating,
-          onPressed: start,
-          child: Text(
-            creating
-                ? EvaluationViewStrings.starting
-                : EvaluationViewStrings.start,
+        actions: [
+          ShadButton.outline(
+            onPressed: creating ? null : () => Navigator.of(context).pop(),
+            child: const Text(EvaluationViewStrings.cancel),
           ),
+          ShadButton(
+            enabled: !creating,
+            onPressed: start,
+            child: Text(
+              creating
+                  ? EvaluationViewStrings.starting
+                  : EvaluationViewStrings.start,
+            ),
+          ),
+        ],
+        child: EvaluationStartForm(
+          key: formKey,
+          templates: options.templates,
+          members: options.members,
+          events: options.events,
+          eventsByMember: options.eventsByMember,
+          fixedTemplate: options.fixedTemplate,
+          fixedMember: options.fixedMember,
+          fixedEvent: options.fixedEvent,
+          enabled: !creating,
         ),
-      ],
-      child: EvaluationStartForm(
-        key: formKey,
-        templates: options.templates,
-        members: options.members,
-        events: options.events,
-        eventsByMember: options.eventsByMember,
-        fixedTemplate: options.fixedTemplate,
-        fixedMember: options.fixedMember,
-        fixedEvent: options.fixedEvent,
-        enabled: !creating,
       ),
     );
   }

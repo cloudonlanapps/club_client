@@ -481,6 +481,8 @@ own isolated server.
 
 23. **Field ids are named constants.** Each form has a `<X>FormFields` class of `static const String` ids (`EventCreateFormFields.titleId`); the form, its adapter and its tests use them. No bare string id.
 
+24. **A dialog that saves while it is open stays open until the save ends.** Its host wraps the `ShadDialog` in `SavingDialogScope(saving: …)` and passes `closeIcon: SavingDialogCloseIcon(saving: …)` (both `ui_lib`), with the same in-flight flag that turns its form and buttons off. While the save is in flight nothing closes the dialog: not its buttons, its close X, a tap outside, Escape or system back; so what the server refuses is still seen where rule 20 puts it. The dialog closes itself with `Navigator.pop` once the save ends. A dialog that only returns a value, and whose caller saves after it has closed, needs neither (club_client#113).
+
 ## Section-wise Editors (shared inline pattern)
 
 Editing an existing entity happens **section-by-section, inline, in place** — never via a dialog/popover and never via a `/…/:id/edit` route. All section editors are built on one shared, SDK-free primitive in `ui_lib`; do not hand-roll the chrome, the edit pencil, or a dialog host per feature.

@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import 'support/credit_test_scope.dart';
+import 'support/dialog_dismissal.dart';
 
 const _member = 'view_member';
 const _accountId = 'PRG00001';
@@ -183,6 +184,41 @@ void main() {
 
       expect(find.text('Save'), findsNothing);
       expect(_button(tester, 'Saving…').onPressed, isNull);
+
+      held.complete();
+      await tester.pumpAndSettle();
+      expect(find.byType(CreditActionDialog), findsNothing);
+    });
+    testWidgets('Issue 113: while Add credit saves in its dialog, the X, a '
+        'tap outside, Escape and system back do not close it', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(900, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final held = Completer<void>();
+      await tester.pumpWidget(
+        creditScope(
+          user: _admin,
+          accountsNotifier: () => _HeldAccounts(held),
+          child: Builder(
+            builder: (context) => ShadButton(
+              onPressed: () => showShadDialog<bool>(
+                context: context,
+                builder: (_) => const CreditActionForm.dialog(
+                  kind: CreditActionKind.grant,
+                  username: _member,
+                ),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await _fill(tester, CreditActionKind.grant);
+      await tester.tap(find.widgetWithText(ShadButton, 'Save'));
+      await tester.pump();
+
+      await expectNoDismissal(tester, find.byType(CreditActionDialog));
 
       held.complete();
       await tester.pumpAndSettle();

@@ -9,6 +9,8 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart'
+    show SavingDialogCloseIcon, SavingDialogScope;
 
 import '../../models/programme_schedule_form_helpers.dart';
 import '../../utils/event_refusal.dart';
@@ -186,45 +188,49 @@ class ProgrammeEndDateDialogState
   @override
   Widget build(BuildContext context) {
     final event = widget.event;
-    return ShadDialog(
-      title: const Text(ProgrammeEndDateDialog.title),
-      constraints: const BoxConstraints(
-        maxWidth: ProgrammeEndDateDialog.maxWidth,
-      ),
-      actions: [
-        ShadButton.outline(
-          onPressed: saving ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        if (hasEnd)
-          ShadButton.outline(
-            onPressed: saving ? null : clear,
-            child: const Text(ProgrammeEndDateDialog.clearLabel),
-          ),
-        ShadButton(
-          onPressed: saving ? null : save,
-          child: Text(saving ? 'Saving…' : 'Save'),
-        ),
-      ],
-      child: ConstrainedBox(
+    return SavingDialogScope(
+      saving: saving,
+      child: ShadDialog(
+        closeIcon: SavingDialogCloseIcon(saving: saving),
+        title: const Text(ProgrammeEndDateDialog.title),
         constraints: const BoxConstraints(
-          maxWidth: ProgrammeEndDateDialog.maxFormWidth,
+          maxWidth: ProgrammeEndDateDialog.maxWidth,
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: ProgrammeEndDateForm(
-            key: formKey,
-            initialValues: buildProgrammeEndDateFormInitialValues(
-              event,
-              schedules: widget.schedules,
+        actions: [
+          ShadButton.outline(
+            onPressed: saving ? null : () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          if (hasEnd)
+            ShadButton.outline(
+              onPressed: saving ? null : clear,
+              child: const Text(ProgrammeEndDateDialog.clearLabel),
             ),
-            reasonRequired: !hasEnd,
-            resultOf: (day) => programmeEndResultLine(
-              event,
-              day,
-              schedules: widget.schedules,
+          ShadButton(
+            onPressed: saving ? null : save,
+            child: Text(saving ? 'Saving…' : 'Save'),
+          ),
+        ],
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: ProgrammeEndDateDialog.maxFormWidth,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: ProgrammeEndDateForm(
+              key: formKey,
+              initialValues: buildProgrammeEndDateFormInitialValues(
+                event,
+                schedules: widget.schedules,
+              ),
+              reasonRequired: !hasEnd,
+              resultOf: (day) => programmeEndResultLine(
+                event,
+                day,
+                schedules: widget.schedules,
+              ),
+              enabled: !saving,
             ),
-            enabled: !saving,
           ),
         ),
       ),

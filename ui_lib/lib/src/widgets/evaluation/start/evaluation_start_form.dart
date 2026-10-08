@@ -5,6 +5,7 @@ import '../../../constants/evaluation_spacing.dart';
 import '../../../constants/evaluation_strings.dart';
 import '../../../models/evaluation_start_options.dart';
 import '../../read_only_field.dart';
+import '../common/evaluation_form_focus.dart';
 import 'evaluation_form_error.dart';
 import 'evaluation_period_fields.dart';
 import 'evaluation_period_validators.dart';
@@ -69,7 +70,8 @@ class EvaluationStartForm extends StatefulWidget {
 }
 
 /// State of [EvaluationStartForm]: the form and its period message.
-class EvaluationStartFormState extends State<EvaluationStartForm> {
+class EvaluationStartFormState extends State<EvaluationStartForm>
+    with EvaluationFormFocus<EvaluationStartForm> {
   /// The form.
   final GlobalKey<ShadFormState> formKey = GlobalKey<ShadFormState>();
 

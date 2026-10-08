@@ -7,6 +7,7 @@ import '../../../models/evaluation_layout_callbacks.dart';
 import '../../../models/evaluation_layout_entry.dart';
 import '../../../models/evaluation_template_create_value.dart';
 import '../../../utils/evaluation_form_equality.dart';
+import '../common/evaluation_form_focus.dart';
 import 'evaluation_layout_form_field.dart';
 import 'evaluation_template_create_form_fields.dart';
 import 'evaluation_template_form_validators.dart';
@@ -61,7 +62,8 @@ class EvaluationTemplateCreateForm extends StatefulWidget {
 /// State of [EvaluationTemplateCreateForm]: the form and its form-level
 /// message.
 class EvaluationTemplateCreateFormState
-    extends State<EvaluationTemplateCreateForm> {
+    extends State<EvaluationTemplateCreateForm>
+    with EvaluationFormFocus<EvaluationTemplateCreateForm> {
   /// The form.
   final GlobalKey<ShadFormState> formKey = GlobalKey<ShadFormState>();
 

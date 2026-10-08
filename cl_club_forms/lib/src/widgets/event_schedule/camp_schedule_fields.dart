@@ -8,6 +8,7 @@ import '../../models/session_input.dart';
 import '../form/labeled_form_row.dart';
 import 'camp_date_exclusion_calendar.dart';
 import 'session_split_field.dart';
+import 'time_picker_empty_parts.dart';
 import 'two_column_grid.dart';
 
 /// `ShadForm`-compatible field for camp event schedule.
@@ -74,6 +75,7 @@ class CampScheduleFormFieldBodyState extends State<CampScheduleFormFieldBody> {
   late Set<DateTime> excludedDates;
   late List<SessionInput> sessions;
   final GlobalKey<SessionSplitFieldState> _splitKey = GlobalKey();
+  final GlobalKey<FormFieldState<ShadTimeOfDay>> _startTimeKey = GlobalKey();
   late TextEditingController durationController;
   late TextEditingController trainingDaysController;
   late ShadTimePickerController sessionStartTimeController;
@@ -103,7 +105,7 @@ class CampScheduleFormFieldBodyState extends State<CampScheduleFormFieldBody> {
       // minute field is placeholder text, not a value.
       minute: initial.sessionStartTime?.minute ?? 0,
       second: 0,
-    );
+    )..addListener(onStartTimeControllerChanged);
   }
 
   @override
@@ -174,6 +176,15 @@ class CampScheduleFormFieldBodyState extends State<CampScheduleFormFieldBody> {
       sessions = const [];
     });
     emit();
+  }
+
+  /// The picker reports a time only once every part of it is filled. With
+  /// a part emptied the start time is empty too, so the required rule
+  /// refuses it.
+  void onStartTimeControllerChanged() {
+    if (sessionStartTimeController.value != null) return;
+    if (selectedSessionStartTime == null) return;
+    _startTimeKey.currentState?.didChange(null);
   }
 
   /// A start time that is set or moved takes the session split with it: the
@@ -275,20 +286,24 @@ class CampScheduleFormFieldBodyState extends State<CampScheduleFormFieldBody> {
             LabeledFormRow(
               label: 'Start Time',
               required: true,
-              field: ShadTimePickerFormField(
+              field: TimePickerEmptyParts(
                 controller: sessionStartTimeController,
-                initialValue: selectedSessionStartTime,
-                enabled: enabled,
-                showSeconds: false,
-                hourLabel: const SizedBox.shrink(),
-                minuteLabel: const SizedBox.shrink(),
-                // Match the plain inputs beside it: 14px digits (the picker
-                // defaults to 16) and no label gap (labels are hidden).
-                gap: 0,
-                style: ShadTheme.of(context).textTheme.muted,
-                validator: (time) =>
-                    time == null ? 'Start time is required' : null,
-                onChanged: onSessionStartTimeChanged,
+                child: ShadTimePickerFormField(
+                  key: _startTimeKey,
+                  controller: sessionStartTimeController,
+                  initialValue: selectedSessionStartTime,
+                  enabled: enabled,
+                  showSeconds: false,
+                  hourLabel: const SizedBox.shrink(),
+                  minuteLabel: const SizedBox.shrink(),
+                  // Match the plain inputs beside it: 14px digits (the picker
+                  // defaults to 16) and no label gap (labels are hidden).
+                  gap: 0,
+                  style: ShadTheme.of(context).textTheme.muted,
+                  validator: (time) =>
+                      time == null ? 'Start time is required' : null,
+                  onChanged: onSessionStartTimeChanged,
+                ),
               ),
             ),
             LabeledFormRow(

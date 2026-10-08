@@ -5,6 +5,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../constants/form_spacing.dart';
 import '../../models/one_off_schedule_data.dart';
 import '../form/labeled_form_row.dart';
+import 'time_picker_empty_parts.dart';
 import 'two_column_grid.dart';
 
 /// `ShadForm`-compatible field for one-off event schedule.
@@ -67,6 +68,7 @@ class OneOffScheduleFormFieldBodyState
   late int durationMinutes;
   late TextEditingController durationController;
   late ShadTimePickerController startTimeController;
+  final GlobalKey<FormFieldState<ShadTimeOfDay>> _startTimeKey = GlobalKey();
 
   @override
   void initState() {
@@ -84,7 +86,7 @@ class OneOffScheduleFormFieldBodyState
       // user enters Hours. See CLAUDE.md form rule 11.
       minute: initial.startTime?.minute ?? 0,
       second: 0,
-    );
+    )..addListener(onStartTimeControllerChanged);
   }
 
   @override
@@ -129,6 +131,15 @@ class OneOffScheduleFormFieldBodyState
       return 'Duration must be greater than 0';
     }
     return null;
+  }
+
+  /// The picker reports a time only once every part of it is filled. With
+  /// a part emptied the start time is empty too, so the required rule
+  /// refuses it.
+  void onStartTimeControllerChanged() {
+    if (startTimeController.value != null) return;
+    if (selectedStartTime == null) return;
+    _startTimeKey.currentState?.didChange(null);
   }
 
   void emit() {
@@ -181,23 +192,27 @@ class OneOffScheduleFormFieldBodyState
             LabeledFormRow(
               label: 'Start Time',
               required: true,
-              field: ShadTimePickerFormField(
+              field: TimePickerEmptyParts(
                 controller: startTimeController,
-                initialValue: selectedStartTime,
-                enabled: enabled,
-                showSeconds: false,
-                hourLabel: const SizedBox.shrink(),
-                minuteLabel: const SizedBox.shrink(),
-                // Match the plain inputs beside it: 14px digits (the picker
-                // defaults to 16) and no label gap (labels are hidden).
-                gap: 0,
-                style: ShadTheme.of(context).textTheme.muted,
-                validator: (time) =>
-                    time == null ? 'Start time is required' : null,
-                onChanged: (time) {
-                  setState(() => selectedStartTime = time);
-                  emit();
-                },
+                child: ShadTimePickerFormField(
+                  key: _startTimeKey,
+                  controller: startTimeController,
+                  initialValue: selectedStartTime,
+                  enabled: enabled,
+                  showSeconds: false,
+                  hourLabel: const SizedBox.shrink(),
+                  minuteLabel: const SizedBox.shrink(),
+                  // Match the plain inputs beside it: 14px digits (the picker
+                  // defaults to 16) and no label gap (labels are hidden).
+                  gap: 0,
+                  style: ShadTheme.of(context).textTheme.muted,
+                  validator: (time) =>
+                      time == null ? 'Start time is required' : null,
+                  onChanged: (time) {
+                    setState(() => selectedStartTime = time);
+                    emit();
+                  },
+                ),
               ),
             ),
             LabeledFormRow(

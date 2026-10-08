@@ -17,6 +17,10 @@ class EventFormFields {
   // Organizer & coaches section.
   static const String organizerNameId = 'organizerName';
   static const String coachNamesId = 'coachNames';
+
+  /// The session a programme's new organizer and coaches take over from,
+  /// its start as a `DateTime`. A camp or a one-off has no such field.
+  static const String effectiveFromId = 'effectiveFrom';
 }
 
 /// Who an event is for, by gender: anyone, boys or girls. The form's Gender

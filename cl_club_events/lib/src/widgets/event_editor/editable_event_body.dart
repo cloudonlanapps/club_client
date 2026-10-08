@@ -4,6 +4,7 @@ import 'package:cl_club_forms/cl_club_forms.dart'
     show EventStaffForm, EventStaffFormState;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
+        clEventSchedulesProvider,
         clEventsMasterProvider,
         clUsersMasterProvider,
         clVenueDetailProvider,
@@ -27,6 +28,8 @@ import 'package:ui_lib/ui_lib.dart'
 
 import '../../models/camp_event_form_helpers.dart' show EventFormSubmit;
 import '../../models/event_staff_form_helpers.dart';
+import '../../models/programme_schedule_form_helpers.dart'
+    show programmeAdjustFromOptions;
 import '../../utils/event_save_error.dart';
 import '../events_preview/cl_event_audit_info.dart';
 import '../events_preview/cl_event_enrolments_summary.dart';
@@ -144,7 +147,7 @@ class EventOverviewCard extends ConsumerWidget {
   ) async {
     try {
       await EventFormSubmit.updateDescription(
-        eventId: event.id,
+        event: event,
         description: updated,
         notifier: ref.read(clEventsMasterProvider.notifier),
       );
@@ -221,9 +224,10 @@ class EventOverviewCard extends ConsumerWidget {
 /// are a coach-only multi-select list. In read mode a coach name is a tappable
 /// link to their **public** profile (`onPublicProfileTap`) only when that coach
 /// has opted in (`isPublicProfile`); others render as plain text. The editor
-/// stages changes and the card's Save commits them in a single `updateEvent`
-/// call. Coach display names + public ids are resolved from
-/// `clUsersMasterProvider`.
+/// stages changes and the card's Save commits them in a single call: an
+/// update of a camp or a one-off, and for a programme a split from the
+/// upcoming session the editor asks for (club_client#118). Coach display
+/// names + public ids are resolved from `clUsersMasterProvider`.
 class OrganizerCoachesSection extends ConsumerStatefulWidget {
   const OrganizerCoachesSection({
     required this.event,
@@ -337,7 +341,7 @@ class OrganizerCoachesSectionState
   Future<bool> _save(Map<String, dynamic> values) async {
     try {
       await EventFormSubmit.updateOrganizer(
-        eventId: widget.event.id,
+        event: widget.event,
         values: values,
         notifier: ref.read(clEventsMasterProvider.notifier),
       );
@@ -385,6 +389,12 @@ class OrganizerCoachesSectionState
         ? null
         : _pickerFor(organizerName, master);
     final coaches = [for (final u in coachNames) _pickerFor(u, master)];
+    // A programme's staffing changes from a session onward: its editor
+    // asks for one of the upcoming sessions of the present schedule.
+    final isProgramme = event.type == EventType.programme;
+    final schedules = isProgramme
+        ? ref.watch(clEventSchedulesProvider(event.id)).valueOrNull
+        : null;
 
     return EditableSectionCard<Map<String, dynamic>>(
       title: 'Organizer & Coaches',
@@ -413,22 +423,31 @@ class OrganizerCoachesSectionState
               ),
         ],
       ),
-      editBuilder: ({required enabled}) => EventStaffForm(
-        key: _editorKey,
-        initialValues: buildEventStaffFormInitialValues(
-          organizer: organizer,
-          coaches: coaches,
-        ),
-        enabled: enabled,
-        onPickOrganizer: () async {
-          final picked = await _pickOrganizer();
-          return picked == null ? null : eventStaffMemberOf(picked);
-        },
-        onPickCoaches: (exclude) async {
-          final picked = await _pickCoaches(exclude);
-          return picked?.map(eventStaffMemberOf).toList();
-        },
-      ),
+      editBuilder: ({required enabled}) {
+        final fromOptions = isProgramme
+            ? programmeAdjustFromOptions(event, schedules: schedules)
+            : null;
+        return EventStaffForm(
+          key: _editorKey,
+          initialValues: buildEventStaffFormInitialValues(
+            organizer: organizer,
+            coaches: coaches,
+            from: fromOptions == null || fromOptions.isEmpty
+                ? null
+                : fromOptions.first,
+          ),
+          fromOptions: fromOptions,
+          enabled: enabled,
+          onPickOrganizer: () async {
+            final picked = await _pickOrganizer();
+            return picked == null ? null : eventStaffMemberOf(picked);
+          },
+          onPickCoaches: (exclude) async {
+            final picked = await _pickCoaches(exclude);
+            return picked?.map(eventStaffMemberOf).toList();
+          },
+        );
+      },
       onValidate: () => _editorKey.currentState?.validate(),
       isDirty: () => _editorKey.currentState?.isDirty ?? false,
       onSave: _save,
@@ -625,7 +644,7 @@ class EventFlagsCardState extends ConsumerState<EventFlagsCard> {
     setState(() => isSaving = true);
     try {
       await EventFormSubmit.updateFlags(
-        eventId: widget.event.id,
+        event: widget.event,
         notifier: ref.read(clEventsMasterProvider.notifier),
         visibility: visibility,
         isFeatured: isFeatured,

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cl_club_events/src/utils/programme_end_date.dart';
+import 'package:cl_club_events/src/utils/programme_end_date_messages.dart';
 import 'package:cl_club_events/src/widgets/event_editor/event_schedule_section.dart';
 import 'package:cl_club_events/src/widgets/event_editor/programme_end_date_dialog.dart';
 import 'package:cl_club_events/src/widgets/event_editor/programme_schedule_actions.dart';

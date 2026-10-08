@@ -118,14 +118,14 @@ packages:
     source: path
     version: "0.1.0"
   cl_club_members:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       path: "../../cl_club_members"
       relative: true
     source: path
     version: "0.1.0"
   cl_club_venues:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       path: "../../cl_club_venues"
       relative: true
@@ -1194,7 +1194,7 @@ packages:
     source: hosted
     version: "1.4.0"
   ui_lib:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       path: "../../ui_lib"
       relative: true

@@ -47,6 +47,10 @@ differs here:
   content page by its URL, so `go()` to one is legitimate. A detail page is
   addressed by a public id only the server knows: reach it by tapping its
   card.
+- **Fixtures go in and out through the SDK.** The site creates and deletes
+  nothing, so a test seeds as the super-admin (`_helpers/seed.dart`) in
+  `setUpAll`, removes what it made in `tearDownAll`, and checks there that
+  nothing of it is left. What a page shows is still checked on the page.
 - **The first file needs an untouched server.**
   `workflow_emptysite_every_route_test.dart` checks every page of a site whose
   server holds nothing. It sorts first among the suite's files, so on a fresh

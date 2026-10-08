@@ -104,7 +104,7 @@ _app-test DIR CONF TARGET keep="": _native-deploy
             elif grep -qE '~[0-9]+: All tests (passed|skipped)|~[0-9]+: Some tests' "$out"; then
                 # A skip is not a pass: name it, with the reasons the tests gave.
                 echo "    [SKIP] $f ({{CONF}})"
-                grep -E '^\s+(known issue, club_core#[0-9]+|.* is (on|off) on this stack)' "$out" | sort -u | sed 's/^\s*/           /'
+                grep -E '^\s+(known issue, club_(core|client)#[0-9]+|.* is (on|off) on this stack)' "$out" | sort -u | sed 's/^\s*/           /'
             else echo "    [PASS] $f ({{CONF}})"; fi
             rm -f "$out"
         done

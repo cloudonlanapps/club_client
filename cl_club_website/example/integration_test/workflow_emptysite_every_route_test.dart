@@ -62,13 +62,7 @@ SiteCopy _copy(WidgetTester tester) =>
 
 /// Mounts the site and opens [route].
 Future<void> _open(WidgetTester tester, String route) async {
-  await pumpSite(tester, apiBaseUrl: _kApiBaseUrl);
-  await waitFor(
-    tester,
-    () => container(tester).read(siteStringsProvider).hasValue,
-    description: "the site's copy",
-  );
-  if (route != '/') await go(tester, route);
+  await pumpSite(tester, apiBaseUrl: _kApiBaseUrl, location: route);
   expect(currentLocation(tester), route);
 }
 

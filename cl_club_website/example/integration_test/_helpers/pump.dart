@@ -19,6 +19,7 @@ import 'package:cl_club_website/src/site/router.dart' show routerProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show bundledContactInfoProvider;
 import 'package:cl_server_config/cl_server_config.dart';
+import 'package:flutter/widgets.dart' show SizedBox;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:media_kit/media_kit.dart';
@@ -28,11 +29,16 @@ import 'package:media_kit/media_kit.dart';
 /// `serverConfigProvider` only. No `secureClientProvider` and no session: a
 /// visitor has none, so every read goes through the sessionless client.
 ///
+/// The site starts on the landing page, as it does for a visitor; pass
+/// [location] to open another address once it is up. Calling it again in one
+/// test renders the site afresh, with nothing kept from the first time.
+///
 /// Pass [extraOverrides] to layer provider overrides on top; they come after
 /// the defaults, so they can replace any of them.
 Future<void> pumpSite(
   WidgetTester tester, {
   required String apiBaseUrl,
+  String location = landingLocation,
   List<Override> extraOverrides = const [],
 }) async {
   MediaKit.ensureInitialized();
@@ -52,12 +58,36 @@ Future<void> pumpSite(
       ...extraOverrides,
     ],
   );
-  addTearDown(scope.dispose);
+  // A test that fails leaves its site mounted. Take it down before the
+  // container goes, so that microtask still finds its providers, and the
+  // failure stays with the test that failed.
+  addTearDown(() async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    scope.dispose();
+  });
+  // Take down a site an earlier call mounted first: the router's navigator
+  // has a global key, which must not move from the old tree into the new.
+  await tester.pumpWidget(const SizedBox.shrink());
   await tester.pumpWidget(
     UncontrolledProviderScope(container: scope, child: const App()),
   );
-  await settle(tester);
+  // The landing page's carousel animates for as long as it shows, so it
+  // never settles: wait for the site's copy, then leave it or settle briefly.
+  await waitFor(
+    tester,
+    () => scope.read(siteStringsProvider).hasValue,
+    description: "the site's copy",
+  );
+  if (location == landingLocation) {
+    await settle(tester, timeout: const Duration(seconds: 3));
+  } else {
+    await go(tester, location);
+  }
 }
+
+/// The address of the landing page.
+const landingLocation = '/';
 
 /// The provider container of the mounted site.
 ProviderContainer container(WidgetTester tester) =>
@@ -84,12 +114,15 @@ String currentLocation(WidgetTester tester) => container(
 /// a page that keeps animating (the landing hero's carousel) never settles
 /// without that indicating a hang. On timeout we pump one more frame and
 /// return.
-Future<void> settle(WidgetTester tester) async {
+Future<void> settle(
+  WidgetTester tester, {
+  Duration timeout = const Duration(seconds: 15),
+}) async {
   try {
     await tester.pumpAndSettle(
       const Duration(milliseconds: 250),
       EnginePhase.sendSemanticsUpdate,
-      const Duration(seconds: 15),
+      timeout,
     );
   } on Object catch (_) {
     await tester.pump(const Duration(seconds: 1));

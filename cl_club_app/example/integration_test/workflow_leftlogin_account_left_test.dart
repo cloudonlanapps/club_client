@@ -70,7 +70,7 @@ void main() {
       passwordHash: _kPwd,
       firstName: 'Leftlogin',
       lastName: 'Member',
-      phone: '9876543210',
+      phone: '7400543210',
       email: '$_kMember@example.com',
       gender: Gender.preferNotToSay,
       dateOfBirthUtc: DateTime.utc(1990, 1, 1),

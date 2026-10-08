@@ -16,6 +16,7 @@ abstract final class UserEntries {
       formType: UserForm,
       builder: (key) => UserForm(
         key: key,
+        defaultCountryCode: DemoSamples.countryCode,
         canAssignAdmin: true,
         canAssignCoach: true,
         onCheckUsernameAvailable: FakeHostCalls.usernameAvailable,
@@ -49,8 +50,11 @@ abstract final class UserEntries {
       title: 'User contact form',
       group: FormDemoGroup.users,
       formType: UserContactForm,
-      builder: (key) =>
-          UserContactForm(key: key, initialValues: DemoSamples.member),
+      builder: (key) => UserContactForm(
+        key: key,
+        defaultCountryCode: DemoSamples.countryCode,
+        initialValues: DemoSamples.member,
+      ),
     ),
     FormDemoEntry(
       id: 'user-address',

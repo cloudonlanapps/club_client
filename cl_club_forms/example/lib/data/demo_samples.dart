@@ -35,6 +35,10 @@ abstract final class DemoSamples {
   /// A username the fake availability check reports as taken starts so.
   static const String takenPrefix = 'taken';
 
+  /// The country calling code of the club in the samples. The sample
+  /// phones carry their own: they are numbers set aside for made-up use.
+  static const String countryCode = '91';
+
   /// The username of the member in the samples.
   static const String username = 'sam.sample';
 
@@ -110,12 +114,12 @@ abstract final class DemoSamples {
     UserFormFields.cityId: 'Pune',
     UserFormFields.stateId: 'Maharashtra',
     UserFormFields.pincodeId: '411001',
-    UserFormFields.phoneId: '0000000000',
+    UserFormFields.phoneId: '+12025550143',
     UserFormFields.emailId: 'sam@example.test',
     UserFormFields.emergencyContactNameId: 'Pat Sample',
     UserFormFields.emergencyContactRelationId:
         UserFormAssembly.emergencyRelations.first,
-    UserFormFields.emergencyContactPhoneId: '0000000001',
+    UserFormFields.emergencyContactPhoneId: '+12025550144',
     UserFormFields.medicalInfoId: 'None known',
   };
 }

@@ -36,7 +36,7 @@ abstract final class ClubIdentityEntries {
         key: key,
         languages: DemoSamples.languages,
         initialValues: const {
-          ClubContactFormFields.phoneNumberId: '+10000000000',
+          ClubContactFormFields.phoneNumberId: '+12025550100',
           ClubContactFormFields.emailId: 'hello@example.test',
           ClubContactFormFields.emailSubjectId: FormTranslatedText(
             'A question for the club',

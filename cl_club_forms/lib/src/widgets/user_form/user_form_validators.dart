@@ -1,3 +1,4 @@
+import '../common_form_validators.dart';
 import '../signup/signup_gender.dart';
 import 'user_form_fields.dart';
 
@@ -32,12 +33,9 @@ class UserFormValidators {
     return null;
   }
 
-  static String? email(String value) {
-    final t = value.trim();
-    if (t.isEmpty) return 'Email is required';
-    if (!t.contains('@')) return 'Enter a valid email';
-    return null;
-  }
+  /// Email is required and must read as an address
+  /// (`CommonFormValidators.email`).
+  static String? email(String value) => CommonFormValidators.email(value);
 
   static String? password(String value) {
     if (value.isEmpty) return 'Password is required';
@@ -55,25 +53,21 @@ class UserFormValidators {
   static String? passwordsMatch(String? password, String? confirm) =>
       (password ?? '') == (confirm ?? '') ? null : passwordsDiffer;
 
-  /// Phone is required and must be at least 10 characters.
-  static String? phone(String value) {
-    final t = value.trim();
-    if (t.isEmpty) return 'Phone number is required';
-    if (t.length < UserFormFields.phoneMinLength) {
-      return 'Enter a valid phone number';
-    }
-    return null;
-  }
+  /// Phone is required and must be a valid number of its country, the
+  /// club's ([defaultCountryCode]) when typed without a country code
+  /// (`CommonFormValidators.phone`).
+  static String? phone(String value, {required String defaultCountryCode}) =>
+      CommonFormValidators.phone(value, defaultCountryCode: defaultCountryCode);
 
-  /// Phone is optional, but if provided must be at least 10 characters.
-  static String? phoneOptional(String value) {
-    final t = value.trim();
-    if (t.isEmpty) return null;
-    if (t.length < UserFormFields.phoneMinLength) {
-      return 'Enter a valid phone number';
-    }
-    return null;
-  }
+  /// Phone is optional, but if provided must be a valid number of its
+  /// country (`CommonFormValidators.phoneOptional`).
+  static String? phoneOptional(
+    String value, {
+    required String defaultCountryCode,
+  }) => CommonFormValidators.phoneOptional(
+    value,
+    defaultCountryCode: defaultCountryCode,
+  );
 
   /// Gender must be selected.
   static String? gender(SignupGender? value) {

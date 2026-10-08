@@ -20,6 +20,7 @@ Future<GlobalKey<SignupFormState>> _pump(
       home: Scaffold(
         body: SingleChildScrollView(
           child: SignupForm(
+            defaultCountryCode: '91',
             key: key,
             username: username,
             initialValues: initialValues,

@@ -15,6 +15,7 @@ Future<GlobalKey<UserFormState>> _pumpCreate(WidgetTester tester) async {
       home: Scaffold(
         body: SingleChildScrollView(
           child: UserForm(
+            defaultCountryCode: '91',
             key: key,
             canAssignCoach: true,
             onCheckUsernameAvailable: (_) async => true,

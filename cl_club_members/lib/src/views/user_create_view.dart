@@ -170,6 +170,7 @@ class UserCreateViewState extends ConsumerState<UserCreateView> {
               form: UserForm(
                 key: createFormKey,
                 initialValues: buildUserFormInitialValues(null),
+                defaultCountryCode: ref.watch(defaultCountryCodeProvider),
                 enabled: !isSubmitting,
                 canAssignAdmin: isSuperAdmin,
                 canAssignCoach: isAdmin,

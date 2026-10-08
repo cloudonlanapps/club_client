@@ -84,6 +84,7 @@ Future<_Users> _pump(
   String? refusalCode,
   VoidCallback? onCreated,
   VoidCallback? onCancel,
+  String countryCode = '91',
 }) async {
   await tester.binding.setSurfaceSize(const Size(1024, 2400));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -104,7 +105,7 @@ Future<_Users> _pump(
         usernameAvailabilityProvider.overrideWith(
           (ref, username) async => UsernameAvailability.available,
         ),
-        defaultCountryCodeProvider.overrideWithValue('91'),
+        defaultCountryCodeProvider.overrideWithValue(countryCode),
       ],
       child: ShadApp(
         home: ShadToaster(
@@ -230,4 +231,19 @@ void main() {
       expect(find.text('Discard changes?'), findsOneWidget);
     });
   });
+
+  group(
+    'Issue 71: UserCreateView gives its form the country code of the club',
+    () {
+      testWidgets('Issue 71: the form checks a phone in the country the '
+          'server reports', (tester) async {
+        await _pump(tester, countryCode: '33');
+
+        expect(
+          tester.widget<UserForm>(find.byType(UserForm)).defaultCountryCode,
+          '33',
+        );
+      });
+    },
+  );
 }

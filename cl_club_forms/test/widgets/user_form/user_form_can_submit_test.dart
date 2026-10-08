@@ -20,6 +20,7 @@ void main() {
               builder: (context, setState) {
                 parentSetState = setState;
                 return UserForm(
+                  defaultCountryCode: '91',
                   key: formKey,
                   enabled: !parentIsSubmitting,
                   onCheckUsernameAvailable: (_) async => true,

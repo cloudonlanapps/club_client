@@ -161,7 +161,7 @@ void main() {
           passwordHash: password,
           firstName: first,
           lastName: 'Workflow',
-          phone: '9876500${username.length}1',
+          phone: '7400500${username.length}1',
           email: '$username@example.com',
           gender: Gender.preferNotToSay,
           dateOfBirthUtc: DateTime.utc(1995, 1, 1),

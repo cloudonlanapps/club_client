@@ -14,6 +14,7 @@ import 'user_form_validators.dart';
 /// which holds the initial values.
 class UserEmergencyFields extends StatelessWidget {
   const UserEmergencyFields({
+    required this.defaultCountryCode,
     this.enabled = true,
     this.pairMinWidth = UserFieldPair.sideBySideMinWidth,
     super.key,
@@ -24,6 +25,11 @@ class UserEmergencyFields extends StatelessWidget {
 
   /// Most lines the medical notes grow to.
   static const int medicalInfoMaxLines = 4;
+
+  /// The club's country calling code (digits only, as the server reports
+  /// it: `91`); the emergency contact's phone typed without a country code
+  /// is checked as a number of that country.
+  final String defaultCountryCode;
 
   /// Whether the fields respond.
   final bool enabled;
@@ -71,7 +77,10 @@ class UserEmergencyFields extends StatelessWidget {
               keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.next,
               enabled: enabled,
-              validator: UserFormValidators.phoneOptional,
+              validator: (value) => UserFormValidators.phoneOptional(
+                value,
+                defaultCountryCode: defaultCountryCode,
+              ),
             ),
           ),
         ),

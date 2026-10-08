@@ -32,6 +32,7 @@ import 'user_username_field.dart';
 class UserForm extends StatefulWidget {
   const UserForm({
     required this.onCheckUsernameAvailable,
+    required this.defaultCountryCode,
     this.initialValues,
     this.onShowDefaultPassword,
     this.enabled = true,
@@ -46,6 +47,11 @@ class UserForm extends StatefulWidget {
 
   /// Resolves to true when the username is free.
   final Future<bool> Function(String username) onCheckUsernameAvailable;
+
+  /// The club's country calling code (digits only, as the server reports
+  /// it: `91`); a phone typed without a country code is checked as a
+  /// number of that country.
+  final String defaultCountryCode;
 
   /// Shows the default password; null hides the action beside the tick.
   final VoidCallback? onShowDefaultPassword;
@@ -139,7 +145,11 @@ class UserFormState extends State<UserForm>
                   if (!useDefaultPassword) UserPasswordFields(enabled: enabled),
                   UserNameFields(enabled: enabled),
                   UserGenderDobFields(enabled: enabled),
-                  UserContactFields(enabled: enabled, emailFirst: false),
+                  UserContactFields(
+                    defaultCountryCode: widget.defaultCountryCode,
+                    enabled: enabled,
+                    emailFirst: false,
+                  ),
                 ],
               ),
               if (widget.canAssignAdmin || widget.canAssignCoach)

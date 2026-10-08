@@ -37,6 +37,7 @@ abstract final class AccountEntries {
       formType: SignupForm,
       builder: (key) => SignupForm(
         key: key,
+        defaultCountryCode: DemoSamples.countryCode,
         onCheckUsernameAvailable: FakeHostCalls.usernameAvailable,
       ),
     ),
@@ -47,6 +48,7 @@ abstract final class AccountEntries {
       formType: SignupForm,
       builder: (key) => SignupForm(
         key: key,
+        defaultCountryCode: DemoSamples.countryCode,
         username: DemoSamples.username,
         initialValues: DemoSamples.member,
       ),

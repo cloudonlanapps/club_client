@@ -44,6 +44,7 @@ Future<RecordingUrlLauncher> _pump(
   required bool canEdit,
   UserPrivate? user,
   UserPrivate? viewer,
+  String countryCode = '91',
 }) async {
   final original = UrlLauncherPlatform.instance;
   final launcher = RecordingUrlLauncher();
@@ -59,7 +60,7 @@ Future<RecordingUrlLauncher> _pump(
             viewer ?? _user(username: 'viewer', isAdmin: true),
           ),
         ),
-        defaultCountryCodeProvider.overrideWithValue('91'),
+        defaultCountryCodeProvider.overrideWithValue(countryCode),
       ],
       child: ShadApp(
         home: Scaffold(
@@ -212,4 +213,24 @@ void main() {
       expect(_button('Email'), findsNothing);
     });
   });
+
+  group(
+    'Issue 71: the contact card gives its form the country code of the club',
+    () {
+      testWidgets('Issue 71: the form checks a phone in the country the '
+          'server reports', (tester) async {
+        await _pump(tester, canEdit: true, countryCode: '33');
+
+        await tester.tap(find.byIcon(LucideIcons.pencil));
+        await tester.pumpAndSettle();
+
+        expect(
+          tester
+              .widget<UserContactForm>(find.byType(UserContactForm))
+              .defaultCountryCode,
+          '33',
+        );
+      });
+    },
+  );
 }

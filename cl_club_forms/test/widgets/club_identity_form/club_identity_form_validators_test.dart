@@ -1,6 +1,8 @@
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:cl_club_forms/src/widgets/club_identity_form/club_identity_form_validators.dart'
     show ClubIdentityFormValidators;
+import 'package:cl_club_forms/src/widgets/common_form_validators.dart'
+    show CommonFormValidators;
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -92,9 +94,32 @@ void main() {
       expect(ClubIdentityFormValidators.phone('   '), isNull);
     });
 
-    test('Issue 61: the shortest and the longest E.164 numbers pass', () {
-      expect(ClubIdentityFormValidators.phone('+12'), isNull);
-      expect(ClubIdentityFormValidators.phone('+123456789012345'), isNull);
+    test('Issue 71: a valid number of its country in international format '
+        'passes, padded or not', () {
+      for (final phone in [
+        '+919876543210',
+        ' +14155550123 ',
+        '+447400123456',
+      ]) {
+        expect(ClubIdentityFormValidators.phone(phone), isNull, reason: phone);
+      }
+    });
+
+    test('Issue 71: a number in the format that is no number of its country '
+        'is refused', () {
+      for (final phone in [
+        '+12',
+        '+123456789012345',
+        '+91987654321',
+        '+9198765432101',
+        '+10000000000',
+      ]) {
+        expect(
+          ClubIdentityFormValidators.phone(phone),
+          'Enter a valid phone number',
+          reason: phone,
+        );
+      }
     });
 
     test('Issue 61: one digit, or sixteen, is refused', () {
@@ -144,6 +169,28 @@ void main() {
       ]) {
         expect(ClubIdentityFormValidators.email(email), message, reason: email);
       }
+    });
+  });
+
+  group('Issue 71: ClubIdentityFormValidators.email shares the one email '
+      'pattern', () {
+    test('Issue 71: it refuses and accepts what CommonFormValidators.isEmail '
+        'does, with its own message', () {
+      for (final email in ['@', 'a@', '@b', 'a@b', 'a b@c.d', 'a@b.c']) {
+        expect(
+          ClubIdentityFormValidators.email(email) == null,
+          CommonFormValidators.isEmail(email),
+          reason: email,
+        );
+      }
+      expect(
+        ClubIdentityFormValidators.email('@'),
+        'Enter a valid email address',
+      );
+      expect(
+        ClubIdentityFormValidators.emailInvalid,
+        'Enter a valid email address',
+      );
     });
   });
 

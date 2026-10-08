@@ -116,7 +116,6 @@ void main() {
     test('Issue 61: the limits are the ones the server keeps', () {
       expect(UserFormFields.passwordMinLength, 8);
       expect(UserFormFields.usernameMinLength, 3);
-      expect(UserFormFields.phoneMinLength, 10);
       expect(
         ChangePasswordFormFields.passwordMinLength,
         UserFormFields.passwordMinLength,

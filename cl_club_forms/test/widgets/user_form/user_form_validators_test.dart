@@ -2,6 +2,12 @@ import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:cl_club_forms/src/widgets/user_form/user_form_validators.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+String? _phone(String value, {String code = '91'}) =>
+    UserFormValidators.phone(value, defaultCountryCode: code);
+
+String? _phoneOptional(String value, {String code = '91'}) =>
+    UserFormValidators.phoneOptional(value, defaultCountryCode: code);
+
 void main() {
   group('Issue 61: UserFormValidators.username', () {
     test('Issue 61: an empty username, or one of spaces, is required', () {
@@ -102,39 +108,68 @@ void main() {
 
   group('Issue 61: UserFormValidators, the phones', () {
     test('Issue 61: phone is required', () {
-      expect(UserFormValidators.phone(''), 'Phone number is required');
-      expect(UserFormValidators.phone('   '), 'Phone number is required');
+      expect(_phone(''), 'Phone number is required');
+      expect(_phone('   '), 'Phone number is required');
     });
 
     test('Issue 61: phone refuses nine characters and accepts ten', () {
-      expect(UserFormFields.phoneMinLength, 10);
-      expect(
-        UserFormValidators.phone('987654321'),
-        'Enter a valid phone number',
-      );
-      expect(UserFormValidators.phone('9876543210'), isNull);
-      expect(UserFormValidators.phone('+91 9876543210'), isNull);
+      expect(_phone('987654321'), 'Enter a valid phone number');
+      expect(_phone('9876543210'), isNull);
+      expect(_phone('+91 9876543210'), isNull);
     });
 
     test('Issue 61: phone counts its length without the padding', () {
-      expect(
-        UserFormValidators.phone('  987654321  '),
-        'Enter a valid phone number',
-      );
+      expect(_phone('  987654321  '), 'Enter a valid phone number');
     });
 
     test('Issue 61: phoneOptional accepts an empty phone', () {
-      expect(UserFormValidators.phoneOptional(''), isNull);
-      expect(UserFormValidators.phoneOptional('   '), isNull);
+      expect(_phoneOptional(''), isNull);
+      expect(_phoneOptional('   '), isNull);
     });
 
     test('Issue 61: phoneOptional refuses nine characters and accepts '
         'ten', () {
-      expect(
-        UserFormValidators.phoneOptional('987654321'),
-        'Enter a valid phone number',
-      );
-      expect(UserFormValidators.phoneOptional('9876543210'), isNull);
+      expect(_phoneOptional('987654321'), 'Enter a valid phone number');
+      expect(_phoneOptional('9876543210'), isNull);
+    });
+  });
+
+  group('Issue 71: UserFormValidators, the shared email and phone rules', () {
+    test('Issue 71: @, a@ and @b are refused as an email', () {
+      for (final bad in ['@', 'a@', '@b', 'a@b', 'a b@c.d']) {
+        expect(UserFormValidators.email(bad), 'Enter a valid email');
+      }
+      expect(UserFormValidators.email('a@b.c'), isNull);
+    });
+
+    test('Issue 71: a ten-letter word, 12345 and +00 123 are refused as a '
+        'phone, required or not', () {
+      for (final bad in ['abcdefghij', '12345', '+00 123']) {
+        expect(_phone(bad), 'Enter a valid phone number', reason: bad);
+        expect(_phoneOptional(bad), 'Enter a valid phone number', reason: bad);
+      }
+    });
+
+    test('Issue 71: a valid number passes typed nationally, with a leading '
+        '0, with + or 00 and the country code, and with spaces or dashes', () {
+      for (final good in [
+        '9876543210',
+        '09876543210',
+        '+919876543210',
+        '00919876543210',
+        '98765 43210',
+        '98765-43210',
+      ]) {
+        expect(_phone(good), isNull, reason: good);
+        expect(_phoneOptional(good), isNull, reason: good);
+      }
+    });
+
+    test('Issue 71: a number of another country passes with its country '
+        'code, and a national one is judged in the country given', () {
+      expect(_phone('+1 415 555 0123'), isNull);
+      expect(_phone('06 12 34 56 78'), 'Enter a valid phone number');
+      expect(_phone('06 12 34 56 78', code: '33'), isNull);
     });
   });
 

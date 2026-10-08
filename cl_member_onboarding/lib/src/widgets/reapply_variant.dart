@@ -111,6 +111,7 @@ class ReapplyVariantState extends ConsumerState<ReapplyVariant> {
                 key: formKey,
                 username: user.username,
                 initialValues: buildReapplyFormInitialValues(user),
+                defaultCountryCode: ref.watch(defaultCountryCodeProvider),
                 enabled: !isSubmitting,
               ),
               const SizedBox(height: ReapplySizes.sectionGap),

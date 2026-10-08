@@ -36,6 +36,7 @@ import 'username_confirmation.dart';
 /// [onCanSubmitChanged] reports true.
 class SignupForm extends StatefulWidget {
   const SignupForm({
+    required this.defaultCountryCode,
     this.username,
     this.initialValues,
     this.onCheckUsernameAvailable,
@@ -56,6 +57,11 @@ class SignupForm extends StatefulWidget {
   /// The mode: null while signing up, the member's username when
   /// reapplying.
   final String? username;
+
+  /// The club's country calling code (digits only, as the server reports
+  /// it: `91`); a phone typed without a country code is checked as a
+  /// number of that country.
+  final String defaultCountryCode;
 
   /// Pre-fill values keyed by field id; null means an empty form.
   final Map<String, dynamic>? initialValues;
@@ -155,7 +161,11 @@ class SignupFormState extends State<SignupForm>
             yearsBefore: SignupForm.dateOfBirthYearsBefore,
             yearsAfter: SignupForm.dateOfBirthYearsAfter,
           ),
-          UserContactFields(enabled: enabled, emailFirst: false),
+          UserContactFields(
+            defaultCountryCode: widget.defaultCountryCode,
+            enabled: enabled,
+            emailFirst: false,
+          ),
         ],
       ),
     );

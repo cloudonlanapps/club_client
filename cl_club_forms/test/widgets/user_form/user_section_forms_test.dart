@@ -116,6 +116,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         UserContactForm(
+          defaultCountryCode: '91',
           key: key,
           initialValues: const {
             UserFormFields.emailId: 'asha@example.com',
@@ -144,6 +145,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         UserContactForm(
+          defaultCountryCode: '91',
           key: key,
           initialValues: const {
             UserFormFields.emailId: 'not-an-email',

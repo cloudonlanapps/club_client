@@ -15,7 +15,7 @@ import 'club_identity_form_pump.dart';
 typedef _F = ClubContactFormFields;
 
 const _initial = <String, dynamic>{
-  _F.phoneNumberId: '+10000000000',
+  _F.phoneNumberId: '+14155550100',
   _F.emailSubjectId: FormTranslatedText('Hello', {'mr': 'Namaskar'}),
 };
 
@@ -115,7 +115,7 @@ void main() {
       );
 
       expect(key.currentState!.validate(), {
-        _F.phoneNumberId: '+10000000000',
+        _F.phoneNumberId: '+14155550100',
         _F.whatsappNumberId: '',
         _F.emailId: '',
         _F.instagramUrlId: '',
@@ -363,7 +363,7 @@ void main() {
         key.currentState!,
         _F.phoneNumberId,
       );
-      expect(values[_F.phoneNumberId], '+10000000000');
+      expect(values[_F.phoneNumberId], '+14155550100');
     });
 
     testWidgets('Issue 61: with enabled false no field responds, '

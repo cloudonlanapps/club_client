@@ -241,4 +241,21 @@ void main() {
       expect(RegExp(r"""containsKey\(['"]""").hasMatch(source), isFalse);
     });
   });
+
+  group('Issue 69: a user is created whole and edited by section', () {
+    test('Issue 69: UserFormSubmit has no update of the whole user', () {
+      final source = File(
+        'lib/src/models/user_form_helpers.dart',
+      ).readAsStringSync();
+      expect(source, isNot(contains('Future<void> update({')));
+      for (final kept in [
+        'create({',
+        'updatePersonalDetails({',
+        'updateContact({',
+        'updateAddress({',
+      ]) {
+        expect(source, contains(kept), reason: kept);
+      }
+    });
+  });
 }

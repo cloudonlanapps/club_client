@@ -48,6 +48,7 @@ Future<SignupFormState> _pump(
   await pumpForm(
     tester,
     SignupForm(
+      defaultCountryCode: '91',
       key: key,
       username: username,
       initialValues: initialValues,

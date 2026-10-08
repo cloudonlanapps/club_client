@@ -428,7 +428,7 @@ void main() {
     );
     _venueId = venue.id;
 
-    var phone = 9876500310;
+    var phone = 7400500310;
     for (final (username, first, last) in [
       (_kAdmin, 'Photo', 'Admin'),
       (_kCoach, 'Photo', 'Coach'),

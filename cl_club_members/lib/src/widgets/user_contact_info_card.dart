@@ -109,6 +109,7 @@ class UserContactInfoCardState extends ConsumerState<UserContactInfoCard> {
       editBuilder: () => UserContactForm(
         key: formKey,
         initialValues: buildUserFormInitialValues(user),
+        defaultCountryCode: ref.watch(defaultCountryCodeProvider),
       ),
       onValidate: () => formKey.currentState?.validate(),
       isDirty: () => formKey.currentState?.isDirty ?? false,

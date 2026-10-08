@@ -11,32 +11,16 @@ abstract final class UserEntries {
   static List<FormDemoEntry> get all => [
     FormDemoEntry(
       id: 'user-create',
-      title: 'User form, creating',
+      title: 'User form',
       group: FormDemoGroup.users,
       formType: UserForm,
       builder: (key) => UserForm(
         key: key,
-        canEditDateOfBirth: true,
-        canEditGender: true,
-        canEditUseNamePublicly: true,
+        defaultCountryCode: DemoSamples.countryCode,
         canAssignAdmin: true,
         canAssignCoach: true,
         onCheckUsernameAvailable: FakeHostCalls.usernameAvailable,
         onShowDefaultPassword: () {},
-      ),
-    ),
-    FormDemoEntry(
-      id: 'user-edit',
-      title: 'User form, editing',
-      group: FormDemoGroup.users,
-      formType: UserForm,
-      builder: (key) => UserForm(
-        key: key,
-        readOnlyUsername: DemoSamples.username,
-        initialValues: DemoSamples.member,
-        canEditDateOfBirth: true,
-        canEditGender: true,
-        canEditUseNamePublicly: true,
       ),
     ),
     FormDemoEntry(
@@ -66,8 +50,11 @@ abstract final class UserEntries {
       title: 'User contact form',
       group: FormDemoGroup.users,
       formType: UserContactForm,
-      builder: (key) =>
-          UserContactForm(key: key, initialValues: DemoSamples.member),
+      builder: (key) => UserContactForm(
+        key: key,
+        defaultCountryCode: DemoSamples.countryCode,
+        initialValues: DemoSamples.member,
+      ),
     ),
     FormDemoEntry(
       id: 'user-address',

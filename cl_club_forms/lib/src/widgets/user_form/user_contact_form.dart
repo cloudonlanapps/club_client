@@ -18,12 +18,18 @@ import 'user_form_fields.dart';
 class UserContactForm extends StatefulWidget {
   const UserContactForm({
     required this.initialValues,
+    required this.defaultCountryCode,
     this.enabled = true,
     super.key,
   });
 
   /// Initial values; reads the ids of [UserFormFields.contactIds].
   final Map<String, dynamic> initialValues;
+
+  /// The club's country calling code (digits only, as the server reports
+  /// it: `91`); a phone, the member's or the emergency contact's, typed
+  /// without a country code is checked as a number of that country.
+  final String defaultCountryCode;
 
   /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
@@ -51,8 +57,12 @@ class UserContactFormState extends State<UserContactForm>
       child: FormBody(
         error: formError,
         children: [
-          UserContactFields(enabled: widget.enabled),
+          UserContactFields(
+            defaultCountryCode: widget.defaultCountryCode,
+            enabled: widget.enabled,
+          ),
           UserEmergencyFields(
+            defaultCountryCode: widget.defaultCountryCode,
             enabled: widget.enabled,
             pairMinWidth: UserFieldPair.never,
           ),

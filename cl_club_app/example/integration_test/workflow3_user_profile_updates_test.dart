@@ -88,18 +88,18 @@ const _kSudoPassword = String.fromEnvironment('SUDO_PASSWORD');
 const _kMemberUsername = 'workflow3_user';
 const _kMemberPassword = 'Workflow3Pwd!2024';
 const _kMemberEmail = 'workflow3_user@example.com';
-const _kMemberPhone = '9876543212';
+const _kMemberPhone = '7400543212';
 
 // Phase 3b reconsider/reapply cycle (steps 4-5): the admin
 // sends the pending registration back with a note, the member sees the
 // ReapplyVariant banner, edits a field, and resubmits.
 const _kReviewNote = 'Please re-upload a clearer identity document.';
-const _kReapplyPhone = '9876543200';
+const _kReapplyPhone = '7400543200';
 
 const _kAdminUsername = 'workflow3_admin';
 const _kAdminPassword = 'Workflow3AdmPwd!2024';
 const _kAdminEmail = 'workflow3_admin@example.com';
-const _kAdminPhone = '9876543213';
+const _kAdminPhone = '7400543213';
 
 // Profile content used by Phase 5/6.
 const _kBioMarkdown = 'workflow3 user bio: hockey is life.';
@@ -115,8 +115,8 @@ const _kEditedEmail = 'workflow3_user_updated@example.com';
 // Phones are typed as people type them (a space, a leading 0) and stored in
 // international format (#31): `_kEdited*Phone` is the national number the
 // stored value must end in, behind the stack's country code.
-const _kEditedPhoneTyped = '98765 43299';
-const _kEditedPhone = '9876543299';
+const _kEditedPhoneTyped = '74005 43299';
+const _kEditedPhone = '7400543299';
 const _kEditedAddrLine1 = 'Wf3 Line1';
 const _kEditedAddrLine2 = 'Wf3 Line2';
 const _kEditedCity = 'Wf3 City';
@@ -124,8 +124,8 @@ const _kEditedState = 'Karnataka';
 const _kEditedPincode = '560001';
 const _kEditedEmergencyName = 'Wf3 EC Name';
 const _kEditedEmergencyRelation = 'Parent';
-const _kEditedEmergencyPhoneTyped = '09876543298';
-const _kEditedEmergencyPhone = '9876543298';
+const _kEditedEmergencyPhoneTyped = '07400543298';
+const _kEditedEmergencyPhone = '7400543298';
 const _kEditedMedicalInfo = 'Wf3 medical notes';
 
 // Admin overwrites applied in Phase 8.

@@ -53,9 +53,9 @@ const _kEditedFirstName = 'WfEdited';
 // Phones as typed, and the national number each must be stored under once
 // the app has put it in international format (#31): one typed bare at
 // creation, one typed with a space and a leading 0 in the Contact section.
-const _kCreatedPhone = '9876500010';
-const _kEditedPhoneTyped = '098765 00011';
-const _kEditedPhone = '9876500011';
+const _kCreatedPhone = '7400500010';
+const _kEditedPhoneTyped = '074005 00011';
+const _kEditedPhone = '7400500011';
 const _kEditedAddrLine1 = 'WfEdited line 1';
 const _kEditedBio = 'workflow_edituser bio: edited by admin.';
 

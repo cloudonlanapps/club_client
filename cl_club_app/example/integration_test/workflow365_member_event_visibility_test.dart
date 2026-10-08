@@ -162,7 +162,7 @@ void main() {
       passwordHash: _kUserPwd,
       firstName: 'Workflow365',
       lastName: 'User',
-      phone: '9876543210',
+      phone: '7400543210',
       email: '$_kUser@example.com',
       gender: Gender.preferNotToSay,
       dateOfBirthUtc: DateTime.utc(1990, 1, 1),

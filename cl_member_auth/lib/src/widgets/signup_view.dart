@@ -121,6 +121,7 @@ class SignupViewState extends ConsumerState<SignupView> {
               const SizedBox(height: AuthViewSizes.sectionGap),
               SignupForm(
                 key: formKey,
+                defaultCountryCode: ref.watch(defaultCountryCodeProvider),
                 enabled: !isSubmitting,
                 onCheckUsernameAvailable: checkUsernameAvailable,
                 onCanSubmitChanged: (value) {

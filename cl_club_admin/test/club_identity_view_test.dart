@@ -12,7 +12,7 @@ import 'support/admin_test_scope.dart';
 const _stored = ClubIdentity(
   name: 'Example Club',
   contact: ClubContactDetails(
-    phoneNumber: '+10000000000',
+    phoneNumber: '+14155550100',
     city: LocalizedText('Example City', {'mr': 'Udaharan'}),
   ),
   extra: {'values': <String>[]},
@@ -166,7 +166,7 @@ void main() {
         findsNWidgets(3),
       );
       expect(_in(_club, find.text('Example Club')), findsOneWidget);
-      expect(_in(_contact, find.text('+10000000000')), findsOneWidget);
+      expect(_in(_contact, find.text('+14155550100')), findsOneWidget);
       expect(_in(_address, find.text('Example City')), findsOneWidget);
       expect(_in(_address, find.text('City (mr)')), findsOneWidget);
       expect(_in(_address, find.text('Udaharan')), findsOneWidget);
@@ -236,7 +236,7 @@ void main() {
         'shortName': 'EXC',
         'inquiryEmail': 'desk@club.example',
         'contact': {
-          'phoneNumber': '+10000000000',
+          'phoneNumber': '+14155550100',
           'city': {'default': 'Example City', 'mr': 'Udaharan'},
         },
       });
@@ -263,7 +263,7 @@ void main() {
 
       expect(stub.saves, hasLength(2));
       expect(stub.saves.first.toMap()['contact'], {
-        'phoneNumber': '+10000000000',
+        'phoneNumber': '+14155550100',
         'email': 'hello@club.example',
         'city': {'default': 'Example City', 'mr': 'Udaharan'},
       });
@@ -271,7 +271,7 @@ void main() {
         'values': <String>[],
         'name': 'Example Club',
         'contact': {
-          'phoneNumber': '+10000000000',
+          'phoneNumber': '+14155550100',
           'email': 'hello@club.example',
           'city': 'Example City',
           'postalCode': '000000',
@@ -356,7 +356,7 @@ void main() {
         'values': <String>[],
         'name': 'Example Club',
         'contact': {
-          'phoneNumber': '+10000000000',
+          'phoneNumber': '+14155550100',
           'city': {'default': 'Example City', 'mr': 'Udaharan'},
           'postalCode': '000000',
         },

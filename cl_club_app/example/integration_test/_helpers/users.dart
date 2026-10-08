@@ -44,7 +44,7 @@ Future<void> createUserViaUi(
   required String password,
   String firstName = 'Integration',
   String lastName = 'Tester',
-  String phone = '9876543210',
+  String phone = '7400543210',
   String? email,
   Gender gender = Gender.preferNotToSay,
   DateTime? dateOfBirthUtc,

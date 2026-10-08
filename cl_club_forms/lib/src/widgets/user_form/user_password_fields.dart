@@ -16,6 +16,17 @@ class UserPasswordFields extends StatelessWidget {
   /// Whether the fields respond.
   final bool enabled;
 
+  /// Empties the password and its confirmation in [form], for a form that
+  /// takes these fields away again.
+  static void clear(ShadFormState form) {
+    for (final id in const [
+      UserFormFields.passwordId,
+      UserFormFields.confirmPasswordId,
+    ]) {
+      form.setFieldValue<String>(id, '');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FormBody(

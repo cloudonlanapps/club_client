@@ -102,7 +102,7 @@ void main() {
       passwordHash: _kPwd,
       firstName: 'WAdjustProg',
       lastName: 'admin',
-      phone: '9876543210',
+      phone: '7400543210',
       email: '$_kAdmin@example.com',
       gender: Gender.preferNotToSay,
       dateOfBirthUtc: DateTime.utc(2000, 1, 1),

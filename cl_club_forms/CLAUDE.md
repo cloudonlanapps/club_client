@@ -26,6 +26,7 @@ a test that needs one imports it from `package:cl_club_forms/src/...`.
 |---|---|
 | `flutter`, `shadcn_ui` | the widgets |
 | `cl_calendar` | the date pickers (form rule 4) |
+| `phone_numbers_parser` | whether a phone number is valid for its country |
 
 **Forbidden: `ui_lib`, and every `cl_*` package.** `cl_club_forms` and
 `ui_lib` do not depend on each other; a feature package uses both.

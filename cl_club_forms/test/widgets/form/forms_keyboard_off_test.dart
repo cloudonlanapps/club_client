@@ -27,6 +27,23 @@ const _venues = [
 
 final _day = DateTime(2030, 5, 14);
 
+const _countryCode = '91';
+
+const _inquiryCopy = InquiryFormCopy(
+  nameLabel: 'Name',
+  namePlaceholder: 'Your name',
+  emailLabel: 'Email',
+  emailPlaceholder: 'you@example.com',
+  phoneLabel: 'Phone',
+  phonePlaceholder: 'Your phone',
+  messageLabel: 'Message',
+  messagePlaceholder: 'Your message',
+  nameRequired: 'Name is required',
+  emailRequired: 'Email is required',
+  emailInvalid: 'Enter a valid email',
+  messageRequired: 'Message is required',
+);
+
 final _oneOff = OneOffScheduleData(
   date: _day,
   startTime: _six,
@@ -59,6 +76,7 @@ final List<_Case> _cases = [
     name: 'SignupForm',
     build: ({required enabled}) => SignupForm(
       enabled: enabled,
+      defaultCountryCode: _countryCode,
       onCheckUsernameAvailable: (_) async => true,
     ),
     typed: true,
@@ -67,6 +85,7 @@ final List<_Case> _cases = [
     name: 'UserForm, creating',
     build: ({required enabled}) => UserForm(
       enabled: enabled,
+      defaultCountryCode: _countryCode,
       onCheckUsernameAvailable: (_) async => true,
     ),
     typed: true,
@@ -81,8 +100,17 @@ final List<_Case> _cases = [
   ),
   (
     name: 'UserContactForm',
+    build: ({required enabled}) => UserContactForm(
+      enabled: enabled,
+      defaultCountryCode: _countryCode,
+      initialValues: const {},
+    ),
+    typed: true,
+  ),
+  (
+    name: 'InquiryForm',
     build: ({required enabled}) =>
-        UserContactForm(enabled: enabled, initialValues: const {}),
+        InquiryForm(enabled: enabled, copy: _inquiryCopy),
     typed: true,
   ),
   (

@@ -1,4 +1,5 @@
-import 'package:cl_club_forms/cl_club_forms.dart' show UserFormFields;
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show SignupForm, UserFormFields;
 import 'package:cl_member_auth/cl_member_auth.dart'
     show AuthNotifier, authStateProvider;
 import 'package:cl_member_onboarding/src/models/onboarding_write_messages.dart';
@@ -25,7 +26,7 @@ UserPrivate _user({String? lastName = 'One'}) => UserPrivate(
   firstName: 'Una',
   lastName: lastName,
   email: 'u1@example.com',
-  phone: '+10000000000',
+  phone: '+14155550100',
   dateOfBirthUtc: DateTime.utc(2000),
   gender: Gender.female,
 );
@@ -81,6 +82,7 @@ Future<(_Users, _Auth)> _pump(
   WidgetTester tester, {
   bool fails = false,
   VoidCallback? onContinue,
+  String countryCode = '91',
 }) async {
   await tester.binding.setSurfaceSize(const Size(900, 2000));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -91,7 +93,7 @@ Future<(_Users, _Auth)> _pump(
       overrides: [
         authStateProvider.overrideWith(() => auth),
         clUsersMasterProvider.overrideWith(() => users),
-        defaultCountryCodeProvider.overrideWithValue('91'),
+        defaultCountryCodeProvider.overrideWithValue(countryCode),
       ],
       child: ShadApp(
         home: ShadToaster(
@@ -164,4 +166,19 @@ void main() {
       );
     });
   });
+
+  group(
+    'Issue 71: ReapplyVariant gives its form the country code of the club',
+    () {
+      testWidgets('Issue 71: the form checks a phone in the country the '
+          'server reports', (tester) async {
+        await _pump(tester, countryCode: '33');
+
+        expect(
+          tester.widget<SignupForm>(find.byType(SignupForm)).defaultCountryCode,
+          '33',
+        );
+      });
+    },
+  );
 }

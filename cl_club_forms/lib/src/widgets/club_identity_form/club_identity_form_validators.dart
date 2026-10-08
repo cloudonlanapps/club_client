@@ -1,3 +1,5 @@
+import '../common_form_validators.dart';
+
 /// Validators shared by the club identity section forms (`ClubDetailsForm`,
 /// `ClubContactForm`, `ClubLanguageForm`; club_core#20).
 ///
@@ -8,13 +10,6 @@
 class ClubIdentityFormValidators {
   const ClubIdentityFormValidators._();
 
-  /// E.164: a `+`, a non-zero country digit, at most 15 digits in all, no
-  /// spaces or punctuation.
-  static final RegExp e164Pattern = RegExp(r'^\+[1-9]\d{1,14}$');
-
-  /// One `@`, no spaces, and a dot in the domain.
-  static final RegExp emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-
   /// A bare ISO 639 language code: two or three lowercase letters, as a
   /// locale's `languageCode` reads.
   static final RegExp languageCodePattern = RegExp(r'^[a-z]{2,3}$');
@@ -22,24 +17,19 @@ class ClubIdentityFormValidators {
   /// The URL schemes a public link may use.
   static const Set<String> urlSchemes = {'http', 'https'};
 
-  /// A phone number in international (E.164) format, e.g. `+919876543210`.
-  static String? phone(String value) {
-    final t = value.trim();
-    if (t.isEmpty) return null;
-    if (!e164Pattern.hasMatch(t)) {
-      return 'Use the international format: + and the country code, '
-          'digits only (e.g. +919876543210)';
-    }
-    return null;
-  }
+  /// Shown when what is typed is not an email address.
+  static const String emailInvalid = 'Enter a valid email address';
 
-  /// An email address.
-  static String? email(String value) {
-    final t = value.trim();
-    if (t.isEmpty) return null;
-    if (!emailPattern.hasMatch(t)) return 'Enter a valid email address';
-    return null;
-  }
+  /// A phone number in international (E.164) format, e.g. `+919876543210`,
+  /// valid for its country (`CommonFormValidators.internationalPhone`).
+  static String? phone(String value) =>
+      CommonFormValidators.internationalPhone(value);
+
+  /// An email address (`CommonFormValidators.isEmail`).
+  static String? email(String value) =>
+      value.trim().isEmpty || CommonFormValidators.isEmail(value)
+      ? null
+      : emailInvalid;
 
   /// A full `http(s)` link with a host, with or without a fragment.
   static String? url(String value) {

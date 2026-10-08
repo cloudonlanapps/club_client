@@ -8,6 +8,7 @@ import 'group_entries.dart';
 import 'schedule_entries.dart';
 import 'user_entries.dart';
 import 'venue_entries.dart';
+import 'website_entries.dart';
 
 /// Every entry of the sidebar. A form added to the package gets an entry in
 /// its family's file; `test/form_demo_entries_test.dart` fails until it has.
@@ -22,6 +23,7 @@ abstract final class FormDemoEntries {
     ...GroupEntries.all,
     ...VenueEntries.all,
     ...ClubIdentityEntries.all,
+    ...WebsiteEntries.all,
   ]);
 
   /// The entries of [group], in the order shown.

@@ -1,6 +1,9 @@
 import 'package:cl_member_onboarding/src/views/onboarding_welcome_view.dart';
+import 'package:cl_remote_store/cl_remote_store.dart'
+    show defaultCountryCodeProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
@@ -19,13 +22,16 @@ UserPrivate _user({
     firstName: 'Una',
     lastName: 'One',
     email: 'u1@example.com',
-    phone: '+10000000000',
+    phone: '+14155550100',
     dateOfBirthUtc: DateTime.utc(2000),
     gender: Gender.female,
   );
 }
 
-Widget _wrap(Widget child) => ShadApp(home: Scaffold(body: child));
+Widget _wrap(Widget child) => ProviderScope(
+  overrides: [defaultCountryCodeProvider.overrideWithValue('91')],
+  child: ShadApp(home: Scaffold(body: child)),
+);
 
 void main() {
   group('Issue 379: OnboardingWelcomeView variants', () {

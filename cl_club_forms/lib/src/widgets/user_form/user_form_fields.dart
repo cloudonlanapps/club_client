@@ -157,7 +157,4 @@ class UserFormFields {
 
   /// Shortest username the server accepts.
   static const int usernameMinLength = 3;
-
-  /// Shortest phone number taken as one.
-  static const int phoneMinLength = 10;
 }

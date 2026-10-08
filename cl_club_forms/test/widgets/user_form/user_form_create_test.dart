@@ -1,4 +1,4 @@
-// Issue 61, UserForm while it creates a user (readOnlyUsername null).
+// Issue 61, UserForm, which creates a user.
 // Every point applies. The in-form actions are the username field's
 // "Check availability" and "Show" beside the default-password tick.
 // The form's values are its fields as typed: nothing is trimmed here (the
@@ -121,13 +121,6 @@ void main() {
     ) async {
       await pumpCreate(tester);
       expect(fieldIds(tester), containsAll([_gender, _dob]));
-
-      await pumpCreate(
-        tester,
-        canEditGender: true,
-        canEditDateOfBirth: true,
-        canEditUseNamePublicly: true,
-      );
       expect(fieldIds(tester), createIds);
       expect(rowLabels(tester), createRows);
     });

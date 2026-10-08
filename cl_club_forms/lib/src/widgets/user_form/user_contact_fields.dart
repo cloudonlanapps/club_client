@@ -11,10 +11,16 @@ import 'user_form_validators.dart';
 /// form's `ShadForm`, which holds the initial values.
 class UserContactFields extends StatelessWidget {
   const UserContactFields({
+    required this.defaultCountryCode,
     this.enabled = true,
     this.emailFirst = true,
     super.key,
   });
+
+  /// The club's country calling code (digits only, as the server reports
+  /// it: `91`); a phone typed without a country code is checked as a
+  /// number of that country.
+  final String defaultCountryCode;
 
   /// Whether the fields respond.
   final bool enabled;
@@ -49,7 +55,10 @@ class UserContactFields extends StatelessWidget {
         keyboardType: TextInputType.phone,
         textInputAction: TextInputAction.next,
         enabled: enabled,
-        validator: UserFormValidators.phone,
+        validator: (value) => UserFormValidators.phone(
+          value,
+          defaultCountryCode: defaultCountryCode,
+        ),
       ),
     );
     return FormBody(children: emailFirst ? [email, phone] : [phone, email]);

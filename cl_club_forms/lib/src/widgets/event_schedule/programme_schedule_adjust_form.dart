@@ -8,6 +8,7 @@ import '../form/form_body.dart';
 import '../form/form_contract.dart';
 import '../form/labeled_form_row.dart';
 import 'event_venue_select_field.dart';
+import 'programme_from_session_field.dart';
 import 'programme_schedule_adjust_form_fields.dart';
 import 'programme_schedule_adjust_form_validators.dart';
 import 'programme_schedule_fields.dart';
@@ -31,7 +32,7 @@ class ProgrammeScheduleAdjustForm extends StatefulWidget {
   });
 
   /// How a From session is written in the picker and in [effectLine].
-  static final DateFormat fromFormat = DateFormat('EEE d MMM y, HH:mm');
+  static final DateFormat fromFormat = ProgrammeFromSessionField.format;
 
   /// What saving does, for the session starting at [from].
   static String effectLine(DateTime from) =>
@@ -118,30 +119,16 @@ class ProgrammeScheduleAdjustFormState
         error: formError,
         children: [
           LabeledFormRow(
-            label: 'From',
+            label: ProgrammeFromSessionField.label,
             required: true,
-            field: ShadSelectFormField<DateTime>(
+            field: ProgrammeFromSessionField(
               id: ProgrammeScheduleAdjustFormFields.fromId,
+              options: widget.fromOptions,
               initialValue: initial.from,
               enabled: widget.enabled,
-              placeholder: const Text('Pick a session'),
               validator: (value) => ProgrammeScheduleAdjustFormValidators.from(
                 value,
                 widget.fromOptions,
-              ),
-              options: [
-                for (final option in widget.fromOptions)
-                  ShadOption(
-                    value: option,
-                    child: Text(
-                      ProgrammeScheduleAdjustForm.fromFormat.format(
-                        option.toLocal(),
-                      ),
-                    ),
-                  ),
-              ],
-              selectedOptionBuilder: (context, value) => Text(
-                ProgrammeScheduleAdjustForm.fromFormat.format(value.toLocal()),
               ),
               onChanged: (value) => setState(() => from = value),
             ),

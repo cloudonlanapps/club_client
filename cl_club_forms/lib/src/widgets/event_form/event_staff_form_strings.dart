@@ -23,4 +23,9 @@ abstract final class EventStaffFormStrings {
 
   /// What precedes a username where one is shown.
   static const String usernamePrefix = '@';
+
+  /// What saving does to a programme, for the session written as [from].
+  static String effectLine(String from) =>
+      'Sessions before $from keep the present organizer and coaches; '
+      'sessions from it have the new ones.';
 }

@@ -13,9 +13,12 @@ import 'package:club_sdk_2/club_sdk_2.dart'
         StaleVersionException,
         Visibility;
 
-import '../utils/event_refusal.dart';
+import 'package:flutter/foundation.dart' show listEquals;
 
-/// SDK ↔ form adapter for the camp-event section editors — the one place that
+import '../utils/event_refusal.dart';
+import '../utils/schedule_save_error.dart';
+
+/// SDK ↔ form adapter for the event section editors — the one place that
 /// bridges the forms' flat `Map<String, dynamic>` (keyed by [EventFormFields],
 /// with the form-local [EventGender]) to the `cl_remote_store` update calls.
 ///
@@ -60,6 +63,12 @@ Map<String, dynamic> buildEventFormInitialValues(Event? event) {
 /// method sends **only** its own fields (rule 21): nullable axes use a
 /// `ValueGetter` so they can be cleared, while fields the section doesn't edit
 /// are left out entirely (the notifier treats an absent value as "no change").
+///
+/// The server offers `updateEvent` to camps and one-offs only. A programme's
+/// identity, eligibility and presentation are a **correction**
+/// (`correctionOnEvent`), and its staffing changes by a **split** from a
+/// session onward (`updateEventForAllFuture`); each method picks the verb
+/// from the event's type (club_client#118).
 class EventFormSubmit {
   const EventFormSubmit._();
 
@@ -80,22 +89,32 @@ class EventFormSubmit {
     EventGender.any => null,
   };
 
-  /// Rename (management section) — `title` is a direct field on the server.
+  /// Rename (management section): a correction of a programme's title, an
+  /// update of a camp's or a one-off's.
   static Future<Event> updateTitle({
-    required int eventId,
+    required Event event,
     required String title,
     required ClEventsMasterNotifier notifier,
   }) {
-    return notifier.updateEvent(eventId, title: title.trim());
+    final trimmed = title.trim();
+    if (event.type == EventType.programme) {
+      return notifier.correctionOnEvent(event.id, title: trimmed);
+    }
+    return notifier.updateEvent(event.id, title: trimmed);
   }
 
-  /// Description (markdown section) — direct field; an empty string clears it.
+  /// Description (markdown section): a correction of a programme's, an
+  /// update of a camp's or a one-off's. An empty string clears it.
   static Future<Event> updateDescription({
-    required int eventId,
+    required Event event,
     required String description,
     required ClEventsMasterNotifier notifier,
   }) {
-    return notifier.updateEvent(eventId, description: description.trim());
+    final trimmed = description.trim();
+    if (event.type == EventType.programme) {
+      return notifier.correctionOnEvent(event.id, description: trimmed);
+    }
+    return notifier.updateEvent(event.id, description: trimmed);
   }
 
   /// Eligibility section — gender and the age band (`minAge`, `maxAge`,
@@ -181,7 +200,8 @@ class EventFormSubmit {
   ///
   /// An organizer or a coach without an account shows on that field: the
   /// server answers both with `USER_NOT_FOUND` and tells them apart in its
-  /// message. A programme's clash with another booking shows inline.
+  /// message. A From session a programme's split no longer accepts shows on
+  /// the From field. A clash with another booking shows inline.
   static EventFormRefusal? staffRefusal(Object error) {
     if (error is! ServerException || error is StaleVersionException) {
       return null;
@@ -195,6 +215,17 @@ class EventFormSubmit {
               : const {EventFormFields.coachNamesId: coachGoneMessage},
           formError: null,
         );
+      case SdkErrorCode.effectiveTimeNotSessionBoundary:
+      case SdkErrorCode.cutoffTooSoon:
+        return (
+          fieldErrors: {
+            EventFormFields.effectiveFromId: scheduleSaveErrorMessage(
+              error,
+              fallback: staffFromRefusedMessage,
+            ),
+          },
+          formError: null,
+        );
       case SdkErrorCode.conflict:
       case SdkErrorCode.timeConflict:
         return (fieldErrors: const {}, formError: staffClashMessage);
@@ -203,38 +234,77 @@ class EventFormSubmit {
     }
   }
 
+  /// Shown on the From field when the server refuses the session and says
+  /// no more.
+  static const String staffFromRefusedMessage =
+      'That session cannot be used. Pick another.';
+
   /// Shown inline when the organizer is booked elsewhere at the same time.
   static const String staffClashMessage =
       'That clashes with another booking of the organizer, a coach or the '
       'venue.';
 
-  /// Organizer & coaches section. `organizerName` is a direct field (sending
-  /// the trimmed value, possibly empty); `coachNames` is a clearable list.
+  /// Organizer & coaches section.
+  ///
+  /// A camp's or a one-off's is an update: `organizerName` is a direct field
+  /// (sending the trimmed value, possibly empty) and `coachNames` a
+  /// clearable list.
+  ///
+  /// A programme's staffing changes by a split: one `updateEventForAllFuture`
+  /// call effective from the session [values] hold under
+  /// [EventFormFields.effectiveFromId], with [event]'s `version` and only
+  /// what changed between the organizer and the coaches. Sessions before it
+  /// keep the present staff. Returns [event] untouched, with no call, when
+  /// neither changed.
   static Future<Event> updateOrganizer({
-    required int eventId,
+    required Event event,
     required Map<String, dynamic> values,
     required ClEventsMasterNotifier notifier,
-  }) {
+  }) async {
     final coaches =
         (values[EventFormFields.coachNamesId] as List<String>?) ?? const [];
-    return notifier.updateEvent(
-      eventId,
-      organizerName:
-          (values[EventFormFields.organizerNameId] as String?)?.trim() ?? '',
-      coachNames: () => coaches,
+    final organizer =
+        (values[EventFormFields.organizerNameId] as String?)?.trim() ?? '';
+    if (event.type != EventType.programme) {
+      return notifier.updateEvent(
+        event.id,
+        organizerName: organizer,
+        coachNames: () => coaches,
+      );
+    }
+    final organizerChanged = organizer != (event.organizerName?.trim() ?? '');
+    final coachesChanged = !listEquals(
+      coaches,
+      event.coachNames ?? const <String>[],
+    );
+    if (!organizerChanged && !coachesChanged) return event;
+    final from = values[EventFormFields.effectiveFromId] as DateTime;
+    return notifier.updateEventForAllFuture(
+      event.id,
+      effectiveDateTimeUtc: from.toUtc(),
+      version: event.version,
+      organizerName: organizerChanged ? organizer : null,
+      coachNames: coachesChanged ? () => coaches : null,
     );
   }
 
-  /// Flags section — visibility + featured, both direct fields persisted
-  /// immediately on toggle.
+  /// Flags section — visibility + featured, persisted immediately on
+  /// toggle: a correction of a programme, an update of a camp or a one-off.
   static Future<Event> updateFlags({
-    required int eventId,
+    required Event event,
     required ClEventsMasterNotifier notifier,
     Visibility? visibility,
     bool? isFeatured,
   }) {
+    if (event.type == EventType.programme) {
+      return notifier.correctionOnEvent(
+        event.id,
+        visibility: visibility,
+        isFeatured: isFeatured,
+      );
+    }
     return notifier.updateEvent(
-      eventId,
+      event.id,
       visibility: visibility,
       isFeatured: isFeatured,
     );

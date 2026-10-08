@@ -214,6 +214,20 @@ final List<FormCase> formCases = [
     typed: false,
   ),
   (
+    name: 'EventStaffForm, of a programme',
+    build: ({required enabled}) => EventStaffForm(
+      enabled: enabled,
+      initialValues: {
+        EventFormFields.coachNamesId: const <EventStaffMember>[],
+        EventFormFields.effectiveFromId: _day,
+      },
+      fromOptions: [_day, _day.add(const Duration(days: 7))],
+      onPickOrganizer: () async => null,
+      onPickCoaches: (_) async => null,
+    ),
+    typed: false,
+  ),
+  (
     name: 'EventCancellationForm',
     build: ({required enabled}) => EventCancellationForm(enabled: enabled),
     typed: true,

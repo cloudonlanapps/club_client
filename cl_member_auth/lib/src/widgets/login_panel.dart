@@ -10,7 +10,7 @@ import '../constants/auth_view_strings.dart';
 /// forgot-password link, the Sign in action and the sign-up link.
 ///
 /// The view holds [formKey] and the in-flight flag; [onSubmit] is its Sign
-/// in action.
+/// in action, which Enter in the form's password field calls too.
 class LoginPanel extends StatelessWidget {
   const LoginPanel({
     required this.formKey,
@@ -47,7 +47,11 @@ class LoginPanel extends StatelessWidget {
         const SizedBox(height: AuthViewSizes.headingGap),
         Text(AuthViewStrings.signInIntro, style: theme.textTheme.p),
         const SizedBox(height: AuthViewSizes.sectionGap),
-        LoginForm(key: formKey, enabled: !isSubmitting),
+        LoginForm(
+          key: formKey,
+          enabled: !isSubmitting,
+          onSubmitted: isSubmitting ? null : onSubmit,
+        ),
         const SizedBox(height: AuthViewSizes.linkGap),
         Align(
           alignment: Alignment.centerRight,

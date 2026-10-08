@@ -67,7 +67,9 @@ class LoginViewState extends ConsumerState<LoginView> {
   bool isSubmitting = false;
 
   /// The Sign in action: validates the form and signs in with its values.
+  /// Does nothing while a sign-in is in flight.
   Future<void> submit() async {
+    if (isSubmitting) return;
     final values = formKey.currentState?.validate();
     if (values == null) return;
     await handleLogin(

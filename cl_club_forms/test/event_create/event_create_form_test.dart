@@ -91,8 +91,8 @@ void main() {
       expect(find.text('Title is required'), findsOneWidget);
     });
 
-    testWidgets('Issue 702: missing venue surfaces an inline error and '
-        'blocks submit', (tester) async {
+    testWidgets('Issue 702: missing venue surfaces an error and blocks '
+        'submit', (tester) async {
       final initial = EventCreateForm.defaultValues(EventFormType.camp)
         ..[EventCreateFormFields.titleId] = 'Summer Camp';
       final key = await _pump(

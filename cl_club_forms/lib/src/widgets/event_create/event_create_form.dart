@@ -76,13 +76,6 @@ class EventCreateFormState extends State<EventCreateForm>
   late final Map<String, dynamic> initial =
       widget.initialValues ?? EventCreateForm.defaultValues(widget.eventType);
 
-  /// A venue must be selected before the event can be created.
-  @override
-  String? crossFieldError(Map<String, dynamic> values) =>
-      EventCreateFormValidators.venue(
-        values[EventCreateFormFields.venueId] as int?,
-      );
-
   @override
   Map<String, dynamic> assemble(Map<String, dynamic> values) => {
     for (final id in trackedIds) id: values[id],
@@ -148,6 +141,7 @@ class EventCreateFormState extends State<EventCreateForm>
                 venues: widget.venues,
                 initialValue: initial[EventCreateFormFields.venueId] as int?,
                 enabled: enabled,
+                validator: EventCreateFormValidators.venue,
               ),
             ],
           ),

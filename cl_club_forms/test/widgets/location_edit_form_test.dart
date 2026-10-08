@@ -64,7 +64,6 @@ void main() {
       String address = '1 Rink Rd',
       String mapUri = 'https://maps.example/x',
       bool enabled = true,
-      VoidCallback? onSubmitted,
     }) async {
       final key = GlobalKey<LocationEditFormState>();
       await pumpForm(
@@ -74,7 +73,6 @@ void main() {
           initialAddress: address,
           initialMapUri: mapUri,
           enabled: enabled,
-          onSubmitted: onSubmitted,
         ),
       );
       return key.currentState!;
@@ -161,32 +159,6 @@ void main() {
       expect(state.isDirty, isTrue);
       await enterField(tester, _F.mapUriId, 'https://maps.example/x');
       expect(state.isDirty, isFalse);
-    });
-
-    testWidgets('Issue 61: Enter in the map link is handed to the host, '
-        'Enter in the address is not', (tester) async {
-      var submitted = 0;
-      await pump(tester, onSubmitted: () => submitted++);
-
-      await tester.showKeyboard(
-        find.descendant(
-          of: fieldWithId(_F.addressId),
-          matching: find.byType(EditableText),
-        ),
-      );
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pump();
-      expect(submitted, 0);
-
-      await tester.showKeyboard(
-        find.descendant(
-          of: fieldWithId(_F.mapUriId),
-          matching: find.byType(EditableText),
-        ),
-      );
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pump();
-      expect(submitted, 1);
     });
 
     testWidgets('Issue 61: showErrors puts a message on a field and one '

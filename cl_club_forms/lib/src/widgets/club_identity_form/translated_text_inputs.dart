@@ -13,6 +13,7 @@ class TranslatedTextInputs extends StatelessWidget {
     required this.id,
     required this.label,
     required this.languages,
+    required this.enabled,
     this.keyboardType = TextInputType.text,
     this.multiline = false,
     super.key,
@@ -41,6 +42,9 @@ class TranslatedTextInputs extends StatelessWidget {
   /// The language codes to offer a translation in.
   final List<String> languages;
 
+  /// Whether the inputs respond; the form's own `enabled`.
+  final bool enabled;
+
   /// The keyboard every input asks for.
   final TextInputType keyboardType;
 
@@ -58,6 +62,7 @@ class TranslatedTextInputs extends StatelessWidget {
           id: id,
           label: label,
           keyboardType: keyboardType,
+          enabled: enabled,
           multiline: multiline,
           description: languages.isEmpty ? null : defaultHelp,
         ),
@@ -68,6 +73,7 @@ class TranslatedTextInputs extends StatelessWidget {
               id: translationIdOf(id, language),
               label: '$label ($language)',
               keyboardType: keyboardType,
+              enabled: enabled,
               multiline: multiline,
             ),
           ),

@@ -94,6 +94,75 @@ Future<int> expectKeyboardIgnoredWhenOff(
   return tried;
 }
 
+/// The controls on screen that have an on and an off look, each with
+/// whether it is drawn on. A control kept offstage has no look and is left
+/// out.
+List<bool> drawnControls(WidgetTester tester) => [
+  for (final widget in tester.widgetList(
+    find.byWidgetPredicate((w) => _drawnOn(w) != null),
+  ))
+    _drawnOn(widget)!,
+];
+
+/// Whether [widget], a control, is drawn on; null when it is no control.
+bool? _drawnOn(Widget widget) => switch (widget) {
+  ShadInput(:final enabled) => enabled,
+  ShadSelect<dynamic>(:final enabled) => enabled,
+  ShadCheckbox(:final enabled) => enabled,
+  ShadSwitch(:final enabled) => enabled,
+  ShadRadioGroup<dynamic>(:final enabled) => enabled,
+  ShadButton(:final enabled) => enabled,
+  _ => null,
+};
+
+/// The look of a form turned off after it is mounted, as a host does while
+/// it saves: every control is drawn off, and turned on again each is drawn
+/// as it was. [build] gives the same form with `enabled` on or off.
+///
+/// Only the form is built again when it is turned off, as under a host's
+/// `setState`: nothing above it changes, so a field the form does not build
+/// again keeps the look it had. (A second [pumpForm] builds the whole app
+/// again, theme included, which redraws every field and hides that.)
+/// [whileOff] runs while the form is off, for what a test checks then.
+/// Returns how many controls were checked.
+Future<int> expectDrawnOffWhenTurnedOff(
+  WidgetTester tester,
+  Widget Function({required bool enabled}) build, {
+  Size size = kFormSurface,
+  Future<void> Function()? whileOff,
+}) async {
+  final enabled = ValueNotifier<bool>(true);
+  addTearDown(enabled.dispose);
+  await pumpForm(
+    tester,
+    ValueListenableBuilder<bool>(
+      valueListenable: enabled,
+      builder: (context, on, _) => build(enabled: on),
+    ),
+    size: size,
+  );
+  final before = drawnControls(tester);
+
+  enabled.value = false;
+  await tester.pumpAndSettle();
+  final off = drawnControls(tester);
+  expect(off, hasLength(before.length));
+  expect(
+    [
+      for (var i = 0; i < off.length; i++)
+        if (off[i]) i,
+    ],
+    isEmpty,
+    reason: 'controls still drawn on',
+  );
+  await whileOff?.call();
+
+  enabled.value = true;
+  await tester.pumpAndSettle();
+  expect(drawnControls(tester), before, reason: 'controls turned on again');
+  return before.length;
+}
+
 /// The labels of the form's rows, top to bottom, as shown: a required row's
 /// label ends in ` *`.
 List<String> rowLabels(WidgetTester tester) => [

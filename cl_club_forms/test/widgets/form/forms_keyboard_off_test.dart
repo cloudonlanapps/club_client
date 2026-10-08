@@ -1,6 +1,9 @@
 // Issue 67: every form of cl_club_forms, turned off while one of its text
 // inputs has the keyboard focus, takes no typing. The check itself is the
 // harness's `expectKeyboardIgnoredWhenOff`.
+//
+// Issue 94: the same forms, turned off after they are mounted, draw every
+// control off (`expectDrawnOffWhenTurnedOff`).
 import 'dart:io';
 
 import 'package:cl_club_forms/cl_club_forms.dart';
@@ -372,5 +375,15 @@ void main() {
       final form = tester.state<ShadFormState>(find.byType(ShadForm));
       expect(form.value[LoginFormFields.usernameId], '');
     });
+  });
+
+  group('Issue 94: a form turned off after it is mounted is drawn off', () {
+    for (final c in _cases) {
+      testWidgets('Issue 94: ${c.name} turned off after it is mounted draws '
+          'every control off, and on again when turned on', (tester) async {
+        final checked = await expectDrawnOffWhenTurnedOff(tester, c.build);
+        expect(checked, greaterThan(0), reason: 'controls checked');
+      });
+    }
   });
 }

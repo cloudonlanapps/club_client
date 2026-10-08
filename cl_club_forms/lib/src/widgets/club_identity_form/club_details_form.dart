@@ -81,25 +81,29 @@ class ClubDetailsFormState extends State<ClubDetailsForm>
       child: FormBody(
         error: formError,
         children: [
-          const ClubIdentityTextInput(
+          ClubIdentityTextInput(
             id: ClubDetailsFormFields.nameId,
             label: ClubDetailsFormFields.nameLabel,
             keyboardType: TextInputType.name,
+            enabled: widget.enabled,
           ),
-          const ClubIdentityTextInput(
+          ClubIdentityTextInput(
             id: ClubDetailsFormFields.shortNameId,
             label: ClubDetailsFormFields.shortNameLabel,
             keyboardType: TextInputType.name,
+            enabled: widget.enabled,
           ),
           TranslatedTextInputs(
             id: ClubDetailsFormFields.taglineId,
             label: ClubDetailsFormFields.taglineLabel,
             languages: widget.languages,
+            enabled: widget.enabled,
           ),
-          const ClubIdentityTextInput(
+          ClubIdentityTextInput(
             id: ClubDetailsFormFields.inquiryEmailId,
             label: ClubDetailsFormFields.inquiryEmailLabel,
             keyboardType: TextInputType.emailAddress,
+            enabled: widget.enabled,
             validator: ClubIdentityFormValidators.email,
             description: ClubDetailsFormFields.inquiryEmailHelp,
           ),

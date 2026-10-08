@@ -52,19 +52,6 @@ class OneOffRescheduleSectionState
     extends ConsumerState<OneOffRescheduleSection> {
   final formKey = GlobalKey<OneOffScheduleFormState>();
 
-  /// Whether a save is in flight: the form's fields are then off.
-  bool saving = false;
-
-  /// Saves the move, with the form's fields off meanwhile.
-  Future<bool> save(Map<String, dynamic> values) async {
-    setState(() => saving = true);
-    try {
-      return await commit(values);
-    } finally {
-      if (mounted) setState(() => saving = false);
-    }
-  }
-
   /// Sends the move. True closes the editor; a refusal about a field shows
   /// on that field, the postpone-only rule inline, and both keep it open.
   Future<bool> commit(Map<String, dynamic> values) async {
@@ -139,7 +126,7 @@ class OneOffRescheduleSectionState
       canEdit: widget.canEdit,
       editMaxWidth: 560,
       read: ClEventScheduleBody(event: event),
-      editBuilder: () => OneOffScheduleForm(
+      editBuilder: ({required enabled}) => OneOffScheduleForm(
         key: formKey,
         initialValue: buildOneOffScheduleInitialValues(event),
         venues: [
@@ -147,11 +134,11 @@ class OneOffRescheduleSectionState
             EventVenueOption(id: venue.id, name: venue.name),
         ],
         notBefore: event.startTimeUtc,
-        enabled: !saving,
+        enabled: enabled,
       ),
       onValidate: () => formKey.currentState?.validate(),
       isDirty: () => formKey.currentState?.isDirty ?? false,
-      onSave: save,
+      onSave: commit,
     );
   }
 }

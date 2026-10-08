@@ -76,9 +76,10 @@ class _GroupEligibilitySectionState
           ],
         ],
       ),
-      editBuilder: () => GroupEligibilityForm(
+      editBuilder: ({required enabled}) => GroupEligibilityForm(
         key: _formKey,
         initialValues: initialValues,
+        enabled: enabled,
         criteriaLocked: hasMembers,
         // The card's Reset shows only while the form holds a value.
         onChanged: () => setState(() {}),

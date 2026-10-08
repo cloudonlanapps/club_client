@@ -106,9 +106,10 @@ class UserContactInfoCardState extends ConsumerState<UserContactInfoCard> {
       emptyHint: 'Tap to add contact details',
       editMaxWidth: 460,
       read: profileSectionRows(rows),
-      editBuilder: () => UserContactForm(
+      editBuilder: ({required enabled}) => UserContactForm(
         key: formKey,
         initialValues: buildUserFormInitialValues(user),
+        enabled: enabled,
         defaultCountryCode: ref.watch(defaultCountryCodeProvider),
       ),
       onValidate: () => formKey.currentState?.validate(),

@@ -671,9 +671,10 @@ class _PersonalDetailsCardState extends ConsumerState<PersonalDetailsCard> {
       emptyHint: 'Tap to add personal details',
       editMaxWidth: 460,
       read: profileSectionRows(rows),
-      editBuilder: () => UserPersonalDetailsForm(
+      editBuilder: ({required enabled}) => UserPersonalDetailsForm(
         key: _formKey,
         initialValues: buildUserFormInitialValues(user),
+        enabled: enabled,
         canEditDateOfBirth: isSuperAdmin,
         canEditGender: isSuperAdmin,
         canEditUseNamePublicly: isSuperAdmin,
@@ -730,9 +731,10 @@ class _AddressCardState extends ConsumerState<AddressCard> {
       emptyHint: 'Tap to add address',
       editMaxWidth: 460,
       read: profileSectionRows(rows),
-      editBuilder: () => UserAddressForm(
+      editBuilder: ({required enabled}) => UserAddressForm(
         key: _formKey,
         initialValues: buildUserFormInitialValues(user),
+        enabled: enabled,
       ),
       onValidate: () => _formKey.currentState?.validate(),
       isDirty: () => _formKey.currentState?.isDirty ?? false,

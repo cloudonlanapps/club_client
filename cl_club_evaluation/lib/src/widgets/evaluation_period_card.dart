@@ -108,12 +108,13 @@ class EvaluationPeriodCardState extends ConsumerState<EvaluationPeriodCard> {
         startUtc: e.periodStartUtc,
         endUtc: e.periodEndUtc,
       ),
-      editBuilder: () => EvaluationPeriodForm(
+      editBuilder: ({required enabled}) => EvaluationPeriodForm(
         key: formKey,
         events: events,
         initialEvent: current,
         initialStart: EvaluationPeriodDates.toLocalDate(e.periodStartUtc),
         initialEnd: EvaluationPeriodDates.toLocalDate(e.periodEndUtc),
+        enabled: enabled,
       ),
       onValidate: () => formKey.currentState?.validate(),
       isDirty: () => formKey.currentState?.isDirty ?? false,

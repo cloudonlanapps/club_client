@@ -25,7 +25,8 @@ class _HostState extends State<_Host> {
       title: 'Demo',
       canEdit: true,
       read: const Text('READ MODE'),
-      editBuilder: () => Text(hasValue ? 'FORM WITH VALUE' : 'EMPTY FORM'),
+      editBuilder: ({required enabled}) =>
+          Text(hasValue ? 'FORM WITH VALUE' : 'EMPTY FORM'),
       onValidate: () => hasValue ? 'value' : 'empty',
       isDirty: () => true,
       onSave: (value) async {

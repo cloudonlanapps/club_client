@@ -408,10 +408,11 @@ class VenueLocationCardState extends ConsumerState<VenueLocationCard> {
             Text('No map link provided.', style: theme.textTheme.muted),
         ],
       ),
-      editBuilder: () => LocationEditForm(
+      editBuilder: ({required enabled}) => LocationEditForm(
         key: _formKey,
         initialAddress: venue.address ?? '',
         initialMapUri: venue.mapUri ?? '',
+        enabled: enabled,
       ),
       onValidate: () => _formKey.currentState?.validate(),
       isDirty: () => _formKey.currentState?.isDirty ?? false,

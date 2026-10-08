@@ -28,6 +28,7 @@ class EvaluationPeriodForm extends StatefulWidget {
     this.initialEvent,
     this.initialStart,
     this.initialEnd,
+    this.enabled = true,
     super.key,
   });
 
@@ -43,6 +44,10 @@ class EvaluationPeriodForm extends StatefulWidget {
 
   /// The seeded last day.
   final DateTime? initialEnd;
+
+  /// Whether the event and the dates can change; the host turns it off
+  /// while it saves.
+  final bool enabled;
 
   @override
   State<EvaluationPeriodForm> createState() => EvaluationPeriodFormState();
@@ -134,6 +139,7 @@ class EvaluationPeriodFormState extends State<EvaluationPeriodForm>
             label: EvaluationStrings.event,
             initialValue: initialEventValue,
             options: eventOptions,
+            enabled: widget.enabled,
             onChanged: (_) {
               if (formError != null) setState(() => formError = null);
             },
@@ -141,6 +147,7 @@ class EvaluationPeriodFormState extends State<EvaluationPeriodForm>
           EvaluationPeriodFields(
             initialStart: widget.initialStart,
             initialEnd: widget.initialEnd,
+            enabled: widget.enabled,
             onChanged: () {
               if (formError != null) setState(() => formError = null);
             },

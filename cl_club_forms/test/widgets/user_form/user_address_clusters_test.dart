@@ -1,12 +1,10 @@
-// The field clusters of the user forms that hold the address, and the
-// block UserForm adds while editing.
+// The field clusters of the user forms that hold the address.
 // Each is mounted alone in a bare ShadForm. A cluster has no validate() or
 // isDirty of its own (the embedding form has) and no rule across fields;
 // those points are tested on the forms.
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:cl_club_forms/src/widgets/user_form/indian_states.dart';
 import 'package:cl_club_forms/src/widgets/user_form/user_address_fields.dart';
-import 'package:cl_club_forms/src/widgets/user_form/user_edit_only_fields.dart';
 import 'package:cl_club_forms/src/widgets/user_form/user_field_pair.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,12 +12,6 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../support/account_user_form_harness.dart';
 import '../../support/form_harness.dart';
 
-const String _email = UserFormFields.emailId;
-const String _phone = UserFormFields.phoneId;
-const String _ecName = UserFormFields.emergencyContactNameId;
-const String _ecRelation = UserFormFields.emergencyContactRelationId;
-const String _ecPhone = UserFormFields.emergencyContactPhoneId;
-const String _medical = UserFormFields.medicalInfoId;
 const String _line1 = UserFormFields.addrLine1Id;
 const String _line2 = UserFormFields.addrLine2Id;
 const String _city = UserFormFields.cityId;
@@ -155,67 +147,6 @@ void main() {
       await expectTapsIgnored(tester, [_line1, _line2, _city, _pincode]);
       await tapSelect(tester, _state);
       expect(find.text('Assam'), findsNothing);
-    });
-  });
-
-  group('Issue 61: UserEditOnlyFields', () {
-    testWidgets('Issue 61: it shows the address under its heading, then '
-        'phone, email, the emergency contact and the medical notes', (
-      tester,
-    ) async {
-      await pumpCluster(tester, const UserEditOnlyFields());
-
-      expect(rowLabels(tester), [
-        'Address',
-        'Address line 1',
-        'Address line 2',
-        'City',
-        'State',
-        'Pincode',
-        'Phone *',
-        'Email *',
-        'Emergency contact name',
-        'Emergency contact relation',
-        'Emergency contact phone',
-        'Medical info',
-      ]);
-      expect(fieldIds(tester), [
-        _line1,
-        _line2,
-        _city,
-        _state,
-        _pincode,
-        _phone,
-        _email,
-        _ecName,
-        _ecRelation,
-        _ecPhone,
-        _medical,
-      ]);
-      expectLabelsAreRows(tester);
-      expectNoHostChrome(tester);
-    });
-
-    testWidgets('Issue 61: with enabled off every field of it is off', (
-      tester,
-    ) async {
-      await pumpCluster(tester, const UserEditOnlyFields(enabled: false));
-
-      expectEveryFieldOff(tester);
-    });
-
-    testWidgets('Issue 61: it fits a phone', (tester) async {
-      await pumpCluster(
-        tester,
-        const UserEditOnlyFields(),
-        initial: const {
-          _state: 'Dadra and Nagar Haveli and Daman and Diu',
-          _ecRelation: 'Parent',
-        },
-        size: kPhoneSurface,
-      );
-
-      expect(tester.takeException(), isNull);
     });
   });
 }

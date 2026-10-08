@@ -171,8 +171,6 @@ class UserCreateViewState extends ConsumerState<UserCreateView> {
                 key: createFormKey,
                 initialValues: buildUserFormInitialValues(null),
                 enabled: !isSubmitting,
-                canEditDateOfBirth: true,
-                canEditUseNamePublicly: true,
                 canAssignAdmin: isSuperAdmin,
                 canAssignCoach: isAdmin,
                 onCheckUsernameAvailable: checkUsernameAvailable,

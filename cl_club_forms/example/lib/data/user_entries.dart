@@ -11,32 +11,15 @@ abstract final class UserEntries {
   static List<FormDemoEntry> get all => [
     FormDemoEntry(
       id: 'user-create',
-      title: 'User form, creating',
+      title: 'User form',
       group: FormDemoGroup.users,
       formType: UserForm,
       builder: (key) => UserForm(
         key: key,
-        canEditDateOfBirth: true,
-        canEditGender: true,
-        canEditUseNamePublicly: true,
         canAssignAdmin: true,
         canAssignCoach: true,
         onCheckUsernameAvailable: FakeHostCalls.usernameAvailable,
         onShowDefaultPassword: () {},
-      ),
-    ),
-    FormDemoEntry(
-      id: 'user-edit',
-      title: 'User form, editing',
-      group: FormDemoGroup.users,
-      formType: UserForm,
-      builder: (key) => UserForm(
-        key: key,
-        readOnlyUsername: DemoSamples.username,
-        initialValues: DemoSamples.member,
-        canEditDateOfBirth: true,
-        canEditGender: true,
-        canEditUseNamePublicly: true,
       ),
     ),
     FormDemoEntry(

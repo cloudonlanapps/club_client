@@ -115,44 +115,5 @@ void main() {
         findsOneWidget,
       );
     });
-
-    testWidgets('Issue 53: editing shows the shared address, contact and '
-        'emergency fields', (tester) async {
-      final key = GlobalKey<UserFormState>();
-      await tester.binding.setSurfaceSize(const Size(1024, 3000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-      await tester.pumpWidget(
-        ShadApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: UserForm(
-                key: key,
-                readOnlyUsername: 'robin',
-                initialValues: const {
-                  UserFormFields.firstNameId: 'Robin',
-                  UserFormFields.cityId: 'Pune',
-                },
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(key.currentState!.canSubmit, isTrue);
-      expect(_field(UserFormFields.usernameId), findsNothing);
-      expect(_field(UserFormFields.passwordId), findsNothing);
-      for (final id in [
-        UserFormFields.nicknameId,
-        UserFormFields.addrLine1Id,
-        UserFormFields.pincodeId,
-        UserFormFields.emailId,
-        UserFormFields.emergencyContactPhoneId,
-        UserFormFields.medicalInfoId,
-      ]) {
-        expect(_field(id), findsOneWidget, reason: id);
-      }
-      expect(find.text('Pune'), findsOneWidget);
-    });
   });
 }

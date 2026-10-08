@@ -17,9 +17,6 @@ const List<String> kAvatarPublicAccessRoles = ['public'];
 /// Access roles of a private avatar: the member it belongs to and staff.
 const List<String> kAvatarPrivateAccessRoles = ['self', 'admin', 'coach'];
 
-/// Largest page the server's media listings return.
-const int kMediaListPageLimit = 100;
-
 /// Most-recent avatar download URL for `username`, or `null` if the user
 /// has no avatar attached.
 ///
@@ -43,10 +40,10 @@ final FutureProviderFamily<String?, String> avatarImageProvider =
 
 /// Whether the user's current avatar (most-recent `user_avatar`-tagged
 /// media) is marked publicly visible, i.e. its `accessRoles` contains
-/// `'public'`. Returns `false` when the user has no avatar, or when the
-/// most-recent linked media isn't present in the caller's `listMyFiles`
-/// page (admin viewing another user's avatar — caller should not rely on
-/// the result in that case).
+/// `'public'`. Returns `false` when the user has no avatar, or when its
+/// file is one the caller may not read.
+///
+/// The file is read by its uuid (club_client#86).
 ///
 /// Seeds the "Allow others to see my photo" checkbox, both in the upload
 /// preview dialog and on the member's own current photo (club_client#35).
@@ -57,18 +54,27 @@ final FutureProviderFamily<bool, String> avatarVisibilityProvider =
       if (links.isEmpty) return false;
       final sorted = [...links]
         ..sort((a, b) => b.createdAtUtc.compareTo(a.createdAtUtc));
-      final mostRecentUuid = sorted.first.mediaUuid;
-      // Server caps `limit` at 100. The just-uploaded avatar is the user's
-      // most-recent media, so the first page is sufficient here.
-      final myFiles = await client.media.listMyFiles(
-        limit: kMediaListPageLimit,
-      );
-      final match = myFiles.items
-          .where((m) => m.uuid == mostRecentUuid)
-          .toList();
-      if (match.isEmpty) return false;
-      return match.first.accessRoles.contains(kAvatarPublicAccessRoles.single);
+      final current = await findAvatarMedia(client, sorted.first.mediaUuid);
+      if (current == null) return false;
+      return current.accessRoles.contains(kAvatarPublicAccessRoles.single);
     });
+
+/// The media record with [mediaUuid], or null when no file has that uuid or
+/// the caller may not read it (the server answers both 404).
+///
+/// A media link carries the uuid; the calls that change a file take the id
+/// this record holds (club_client#86).
+Future<Media?> findAvatarMedia(SecureClient client, String mediaUuid) async {
+  try {
+    return await client.media.getByUuid(mediaUuid);
+  } on ServerException catch (e) {
+    if (e.statusCode == kNotFoundStatus) return null;
+    rethrow;
+  }
+}
+
+/// HTTP status of a file that does not exist or the caller may not read.
+const int kNotFoundStatus = 404;
 
 /// Mutation surface for a single user's avatar.
 ///
@@ -76,9 +82,10 @@ final FutureProviderFamily<bool, String> avatarVisibilityProvider =
 /// [AvatarMutationNotifier.uploadOnBehalf],
 /// [AvatarMutationNotifier.setVisibility] or [AvatarMutationNotifier.clear];
 /// reads observe [avatarImageProvider] and [avatarVisibilityProvider].
-/// The notifier handles the upload → attach → soft-delete-previous flow
-/// in an order that keeps the user with a renderable avatar across
-/// upload-or-attach failures.
+/// The notifier uploads and attaches; the server keeps a user to one avatar
+/// and replaces the previous one when the new link is made
+/// (club_client#87), so a failed upload or attach leaves the current photo
+/// in place.
 final AvatarMutationProvider avatarMutationProvider =
     AsyncNotifierProvider.family<AvatarMutationNotifier, void, String>(
       AvatarMutationNotifier.new,
@@ -103,9 +110,7 @@ class AvatarMutationNotifier extends FamilyAsyncNotifier<void, String>
   ///   - `true`  → [kAvatarPublicAccessRoles]
   ///   - `false` → [kAvatarPrivateAccessRoles]
   ///
-  /// On a failure during upload or attach, prior media is preserved.
-  /// Prior media is only soft-deleted after the new link has been
-  /// successfully attached.
+  /// On a failure during upload or attach, the prior avatar stays.
   Future<void> upload({
     required List<int> bytes,
     required String filename,
@@ -120,7 +125,6 @@ class AvatarMutationNotifier extends FamilyAsyncNotifier<void, String>
       accessRoles: allowOthersToSee
           ? kAvatarPublicAccessRoles
           : kAvatarPrivateAccessRoles,
-      onBehalf: false,
     ),
     refetch: () => refetchAvatar(arg),
   );
@@ -145,7 +149,7 @@ class AvatarMutationNotifier extends FamilyAsyncNotifier<void, String>
       filename: filename,
       contentType: contentType,
       accessRoles: kAvatarPrivateAccessRoles,
-      onBehalf: true,
+      ownerUsername: arg,
     ),
     refetch: () => refetchAvatar(arg),
   );
@@ -153,9 +157,8 @@ class AvatarMutationNotifier extends FamilyAsyncNotifier<void, String>
   /// Make the user's current avatar public ([allowOthersToSee] true) or
   /// private again, without a new upload (club_client#35).
   ///
-  /// For the member themselves: the current avatar is looked up among the
-  /// caller's own files. Throws a [StateError] when the user has no avatar
-  /// or the current one is not among those files.
+  /// For the member themselves. Throws a [StateError] when the user has no
+  /// avatar or the current one is a file the caller may not read.
   Future<void> setVisibility({required bool allowOthersToSee}) async {
     final username = arg;
     await runGuarded('Avatar.setVisibility', () async {
@@ -165,10 +168,10 @@ class AvatarMutationNotifier extends FamilyAsyncNotifier<void, String>
       final current = links.reduce(
         (a, b) => b.createdAtUtc.isAfter(a.createdAtUtc) ? b : a,
       );
-      final id = await findMediaId(client, current.mediaUuid, onBehalf: false);
-      if (id == null) throw StateError('The current avatar is not yours');
+      final media = await findAvatarMedia(client, current.mediaUuid);
+      if (media == null) throw StateError('The current avatar is not yours');
       await client.media.patch(
-        id,
+        media.id,
         accessRoles: allowOthersToSee
             ? kAvatarPublicAccessRoles
             : kAvatarPrivateAccessRoles,
@@ -189,7 +192,7 @@ class AvatarMutationNotifier extends FamilyAsyncNotifier<void, String>
       await client.userMedia.detachTag(username, kUserAvatarTag);
       for (final link in links) {
         try {
-          await softDeleteByUuid(client, link.mediaUuid, onBehalf: false);
+          await softDeleteByUuid(client, link.mediaUuid);
         } on Object catch (e, st) {
           debugPrint(
             'avatarMutationProvider.clear: softDelete failed for '
@@ -208,99 +211,45 @@ class AvatarMutationNotifier extends FamilyAsyncNotifier<void, String>
       ..invalidate(avatarVisibilityProvider(username));
   }
 
-  /// The body shared by [upload] and [uploadOnBehalf]: upload, attach under
-  /// [kUserAvatarTag], then detach and soft-delete each prior avatar.
+  /// The body shared by [upload] and [uploadOnBehalf]: upload, then attach
+  /// under [kUserAvatarTag].
   ///
-  /// [onBehalf] names the user as the file's owner (`ownerUsername`) and
-  /// looks prior files up in the staff listing, since they are not the
-  /// caller's own.
+  /// The server replaces the user's previous avatar when the new link is
+  /// made: it removes the old link, one the caller may not view included,
+  /// and soft-deletes its file (club_client#87). Nothing is detached or
+  /// deleted from here.
+  ///
+  /// [ownerUsername] names the user as the file's owner when an admin
+  /// uploads for them.
   Future<void> replaceAvatar({
     required List<int> bytes,
     required String filename,
     required String contentType,
     required List<String> accessRoles,
-    required bool onBehalf,
+    String? ownerUsername,
   }) async {
     final username = arg;
     final client = await ref.read(secureClientProvider.future);
-    final priorLinks = await client.userMedia.listByTag(
-      username,
-      kUserAvatarTag,
-    );
     final media = await client.media.upload(
       fileBytes: bytes,
       filename: filename,
       contentType: contentType,
       accessRoles: accessRoles,
-      ownerUsername: onBehalf ? username : null,
+      ownerUsername: ownerUsername,
     );
     await client.userMedia.attach(
       username,
       tag: kUserAvatarTag,
       mediaUuid: media.uuid,
     );
-    // Replace each prior avatar: detach the link, then soft-delete the
-    // media. The order matters — the server returns 409 MEDIA_IN_USE
-    // if soft-delete sees a live link. Both calls are expected to
-    // succeed; failures are logged (not swallowed) so any real fault
-    // surfaces in the console without aborting the rest of the loop.
-    for (final prior in priorLinks) {
-      try {
-        await client.userMedia.detach(
-          username,
-          kUserAvatarTag,
-          prior.mediaUuid,
-        );
-        await softDeleteByUuid(client, prior.mediaUuid, onBehalf: onBehalf);
-      } on Object catch (e, st) {
-        debugPrint(
-          'avatarMutationProvider: cleanup failed for prior media '
-          '${prior.mediaUuid}: $e\n$st',
-        );
-      }
-    }
     refetchAvatar(username);
   }
 
-  /// Soft-delete the media with [mediaUuid], if [findMediaId] resolves it.
-  /// Best-effort cleanup: an unresolved uuid stays an orphan media row.
-  Future<void> softDeleteByUuid(
-    SecureClient client,
-    String mediaUuid, {
-    required bool onBehalf,
-  }) async {
-    final id = await findMediaId(client, mediaUuid, onBehalf: onBehalf);
-    if (id == null) return;
-    await client.media.softDelete(id);
-  }
-
-  /// The numeric id of the media with [mediaUuid], or null if not found.
-  ///
-  /// The link table only carries the uuid, the media writes take the id,
-  /// and the server has no fetch-by-uuid. For the user themselves the first
-  /// page of their own files is searched (a prior avatar buried deeper than
-  /// [kMediaListPageLimit] is not found). [onBehalf] (an admin acting for
-  /// the user) walks the staff listing of all media instead, since the
-  /// files are the user's and not the caller's.
-  Future<int?> findMediaId(
-    SecureClient client,
-    String mediaUuid, {
-    required bool onBehalf,
-  }) async {
-    if (!onBehalf) {
-      final mine = await client.media.listMyFiles(limit: kMediaListPageLimit);
-      return mine.items.where((m) => m.uuid == mediaUuid).firstOrNull?.id;
-    }
-    var offset = 0;
-    while (true) {
-      final page = await client.media.list(
-        offset: offset,
-        limit: kMediaListPageLimit,
-      );
-      final found = page.items.where((m) => m.uuid == mediaUuid).firstOrNull;
-      if (found != null) return found.id;
-      offset += page.items.length;
-      if (page.items.isEmpty || offset >= page.total) return null;
-    }
+  /// Soft-delete the media with [mediaUuid], if [findAvatarMedia] resolves
+  /// it. Best-effort cleanup: an unresolved uuid stays an orphan media row.
+  Future<void> softDeleteByUuid(SecureClient client, String mediaUuid) async {
+    final media = await findAvatarMedia(client, mediaUuid);
+    if (media == null) return;
+    await client.media.softDelete(media.id);
   }
 }

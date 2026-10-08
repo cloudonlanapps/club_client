@@ -457,4 +457,48 @@ void main() {
       expect(find.textContaining('server rejected the upload'), findsNothing);
     },
   );
+
+  testWidgets('Issue 89: the pencil is a shadcn icon on a plain tap target, '
+      'with no Material ink', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          avatarMutationProvider.overrideWith(
+            _RecordingAvatarMutationNotifier.new,
+          ),
+        ],
+        child: const ShadApp(
+          home: Center(
+            child: AvatarUploadAffordance(
+              username: 'alice',
+              picker: _stubPicker,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final affordance = find.byType(AvatarUploadAffordance);
+    expect(
+      find.descendant(of: affordance, matching: find.byType(InkWell)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: affordance, matching: find.byType(Material)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(
+        of: affordance,
+        matching: find.byIcon(LucideIcons.pencil),
+      ),
+      findsOneWidget,
+    );
+
+    // It still opens the preview, with no Material ancestor to lean on.
+    await tester.tap(find.byTooltip(AvatarUploadAffordanceState.tooltip));
+    await tester.pumpAndSettle();
+    expect(find.text('Update profile photo'), findsOneWidget);
+  });
 }

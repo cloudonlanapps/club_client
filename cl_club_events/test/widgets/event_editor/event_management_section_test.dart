@@ -226,7 +226,7 @@ void main() {
         final pumped = await _pump(tester, user: admin, archived: true);
         pumped.events.refusal = const ServerException(
           statusCode: 400,
-          code: 'VENUE_IS_DELETED',
+          code: SdkErrorCode.venueIsDeleted,
           message: 'Cannot restore event: venue is deleted',
         );
 

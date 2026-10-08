@@ -3,6 +3,7 @@
 // its aggregate validator are covered in one_off_schedule_fields_test.dart.
 import 'package:cl_calendar/cl_calendar.dart' show CLDatePickerFormField;
 import 'package:cl_club_forms/src/models/one_off_schedule_data.dart';
+import 'package:cl_club_forms/src/widgets/event_schedule/duration_picker_column.dart';
 import 'package:cl_club_forms/src/widgets/event_schedule/one_off_schedule_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,6 +11,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../support/camp_one_off_schedule_helpers.dart';
 import '../support/form_harness.dart';
+import '../support/programme_timetable_support.dart';
 
 const _id = 'schedule';
 
@@ -84,7 +86,7 @@ void main() {
       await pumpForm(tester, host.build());
 
       expect(host.value, isNull);
-      expect(textInRow('Duration', '2h'), findsOneWidget);
+      expect(textInRow('Duration', '2:00'), findsOneWidget);
       expect(textInRow('Date', 'Pick a date'), findsOneWidget);
 
       await pickScheduleDate(tester, DateTime(2030, 5, 14));
@@ -117,7 +119,8 @@ void main() {
       final host = _Host();
       await pumpForm(tester, host.build(initial: _seed()));
 
-      await typeInRow(tester, 'Duration', '45m');
+      await pickDurationMinute(tester, 45);
+      await pickDurationHour(tester, 0);
       expect(host.reported.last, _seed().copyWith(durationMinutes: 45));
 
       await pickScheduleDate(tester, DateTime(2030, 6, 1));
@@ -129,45 +132,20 @@ void main() {
           durationMinutes: 45,
         ),
       );
-      expect(host.reported, hasLength(2));
+      expect(host.reported, hasLength(3));
     });
-
-    for (final (text, minutes) in [
-      ('3h', 180),
-      ('1.5h', 90),
-      ('1.5', 90),
-      ('45m', 45),
-      ('2h 15m', 135),
-      ('2h15', 135),
-      (' 1H 30M ', 90),
-    ]) {
-      testWidgets('Issue 61: a duration typed as "$text" is $minutes '
-          'minutes', (tester) async {
-        final host = _Host();
-        await pumpForm(tester, host.build(initial: _seed()));
-
-        await typeInRow(tester, 'Duration', text);
-
-        expect(host.value!.durationMinutes, minutes);
-      });
-    }
 
     testWidgets('Issue 61: validating an empty cluster puts each message '
         'on its own row', (tester) async {
       final host = _Host();
       await pumpForm(tester, host.build());
 
-      await typeInRow(tester, 'Duration', 'soon');
       expect(host.formKey.currentState!.saveAndValidate(), isFalse);
       await tester.pumpAndSettle();
 
       expect(textInRow('Date', 'Date is required'), findsOneWidget);
       expect(
         textInRow('Start Time', 'Start time is required'),
-        findsOneWidget,
-      );
-      expect(
-        textInRow('Duration', 'Duration must be greater than 0'),
         findsOneWidget,
       );
     });
@@ -199,12 +177,9 @@ void main() {
             .enabled,
         isFalse,
       );
-      expect(
-        tester
-            .widget<ShadInputFormField>(find.byType(ShadInputFormField))
-            .enabled,
-        isFalse,
-      );
+      await tester.tap(durationPicker(), warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(find.byType(DurationPickerColumn), findsNothing);
       expect(host.reported, isEmpty);
     });
 

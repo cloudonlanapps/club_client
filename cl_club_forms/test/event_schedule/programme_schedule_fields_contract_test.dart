@@ -180,43 +180,6 @@ void main() {
       expect(programmeValue(form).hasNoEndDate, isFalse);
     });
 
-    testWidgets('Issue 61: a duration that is nothing or unreadable is '
-        'refused on Duration', (tester) async {
-      final form = await pumpProgrammeField(
-        tester,
-        initialValue: validProgramme,
-      );
-
-      for (final typed in ['0', '0m', '', 'two hours']) {
-        await enterDuration(tester, typed);
-        expect(
-          await validateProgramme(tester, form),
-          isFalse,
-          reason: '"$typed"',
-        );
-        expect(
-          _inRow('Duration', 'Duration must be greater than 0'),
-          findsOneWidget,
-        );
-      }
-    });
-
-    testWidgets('Issue 61: a duration over four hours is refused on '
-        'Duration', (tester) async {
-      final form = await pumpProgrammeField(
-        tester,
-        initialValue: validProgramme,
-      );
-
-      await enterDuration(tester, '241m');
-
-      expect(await validateProgramme(tester, form), isFalse);
-      expect(
-        _inRow('Duration', 'Programme session cannot exceed 4h'),
-        findsOneWidget,
-      );
-    });
-
     testWidgets('Issue 61: a duration of exactly four hours is accepted', (
       tester,
     ) async {
@@ -225,7 +188,7 @@ void main() {
         initialValue: validProgramme,
       );
 
-      await enterDuration(tester, '240m');
+      await pickDuration(tester, 4);
 
       expect(await validateProgramme(tester, form), isTrue);
       expect(programmeValue(form).totalDurationMinutes, 240);

@@ -1,4 +1,5 @@
 import 'package:cl_club_forms/src/models/one_off_schedule_data.dart';
+import 'package:cl_club_forms/src/widgets/event_schedule/duration_picker_dropdown.dart';
 import 'package:cl_club_forms/src/widgets/event_schedule/one_off_schedule_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -115,12 +116,8 @@ void main() {
         );
         await _pumpField(tester, initialValue: initial);
 
-        // 90m → "1h 30m" via formatDuration.
-        final body = tester.state<OneOffScheduleFormFieldBodyState>(
-          find.byType(OneOffScheduleFormFieldBody),
-        );
-        expect(body.durationController.text, '1h 30m');
-        expect(find.text('1h 30m'), findsOneWidget);
+        // 90m → "1:30" in the duration picker.
+        expect(find.text('1:30'), findsOneWidget);
       },
     );
 
@@ -134,14 +131,13 @@ void main() {
         );
         final formKey = await _pumpField(tester, initialValue: initial);
 
-        // Drive the duration through the controller — `enterText` on a
-        // ShadInputFormField needs the editable in view, and the time
-        // picker also exposes EditableTexts that confuse direct finders.
-        final body = tester.state<OneOffScheduleFormFieldBodyState>(
-          find.byType(OneOffScheduleFormFieldBody),
-        );
-        body.durationController.text = '2h';
-        body.onDurationTextChanged('2h');
+        // Drive the duration through the cluster's own handler, as the
+        // duration picker does.
+        tester
+            .state<OneOffScheduleFormFieldBodyState>(
+              find.byType(OneOffScheduleFormFieldBody),
+            )
+            .onDurationChanged(120);
         await tester.pumpAndSettle();
 
         final value = _read(formKey)!;
@@ -151,52 +147,6 @@ void main() {
           value.startTime,
           const ShadTimeOfDay(hour: 9, minute: 0, second: 0),
         );
-      },
-    );
-
-    testWidgets(
-      'duration that does not parse leaves the previous value untouched',
-      (tester) async {
-        final initial = OneOffScheduleData(
-          date: DateTime(2026),
-          startTime: const ShadTimeOfDay(hour: 9, minute: 0, second: 0),
-          durationMinutes: 60,
-        );
-        final formKey = await _pumpField(tester, initialValue: initial);
-
-        tester
-            .state<OneOffScheduleFormFieldBodyState>(
-              find.byType(OneOffScheduleFormFieldBody),
-            )
-            .onDurationTextChanged('garbage');
-        await tester.pumpAndSettle();
-
-        // The form still holds the initial value because parseDuration
-        // returned null and emit() short-circuited.
-        expect(_read(formKey)?.durationMinutes, 60);
-      },
-    );
-
-    testWidgets(
-      'validateDuration rejects non-positive and unparseable input',
-      (tester) async {
-        final formKey = await _pumpField(
-          tester,
-          initialValue: OneOffScheduleData(
-            date: DateTime(2026),
-            startTime: const ShadTimeOfDay(hour: 9, minute: 0, second: 0),
-            durationMinutes: 60,
-          ),
-        );
-        final body = tester.state<OneOffScheduleFormFieldBodyState>(
-          find.byType(OneOffScheduleFormFieldBody),
-        );
-        expect(body.validateDuration('0'), 'Duration must be greater than 0');
-        expect(body.validateDuration('xx'), 'Duration must be greater than 0');
-        expect(body.validateDuration('1h 30m'), isNull);
-        // Sanity-check: reading the form value after a failing validate
-        // does not corrupt state.
-        expect(_read(formKey)?.durationMinutes, 60);
       },
     );
 
@@ -230,8 +180,8 @@ void main() {
         );
         await _pumpField(tester, initialValue: initial, enabled: false);
 
-        final input = tester.widget<ShadInputFormField>(
-          find.byType(ShadInputFormField),
+        final input = tester.widget<DurationPickerDropdown>(
+          find.byType(DurationPickerDropdown),
         );
         expect(input.enabled, isFalse);
       },

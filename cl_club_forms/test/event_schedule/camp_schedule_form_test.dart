@@ -58,7 +58,7 @@ void main() {
     expect(key.currentState!.isDirty, isFalse);
 
     // Change the daily duration through the field's own handler.
-    _body(tester).onDurationTextChanged('3h');
+    _body(tester).onDurationChanged(180);
     await tester.pumpAndSettle();
 
     expect(key.currentState!.isDirty, isTrue);

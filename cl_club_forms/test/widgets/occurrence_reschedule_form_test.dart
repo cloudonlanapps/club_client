@@ -136,7 +136,7 @@ void main() {
       ]);
       expectLabelsAreRows(tester);
       expect(find.text('1 Jul 2026'), findsOneWidget);
-      expect(find.text('1h 30m'), findsOneWidget);
+      expect(find.text('1:30'), findsOneWidget);
     });
   });
 
@@ -186,16 +186,16 @@ void main() {
     testWidgets('Issue 61: a duration of nothing is refused on Duration', (
       tester,
     ) async {
-      final state = await _mount(tester);
+      final state = await _mount(
+        tester,
+        schedule: _seededSchedule.copyWith(durationMinutes: 0),
+      );
 
-      for (final typed in ['0', '', 'long']) {
-        await enterDuration(tester, typed);
-        expect(state.validate(), isNull, reason: 'typed "$typed"');
-        await tester.pumpAndSettle();
-        expect(find.text('Duration must be greater than 0'), findsOneWidget);
-      }
+      expect(state.validate(), isNull);
+      await tester.pumpAndSettle();
+      expect(find.text('Duration must be greater than 0'), findsOneWidget);
 
-      await enterDuration(tester, '45m');
+      await pickDuration(tester, 0, 45);
       expect(_scheduleOf(state.validate()!).durationMinutes, 45);
     });
 
@@ -243,7 +243,7 @@ void main() {
 
       await _pickDate(tester, DateTime(2026, 7, 3));
       await enterStartTime(tester, 17, 45);
-      await enterDuration(tester, '2h');
+      await pickDuration(tester, 2);
       await pickOption(tester, 'Rink A', 'Rink B');
 
       expect(state.validate(), {
@@ -285,10 +285,10 @@ void main() {
         'old one makes it clean', (tester) async {
       final state = await _mount(tester);
 
-      await enterDuration(tester, '2h');
+      await pickDuration(tester, 2);
       expect(state.isDirty, isTrue);
 
-      await enterDuration(tester, '90m');
+      await pickDuration(tester, 1, 30);
       expect(state.isDirty, isFalse);
     });
 

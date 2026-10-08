@@ -5,8 +5,12 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../constants/form_spacing.dart';
 import '../../models/one_off_schedule_data.dart';
 import '../form/labeled_form_row.dart';
+import 'schedule_duration_field.dart';
 import 'time_picker_empty_parts.dart';
 import 'two_column_grid.dart';
+
+/// The longest one-off the Duration picker offers.
+const int maxOneOffDurationMinutes = 8 * 60;
 
 /// `ShadForm`-compatible field for one-off event schedule.
 ///
@@ -66,7 +70,6 @@ class OneOffScheduleFormFieldBodyState
   late DateTime? selectedDate;
   late ShadTimeOfDay? selectedStartTime;
   late int durationMinutes;
-  late TextEditingController durationController;
   late ShadTimePickerController startTimeController;
   final GlobalKey<FormFieldState<ShadTimeOfDay>> _startTimeKey = GlobalKey();
 
@@ -77,9 +80,6 @@ class OneOffScheduleFormFieldBodyState
     selectedDate = initial.date;
     selectedStartTime = initial.startTime;
     durationMinutes = initial.durationMinutes;
-    durationController = TextEditingController(
-      text: formatDuration(durationMinutes),
-    );
     startTimeController = ShadTimePickerController(
       hour: initial.startTime?.hour,
       // Pre-seed minute and second so the picker fires onChanged once the
@@ -91,46 +91,8 @@ class OneOffScheduleFormFieldBodyState
 
   @override
   void dispose() {
-    durationController.dispose();
     startTimeController.dispose();
     super.dispose();
-  }
-
-  String formatDuration(int minutes) {
-    final hours = minutes / 60;
-    if (hours == hours.truncateToDouble()) return '${hours.toInt()}h';
-    if (hours < 1) return '${minutes}m';
-    final whole = hours.truncate();
-    final fraction = minutes - whole * 60;
-    if (fraction == 30) return '${whole}h 30m';
-    return '${whole}h ${fraction}m';
-  }
-
-  int? parseDuration(String rawText) {
-    final text = rawText.trim().toLowerCase();
-    if (text.isEmpty) return null;
-    final compound = RegExp(r'^(\d+)h\s*(\d+)?m?$').firstMatch(text);
-    if (compound != null) {
-      final hours = int.tryParse(compound.group(1)!) ?? 0;
-      final mins = int.tryParse(compound.group(2) ?? '0') ?? 0;
-      return hours * 60 + mins;
-    }
-    final decimalHours = RegExp(r'^(\d+(?:\.\d+)?)h?$').firstMatch(text);
-    if (decimalHours != null) {
-      final hours = double.tryParse(decimalHours.group(1)!) ?? 0;
-      return (hours * 60).round();
-    }
-    final mOnly = RegExp(r'^(\d+)m$').firstMatch(text);
-    if (mOnly != null) return int.tryParse(mOnly.group(1)!);
-    return null;
-  }
-
-  String? validateDuration(String value) {
-    final parsed = parseDuration(value);
-    if (parsed == null || parsed <= 0) {
-      return 'Duration must be greater than 0';
-    }
-    return null;
   }
 
   /// The picker reports a time only once every part of it is filled. With
@@ -152,12 +114,9 @@ class OneOffScheduleFormFieldBodyState
     );
   }
 
-  void onDurationTextChanged(String value) {
-    final parsed = parseDuration(value);
-    if (parsed != null && parsed > 0) {
-      setState(() => durationMinutes = parsed);
-      emit();
-    }
+  void onDurationChanged(int minutes) {
+    setState(() => durationMinutes = minutes);
+    emit();
   }
 
   @override
@@ -218,15 +177,11 @@ class OneOffScheduleFormFieldBodyState
             LabeledFormRow(
               label: 'Duration',
               required: true,
-              field: ShadInputFormField(
-                controller: durationController,
+              field: ScheduleDurationField(
+                minutes: durationMinutes,
+                longestMinutes: maxOneOffDurationMinutes,
                 enabled: enabled,
-                keyboardType: TextInputType.text,
-                autocorrect: false,
-                enableSuggestions: false,
-                placeholder: const Text('e.g., 2h, 1.5h, 90m'),
-                validator: validateDuration,
-                onChanged: onDurationTextChanged,
+                onChanged: onDurationChanged,
               ),
             ),
           ],

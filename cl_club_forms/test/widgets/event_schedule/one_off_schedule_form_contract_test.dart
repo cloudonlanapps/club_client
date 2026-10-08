@@ -12,6 +12,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../support/camp_one_off_schedule_helpers.dart';
 import '../../support/form_harness.dart';
+import '../../support/programme_timetable_support.dart';
 
 const String _scheduleId = OneOffScheduleFormFields.scheduleId;
 const String _venueId = OneOffScheduleFormFields.venueId;
@@ -160,25 +161,6 @@ void main() {
       await pickScheduleStartTime(tester, timeAt(18));
       expect(state.validate(), isNotNull);
     });
-
-    for (final bad in ['', '0', '0m', 'later']) {
-      testWidgets('Issue 61: duration "$bad" is refused on its row', (
-        tester,
-      ) async {
-        final state = await _pump(tester, _initial());
-
-        await typeInRow(tester, 'Duration', bad);
-        expect(state.validate(), isNull);
-        await tester.pumpAndSettle();
-        expect(
-          textInRow('Duration', 'Duration must be greater than 0'),
-          findsOneWidget,
-        );
-
-        await typeInRow(tester, 'Duration', '45m');
-        expect(state.validate(), isNotNull);
-      });
-    }
 
     testWidgets('Issue 61: no venue is refused on the venue field, a chosen '
         'one accepted', (tester) async {
@@ -331,7 +313,7 @@ void main() {
 
       await pickScheduleDate(tester, DateTime(2030, 6, 2));
       await pickScheduleStartTime(tester, timeAt(9, 30));
-      await typeInRow(tester, 'Duration', ' 1H 30M ');
+      await pickDuration(tester, 1, 30);
       await _chooseVenue(tester, 'North Rink');
       _splitState(tester).onSessionDurationChanged(
         0,
@@ -364,7 +346,7 @@ void main() {
         SessionInput(name: 'Match', startTime: '10:30', endTime: '12:00'),
       ]);
 
-      await typeInRow(tester, 'Duration', '3h');
+      await pickDuration(tester, 3);
       final values = state.validate()!;
       expect(values[_sessionsId], isEmpty);
       expect(

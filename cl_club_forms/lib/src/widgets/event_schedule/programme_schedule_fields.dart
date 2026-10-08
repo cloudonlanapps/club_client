@@ -6,6 +6,7 @@ import '../../constants/form_spacing.dart';
 import '../../models/programme_schedule_data.dart';
 import '../../models/session_input.dart';
 import '../form/labeled_form_row.dart';
+import 'schedule_duration_field.dart';
 import 'session_split_field.dart';
 import 'time_picker_empty_parts.dart';
 import 'two_column_grid.dart';
@@ -112,7 +113,6 @@ class ProgrammeScheduleFormFieldBodyState
   late List<SessionInput> sessions;
   final GlobalKey<SessionSplitFieldState> _splitKey = GlobalKey();
   final GlobalKey<FormFieldState<ShadTimeOfDay>> _startTimeKey = GlobalKey();
-  late TextEditingController durationController;
   late ShadTimePickerController sessionStartTimeController;
   int endDateResetCounter = 0;
 
@@ -133,9 +133,6 @@ class ProgrammeScheduleFormFieldBodyState
         (a, s) => a + SessionSplitField.sessionMinutes(s),
       );
     }
-    durationController = TextEditingController(
-      text: formatDuration(totalDurationMinutes),
-    );
     sessionStartTimeController = ShadTimePickerController(
       hour: data.sessionStartTime?.hour,
       // Pre-seed so onChanged fires once the user enters Hours. See
@@ -147,31 +144,8 @@ class ProgrammeScheduleFormFieldBodyState
 
   @override
   void dispose() {
-    durationController.dispose();
     sessionStartTimeController.dispose();
     super.dispose();
-  }
-
-  String formatDuration(int minutes) =>
-      SessionSplitField.formatDuration(minutes);
-
-  int? parseDuration(String rawText) {
-    final text = rawText.trim().toLowerCase();
-    if (text.isEmpty) return null;
-    final compound = RegExp(r'^(\d+)h\s*(\d+)?m?$').firstMatch(text);
-    if (compound != null) {
-      final hours = int.tryParse(compound.group(1)!) ?? 0;
-      final mins = int.tryParse(compound.group(2) ?? '0') ?? 0;
-      return hours * 60 + mins;
-    }
-    final decimalHours = RegExp(r'^(\d+(?:\.\d+)?)h?$').firstMatch(text);
-    if (decimalHours != null) {
-      final hours = double.tryParse(decimalHours.group(1)!) ?? 0;
-      return (hours * 60).round();
-    }
-    final mOnly = RegExp(r'^(\d+)m$').firstMatch(text);
-    if (mOnly != null) return int.tryParse(mOnly.group(1)!);
-    return null;
   }
 
   ProgrammeScheduleData currentData() => ProgrammeScheduleData(
@@ -186,28 +160,14 @@ class ProgrammeScheduleFormFieldBodyState
 
   void emit() => widget.state.didChange(currentData());
 
-  void onTotalDurationTextChanged(String value) {
-    final parsed = parseDuration(value);
-    if (parsed == null || parsed <= 0) return;
+  void onTotalDurationChanged(int minutes) {
     // Changing the total resets the split to a single full segment; the
     // SessionSplitField mirrors this via its totalMinutes change.
     setState(() {
-      totalDurationMinutes = parsed;
+      totalDurationMinutes = minutes;
       sessions = const [];
     });
     emit();
-  }
-
-  String? validateTotalDuration(String value) {
-    final parsed = parseDuration(value);
-    if (parsed == null || parsed <= 0) {
-      return 'Duration must be greater than 0';
-    }
-    if (parsed > maxProgrammeDurationMinutes) {
-      return 'Programme session cannot exceed '
-          '${formatDuration(maxProgrammeDurationMinutes)}';
-    }
-    return null;
   }
 
   String? validateEndDate(DateTime? date) {
@@ -389,15 +349,11 @@ class ProgrammeScheduleFormFieldBodyState
             LabeledFormRow(
               label: 'Duration',
               required: true,
-              field: ShadInputFormField(
-                controller: durationController,
+              field: ScheduleDurationField(
+                minutes: totalDurationMinutes,
+                longestMinutes: maxProgrammeDurationMinutes,
                 enabled: enabled,
-                keyboardType: TextInputType.text,
-                autocorrect: false,
-                enableSuggestions: false,
-                placeholder: const Text('e.g., 1h, 1.5h, 90m'),
-                validator: validateTotalDuration,
-                onChanged: onTotalDurationTextChanged,
+                onChanged: onTotalDurationChanged,
               ),
             ),
           ],

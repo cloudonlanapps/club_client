@@ -42,7 +42,7 @@ void main() {
       await pickProgrammeDate(tester, 0, DateTime(2030, 5, 7));
       await pickProgrammeDate(tester, 1, DateTime(2030, 8, 29));
       await enterStartTime(tester, 16, 45);
-      await enterDuration(tester, '1.5h');
+      await pickDuration(tester, 1, 30);
 
       expect(await validateProgramme(tester, form), isTrue);
       expect(
@@ -62,30 +62,6 @@ void main() {
       );
     });
 
-    testWidgets('Issue 61: the duration is read as hours, decimal hours, '
-        'minutes, or both', (tester) async {
-      final form = await pumpProgrammeField(
-        tester,
-        initialValue: validProgramme,
-      );
-
-      for (final MapEntry(key: typed, value: minutes) in {
-        '1h': 60,
-        '1.5h': 90,
-        '2': 120,
-        '45m': 45,
-        '1h 15m': 75,
-        ' 3H ': 180,
-      }.entries) {
-        await enterDuration(tester, typed);
-        expect(
-          programmeValue(form).totalDurationMinutes,
-          minutes,
-          reason: '"$typed"',
-        );
-      }
-    });
-
     testWidgets('Issue 61: a new duration drops the split and shows one '
         'session of the new length', (tester) async {
       final form = await pumpProgrammeField(
@@ -99,7 +75,7 @@ void main() {
       );
       expect(shownDurations(tester), ['0:30', '1:30']);
 
-      await enterDuration(tester, '1h');
+      await pickDuration(tester, 1);
 
       expect(shownDurations(tester), ['1:00']);
       expect(programmeValue(form).sessions, isEmpty);
@@ -137,10 +113,7 @@ void main() {
         ),
       );
 
-      expect(
-        tester.widget<EditableText>(durationInput()).controller.text,
-        '1h 30m',
-      );
+      expect(shownDuration(tester), '1:30');
       expect(find.textContaining('unassigned'), findsNothing);
     });
   });

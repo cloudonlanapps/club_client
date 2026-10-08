@@ -49,7 +49,7 @@ void main() {
       await tester.tap(find.byType(WeekdayChip).at(2));
       await tester.pumpAndSettle();
       await enterStartTime(tester, 18, 15);
-      await enterDuration(tester, '1h 30m');
+      await pickDuration(tester, 1, 30);
       await pickOption(tester, 'North Rink', 'Hall');
       await pickOption(
         tester,
@@ -147,10 +147,10 @@ void main() {
         'old one makes it clean', (tester) async {
       final state = await mountAdjustForm(tester);
 
-      await enterDuration(tester, '90m');
+      await pickDuration(tester, 1, 30);
       expect(state.isDirty, isTrue);
 
-      await enterDuration(tester, '1h');
+      await pickDuration(tester, 1);
       expect(state.isDirty, isFalse);
     });
 
@@ -239,7 +239,9 @@ void main() {
 
       await tester.tap(find.byType(WeekdayChip).at(1), warnIfMissed: false);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('1:00'), warnIfMissed: false);
+      // The Duration and the one session both show the length.
+      await tester.tap(find.text('1:00').first, warnIfMissed: false);
+      await tester.tap(find.text('1:00').last, warnIfMissed: false);
       await tester.pumpAndSettle();
 
       expectInputsDisabled(tester);

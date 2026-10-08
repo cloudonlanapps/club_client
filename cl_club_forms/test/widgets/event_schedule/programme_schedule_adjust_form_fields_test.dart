@@ -234,25 +234,17 @@ void main() {
       );
     });
 
-    testWidgets('Issue 61: a duration of nothing is refused on Duration', (
-      tester,
-    ) async {
-      final state = await mountAdjustForm(tester);
-
-      for (final typed in ['0', '', 'soon']) {
-        await enterDuration(tester, typed);
-        expect(state.validate(), isNull, reason: 'typed "$typed"');
-        await tester.pumpAndSettle();
-        expect(find.text('Duration must be greater than 0'), findsOneWidget);
-      }
-    });
-
     testWidgets('Issue 61: a duration over four hours is refused', (
       tester,
     ) async {
-      final state = await mountAdjustForm(tester);
-
-      await enterDuration(tester, '4h 15m');
+      final state = await mountAdjustForm(
+        tester,
+        initialValue: ProgrammeScheduleAdjustValue(
+          from: adjustFromOptions.first,
+          schedule: adjustSchedule.copyWith(totalDurationMinutes: 255),
+          venueId: 7,
+        ),
+      );
 
       expect(state.validate(), isNull);
       await tester.pumpAndSettle();
@@ -264,7 +256,7 @@ void main() {
     ) async {
       final state = await mountAdjustForm(tester);
 
-      await enterDuration(tester, '4h');
+      await pickDuration(tester, 4);
 
       expect(_scheduleOf(state.validate()!).totalDurationMinutes, 240);
       await tester.pumpAndSettle();

@@ -8,13 +8,13 @@ import 'package:cl_club_forms/src/widgets/event_schedule/camp_schedule_fields.da
 import 'package:cl_club_forms/src/widgets/event_schedule/camp_schedule_form.dart';
 import 'package:cl_club_forms/src/widgets/event_schedule/camp_schedule_form_fields.dart';
 import 'package:cl_club_forms/src/widgets/event_schedule/duration_picker_column.dart';
-import 'package:cl_club_forms/src/widgets/event_schedule/duration_picker_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../support/camp_one_off_schedule_helpers.dart';
 import '../support/form_harness.dart';
+import '../support/programme_timetable_support.dart';
 
 const String _id = CampScheduleFormFields.scheduleId;
 
@@ -69,9 +69,9 @@ void main() {
       await typeInRow(tester, 'Training Days', '5');
       expect(state.isDirty, isFalse);
 
-      await typeInRow(tester, 'Duration', '3h');
+      await pickDuration(tester, 3);
       expect(state.isDirty, isTrue);
-      await typeInRow(tester, 'Duration', '2h');
+      await pickDuration(tester, 2);
       expect(state.isDirty, isFalse);
     });
 
@@ -203,7 +203,7 @@ void main() {
       await tapRestDay(tester, 5);
       await tapRestDay(tester, 6);
       // A session's length picker does not open, its remove button is dead.
-      await tester.tap(find.byType(DurationPickerDropdown).first);
+      await tester.tap(sessionLengthPickers().first);
       await tester.tap(find.byIcon(LucideIcons.x).first, warnIfMissed: false);
       await tester.pumpAndSettle();
       expect(find.byType(DurationPickerColumn), findsNothing);
@@ -231,7 +231,7 @@ void main() {
       await tapRestDay(tester, 6);
       expect(state.isDirty, isTrue);
 
-      await tester.tap(find.byType(DurationPickerDropdown).first);
+      await tester.tap(sessionLengthPickers().first);
       await tester.pumpAndSettle();
       expect(find.byType(DurationPickerColumn), findsNWidgets(2));
     });

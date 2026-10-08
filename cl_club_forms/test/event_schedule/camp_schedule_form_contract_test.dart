@@ -16,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../support/camp_one_off_schedule_helpers.dart';
 import '../support/form_harness.dart';
+import '../support/programme_timetable_support.dart';
 
 const String _id = CampScheduleFormFields.scheduleId;
 
@@ -175,34 +176,18 @@ void main() {
       expect(_valueOf(state.validate()).trainingDays, 1);
     });
 
-    for (final bad in ['', '0', '0m', 'soon', '-1h']) {
-      testWidgets('Issue 61: duration "$bad" is refused on its row', (
-        tester,
-      ) async {
-        final state = await _pump(tester, _seed());
-
-        await typeInRow(tester, 'Duration', bad);
-        expect(state.validate(), isNull);
-        await tester.pumpAndSettle();
-        expect(
-          textInRow('Duration', 'Duration must be greater than 0'),
-          findsOneWidget,
-        );
-      });
-    }
-
     testWidgets('Issue 61: a refused input is accepted once corrected', (
       tester,
     ) async {
       final state = await _pump(tester, _seed());
 
-      await typeInRow(tester, 'Duration', 'soon');
+      await typeInRow(tester, 'Training Days', 'soon');
       expect(state.validate(), isNull);
 
-      await typeInRow(tester, 'Duration', '90m');
-      expect(_valueOf(state.validate()).durationMinutes, 90);
+      await typeInRow(tester, 'Training Days', '4');
+      expect(_valueOf(state.validate()).trainingDays, 4);
       await tester.pumpAndSettle();
-      expect(find.text('Duration must be greater than 0'), findsNothing);
+      expect(find.text('Enter a valid number'), findsNothing);
     });
   });
 
@@ -230,7 +215,7 @@ void main() {
       await pickScheduleDate(tester, DateTime(2026, 9, 7));
       await pickScheduleStartTime(tester, timeAt(17, 15));
       await typeInRow(tester, 'Training Days', '3');
-      await typeInRow(tester, 'Duration', ' 1.5H ');
+      await pickDuration(tester, 1, 30);
       await tapRestDay(tester, 8);
 
       expect(

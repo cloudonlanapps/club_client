@@ -7,7 +7,8 @@ import 'package:cl_club_forms/cl_club_forms.dart'
         EventFormVisibility,
         OneOffScheduleData,
         ProgrammeScheduleData,
-        SessionInput;
+        SessionInput,
+        SessionSplitField;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -137,26 +138,9 @@ class EventCreateFormSubmit {
     for (final s in inputs)
       EventSession(
         name: s.name,
-        periodMinutes: _periodMinutesFromHHmm(s.startTime, s.endTime),
+        periodMinutes: SessionSplitField.sessionMinutes(s),
       ),
   ];
-
-  /// Minute-count between two `HH:MM` strings; 0 on parse failure or wrap.
-  static int _periodMinutesFromHHmm(String start, String end) {
-    int? toMinutes(String hhmm) {
-      final parts = hhmm.split(':');
-      if (parts.length != 2) return null;
-      final h = int.tryParse(parts[0]);
-      final m = int.tryParse(parts[1]);
-      if (h == null || m == null) return null;
-      return h * 60 + m;
-    }
-
-    final s = toMinutes(start);
-    final e = toMinutes(end);
-    if (s == null || e == null) return 0;
-    return e >= s ? e - s : 0;
-  }
 
   static String? _programmeRrule(ProgrammeScheduleData data) {
     if (data.weekdays.isEmpty) return null;

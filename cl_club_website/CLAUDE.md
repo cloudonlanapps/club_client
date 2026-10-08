@@ -20,6 +20,44 @@ cd cl_club_website && dart analyze
 just unit-test cl_club_website
 ```
 
+## Integration suite
+
+`example/integration_test/` runs the site against a real, isolated
+club_server, on the Linux desktop, once per server conf (#82). From the
+club_core root (`justfile_app_tests.just`):
+
+```bash
+just website-test                                   # whole suite, once per conf
+just website-test app_test_server2.conf             # whole suite, one conf
+just website-test-one app_test_server1.conf workflow_emptysite_every_route_test.dart
+just website-test-one app_test_server1.conf <file> keep=1   # leave the server up
+```
+
+The stacks, the two server confs and the rules for writing a test are the
+member app's suite's: read
+[`cl_club_app/example/CLAUDE.md`](../cl_club_app/example/CLAUDE.md). What
+differs here:
+
+- **The site runs as a visitor sees it.** `pumpSite`
+  (`_helpers/pump.dart`) mounts `App` the way `websiteMain()` does: the host's
+  own `club.json` and `contact_info.json`, and `serverConfigProvider` only. No
+  `secureClientProvider` and no session, so every read goes through the
+  sessionless client.
+- **A page's address is a user-facing path.** A visitor opens a listing or a
+  content page by its URL, so `go()` to one is legitimate. A detail page is
+  addressed by a public id only the server knows: reach it by tapping its
+  card.
+- **The first file needs an untouched server.**
+  `workflow_emptysite_every_route_test.dart` checks every page of a site whose
+  server holds nothing. It sorts first among the suite's files, so on a fresh
+  stack it runs before any file that seeds; keep it first.
+- **A desktop run has no web output.** The page description, `robots.txt` and
+  `sitemap.xml` are not produced, the map is a link card and
+  `usePathUrlStrategy()` is not called.
+
+The suite and the `linux/` runner are not part of a generated club project:
+the generator leaves `integration_test` and `linux` out of what it copies.
+
 ## Build-time Configuration
 
 The club comes from the host's `assets/club.json`; `--dart-define` overrides

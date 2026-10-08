@@ -58,8 +58,8 @@ class EvaluationItemForm extends StatefulWidget {
 /// change, which decide the dependent fields.
 class EvaluationItemFormState extends State<EvaluationItemForm>
     with
-        EvaluationFormFocus<EvaluationItemForm>,
-        EvaluationFormContract<EvaluationItemForm> {
+        EvaluationFormContract<EvaluationItemForm>,
+        EvaluationFormFocus<EvaluationItemForm> {
   /// The form's values as of the last change.
   late Map<String, dynamic> values = widget.initialValues;
 

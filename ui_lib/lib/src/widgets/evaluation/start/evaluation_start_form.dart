@@ -73,8 +73,8 @@ class EvaluationStartForm extends StatefulWidget {
 /// State of [EvaluationStartForm]: the form and the chosen member.
 class EvaluationStartFormState extends State<EvaluationStartForm>
     with
-        EvaluationFormFocus<EvaluationStartForm>,
-        EvaluationFormContract<EvaluationStartForm> {
+        EvaluationFormContract<EvaluationStartForm>,
+        EvaluationFormFocus<EvaluationStartForm> {
   /// The chosen member's username, or `null` before a choice.
   String? memberUsername;
 

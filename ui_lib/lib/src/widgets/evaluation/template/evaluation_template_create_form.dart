@@ -67,8 +67,8 @@ class EvaluationTemplateCreateForm extends StatefulWidget {
 class EvaluationTemplateCreateFormState
     extends State<EvaluationTemplateCreateForm>
     with
-        EvaluationFormFocus<EvaluationTemplateCreateForm>,
-        EvaluationFormContract<EvaluationTemplateCreateForm> {
+        EvaluationFormContract<EvaluationTemplateCreateForm>,
+        EvaluationFormFocus<EvaluationTemplateCreateForm> {
   // The layout field owns no focusable input.
   @override
   bool get focusFirstInvalid => false;

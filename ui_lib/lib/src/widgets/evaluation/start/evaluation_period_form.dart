@@ -51,8 +51,8 @@ class EvaluationPeriodForm extends StatefulWidget {
 /// State of [EvaluationPeriodForm]: the form and its form-level message.
 class EvaluationPeriodFormState extends State<EvaluationPeriodForm>
     with
-        EvaluationFormFocus<EvaluationPeriodForm>,
-        EvaluationFormContract<EvaluationPeriodForm> {
+        EvaluationFormContract<EvaluationPeriodForm>,
+        EvaluationFormFocus<EvaluationPeriodForm> {
   // Selects and date pickers have no input to focus.
   @override
   bool get focusFirstInvalid => false;

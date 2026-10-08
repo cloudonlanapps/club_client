@@ -1,6 +1,7 @@
 // The server removes an occurrence only when an EXDATE equals its start
-// instant, so a rest day is sent as the UTC start of the session it removes
-// (club_client#122).
+// instant, so a rest day is sent as the UTC start of the session it removes.
+// A camp's COUNT is the days it is held: rest days are not counted
+// (club_client#122, club_server#30).
 import 'package:cl_club_events/src/models/camp_schedule_form_helpers.dart';
 import 'package:cl_club_forms/cl_club_forms.dart'
     show CampScheduleData, EventFormType;
@@ -39,5 +40,31 @@ void main() {
     final sent = await createWith(EventFormType.camp, _camp);
 
     expect(_exdatesOf(sent.rrule), [_restDaySession]);
+  });
+
+  test("Issue 122: a camp's COUNT is its training days, rest days not "
+      'counted', () {
+    final fields = assembleCampSchedule(_camp);
+
+    expect(fields.rrule, startsWith('FREQ=DAILY;COUNT=4'));
+  });
+
+  test('Issue 122: a rule of four days held and one rest day opens as '
+      'four training days', () {
+    final event = Event(
+      id: 1,
+      title: 'Camp',
+      description: '',
+      type: EventType.camp,
+      visibility: Visibility.public,
+      venueId: 7,
+      startTimeUtc: DateTime(2026, 10, 19, 17).toUtc(),
+      endTimeUtc: DateTime(2026, 10, 19, 18).toUtc(),
+      createdAtUtc: DateTime.utc(2026),
+      updatedAtUtc: DateTime.utc(2026),
+      rrule: 'FREQ=DAILY;COUNT=4\nEXDATE:20261021T113000Z',
+    );
+
+    expect(buildCampScheduleInitialValues(event).trainingDays, 4);
   });
 }

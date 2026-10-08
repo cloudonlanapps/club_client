@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart'
+    show SavingDialogCloseIcon, SavingDialogScope;
 
 /// The dialog one credit form shows in (club_core#101): its [title], the
 /// [form], Cancel and a submit button. `CreditActionForm` drives the form
@@ -41,19 +43,23 @@ class CreditActionDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ShadDialog(
-      title: Text(title),
-      actions: [
-        ShadButton.outline(
-          onPressed: saving ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
-        ),
-        ShadButton(
-          onPressed: saving ? null : onSubmit,
-          child: Text(saving ? savingLabel : submitLabel),
-        ),
-      ],
-      child: SingleChildScrollView(child: form),
+    return SavingDialogScope(
+      saving: saving,
+      child: ShadDialog(
+        closeIcon: SavingDialogCloseIcon(saving: saving),
+        title: Text(title),
+        actions: [
+          ShadButton.outline(
+            onPressed: saving ? null : () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ShadButton(
+            onPressed: saving ? null : onSubmit,
+            child: Text(saving ? savingLabel : submitLabel),
+          ),
+        ],
+        child: SingleChildScrollView(child: form),
+      ),
     );
   }
 }

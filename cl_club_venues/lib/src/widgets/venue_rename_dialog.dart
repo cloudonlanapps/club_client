@@ -3,6 +3,8 @@ import 'package:cl_club_forms/cl_club_forms.dart'
 import 'package:flutter/material.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart'
+    show SavingDialogCloseIcon, SavingDialogScope;
 
 /// Asks for a venue's new name in a [VenueRenameDialog], seeded with
 /// [initialName], and writes it with [onSave], which resolves to `null` once
@@ -79,28 +81,32 @@ class VenueRenameDialogState extends State<VenueRenameDialog> {
   @override
   Widget build(BuildContext context) {
     return PointerInterceptor(
-      child: ShadDialog(
-        title: const Text('Rename venue'),
-        actions: [
-          ShadButton.outline(
-            onPressed: isSaving ? null : () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ShadButton(
-            onPressed: isSaving ? null : save,
-            child: const Text('Save'),
-          ),
-        ],
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: RenameForm(
-            key: formKey,
-            initialValue: widget.initialName,
-            label: 'Venue name',
-            placeholder: 'e.g., Main Arena',
-            validator: VenueFormValidators.name,
-            enabled: !isSaving,
-            onSubmitted: save,
+      child: SavingDialogScope(
+        saving: isSaving,
+        child: ShadDialog(
+          closeIcon: SavingDialogCloseIcon(saving: isSaving),
+          title: const Text('Rename venue'),
+          actions: [
+            ShadButton.outline(
+              onPressed: isSaving ? null : () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ShadButton(
+              onPressed: isSaving ? null : save,
+              child: const Text('Save'),
+            ),
+          ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: RenameForm(
+              key: formKey,
+              initialValue: widget.initialName,
+              label: 'Venue name',
+              placeholder: 'e.g., Main Arena',
+              validator: VenueFormValidators.name,
+              enabled: !isSaving,
+              onSubmitted: save,
+            ),
           ),
         ),
       ),

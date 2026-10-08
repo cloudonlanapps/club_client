@@ -7,7 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
-    show ActionIcon, ConfirmDialog, CredentialedNetworkImage;
+    show
+        ActionIcon,
+        ConfirmDialog,
+        CredentialedNetworkImage,
+        SavingDialogCloseIcon,
+        SavingDialogScope;
 
 import '../../../utils/event_write_error_message.dart';
 
@@ -131,91 +136,95 @@ class ManageRequestsDialogState extends ConsumerState<ManageRequestsDialog> {
             EventType.programme &&
         ref.watch(creditSystemProvider) == true;
 
-    return ShadDialog(
-      title: const Text('Manage Requests'),
-      description: Text(
-        pendingUsers.isEmpty
-            ? 'No pending requests.'
-            : '${pendingUsers.length} member(s) requesting to join',
-      ),
-      child: pendingUsers.isEmpty
-          ? const SizedBox.shrink()
-          : SizedBox(
-              width: 300,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: pendingUsers.map((userName) {
-                  final avatarUrl = ref
-                      .watch(avatarImageProvider(userName))
-                      .value;
-                  final headers =
-                      ref.watch(imageAuthHeadersProvider).value ?? const {};
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        AvatarBubble(
-                          imageUrl: avatarUrl,
-                          httpHeaders: headers,
-                          fallbackLetter: userName[0].toUpperCase(),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                capitalizeStr(userName),
-                                style: theme.textTheme.small,
-                              ),
-                              Text(
-                                'Requesting to join',
-                                style: theme.textTheme.muted,
-                              ),
-                            ],
+    return SavingDialogScope(
+      saving: _running.isNotEmpty,
+      child: ShadDialog(
+        closeIcon: SavingDialogCloseIcon(saving: _running.isNotEmpty),
+        title: const Text('Manage Requests'),
+        description: Text(
+          pendingUsers.isEmpty
+              ? 'No pending requests.'
+              : '${pendingUsers.length} member(s) requesting to join',
+        ),
+        child: pendingUsers.isEmpty
+            ? const SizedBox.shrink()
+            : SizedBox(
+                width: 300,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: pendingUsers.map((userName) {
+                    final avatarUrl = ref
+                        .watch(avatarImageProvider(userName))
+                        .value;
+                    final headers =
+                        ref.watch(imageAuthHeadersProvider).value ?? const {};
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          AvatarBubble(
+                            imageUrl: avatarUrl,
+                            httpHeaders: headers,
+                            fallbackLetter: userName[0].toUpperCase(),
                           ),
-                        ),
-                        if (_running[userName] == 'reject')
-                          ActionIcon(
-                            key: ValueKey('reject-request-$userName'),
-                            icon: Icons.close,
-                            loading: true,
-                          )
-                        else
-                          ActionIcon(
-                            key: ValueKey('reject-request-$userName'),
-                            icon: Icons.close,
-                            color: theme.colorScheme.destructive,
-                            enabled: !_isBusy(userName),
-                            onPressed: () => _reject(userName),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  capitalizeStr(userName),
+                                  style: theme.textTheme.small,
+                                ),
+                                Text(
+                                  'Requesting to join',
+                                  style: theme.textTheme.muted,
+                                ),
+                              ],
+                            ),
                           ),
-                        const SizedBox(width: 4),
-                        if (unfunded(userName, gated: gated)) ...[
-                          CreditChip(username: userName, credits: 0),
+                          if (_running[userName] == 'reject')
+                            ActionIcon(
+                              key: ValueKey('reject-request-$userName'),
+                              icon: Icons.close,
+                              loading: true,
+                            )
+                          else
+                            ActionIcon(
+                              key: ValueKey('reject-request-$userName'),
+                              icon: Icons.close,
+                              color: theme.colorScheme.destructive,
+                              enabled: !_isBusy(userName),
+                              onPressed: () => _reject(userName),
+                            ),
                           const SizedBox(width: 4),
+                          if (unfunded(userName, gated: gated)) ...[
+                            CreditChip(username: userName, credits: 0),
+                            const SizedBox(width: 4),
+                          ],
+                          if (_running[userName] == 'approve')
+                            ActionIcon(
+                              key: ValueKey('approve-request-$userName'),
+                              icon: Icons.check,
+                              loading: true,
+                            )
+                          else
+                            ActionIcon(
+                              key: ValueKey('approve-request-$userName'),
+                              icon: Icons.check,
+                              color: theme.colorScheme.primary,
+                              enabled:
+                                  !_isBusy(userName) &&
+                                  !unfunded(userName, gated: gated),
+                              onPressed: () => _approve(userName),
+                            ),
                         ],
-                        if (_running[userName] == 'approve')
-                          ActionIcon(
-                            key: ValueKey('approve-request-$userName'),
-                            icon: Icons.check,
-                            loading: true,
-                          )
-                        else
-                          ActionIcon(
-                            key: ValueKey('approve-request-$userName'),
-                            icon: Icons.check,
-                            color: theme.colorScheme.primary,
-                            enabled:
-                                !_isBusy(userName) &&
-                                !unfunded(userName, gated: gated),
-                            onPressed: () => _approve(userName),
-                          ),
-                      ],
-                    ),
-                  );
-                }).toList(),
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
-            ),
+      ),
     );
   }
 

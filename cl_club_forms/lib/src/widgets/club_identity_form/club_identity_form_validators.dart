@@ -31,15 +31,12 @@ class ClubIdentityFormValidators {
       ? null
       : emailInvalid;
 
-  /// An absolute `http(s)` link with a host.
+  /// A full `http(s)` link with a host, with or without a fragment.
   static String? url(String value) {
     final t = value.trim();
     if (t.isEmpty) return null;
     final uri = Uri.tryParse(t);
-    if (uri == null ||
-        !uri.isAbsolute ||
-        !urlSchemes.contains(uri.scheme) ||
-        uri.host.isEmpty) {
+    if (uri == null || !urlSchemes.contains(uri.scheme) || uri.host.isEmpty) {
       return 'Enter the full link, starting with https://';
     }
     return null;

@@ -19,7 +19,9 @@ class GroupFormValidators {
     required bool hasAnyCriterion,
   }) {
     if (mode.usesCriteria && !hasAnyCriterion) {
-      return 'Set at least one criterion (age or gender) for an '
+      // "an auto group", "a semi-auto group".
+      final article = mode == GroupMode.auto ? 'an' : 'a';
+      return 'Set at least one criterion (age or gender) for $article '
           '${mode.label.toLowerCase()} group.';
     }
     return null;

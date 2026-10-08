@@ -10,7 +10,10 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 /// - [showErrors] puts back what the server refused.
 ///
 /// The fourth part of the contract is the widget's own `enabled` parameter,
-/// which the host turns off while it saves.
+/// which the host turns off while it saves. A control that is turned off
+/// stops answering the pointer but would keep the keyboard focus it had, and
+/// a text input would go on taking keys; the mixin takes that focus away
+/// ([dropFocusOfControlOff]), so a form that is off takes no typing.
 ///
 /// A form's state mixes this in, builds its `ShadForm` with [formKey], and
 /// shows [formError] inline (`FormBody` does). It overrides
@@ -25,6 +28,60 @@ mixin FormContract<T extends StatefulWidget> on State<T> {
 
   /// The ids of the fields now showing a message [showErrors] put there.
   final Set<String> refusedFieldIds = <String>{};
+
+  @override
+  void initState() {
+    super.initState();
+    FocusManager.instance.addListener(dropFocusOfControlOff);
+  }
+
+  @override
+  void didUpdateWidget(covariant T oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The controls are rebuilt in this frame, so they are read after it.
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => dropFocusOfControlOff(),
+    );
+  }
+
+  @override
+  void dispose() {
+    FocusManager.instance.removeListener(dropFocusOfControlOff);
+    super.dispose();
+  }
+
+  /// Whether [element] is a control that is turned off: a text input, or a
+  /// form field of any kind.
+  bool isControlOff(Element element) {
+    final widget = element.widget;
+    if (widget is ShadInput) return !widget.enabled;
+    if (element is! StatefulElement) return false;
+    final state = element.state;
+    return state is ShadFormBuilderFieldState && !state.enabled;
+  }
+
+  /// Drops the keyboard focus when it is on, or inside, a control of this
+  /// form that is turned off. Runs whenever the focus moves, which covers a
+  /// field that asks for the focus as a form opens turned off, and after
+  /// the host rebuilds the form, which covers a form turned off while a
+  /// field has the focus.
+  void dropFocusOfControlOff() {
+    if (!mounted) return;
+    final focus = FocusManager.instance.primaryFocus;
+    final focused = focus?.context;
+    if (focus == null || focused == null || !focused.mounted) return;
+    var off = false;
+    var inThisForm = false;
+    focused.visitAncestorElements((element) {
+      if (element == context) {
+        inThisForm = true;
+        return false;
+      }
+      off = off || isControlOff(element);
+      return true;
+    });
+    if (inThisForm && off) focus.unfocus();
+  }
 
   /// Whether [validate] puts the focus on the first invalid field. A form
   /// made of pickers and custom fields, which have nothing to focus, turns

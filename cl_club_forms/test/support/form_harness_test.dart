@@ -64,6 +64,25 @@ void main() {
       );
     });
 
+    testWidgets('Issue 67: it checks that a form turned off takes no typing '
+        'in the input that had the focus', (tester) async {
+      final key = GlobalKey<EventCancellationFormState>();
+      final tried = await expectKeyboardIgnoredWhenOff(
+        tester,
+        ({required enabled}) => EventCancellationForm(
+          key: key,
+          enabled: enabled,
+          sessions: [
+            EventCancellationSession(
+              start: DateTime(2026, 11, 14, 18),
+              label: 'Sat 14 Nov, 18:00',
+            ),
+          ],
+        ),
+      );
+      expect(tried, 1);
+    });
+
     testWidgets('Issue 61: it checks a form at phone width', (tester) async {
       await expectFitsPhone(tester, const EventCancellationForm());
     });

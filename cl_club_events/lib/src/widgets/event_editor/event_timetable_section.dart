@@ -74,9 +74,6 @@ class EventTimetableSection extends ConsumerStatefulWidget {
 class EventTimetableSectionState extends ConsumerState<EventTimetableSection> {
   final formKey = GlobalKey<EventTimetableFormState>();
 
-  /// Whether a save is in flight: the form's fields are then off.
-  bool saving = false;
-
   bool get isProgramme => widget.event.type == EventType.programme;
 
   /// Loads a programme's schedules before the editor opens, so the picker
@@ -90,16 +87,6 @@ class EventTimetableSectionState extends ConsumerState<EventTimetableSection> {
       // The editor falls back to the event's own (latest) schedule.
     }
     return true;
-  }
-
-  /// Saves the correction, with the form's fields off meanwhile.
-  Future<bool> save(Map<String, dynamic> values) async {
-    setState(() => saving = true);
-    try {
-      return await commit(values);
-    } finally {
-      if (mounted) setState(() => saving = false);
-    }
   }
 
   /// Sends the correction. True closes the editor; a refusal of the split
@@ -188,18 +175,18 @@ class EventTimetableSectionState extends ConsumerState<EventTimetableSection> {
           if (actions != null) ...[const SizedBox(height: 16), actions],
         ],
       ),
-      editBuilder: () => EventTimetableForm(
+      editBuilder: ({required enabled}) => EventTimetableForm(
         key: formKey,
         schedules: buildEventTimetableSchedules(event, schedules: schedules),
         note: isProgramme
             ? programmeTimetableCorrectionNote
             : eventTimetableCorrectionNote,
-        enabled: !saving,
+        enabled: enabled,
       ),
       onValidate: () => formKey.currentState?.validate(),
       isDirty: () => formKey.currentState?.isDirty ?? false,
       onBeforeEdit: loadSchedules,
-      onSave: save,
+      onSave: commit,
     );
   }
 }

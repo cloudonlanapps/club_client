@@ -60,9 +60,6 @@ class CampScheduleSectionState extends ConsumerState<CampScheduleSection> {
   /// per-occurrence overrides; forwarded to the reschedule so it clears them.
   bool _resetOverrides = false;
 
-  /// Whether a save is in flight: the form's fields are then off.
-  bool saving = false;
-
   /// Per-occurrence daily duration of the event as currently stored.
   int get _currentDurationMinutes =>
       widget.event.endTimeUtc.difference(widget.event.startTimeUtc).inMinutes;
@@ -123,12 +120,7 @@ class CampScheduleSectionState extends ConsumerState<CampScheduleSection> {
       if (proceed != true) return false; // stay in edit mode to re-add sessions
     }
     // `_resetOverrides` reflects the admin's decision from the pre-edit check.
-    setState(() => saving = true);
-    try {
-      return await _commit(data, resetOverrides: _resetOverrides);
-    } finally {
-      if (mounted) setState(() => saving = false);
-    }
+    return _commit(data, resetOverrides: _resetOverrides);
   }
 
   /// Commits the reschedule (a single atomic call carrying the window and the
@@ -360,10 +352,10 @@ class CampScheduleSectionState extends ConsumerState<CampScheduleSection> {
           ],
         ],
       ),
-      editBuilder: () => CampScheduleForm(
+      editBuilder: ({required enabled}) => CampScheduleForm(
         key: _formKey,
         initialValue: buildCampScheduleInitialValues(event),
-        enabled: !saving,
+        enabled: enabled,
       ),
       onValidate: () => _formKey.currentState?.validate(),
       isDirty: () => _formKey.currentState?.isDirty ?? false,

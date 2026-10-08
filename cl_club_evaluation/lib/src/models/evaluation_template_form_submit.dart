@@ -5,7 +5,7 @@ import 'package:ui_lib/ui_lib.dart'
     show
         EvaluationItemValue,
         EvaluationLayoutEntry,
-        EvaluationTemplateCreateValue;
+        EvaluationTemplateCreateFormFields;
 
 import 'evaluation_item_adapter.dart';
 import 'evaluation_layout_adapter.dart';
@@ -13,13 +13,17 @@ import 'evaluation_layout_adapter.dart';
 /// Form → SDK for evaluation templates (form rule 18): the create form
 /// whole, and each section edit of an existing template on its own.
 abstract final class EvaluationTemplateFormSubmit {
-  /// Creates the template [values] describe, its items inline.
+  /// Creates the template the create form's [values] describe (keyed by
+  /// `EvaluationTemplateCreateFormFields`), its items inline.
   static Future<sdk.EvaluationTemplate> create({
-    required EvaluationTemplateCreateValue values,
+    required Map<String, dynamic> values,
     required ClEvaluationTemplatesMasterNotifier notifier,
   }) => notifier.createTemplate(
-    name: values.name,
-    layout: EvaluationLayoutAdapter.toCreateLayout(values.layout),
+    name: values[EvaluationTemplateCreateFormFields.nameId] as String,
+    layout: EvaluationLayoutAdapter.toCreateLayout(
+      values[EvaluationTemplateCreateFormFields.layoutId]
+          as List<EvaluationLayoutEntry>,
+    ),
   );
 
   /// Renames template [templateId] to [name].

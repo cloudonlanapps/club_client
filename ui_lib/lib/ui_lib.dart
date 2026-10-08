@@ -20,8 +20,6 @@ export 'src/models/evaluation_rating_scale.dart' show EvaluationRatingScale;
 export 'src/models/evaluation_rating_style.dart' show EvaluationRatingStyle;
 export 'src/models/evaluation_start_options.dart'
     show EvaluationStartChoice, EvaluationStartMember;
-export 'src/models/evaluation_template_create_value.dart'
-    show EvaluationTemplateCreateValue;
 // Theme
 export 'src/theme/custom_colors.dart'
     show FilmRollColorsExtension, darkCustomColors, lightCustomColors;

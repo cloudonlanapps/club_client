@@ -9,7 +9,8 @@ import 'evaluation_item_kind_icons.dart';
 /// A "+" that drops down what can be added: a question of each kind, an
 /// info text, and — when given — a section and an existing question. Full
 /// width at the end of the outline; [compact] as an icon in a section's
-/// header.
+/// header. Turned off ([enabled]) it stays on screen, greyed, and opens
+/// nothing.
 class EvaluationAddBar extends StatefulWidget {
   /// Adds through the given callbacks.
   const EvaluationAddBar({
@@ -17,6 +18,7 @@ class EvaluationAddBar extends StatefulWidget {
     this.onAddSection,
     this.onAddExisting,
     this.compact = false,
+    this.enabled = true,
     super.key,
   });
 
@@ -31,6 +33,9 @@ class EvaluationAddBar extends StatefulWidget {
 
   /// An icon button instead of a full-width bar.
   final bool compact;
+
+  /// Whether the "+" opens its menu.
+  final bool enabled;
 
   @override
   State<EvaluationAddBar> createState() => EvaluationAddBarState();
@@ -57,6 +62,7 @@ class EvaluationAddBarState extends State<EvaluationAddBar> {
   Widget build(BuildContext context) {
     final section = widget.onAddSection;
     final existing = widget.onAddExisting;
+    final toggle = widget.enabled ? menu.toggle : null;
     return ShadPopover(
       controller: menu,
       popover: (context) => IntrinsicWidth(
@@ -93,11 +99,11 @@ class EvaluationAddBarState extends State<EvaluationAddBar> {
         child: widget.compact
             ? ShadIconButton.ghost(
                 icon: const Icon(LucideIcons.plus),
-                onPressed: menu.toggle,
+                onPressed: toggle,
               )
             : ShadButton.outline(
                 width: double.infinity,
-                onPressed: menu.toggle,
+                onPressed: toggle,
                 child: const Icon(LucideIcons.plus),
               ),
       ),

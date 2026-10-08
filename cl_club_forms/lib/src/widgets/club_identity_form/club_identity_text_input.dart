@@ -12,6 +12,7 @@ class ClubIdentityTextInput extends StatelessWidget {
     required this.id,
     required this.label,
     required this.keyboardType,
+    required this.enabled,
     this.validator,
     this.description,
     this.multiline = false,
@@ -39,6 +40,9 @@ class ClubIdentityTextInput extends StatelessWidget {
   /// The keyboard the input asks for.
   final TextInputType keyboardType;
 
+  /// Whether the input responds; the form's own `enabled`.
+  final bool enabled;
+
   /// Checks the text; null when the field takes any.
   final String? Function(String)? validator;
 
@@ -56,6 +60,7 @@ class ClubIdentityTextInput extends StatelessWidget {
       field: ShadInputFormField(
         key: keyOf(id),
         id: id,
+        enabled: enabled,
         description: help == null ? null : Text(help),
         keyboardType: multiline ? TextInputType.multiline : keyboardType,
         minLines: multiline ? multilineMinLines : null,

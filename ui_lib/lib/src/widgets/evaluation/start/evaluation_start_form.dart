@@ -1,14 +1,14 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../../constants/evaluation_spacing.dart';
 import '../../../constants/evaluation_strings.dart';
 import '../../../models/evaluation_start_options.dart';
-import '../../read_only_field.dart';
+import '../common/evaluation_form_body.dart';
+import '../common/evaluation_form_contract.dart';
 import '../common/evaluation_form_focus.dart';
-import 'evaluation_form_error.dart';
 import 'evaluation_period_fields.dart';
 import 'evaluation_period_validators.dart';
+import 'evaluation_start_fixed_value.dart';
 import 'evaluation_start_form_fields.dart';
 import 'evaluation_start_select.dart';
 
@@ -18,7 +18,8 @@ import 'evaluation_start_select.dart';
 /// Any of the first three may be fixed by the host — a member's profile
 /// fixes the member, an enrolment row the member and the event, a
 /// template's *Start* the template — and then shows read-only. Owns no
-/// buttons or dialog: the host calls [EvaluationStartFormState.validate].
+/// buttons or dialog: the host calls [EvaluationStartFormState.validate]
+/// and shows a server refusal with [EvaluationStartFormState.showErrors].
 class EvaluationStartForm extends StatefulWidget {
   /// A start form offering [templates], [members] and [events].
   const EvaluationStartForm({
@@ -69,15 +70,11 @@ class EvaluationStartForm extends StatefulWidget {
   State<EvaluationStartForm> createState() => EvaluationStartFormState();
 }
 
-/// State of [EvaluationStartForm]: the form and its period message.
+/// State of [EvaluationStartForm]: the form and the chosen member.
 class EvaluationStartFormState extends State<EvaluationStartForm>
-    with EvaluationFormFocus<EvaluationStartForm> {
-  /// The form.
-  final GlobalKey<ShadFormState> formKey = GlobalKey<ShadFormState>();
-
-  /// The period message, or `null`.
-  String? formError;
-
+    with
+        EvaluationFormFocus<EvaluationStartForm>,
+        EvaluationFormContract<EvaluationStartForm> {
   /// The chosen member's username, or `null` before a choice.
   String? memberUsername;
 
@@ -95,48 +92,72 @@ class EvaluationStartFormState extends State<EvaluationStartForm>
     return username == null ? const [] : byMember[username] ?? const [];
   }
 
-  /// Validates every field. Returns the values keyed by
-  /// [EvaluationStartFormFields] (fixed ones included), else `null`.
-  Map<String, dynamic>? validate() {
-    final form = formKey.currentState;
-    if (form == null) return null;
-    final fieldsValid = form.saveAndValidate(focusOnInvalid: false);
-    final v = form.value;
-    final start = v[EvaluationStartFormFields.periodStartId] as DateTime?;
-    final end = v[EvaluationStartFormFields.periodEndId] as DateTime?;
-    final error = EvaluationPeriodValidators.period(start, end);
-    setState(() => formError = error);
-    if (!fieldsValid || error != null) return null;
+  // Selects and date pickers have no input to focus.
+  @override
+  bool get focusFirstInvalid => false;
+
+  /// Whether a template, a member, an event or a date has been chosen. The
+  /// fields seed themselves — nothing chosen, *General*, no dates — so the
+  /// form holds no initial values to compare with.
+  @override
+  bool get isDirty {
+    final values = formKey.currentState?.value ?? const <String, dynamic>{};
+    final event = values[EvaluationStartFormFields.eventId];
+    return values[EvaluationStartFormFields.templateId] != null ||
+        values[EvaluationStartFormFields.memberId] != null ||
+        (event as EvaluationStartEvent?)?.id != null ||
+        values[EvaluationStartFormFields.periodStartId] != null ||
+        values[EvaluationStartFormFields.periodEndId] != null;
+  }
+
+  /// The period message: one date alone, out of order, or ending after
+  /// today.
+  @override
+  String? crossFieldError(Map<String, dynamic> values) =>
+      EvaluationPeriodValidators.period(
+        values[EvaluationStartFormFields.periodStartId] as DateTime?,
+        values[EvaluationStartFormFields.periodEndId] as DateTime?,
+      );
+
+  /// The values keyed by [EvaluationStartFormFields], fixed ones included:
+  /// the template's id, the member's username and the event's id (`null`
+  /// for *General*).
+  @override
+  Map<String, dynamic> assemble(Map<String, dynamic> values) {
     final template =
         widget.fixedTemplate ??
-        v[EvaluationStartFormFields.templateId] as EvaluationStartChoice;
+        values[EvaluationStartFormFields.templateId] as EvaluationStartChoice;
     final member =
         widget.fixedMember ??
-        v[EvaluationStartFormFields.memberId] as EvaluationStartMember;
+        values[EvaluationStartFormFields.memberId] as EvaluationStartMember;
     final event =
         widget.fixedEvent?.id ??
-        (v[EvaluationStartFormFields.eventId] as EvaluationStartEvent?)?.id;
+        (values[EvaluationStartFormFields.eventId] as EvaluationStartEvent?)
+            ?.id;
     return {
       EvaluationStartFormFields.templateId: template.id,
       EvaluationStartFormFields.memberId: member.username,
       EvaluationStartFormFields.eventId: event,
-      EvaluationStartFormFields.periodStartId: start,
-      EvaluationStartFormFields.periodEndId: end,
+      EvaluationStartFormFields.periodStartId:
+          values[EvaluationStartFormFields.periodStartId],
+      EvaluationStartFormFields.periodEndId:
+          values[EvaluationStartFormFields.periodEndId],
     };
   }
 
   @override
   Widget build(BuildContext context) {
     final w = widget;
-    final error = formError;
     return ShadForm(
       key: formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: EvaluationSpacing.fieldGap,
+      child: EvaluationFormBody(
+        error: formError,
         children: [
           if (w.fixedTemplate case final t?)
-            ReadOnlyField(label: EvaluationStrings.template, value: t.label)
+            EvaluationStartFixedValue(
+              label: EvaluationStrings.template,
+              value: t.label,
+            )
           else
             EvaluationStartSelect<EvaluationStartChoice>(
               id: EvaluationStartFormFields.templateId,
@@ -145,9 +166,14 @@ class EvaluationStartFormState extends State<EvaluationStartForm>
               requiredMessage: EvaluationStrings.templateRequired,
               enabled: w.enabled,
               options: [for (final t in w.templates) (t, t.label)],
+              // A changed choice or date clears the form-level message.
+              onChanged: (_) => setFormError(null),
             ),
           if (w.fixedMember case final m?)
-            ReadOnlyField(label: EvaluationStrings.member, value: m.label)
+            EvaluationStartFixedValue(
+              label: EvaluationStrings.member,
+              value: m.label,
+            )
           else
             EvaluationStartSelect<EvaluationStartMember>(
               id: EvaluationStartFormFields.memberId,
@@ -156,10 +182,16 @@ class EvaluationStartFormState extends State<EvaluationStartForm>
               requiredMessage: EvaluationStrings.memberRequired,
               enabled: w.enabled,
               options: [for (final m in w.members) (m, m.label)],
-              onChanged: (m) => setState(() => memberUsername = m?.username),
+              onChanged: (m) => setState(() {
+                memberUsername = m?.username;
+                formError = null;
+              }),
             ),
           if (w.fixedEvent case final e?)
-            ReadOnlyField(label: EvaluationStrings.event, value: e.label)
+            EvaluationStartFixedValue(
+              label: EvaluationStrings.event,
+              value: e.label,
+            )
           else
             EvaluationStartSelect<EvaluationStartEvent>(
               // A new member rebuilds the field, back to General.
@@ -176,14 +208,12 @@ class EvaluationStartFormState extends State<EvaluationStartForm>
                 for (final e in eventOptions)
                   ((id: e.id, label: e.label), e.label),
               ],
+              onChanged: (_) => setFormError(null),
             ),
           EvaluationPeriodFields(
             enabled: w.enabled,
-            onChanged: () {
-              if (formError != null) setState(() => formError = null);
-            },
+            onChanged: () => setFormError(null),
           ),
-          if (error != null) EvaluationFormError(message: error),
         ],
       ),
     );

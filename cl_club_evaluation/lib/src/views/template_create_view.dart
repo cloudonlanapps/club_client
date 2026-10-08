@@ -10,6 +10,7 @@ import 'package:ui_lib/ui_lib.dart'
     show
         ConfirmDialog,
         EvaluationTemplateCreateForm,
+        EvaluationTemplateCreateFormFields,
         EvaluationTemplateCreateFormState;
 
 import '../constants/evaluation_view_strings.dart';
@@ -34,6 +35,8 @@ import '../widgets/existing_question_dialog.dart';
 /// A name already taken (`TEMPLATE_NAME_TAKEN`) shows under the name.
 ///
 /// Leaving a changed form, by Cancel or back, asks first (form rule 20).
+/// While the template is created the form is turned off, and neither
+/// Cancel nor system back leaves.
 /// Open to coaches and admins. Renders nothing unless the server runs
 /// evaluations.
 class TemplateCreateView extends ConsumerStatefulWidget {
@@ -89,7 +92,7 @@ class TemplateCreateViewState extends ConsumerState<TemplateCreateView> {
 
   /// Validates the form and creates the template.
   Future<void> create() async {
-    final values = formKey.currentState?.handleSubmit();
+    final values = formKey.currentState?.validate();
     if (values == null) return;
     setState(() => creating = true);
     final toaster = ShadToaster.of(context);
@@ -106,7 +109,12 @@ class TemplateCreateViewState extends ConsumerState<TemplateCreateView> {
       widget.onCreated(template.id);
     } on Object catch (e) {
       if (EvaluationErrorMessage.isTemplateNameTaken(e)) {
-        formKey.currentState?.setNameError(EvaluationErrorMessage.of(e));
+        formKey.currentState?.showErrors(
+          fieldErrors: {
+            EvaluationTemplateCreateFormFields.nameId:
+                EvaluationErrorMessage.of(e),
+          },
+        );
       } else {
         toaster.show(
           ShadToast.destructive(
@@ -138,7 +146,7 @@ class TemplateCreateViewState extends ConsumerState<TemplateCreateView> {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) unawaited(cancel());
+        if (!didPop && !creating) unawaited(cancel());
       },
       child: EvaluationPage(
         children: [
@@ -160,7 +168,7 @@ class TemplateCreateViewState extends ConsumerState<TemplateCreateView> {
             initialValues: source == null
                 ? null
                 : EvaluationTemplateCopy.initialValues(source),
-            isSubmitting: creating,
+            enabled: !creating,
             onEditItem: (item) => showEvaluationItemDialog(context, item),
             onEditSectionTitle: (title) =>
                 showEvaluationSectionTitleDialog(context, title),

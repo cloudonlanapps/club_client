@@ -1,6 +1,7 @@
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:cl_member_auth/cl_member_auth.dart';
 import 'package:cl_member_onboarding/src/models/identity_documents_submit_strings.dart';
+import 'package:cl_member_onboarding/src/widgets/identity_documents_privacy_policy_dialog.dart';
 import 'package:cl_member_onboarding/src/widgets/identity_documents_submit_body.dart';
 import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -168,6 +169,75 @@ void main() {
 
       expect(find.text(_consentRequired), findsNothing);
       expect(users.submissions, 1);
+    });
+  });
+
+  group('Issue 107: the privacy policy of the submit-documents step', () {
+    /// Opens the policy as a tap on the link of the consent line does.
+    Future<void> openPolicy(WidgetTester tester) async {
+      tester
+          .widget<IdentityDocumentsConsentForm>(
+            find.byType(IdentityDocumentsConsentForm),
+          )
+          .onShowPolicy();
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Issue 107: a tap on the Privacy Policy link opens the '
+        'policy, which says what the documents are used for', (tester) async {
+      await _pump(tester, items: [_slot('a')]);
+      expect(find.byType(IdentityDocumentsPrivacyPolicyDialog), findsNothing);
+
+      final line = tester.getRect(
+        find.text('I agree to the Privacy Policy.', findRichText: true),
+      );
+      await tester.tapAt(line.centerLeft + Offset(line.width * 0.75, 0));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(IdentityDocumentsPrivacyPolicyDialog), findsOneWidget);
+      expect(find.text('How we handle your Aadhaar'), findsOneWidget);
+      for (final part in [
+        'We only use your Aadhaar to confirm your name and date of birth',
+        'We will never use it for marketing',
+        'Only authorised reviewers can see your files',
+      ]) {
+        expect(find.textContaining(part), findsOneWidget, reason: part);
+      }
+    });
+
+    testWidgets('Issue 107: Close takes the policy away and leaves the '
+        'consent as it was', (tester) async {
+      final users = await _pump(tester, items: [_slot('a')]);
+      await _tickConsent(tester);
+      await openPolicy(tester);
+
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(IdentityDocumentsPrivacyPolicyDialog), findsNothing);
+      expect(
+        tester.widget<ShadCheckbox>(find.byType(ShadCheckbox)).value,
+        isTrue,
+      );
+      expect(users.submissions, 0);
+    });
+
+    testWidgets('Issue 107: the policy fits a phone', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        const ShadApp(
+          home: Scaffold(body: IdentityDocumentsPrivacyPolicyDialog()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('How we handle your Aadhaar'), findsOneWidget);
+      expect(
+        tester.getSize(find.byType(ShadDialog)).width,
+        lessThanOrEqualTo(390),
+      );
     });
   });
 }

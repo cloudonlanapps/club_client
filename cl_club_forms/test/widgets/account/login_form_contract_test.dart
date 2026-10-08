@@ -12,11 +12,21 @@ import '../../support/form_harness.dart';
 const String _username = LoginFormFields.usernameId;
 const String _password = LoginFormFields.passwordId;
 
-Future<LoginFormState> _pump(WidgetTester tester, {bool enabled = true}) async {
+Future<LoginFormState> _pump(
+  WidgetTester tester, {
+  bool enabled = true,
+  VoidCallback? onSubmitted,
+}) async {
   final key = GlobalKey<LoginFormState>();
-  await pumpForm(tester, LoginForm(key: key, enabled: enabled));
+  await pumpForm(
+    tester,
+    LoginForm(key: key, enabled: enabled, onSubmitted: onSubmitted),
+  );
   return key.currentState!;
 }
+
+Finder _input(String id) =>
+    find.descendant(of: fieldWithId(id), matching: find.byType(EditableText));
 
 void main() {
   group('Issue 61: LoginForm', () {
@@ -157,6 +167,34 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(AccountFormValidators.usernameRequired), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+  group('Issue 103: LoginForm', () {
+    testWidgets('Issue 103: Enter in the password is handed to the host, '
+        'Enter in the username is not', (tester) async {
+      var submitted = 0;
+      await _pump(tester, onSubmitted: () => submitted++);
+
+      await tester.showKeyboard(_input(_username));
+      await tester.testTextInput.receiveAction(TextInputAction.next);
+      await tester.pump();
+      expect(submitted, 0);
+
+      await tester.showKeyboard(_input(_password));
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+      expect(submitted, 1);
+    });
+
+    testWidgets('Issue 103: Enter in the password does nothing without a '
+        'host callback', (tester) async {
+      await _pump(tester);
+
+      await tester.showKeyboard(_input(_password));
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
       expect(tester.takeException(), isNull);
     });
   });

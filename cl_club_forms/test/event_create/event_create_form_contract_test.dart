@@ -136,8 +136,10 @@ void main() {
       expect(find.text('Title is required'), findsNothing);
     });
 
-    testWidgets('Issue 61: with no venue it is refused inline, and passes '
-        'once one is picked', (tester) async {
+    testWidgets('Issue 103: with no venue the message shows on the venue '
+        'field, with no form-level message, and it passes once one is picked', (
+      tester,
+    ) async {
       final form = await pumpCreateForm(
         tester,
         EventFormType.oneOff,
@@ -148,15 +150,11 @@ void main() {
       await tester.pumpAndSettle();
       final message = find.text('Please select a venue');
       expect(message, findsOneWidget);
-      // Inline under the rows, not on the venue field.
       expect(
         find.descendant(of: fieldWithId(venueId), matching: message),
-        findsNothing,
+        findsOneWidget,
       );
-      expect(
-        tester.getTopLeft(message).dy,
-        greaterThan(tester.getBottomLeft(fieldWithId(scheduleId)).dy),
-      );
+      expect(form.formError, isNull);
 
       await pickOption(tester, EventVenueSelectField.placeholder, 'Main Rink');
       final values = form.validate();
@@ -165,15 +163,28 @@ void main() {
       expect(message, findsNothing);
     });
 
-    testWidgets('Issue 61: a field refused keeps the venue rule quiet until '
-        'the fields pass', (tester) async {
+    testWidgets('Issue 103: with no title and no venue each field shows its '
+        'own message at once', (tester) async {
       final form = await pumpCreateForm(tester, EventFormType.oneOff);
 
       expect(form.validate(), isNull);
       await tester.pumpAndSettle();
 
-      expect(find.text('Title is required'), findsOneWidget);
-      expect(find.text('Please select a venue'), findsNothing);
+      expect(
+        find.descendant(
+          of: fieldWithId(titleId),
+          matching: find.text('Title is required'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: fieldWithId(venueId),
+          matching: find.text('Please select a venue'),
+        ),
+        findsOneWidget,
+      );
+      expect(form.formError, isNull);
     });
 
     testWidgets('Issue 61: a programme on no weekday is refused by its '

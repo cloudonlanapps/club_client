@@ -16,18 +16,23 @@ import '../support/form_harness.dart';
 // type. It does not mix in FormContract: it offers validate() and isDirty
 // (true while the box is ticked) but no showErrors(), so the server-errors
 // point does not apply. Its only in-form action is the Privacy Policy link,
-// which opens IdentityDocumentsPrivacyPolicyDialog; the dialog's Close is
-// the dialog's own button.
+// which calls the host's `onShowPolicy` (club_client#107): the form opens
+// nothing itself, and the policy is the host's.
 
 Future<GlobalKey<IdentityDocumentsConsentFormState>> _pump(
   WidgetTester tester, {
   bool enabled = true,
+  VoidCallback? onShowPolicy,
 }) async {
   final key = GlobalKey<IdentityDocumentsConsentFormState>();
   await tester.pumpWidget(
     ShadApp(
       home: Scaffold(
-        body: IdentityDocumentsConsentForm(key: key, enabled: enabled),
+        body: IdentityDocumentsConsentForm(
+          key: key,
+          enabled: enabled,
+          onShowPolicy: onShowPolicy ?? () {},
+        ),
       ),
     ),
   );
@@ -71,27 +76,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(IdentityDocumentsConsentStrings.required), findsNothing);
     });
-
-    testWidgets('Issue 51: the link in the label opens the privacy policy', (
-      tester,
-    ) async {
-      final key = await _pump(tester);
-      key.currentState!.openPolicy();
-      await tester.pumpAndSettle();
-      expect(find.text('How we handle your Aadhaar'), findsOneWidget);
-    });
-
-    testWidgets('Issue 51: disabled, the link opens nothing', (tester) async {
-      final key = await _pump(tester, enabled: false);
-      key.currentState!.openPolicy();
-      await tester.pumpAndSettle();
-      expect(find.text('How we handle your Aadhaar'), findsNothing);
-    });
   });
 
   group('Issue 61: IdentityDocumentsConsentForm', () {
     const id = IdentityDocumentsConsentFormFields.privacyAcceptedId;
-    const policyTitle = 'How we handle your Aadhaar';
 
     Future<IdentityDocumentsConsentFormState> pump(
       WidgetTester tester, {
@@ -100,20 +88,13 @@ void main() {
       final key = GlobalKey<IdentityDocumentsConsentFormState>();
       await pumpForm(
         tester,
-        IdentityDocumentsConsentForm(key: key, enabled: enabled),
+        IdentityDocumentsConsentForm(
+          key: key,
+          enabled: enabled,
+          onShowPolicy: () {},
+        ),
       );
       return key.currentState!;
-    }
-
-    /// Taps where the link sits in the consent line: three quarters along
-    /// it, the link being its second half. A disabled form ignores pointers,
-    /// so the tap is by position, not through the text's hit test.
-    Future<void> tapLink(WidgetTester tester) async {
-      final line = tester.getRect(
-        find.text('I agree to the Privacy Policy.', findRichText: true),
-      );
-      await tester.tapAt(line.centerLeft + Offset(line.width * 0.75, 0));
-      await tester.pumpAndSettle();
     }
 
     testWidgets('Issue 61: it shows one unticked checkbox, labelled with '
@@ -190,77 +171,80 @@ void main() {
       expect(state.validate(), isNull);
     });
 
-    testWidgets('Issue 61: a tap on the Privacy Policy link opens the '
-        'policy and leaves the box as it was', (tester) async {
-      final state = await pump(tester);
-
-      await tapLink(tester);
-
-      expect(find.text(policyTitle), findsOneWidget);
-      expect(state.isDirty, isFalse);
-    });
-
-    testWidgets('Issue 61: the policy says what the documents are used '
-        'for, and Close takes it away', (tester) async {
-      final state = await pump(tester);
-      await tester.tap(find.byType(ShadCheckbox));
-      await tapLink(tester);
-
-      for (final part in [
-        'We only use your Aadhaar to confirm your name and date of birth',
-        'We will never use it for marketing',
-        'Only authorised reviewers can see your files',
-      ]) {
-        expect(find.textContaining(part), findsOneWidget, reason: part);
-      }
-
-      await tester.tap(find.text('Close'));
-      await tester.pumpAndSettle();
-
-      expect(find.text(policyTitle), findsNothing);
-      expect(find.byType(IdentityDocumentsConsentForm), findsOneWidget);
-      expect(state.validate(), {id: true});
-    });
-
-    testWidgets('Issue 61: with enabled false neither the box nor the link '
-        'responds', (tester) async {
+    testWidgets('Issue 61: with enabled false the box does not respond', (
+      tester,
+    ) async {
       final state = await pump(tester, enabled: false);
 
       await expectNoFieldResponds(tester);
       await tester.tap(find.byType(ShadCheckbox), warnIfMissed: false);
       await tester.pumpAndSettle();
       expect(state.isDirty, isFalse);
-
-      await tapLink(tester);
-      expect(find.text(policyTitle), findsNothing);
     });
 
     testWidgets('Issue 61: it fits a phone', (tester) async {
-      await expectFitsPhone(tester, const IdentityDocumentsConsentForm());
+      await expectFitsPhone(
+        tester,
+        IdentityDocumentsConsentForm(onShowPolicy: () {}),
+      );
+    });
+  });
+
+  group('Issue 107: IdentityDocumentsConsentForm and the policy', () {
+    /// Taps where the link sits in the consent line: three quarters along
+    /// it, the link being its second half. A disabled form ignores pointers,
+    /// so the tap is by position, not through the text's hit test.
+    Future<void> tapLink(WidgetTester tester) async {
+      final line = tester.getRect(
+        find.text('I agree to the Privacy Policy.', findRichText: true),
+      );
+      await tester.tapAt(line.centerLeft + Offset(line.width * 0.75, 0));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Issue 107: a tap on the Privacy Policy link calls '
+        'onShowPolicy, opens nothing and leaves the box as it was', (
+      tester,
+    ) async {
+      var shown = 0;
+      final key = await _pump(tester, onShowPolicy: () => shown++);
+
+      await tapLink(tester);
+
+      expect(shown, 1);
+      expect(find.byType(ShadDialog), findsNothing);
+      expect(key.currentState!.isDirty, isFalse);
     });
 
-    testWidgets('Issue 61: the policy fits a phone', (tester) async {
-      final key = GlobalKey<IdentityDocumentsConsentFormState>();
-      await pumpForm(
+    testWidgets('Issue 107: while the form is off the link does nothing', (
+      tester,
+    ) async {
+      var shown = 0;
+      final key = await _pump(
         tester,
-        IdentityDocumentsConsentForm(key: key),
-        size: kPhoneSurface,
+        enabled: false,
+        onShowPolicy: () => shown++,
       );
 
-      // At this width the consent line wraps, so the link is opened as the
-      // tap on it does.
+      await tapLink(tester);
       key.currentState!.policyTap.onTap!();
       await tester.pumpAndSettle();
 
-      expect(tester.takeException(), isNull);
-      expect(find.text(policyTitle), findsOneWidget);
-      expect(
-        tester.getSize(find.byType(ShadDialog)).width,
-        lessThanOrEqualTo(kPhoneSurface.width),
-      );
-      await tester.tap(find.text('Close'));
-      await tester.pumpAndSettle();
-      expect(find.text(policyTitle), findsNothing);
+      expect(shown, 0);
+    });
+
+    testWidgets('Issue 107: turned off after it is mounted, the link does '
+        'nothing; turned on again, it calls onShowPolicy', (tester) async {
+      var shown = 0;
+      await _pump(tester, onShowPolicy: () => shown++);
+      await _pump(tester, enabled: false, onShowPolicy: () => shown++);
+
+      await tapLink(tester);
+      expect(shown, 0);
+
+      await _pump(tester, onShowPolicy: () => shown++);
+      await tapLink(tester);
+      expect(shown, 1);
     });
   });
 }

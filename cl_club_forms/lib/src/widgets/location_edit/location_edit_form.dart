@@ -16,7 +16,6 @@ class LocationEditForm extends StatefulWidget {
   const LocationEditForm({
     required this.initialAddress,
     required this.initialMapUri,
-    this.onSubmitted,
     this.enabled = true,
     super.key,
   });
@@ -26,9 +25,6 @@ class LocationEditForm extends StatefulWidget {
 
   /// The map link the form starts with; empty when none is on file.
   final String initialMapUri;
-
-  /// Invoked when the user submits the last field (enter key).
-  final VoidCallback? onSubmitted;
 
   /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
@@ -80,7 +76,6 @@ class LocationEditFormState extends State<LocationEditForm>
               keyboardType: TextInputType.url,
               autocorrect: false,
               enableSuggestions: false,
-              onSubmitted: (_) => widget.onSubmitted?.call(),
             ),
           ),
         ],

@@ -81,16 +81,18 @@ class ClubContactFormState extends State<ClubContactForm>
       child: FormBody(
         error: formError,
         children: [
-          const ClubIdentityTextInput(
+          ClubIdentityTextInput(
             id: ClubContactFormFields.phoneNumberId,
             label: ClubContactFormFields.phoneNumberLabel,
             keyboardType: TextInputType.phone,
+            enabled: widget.enabled,
             validator: ClubIdentityFormValidators.phone,
           ),
-          const ClubIdentityTextInput(
+          ClubIdentityTextInput(
             id: ClubContactFormFields.whatsappNumberId,
             label: ClubContactFormFields.whatsappNumberLabel,
             keyboardType: TextInputType.phone,
+            enabled: widget.enabled,
             validator: ClubIdentityFormValidators.phone,
             description: ClubContactFormFields.whatsappNumberHelp,
           ),
@@ -98,23 +100,27 @@ class ClubContactFormState extends State<ClubContactForm>
             id: ClubContactFormFields.whatsappMessageId,
             label: ClubContactFormFields.whatsappMessageLabel,
             languages: widget.languages,
+            enabled: widget.enabled,
             multiline: true,
           ),
-          const ClubIdentityTextInput(
+          ClubIdentityTextInput(
             id: ClubContactFormFields.emailId,
             label: ClubContactFormFields.emailLabel,
             keyboardType: TextInputType.emailAddress,
+            enabled: widget.enabled,
             validator: ClubIdentityFormValidators.email,
           ),
           TranslatedTextInputs(
             id: ClubContactFormFields.emailSubjectId,
             label: ClubContactFormFields.emailSubjectLabel,
             languages: widget.languages,
+            enabled: widget.enabled,
           ),
-          const ClubIdentityTextInput(
+          ClubIdentityTextInput(
             id: ClubContactFormFields.instagramUrlId,
             label: ClubContactFormFields.instagramUrlLabel,
             keyboardType: TextInputType.url,
+            enabled: widget.enabled,
             validator: ClubIdentityFormValidators.url,
           ),
         ],

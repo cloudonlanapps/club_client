@@ -69,7 +69,8 @@ abstract final class UserEntries {
       title: 'Identity documents consent form',
       group: FormDemoGroup.users,
       formType: IdentityDocumentsConsentForm,
-      builder: (key) => IdentityDocumentsConsentForm(key: key),
+      builder: (key) =>
+          IdentityDocumentsConsentForm(key: key, onShowPolicy: () {}),
     ),
   ];
 }

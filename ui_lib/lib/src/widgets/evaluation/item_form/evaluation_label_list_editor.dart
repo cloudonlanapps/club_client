@@ -14,6 +14,7 @@ class EvaluationLabelListEditor extends StatelessWidget {
     required this.addLabel,
     required this.onChanged,
     this.numbered = false,
+    this.enabled = true,
     super.key,
   });
 
@@ -28,6 +29,10 @@ class EvaluationLabelListEditor extends StatelessWidget {
 
   /// Whether each row shows its 1-based number (levels).
   final bool numbered;
+
+  /// Whether the labels can change; off, the rows and the add button show
+  /// greyed.
+  final bool enabled;
 
   /// [labels] with [edit] applied to a copy.
   List<String> edited(void Function(List<String> list) edit) {
@@ -46,12 +51,13 @@ class EvaluationLabelListEditor extends StatelessWidget {
           key: ValueKey(i),
           label: label,
           number: numbered ? i + 1 : null,
+          enabled: enabled,
           onChanged: (text) => onChanged(edited((l) => l[i] = text)),
           onRemove: () => onChanged(edited((l) => l.removeAt(i))),
-          onMoveUp: i == 0
+          onMoveUp: !enabled || i == 0
               ? null
               : () => onChanged(edited((l) => l.insert(i - 1, l.removeAt(i)))),
-          onMoveDown: i == labels.length - 1
+          onMoveDown: !enabled || i == labels.length - 1
               ? null
               : () => onChanged(edited((l) => l.insert(i + 1, l.removeAt(i)))),
         ),
@@ -59,7 +65,7 @@ class EvaluationLabelListEditor extends StatelessWidget {
         alignment: AlignmentDirectional.centerStart,
         child: ShadButton.outline(
           leading: const Icon(LucideIcons.plus),
-          onPressed: () => onChanged([...labels, '']),
+          onPressed: enabled ? () => onChanged([...labels, '']) : null,
           child: Text(addLabel),
         ),
       ),

@@ -182,7 +182,7 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
               const SizedBox(height: 16),
               ShadButton(
                 onPressed: () {
-                  final value = _createKey.currentState?.handleSubmit();
+                  final value = _createKey.currentState?.validate();
                   setState(() => _status = value?.toString() ?? '');
                 },
                 child: const Text('Create'),

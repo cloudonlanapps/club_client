@@ -1,10 +1,11 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../../constants/evaluation_spacing.dart';
 import '../../../constants/evaluation_strings.dart';
+import '../../../constants/form_spacing.dart';
 import '../../../models/evaluation_item_kind.dart';
 import '../../../utils/evaluation_answer_rules.dart';
+import '../../labeled_form_row.dart';
 import 'evaluation_comment_rule_form_field.dart';
 import 'evaluation_item_form_fields.dart';
 import 'evaluation_item_form_validators.dart';
@@ -37,7 +38,7 @@ class EvaluationItemSwitches extends StatelessWidget {
         : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: EvaluationSpacing.fieldGap,
+      spacing: FormSpacing.rowGap,
       children: [
         if (kind.isQuestion)
           ShadSwitchFormField(
@@ -53,13 +54,16 @@ class EvaluationItemSwitches extends StatelessWidget {
             inputSublabel: const Text(EvaluationStrings.commentAreaHint),
           ),
         if (options != null && options.isNotEmpty)
-          EvaluationCommentRuleFormField(
-            id: EvaluationItemFormFields.requireCommentForId,
+          LabeledFormRow(
             label: EvaluationStrings.requireCommentFor,
-            options: options,
-            validator: (rule) => EvaluationItemFormValidators.requireCommentFor(
-              rule,
-              showCommentArea: commentArea,
+            field: EvaluationCommentRuleFormField(
+              id: EvaluationItemFormFields.requireCommentForId,
+              options: options,
+              validator: (rule) =>
+                  EvaluationItemFormValidators.requireCommentFor(
+                    rule,
+                    showCommentArea: commentArea,
+                  ),
             ),
           ),
         if (kind.allowsEvidence)

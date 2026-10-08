@@ -464,7 +464,7 @@ own isolated server.
     - `validate()` — the form's values as a `Map<String, dynamic>`, or `null` when invalid. A section editor returns its section's partial map.
     - `isDirty` — whether anything changed (rule 8). It drives the discard prompt of a create view via `PopScope`, and lets an unmodified Save be a no-op.
     - `showErrors(fieldErrors, formError)` — what the server refused, put back on the fields by id and inline.
-    - `enabled` — a parameter of the widget; the host turns it off while it saves.
+    - `enabled` — a parameter of the widget; the host turns it off while it saves. The form passes it to every field: a field given none (a `const` one above all) is not built again when the form is turned off, and stays drawn live.
 
     The host's Save action calls `validate()`, runs the save itself, holds the in-flight state, and calls `showErrors` when the server refuses a value. A form has no `onSubmit` callback, no `handleSubmit()` and no `isSubmitting`. Cross-field rules (age band, password match, "at least one name", an auto/semi-auto group needs ≥1 criterion) are the form's `crossFieldError` and surface as an **inline form-level message** (`validate()` returns `null`), never a toast from inside the form. A form that wants Enter to submit takes a plain `onSubmitted` callback, which the host points at its Save action.
 

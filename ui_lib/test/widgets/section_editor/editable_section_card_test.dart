@@ -24,7 +24,7 @@ Future<List<String>> _pumpCard(
           isEmpty: isEmpty,
           emptyHint: emptyHint,
           read: const Text('READ MODE'),
-          editBuilder: () => const Text('EDIT FORM'),
+          editBuilder: ({required enabled}) => const Text('EDIT FORM'),
           onValidate: () => validateResult,
           isDirty: () => isDirty,
           onSave: (value) async {

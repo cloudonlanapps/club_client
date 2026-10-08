@@ -263,4 +263,20 @@ void main() {
       );
     });
   });
+  group('Issue 94: ClubAddressForm', () {
+    testWidgets('Issue 94: on screen and turned off, every field is off and '
+        'takes no pointer; turned on again, every field responds', (
+      tester,
+    ) async {
+      await expectOffThenOnAgain(
+        tester,
+        ({required enabled}) => ClubAddressForm(
+          initialValues: _initial,
+          languages: const ['mr'],
+          enabled: enabled,
+        ),
+        inputs: 9,
+      );
+    });
+  });
 }

@@ -9,7 +9,8 @@ abstract final class EvaluationSpacing {
   /// Gap between option buttons, stars and choices.
   static const double optionGap = 8;
 
-  /// Gap between the fields of the item form.
+  /// Gap between two fields side by side in the item form, and between
+  /// the checkboxes of its coach-note rule.
   static const double fieldGap = 12;
 
   /// Gap between a label and its field, and between outline rows.

@@ -25,6 +25,7 @@ class EvaluationOutlineRows extends StatelessWidget {
     required this.onMove,
     required this.onAddToSection,
     this.onAddExistingToSection,
+    this.enabled = true,
     super.key,
   });
 
@@ -53,9 +54,13 @@ class EvaluationOutlineRows extends StatelessWidget {
   /// the option.
   final ValueChanged<int>? onAddExistingToSection;
 
+  /// Whether the arrows and the sections' "+" answer; off, they show
+  /// greyed.
+  final bool enabled;
+
   /// The move callback for [pos] by [delta], or `null` when it cannot move.
   VoidCallback? mover(EvaluationLayoutPosition pos, int delta) =>
-      EvaluationLayoutOps.move(layout, pos, delta) == null
+      !enabled || EvaluationLayoutOps.move(layout, pos, delta) == null
       ? null
       : () => onMove(pos, delta);
 
@@ -93,6 +98,7 @@ class EvaluationOutlineRows extends StatelessWidget {
                   ? null
                   : EvaluationAddBar(
                       compact: true,
+                      enabled: enabled,
                       onAddItem: (kind) => onAddToSection(kind, pos.entry),
                       onAddExisting: existing == null
                           ? null

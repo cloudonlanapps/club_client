@@ -1,12 +1,11 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../../constants/evaluation_spacing.dart';
 import '../../../constants/evaluation_strings.dart';
 import '../../../models/evaluation_start_options.dart';
-import '../../../utils/evaluation_form_equality.dart';
+import '../common/evaluation_form_body.dart';
+import '../common/evaluation_form_contract.dart';
 import '../common/evaluation_form_focus.dart';
-import 'evaluation_form_error.dart';
 import 'evaluation_period_fields.dart';
 import 'evaluation_period_validators.dart';
 import 'evaluation_start_form.dart';
@@ -18,8 +17,9 @@ import 'evaluation_start_select.dart';
 /// dates, both or neither, ending by today.
 ///
 /// Owns no buttons: the host (an `EditableSectionCard`) calls
-/// [EvaluationPeriodFormState.validate] from its Save action and reads
-/// [EvaluationPeriodFormState.isDirty].
+/// [EvaluationPeriodFormState.validate] from its Save action, reads
+/// [EvaluationPeriodFormState.isDirty] and shows a server refusal with
+/// [EvaluationPeriodFormState.showErrors].
 class EvaluationPeriodForm extends StatefulWidget {
   /// Edits the event seeded with [initialEvent] and the period seeded with
   /// [initialStart] and [initialEnd].
@@ -28,6 +28,7 @@ class EvaluationPeriodForm extends StatefulWidget {
     this.initialEvent,
     this.initialStart,
     this.initialEnd,
+    this.enabled = true,
     super.key,
   });
 
@@ -44,19 +45,21 @@ class EvaluationPeriodForm extends StatefulWidget {
   /// The seeded last day.
   final DateTime? initialEnd;
 
+  /// Whether the fields can change (off while the host saves).
+  final bool enabled;
+
   @override
   State<EvaluationPeriodForm> createState() => EvaluationPeriodFormState();
 }
 
 /// State of [EvaluationPeriodForm]: the form and its form-level message.
 class EvaluationPeriodFormState extends State<EvaluationPeriodForm>
-    with EvaluationFormFocus<EvaluationPeriodForm> {
-  /// The form.
-  final GlobalKey<ShadFormState> formKey = GlobalKey<ShadFormState>();
-
-  /// The period message (one date alone, out of order, ending after today,
-  /// or the host's refusal), or `null`.
-  String? formError;
+    with
+        EvaluationFormFocus<EvaluationPeriodForm>,
+        EvaluationFormContract<EvaluationPeriodForm> {
+  // Selects and date pickers have no input to focus.
+  @override
+  bool get focusFirstInvalid => false;
 
   /// The seeded event as the select holds it.
   EvaluationStartEvent get initialEventValue => switch (widget.initialEvent) {
@@ -77,47 +80,32 @@ class EvaluationPeriodFormState extends State<EvaluationPeriodForm>
     ];
   }
 
-  /// Validates the event and the period. Returns
-  /// [EvaluationStartFormFields.eventId] (`null` for *General*),
-  /// [EvaluationStartFormFields.periodStartId] and
-  /// [EvaluationStartFormFields.periodEndId] when valid, else `null` with
-  /// the message shown under the form.
-  Map<String, dynamic>? validate() {
-    final form = formKey.currentState;
-    if (form == null || !form.saveAndValidate(focusOnInvalid: false)) {
-      return null;
-    }
-    final start = form.value[EvaluationStartFormFields.periodStartId];
-    final end = form.value[EvaluationStartFormFields.periodEndId];
-    final error = EvaluationPeriodValidators.period(
-      start as DateTime?,
-      end as DateTime?,
-    );
-    setState(() => formError = error);
-    if (error != null) return null;
-    final event = form.value[EvaluationStartFormFields.eventId];
+  /// The period message: one date alone, out of order, or ending after
+  /// today.
+  @override
+  String? crossFieldError(Map<String, dynamic> values) =>
+      EvaluationPeriodValidators.period(
+        values[EvaluationStartFormFields.periodStartId] as DateTime?,
+        values[EvaluationStartFormFields.periodEndId] as DateTime?,
+      );
+
+  /// [EvaluationStartFormFields.eventId] as the event's id (`null` for
+  /// *General*), with [EvaluationStartFormFields.periodStartId] and
+  /// [EvaluationStartFormFields.periodEndId].
+  @override
+  Map<String, dynamic> assemble(Map<String, dynamic> values) {
+    final event = values[EvaluationStartFormFields.eventId];
     return {
       EvaluationStartFormFields.eventId: (event as EvaluationStartEvent?)?.id,
-      EvaluationStartFormFields.periodStartId: start,
-      EvaluationStartFormFields.periodEndId: end,
+      EvaluationStartFormFields.periodStartId:
+          values[EvaluationStartFormFields.periodStartId],
+      EvaluationStartFormFields.periodEndId:
+          values[EvaluationStartFormFields.periodEndId],
     };
-  }
-
-  /// Shows [message] — the host's server refusal, e.g. a duplicate review
-  /// or an ineligible member — under the form, as a period message is
-  /// shown; it clears once the event or a date changes.
-  void showRefusal(String message) => setState(() => formError = message);
-
-  /// Whether the event or either date differs from the seeded ones.
-  bool get isDirty {
-    final form = formKey.currentState;
-    if (form == null) return false;
-    return !EvaluationFormEquality.mapsEqual(form.initialValue, form.value);
   }
 
   @override
   Widget build(BuildContext context) {
-    final error = formError;
     return ShadForm(
       key: formKey,
       initialValue: {
@@ -125,27 +113,24 @@ class EvaluationPeriodFormState extends State<EvaluationPeriodForm>
         EvaluationStartFormFields.periodStartId: widget.initialStart,
         EvaluationStartFormFields.periodEndId: widget.initialEnd,
       },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: EvaluationSpacing.fieldGap,
+      child: EvaluationFormBody(
+        error: formError,
         children: [
           EvaluationStartSelect<EvaluationStartEvent>(
             id: EvaluationStartFormFields.eventId,
             label: EvaluationStrings.event,
             initialValue: initialEventValue,
+            enabled: widget.enabled,
             options: eventOptions,
-            onChanged: (_) {
-              if (formError != null) setState(() => formError = null);
-            },
+            // A changed event or date clears the message about them.
+            onChanged: (_) => setFormError(null),
           ),
           EvaluationPeriodFields(
             initialStart: widget.initialStart,
             initialEnd: widget.initialEnd,
-            onChanged: () {
-              if (formError != null) setState(() => formError = null);
-            },
+            enabled: widget.enabled,
+            onChanged: () => setFormError(null),
           ),
-          if (error != null) EvaluationFormError(message: error),
         ],
       ),
     );

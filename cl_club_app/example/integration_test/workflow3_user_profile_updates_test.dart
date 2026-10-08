@@ -71,6 +71,7 @@ import 'package:ui_lib/ui_lib.dart'
     show ActionButton, PickedImage, SectionEditButton;
 
 import '_helpers/capabilities.dart';
+import '_helpers/forms.dart' show ensureTextById;
 import '_helpers/pump.dart' show pumpApp;
 
 const _kApiBaseUrl = String.fromEnvironment(
@@ -680,9 +681,14 @@ Future<void> _loginViaUi(
 
   await _enterTextById(tester, 'username', username);
   await _enterTextById(tester, 'password', password);
-  await tester.testTextInput.receiveAction(TextInputAction.done);
+  // No Enter here: in the password field it signs in (#103), and the
+  // button pressed below would then read "Signing in…".
   await tester.pump();
 
+  // As in the shared loginViaUi: a field emptied after it was typed is
+  // typed again, or Sign in validates an empty form and starts nothing.
+  await ensureTextById(tester, 'username', username);
+  await ensureTextById(tester, 'password', password);
   await _submitFormContaining(tester, fieldId: 'username', label: 'Sign in');
 
   try {
@@ -726,9 +732,14 @@ Future<void> _attemptLoginExpectFailure(
 
   await _enterTextById(tester, 'username', username);
   await _enterTextById(tester, 'password', password);
-  await tester.testTextInput.receiveAction(TextInputAction.done);
+  // No Enter here: in the password field it signs in (#103), and the
+  // button pressed below would then read "Signing in…".
   await tester.pump();
 
+  // As in the shared loginViaUi: a field emptied after it was typed is
+  // typed again, or Sign in validates an empty form and starts nothing.
+  await ensureTextById(tester, 'username', username);
+  await ensureTextById(tester, 'password', password);
   await _submitFormContaining(tester, fieldId: 'username', label: 'Sign in');
 
   // Settle into a non-loading null state — auth notifier sets state.error on

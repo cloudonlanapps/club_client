@@ -14,8 +14,9 @@ import 'section_editor_actions.dart';
 /// `Cancel` / `Save` actions — no dialog or popover.
 ///
 /// The card owns only UI concerns: the read/edit toggle, validation gating,
-/// no-op detection ([isDirty]) and the in-flight saving state. It is
-/// SDK-free; the host supplies:
+/// no-op detection ([isDirty]) and the in-flight saving state, which turns
+/// off its own actions and, through [editBuilder], the form. It is SDK-free;
+/// the host supplies:
 ///
 /// * [onValidate] — reads the form's `GlobalKey` state and returns the partial
 ///   value map (or `null` when invalid, which keeps the card in edit mode and
@@ -55,8 +56,10 @@ class EditableSectionCard<T> extends StatefulWidget {
   final Widget read;
 
   /// Builds the inline edit form. Invoked only while editing, so the form's
-  /// `GlobalKey` (held by the host) attaches only in edit mode.
-  final Widget Function() editBuilder;
+  /// `GlobalKey` (held by the host) attaches only in edit mode. `enabled` is
+  /// false while a save is in flight: the host passes it to its form, which
+  /// is then off.
+  final Widget Function({required bool enabled}) editBuilder;
 
   /// Reads the form's state and returns the partial value, or `null` when the
   /// form is invalid.
@@ -139,12 +142,19 @@ class _EditableSectionCardState<T> extends State<EditableSectionCard<T>> {
     final value = widget.onValidate();
     if (value == null) return; // invalid — form shows its own errors
     setState(() => _saving = true);
-    final ok = await widget.onSave(value);
-    if (!mounted) return;
-    setState(() {
-      _saving = false;
-      if (ok) _editing = false;
-    });
+    // A save that throws counts as not stored: the editor stays open, with
+    // the form and the actions live again.
+    var ok = false;
+    try {
+      ok = await widget.onSave(value);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+          if (ok) _editing = false;
+        });
+      }
+    }
   }
 
   @override
@@ -206,13 +216,14 @@ class _EditableSectionCardState<T> extends State<EditableSectionCard<T>> {
   }
 
   Widget _buildEdit(BuildContext context) {
+    final editor = widget.editBuilder(enabled: !_saving);
     final form = widget.editMaxWidth == null
-        ? widget.editBuilder()
+        ? editor
         : Align(
             alignment: Alignment.centerLeft,
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: widget.editMaxWidth!),
-              child: widget.editBuilder(),
+              child: editor,
             ),
           );
     return Column(

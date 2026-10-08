@@ -23,4 +23,10 @@ abstract final class IdentityDocumentsSubmitSizes {
 
   /// Gap between two of the help section's points.
   static const double tipGap = 2;
+
+  /// Widest the privacy policy's text grows.
+  static const double policyMaxWidth = 480;
+
+  /// Gap between two paragraphs of the privacy policy.
+  static const double policyParagraphGap = 12;
 }

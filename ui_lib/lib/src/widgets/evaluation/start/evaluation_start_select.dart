@@ -1,8 +1,11 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../labeled_form_row.dart';
+
 /// One select of the start form, searchable, over [options] of value and
-/// label. With [requiredMessage], an empty choice is invalid.
+/// label, under its label row. With [requiredMessage], an empty choice is
+/// invalid and the label carries the required mark.
 class EvaluationStartSelect<T> extends StatelessWidget {
   /// A select keyed [id].
   const EvaluationStartSelect({
@@ -46,19 +49,22 @@ class EvaluationStartSelect<T> extends StatelessWidget {
     final hint = placeholder;
     final message = requiredMessage;
     final labels = {for (final (v, l) in options) v: l};
-    return ShadSelectFormField<T>(
-      id: id,
-      label: Text(label),
-      initialValue: initialValue,
-      enabled: enabled,
-      onChanged: onChanged,
-      placeholder: hint == null ? null : Text(hint),
-      minWidth: double.infinity,
-      options: [
-        for (final (v, l) in options) ShadOption<T>(value: v, child: Text(l)),
-      ],
-      selectedOptionBuilder: (context, value) => Text(labels[value] ?? ''),
-      validator: message == null ? null : (v) => v == null ? message : null,
+    return LabeledFormRow(
+      label: label,
+      required: message != null,
+      field: ShadSelectFormField<T>(
+        id: id,
+        initialValue: initialValue,
+        enabled: enabled,
+        onChanged: onChanged,
+        placeholder: hint == null ? null : Text(hint),
+        minWidth: double.infinity,
+        options: [
+          for (final (v, l) in options) ShadOption<T>(value: v, child: Text(l)),
+        ],
+        selectedOptionBuilder: (context, value) => Text(labels[value] ?? ''),
+        validator: message == null ? null : (v) => v == null ? message : null,
+      ),
     );
   }
 }

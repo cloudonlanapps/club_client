@@ -11,12 +11,15 @@ import 'login_form_fields.dart';
 ///
 /// The form owns no title, buttons or links: the host drives it through a
 /// `GlobalKey<LoginFormState>`, calling `validate()` from its Sign in action
-/// ([FormContract]).
+/// ([FormContract]). Enter in the password field calls [onSubmitted].
 class LoginForm extends StatefulWidget {
-  const LoginForm({this.enabled = true, super.key});
+  const LoginForm({this.enabled = true, this.onSubmitted, super.key});
 
   /// Whether the fields respond; the host turns it off while it signs in.
   final bool enabled;
+
+  /// Enter in the password field; the host points it at its Sign in action.
+  final VoidCallback? onSubmitted;
 
   @override
   State<LoginForm> createState() => LoginFormState();
@@ -72,6 +75,7 @@ class LoginFormState extends State<LoginForm> with FormContract<LoginForm> {
               textInputAction: TextInputAction.done,
               enabled: widget.enabled,
               validator: AccountFormValidators.password,
+              onSubmitted: (_) => widget.onSubmitted?.call(),
             ),
           ),
         ],

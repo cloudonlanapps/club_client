@@ -50,13 +50,9 @@ class ClubAddressCardState extends ConsumerState<ClubAddressCard> {
   /// Key of the inline form; attached only while the card is being edited.
   final formKey = GlobalKey<ClubAddressFormState>();
 
-  /// Whether a save is in flight; the form is disabled meanwhile.
-  bool saving = false;
-
   /// Stores the section's [values] over the identity the server holds.
   Future<bool> save(Map<String, dynamic> values) async {
-    setState(() => saving = true);
-    final stored = await applyClubIdentityUpdate(
+    return applyClubIdentityUpdate(
       ref: ref,
       context: context,
       update: (notifier) => ClubIdentityFormSubmit.updateAddress(
@@ -68,8 +64,6 @@ class ClubAddressCardState extends ConsumerState<ClubAddressCard> {
       onRefused: (message) =>
           formKey.currentState?.showErrors(formError: message),
     );
-    if (mounted) setState(() => saving = false);
-    return stored;
   }
 
   @override
@@ -92,12 +86,12 @@ class ClubAddressCardState extends ConsumerState<ClubAddressCard> {
           icons: ClubAddressCard.icons,
         ),
       ),
-      editBuilder: () => ClubIdentitySectionBody(
+      editBuilder: ({required enabled}) => ClubIdentitySectionBody(
         child: ClubAddressForm(
           key: formKey,
           initialValues: values,
           languages: widget.languages,
-          enabled: !saving,
+          enabled: enabled,
         ),
       ),
       onValidate: () => formKey.currentState?.validate(),

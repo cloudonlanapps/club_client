@@ -69,7 +69,8 @@ Future<void> loginViaUi(
 
   await enterTextById(tester, 'username', username);
   await enterTextById(tester, 'password', password);
-  await tester.testTextInput.receiveAction(TextInputAction.done);
+  // No Enter here: in the password field it signs in (#103), and the
+  // button pressed below would then read "Signing in…".
   await tester.pump();
 
   // The public navbar shows its own "Sign in" ShadButton (which is a
@@ -161,7 +162,8 @@ Future<void> attemptLoginExpectFailure(
 
   await enterTextById(tester, 'username', username);
   await enterTextById(tester, 'password', password);
-  await tester.testTextInput.receiveAction(TextInputAction.done);
+  // No Enter here: in the password field it signs in (#103), and the
+  // button pressed below would then read "Signing in…".
   await tester.pump();
 
   await tester.tap(find.widgetWithText(ShadButton, 'Sign in').last);

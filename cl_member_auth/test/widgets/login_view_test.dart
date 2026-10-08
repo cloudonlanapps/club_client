@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:cl_club_forms/cl_club_forms.dart' show LoginFormFields;
 import 'package:cl_member_auth/cl_member_auth.dart';
+import 'package:cl_member_auth/src/widgets/login_view.dart' show LoginViewState;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -78,5 +81,54 @@ void main() {
           .onPressed!();
     }
     expect((forgot, signUp), (1, 1));
+  });
+
+  testWidgets('Issue 103: Enter in the password field signs in, once, and '
+      'does nothing while a sign-in is in flight', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1024, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    _ignoreOverflow();
+    final logins = <(String, String)>[];
+    final inFlight = Completer<void>();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [authStateProvider.overrideWith(_SignedOut.new)],
+        child: ShadApp(
+          home: ShadToaster(
+            child: Scaffold(
+              body: LoginView(
+                onLoginSuccess: () {},
+                onNavigateToForgotPassword: () {},
+                onNavigateToSignup: () {},
+                onLogin: (username, password) {
+                  logins.add((username, password));
+                  return inFlight.future;
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(_field(LoginFormFields.usernameId), ' asha ');
+    await tester.enterText(_field(LoginFormFields.passwordId), 'secret');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump();
+    expect(logins, [('asha', 'secret')]);
+    expect(find.text('Signing in…'), findsOneWidget);
+
+    // In flight: Enter again, and the Sign in action itself, do nothing.
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump();
+    await tester.state<LoginViewState>(find.byType(LoginView)).submit();
+    await tester.pump();
+    expect(logins, hasLength(1));
+
+    inFlight.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('Signing in…'), findsNothing);
+    expect(logins, hasLength(1));
   });
 }

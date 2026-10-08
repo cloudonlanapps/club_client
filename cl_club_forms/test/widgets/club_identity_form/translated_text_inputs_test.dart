@@ -45,6 +45,7 @@ void main() {
       final form = await _pump(
         tester,
         const ClubIdentityTextInput(
+          enabled: true,
           id: 'name',
           label: 'Name',
           keyboardType: TextInputType.name,
@@ -71,6 +72,7 @@ void main() {
         final form = await _pump(
           tester,
           const ClubIdentityTextInput(
+            enabled: true,
             id: 'name',
             label: 'Name',
             keyboardType: TextInputType.name,
@@ -91,6 +93,7 @@ void main() {
       await _pump(
         tester,
         const ClubIdentityTextInput(
+          enabled: true,
           id: 'email',
           label: 'Email',
           keyboardType: TextInputType.emailAddress,
@@ -116,11 +119,13 @@ void main() {
         Column(
           children: [
             const ClubIdentityTextInput(
+              enabled: true,
               id: 'free',
               label: 'Free',
               keyboardType: TextInputType.text,
             ),
             ClubIdentityTextInput(
+              enabled: true,
               id: 'checked',
               label: 'Checked',
               keyboardType: TextInputType.text,
@@ -149,11 +154,13 @@ void main() {
         const Column(
           children: [
             ClubIdentityTextInput(
+              enabled: true,
               id: 'phone',
               label: 'Phone',
               keyboardType: TextInputType.phone,
             ),
             ClubIdentityTextInput(
+              enabled: true,
               id: 'message',
               label: 'Message',
               keyboardType: TextInputType.text,
@@ -180,11 +187,13 @@ void main() {
         const Column(
           children: [
             ClubIdentityTextInput(
+              enabled: true,
               id: 'tagline',
               label: 'Tagline',
               keyboardType: TextInputType.text,
             ),
             ClubIdentityTextInput(
+              enabled: true,
               id: 'email',
               label: 'Email',
               keyboardType: TextInputType.emailAddress,
@@ -203,6 +212,7 @@ void main() {
       await _pump(
         tester,
         const ClubIdentityTextInput(
+          enabled: true,
           id: 'name',
           label: 'Name',
           keyboardType: TextInputType.name,
@@ -227,6 +237,7 @@ void main() {
       TextInputType keyboardType = TextInputType.text,
       bool multiline = false,
     }) => TranslatedTextInputs(
+      enabled: true,
       id: 'tagline',
       label: 'Tagline',
       languages: languages,

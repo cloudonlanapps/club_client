@@ -1,12 +1,13 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../../constants/evaluation_spacing.dart';
 import '../../../constants/evaluation_strings.dart';
 import '../../../models/evaluation_item_kind.dart';
 import '../../../models/evaluation_rating_style.dart';
 import '../../../utils/evaluation_answer_rules.dart';
-import '../../../utils/evaluation_form_equality.dart';
+import '../../labeled_form_row.dart';
+import '../common/evaluation_form_body.dart';
+import '../common/evaluation_form_contract.dart';
 import '../common/evaluation_form_focus.dart';
 import 'evaluation_item_form_fields.dart';
 import 'evaluation_item_form_validators.dart';
@@ -23,7 +24,9 @@ import 'evaluation_item_switches.dart';
 /// form through a `GlobalKey<EvaluationItemFormState>`, calling
 /// [EvaluationItemFormState.validate] from its Save action.
 /// [EvaluationItemFormValues] converts to and from `EvaluationItemValue`.
-/// [readOnly] shows the item with every field disabled (a frozen template).
+/// [enabled] off is for the time a save takes: the fields grey and take no
+/// change. [readOnly] is for a viewer who may not edit: it shows the item
+/// with every field disabled (a frozen template).
 class EvaluationItemForm extends StatefulWidget {
   /// Edits an item of [kind] seeded with [initialValues] (see
   /// [EvaluationItemFormValues.fromItem]).
@@ -31,6 +34,7 @@ class EvaluationItemForm extends StatefulWidget {
     required this.kind,
     required this.initialValues,
     this.readOnly = false,
+    this.enabled = true,
     super.key,
   });
 
@@ -43,6 +47,9 @@ class EvaluationItemForm extends StatefulWidget {
   /// Whether the fields are shown without accepting changes.
   final bool readOnly;
 
+  /// Whether the fields can change (off while the host saves).
+  final bool enabled;
+
   @override
   State<EvaluationItemForm> createState() => EvaluationItemFormState();
 }
@@ -50,28 +57,26 @@ class EvaluationItemForm extends StatefulWidget {
 /// State of [EvaluationItemForm]: the form, and its values as of the last
 /// change, which decide the dependent fields.
 class EvaluationItemFormState extends State<EvaluationItemForm>
-    with EvaluationFormFocus<EvaluationItemForm> {
-  /// The form.
-  final GlobalKey<ShadFormState> formKey = GlobalKey<ShadFormState>();
-
+    with
+        EvaluationFormFocus<EvaluationItemForm>,
+        EvaluationFormContract<EvaluationItemForm> {
   /// The form's values as of the last change.
   late Map<String, dynamic> values = widget.initialValues;
 
-  /// Validates every field, showing errors under them. Returns the item's
-  /// values when valid, else `null`: [EvaluationItemFormFields.textId]
+  // Custom fields own no focusable input, so nothing is focused.
+  @override
+  bool get focusFirstInvalid => false;
+
+  /// The item's values: [EvaluationItemFormFields.textId]
   /// trimmed, the switches, the coach-note rule limited to answers the
   /// question can take (empty without the comment area), and the kind's own
   /// fields — `ratingStyleId` with `rateMinId` / `rateMaxId` as `int`s or
   /// `levelsId`; `labelTrueId` / `labelFalseId` as `String?`; `choicesId`
   /// as `List<EvaluationChoice>` valued from the labels.
-  Map<String, dynamic>? validate() {
-    final form = formKey.currentState;
-    // Custom fields own no focusable input, so nothing is focused.
-    if (form == null || !form.saveAndValidate(focusOnInvalid: false)) {
-      return null;
-    }
+  @override
+  Map<String, dynamic> assemble(Map<String, dynamic> values) {
     final kind = widget.kind;
-    final item = EvaluationItemFormValues.toItem(form.value, kind: kind);
+    final item = EvaluationItemFormValues.toItem(values, kind: kind);
     final offered = {
       for (final (v, _) in EvaluationAnswerRules.answerOptions(item) ?? []) v,
     };
@@ -103,39 +108,32 @@ class EvaluationItemFormState extends State<EvaluationItemForm>
     };
   }
 
-  /// Whether any field differs from the initial values.
-  bool get isDirty {
-    final form = formKey.currentState;
-    if (form == null) return false;
-    return !EvaluationFormEquality.mapsEqual(form.initialValue, form.value);
-  }
-
   @override
   Widget build(BuildContext context) {
     final kind = widget.kind;
     final readOnly = widget.readOnly;
     final form = ShadForm(
       key: formKey,
-      enabled: !readOnly,
+      enabled: widget.enabled && !readOnly,
       initialValue: widget.initialValues,
       onChanged: () => setState(() => values = formKey.currentState!.value),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        spacing: EvaluationSpacing.fieldGap,
+      child: EvaluationFormBody(
+        error: formError,
         children: [
-          ShadTextareaFormField(
-            id: EvaluationItemFormFields.textId,
-            label: Text(
-              kind.isQuestion
-                  ? EvaluationStrings.question
-                  : EvaluationStrings.infoText,
+          LabeledFormRow(
+            label: kind.isQuestion
+                ? EvaluationStrings.question
+                : EvaluationStrings.infoText,
+            required: true,
+            field: ShadTextareaFormField(
+              id: EvaluationItemFormFields.textId,
+              validator: kind.isQuestion
+                  ? EvaluationItemFormValidators.question
+                  : EvaluationItemFormValidators.infoText,
             ),
-            validator: kind.isQuestion
-                ? EvaluationItemFormValidators.question
-                : EvaluationItemFormValidators.infoText,
           ),
-          EvaluationItemKindFields(kind: kind, values: values),
+          if (kind.hasKindFields)
+            EvaluationItemKindFields(kind: kind, values: values),
           EvaluationItemSwitches(kind: kind, values: values),
         ],
       ),

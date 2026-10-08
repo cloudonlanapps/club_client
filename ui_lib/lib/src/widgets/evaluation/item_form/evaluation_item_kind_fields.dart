@@ -4,6 +4,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../../constants/evaluation_spacing.dart';
 import '../../../constants/evaluation_strings.dart';
 import '../../../models/evaluation_item_kind.dart';
+import '../../labeled_form_row.dart';
 import 'evaluation_item_form_fields.dart';
 import 'evaluation_item_form_validators.dart';
 import 'evaluation_label_list_form_field.dart';
@@ -34,29 +35,36 @@ class EvaluationItemKindFields extends StatelessWidget {
       spacing: EvaluationSpacing.fieldGap,
       children: [
         Expanded(
-          child: ShadInputFormField(
-            id: EvaluationItemFormFields.labelTrueId,
-            label: const Text(EvaluationStrings.labelTrue),
-            placeholder: const Text(EvaluationStrings.yes),
-            keyboardType: TextInputType.text,
+          child: LabeledFormRow(
+            label: EvaluationStrings.labelTrue,
+            field: ShadInputFormField(
+              id: EvaluationItemFormFields.labelTrueId,
+              placeholder: const Text(EvaluationStrings.yes),
+              keyboardType: TextInputType.text,
+            ),
           ),
         ),
         Expanded(
-          child: ShadInputFormField(
-            id: EvaluationItemFormFields.labelFalseId,
-            label: const Text(EvaluationStrings.labelFalse),
-            placeholder: const Text(EvaluationStrings.no),
-            keyboardType: TextInputType.text,
+          child: LabeledFormRow(
+            label: EvaluationStrings.labelFalse,
+            field: ShadInputFormField(
+              id: EvaluationItemFormFields.labelFalseId,
+              placeholder: const Text(EvaluationStrings.no),
+              keyboardType: TextInputType.text,
+            ),
           ),
         ),
       ],
     ),
     EvaluationItemKind.singleChoice ||
-    EvaluationItemKind.multipleChoice => EvaluationLabelListFormField(
-      id: EvaluationItemFormFields.choicesId,
+    EvaluationItemKind.multipleChoice => LabeledFormRow(
       label: EvaluationStrings.choices,
-      addLabel: EvaluationStrings.choice,
-      validator: EvaluationItemFormValidators.choices,
+      required: true,
+      field: EvaluationLabelListFormField(
+        id: EvaluationItemFormFields.choicesId,
+        addLabel: EvaluationStrings.choice,
+        validator: EvaluationItemFormValidators.choices,
+      ),
     ),
     EvaluationItemKind.number ||
     EvaluationItemKind.qa ||

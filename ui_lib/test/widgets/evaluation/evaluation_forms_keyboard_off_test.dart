@@ -42,14 +42,14 @@ void main() {
       tester,
     ) async {
       await tallSurface(tester);
-      Widget form({required bool isSubmitting}) => wrapEvaluation(
+      Widget form({required bool enabled}) => wrapEvaluation(
         EvaluationTemplateCreateForm(
-          isSubmitting: isSubmitting,
+          enabled: enabled,
           onEditItem: (_) async => null,
           onEditSectionTitle: (_) async => null,
         ),
       );
-      await tester.pumpWidget(form(isSubmitting: false));
+      await tester.pumpWidget(form(enabled: true));
       await tester.showKeyboard(find.byType(EditableText));
       await tester.enterText(find.byType(EditableText), 'Skating');
       await tester.pumpAndSettle();
@@ -57,7 +57,7 @@ void main() {
       final before = _values(tester);
       expect(before[EvaluationTemplateCreateFormFields.nameId], 'Skating');
 
-      await tester.pumpWidget(form(isSubmitting: true));
+      await tester.pumpWidget(form(enabled: false));
       await tester.pumpAndSettle();
       expect(_focusInForm(tester), isFalse);
       await _type(tester);

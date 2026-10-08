@@ -1,8 +1,18 @@
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 import 'form_harness.dart';
+
+/// A field its form does not build again: a `const` one that is given no
+/// `enabled`.
+class _FieldBuiltOnce extends StatelessWidget {
+  const _FieldBuiltOnce();
+
+  @override
+  Widget build(BuildContext context) => ShadInputFormField(id: 'name');
+}
 
 void main() {
   group('Issue 61: the form test harness, on EventCancellationForm', () {
@@ -81,6 +91,30 @@ void main() {
         ),
       );
       expect(tried, 1);
+    });
+
+    testWidgets('Issue 94: it checks that a form turned off after it is '
+        'mounted draws every control off, and on again', (tester) async {
+      final checked = await expectDrawnOffWhenTurnedOff(
+        tester,
+        ({required enabled}) => EventCancellationForm(enabled: enabled),
+      );
+      expect(checked, 1);
+    });
+
+    testWidgets('Issue 94: it fails a form with a field that is not built '
+        'again when the form is turned off', (tester) async {
+      TestFailure? failure;
+      try {
+        await expectDrawnOffWhenTurnedOff(
+          tester,
+          ({required enabled}) =>
+              ShadForm(enabled: enabled, child: const _FieldBuiltOnce()),
+        );
+      } on TestFailure catch (e) {
+        failure = e;
+      }
+      expect(failure?.message, contains('controls still drawn on'));
     });
 
     testWidgets('Issue 61: it checks a form at phone width', (tester) async {

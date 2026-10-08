@@ -246,8 +246,8 @@ void main() {
         const ShadTimeOfDay(hour: 9, minute: 0, second: 0),
       );
       expect(body.totalDurationMinutes, 90);
-      expect(body.durationController.text, '1h 30m');
-      expect(find.text('1h 30m'), findsOneWidget);
+      // The Duration picker and the one session both show the length.
+      expect(find.text('1:30'), findsNWidgets(2));
     });
 
     testWidgets('tapping a weekday chip emits the toggled day in form value', (
@@ -302,60 +302,17 @@ void main() {
         // Initial state: split into two sessions of 30m each.
         expect(body.sessionDurations, [30, 30]);
 
-        body.durationController.text = '2h';
-        body.onTotalDurationTextChanged('2h');
+        body.onTotalDurationChanged(120);
         await tester.pumpAndSettle();
 
         expect(body.totalDurationMinutes, 120);
-        // Re-typing the total collapses back to a single session.
+        // A new total collapses back to a single session.
         expect(body.sessionDurations, [120]);
 
         final value = _read(formKey)!;
         expect(value.totalDurationMinutes, 120);
         // Single-row collapses to [] per buildSessions().
         expect(value.sessions, isEmpty);
-      },
-    );
-
-    testWidgets(
-      'unparseable duration text is ignored — state is unchanged',
-      (tester) async {
-        final formKey = await _pumpField(
-          tester,
-          initialValue: ProgrammeScheduleData(
-            weekdays: const {1},
-            startDate: DateTime(2026),
-            sessionStartTime: const ShadTimeOfDay(
-              hour: 9,
-              minute: 0,
-              second: 0,
-            ),
-            totalDurationMinutes: 60,
-          ),
-        );
-
-        final body = _body(tester)..onTotalDurationTextChanged('garbage');
-        await tester.pumpAndSettle();
-
-        expect(body.totalDurationMinutes, 60);
-        expect(_read(formKey)?.totalDurationMinutes, 60);
-      },
-    );
-
-    testWidgets(
-      'validateTotalDuration rejects non-positive and over-cap input',
-      (tester) async {
-        await _pumpField(tester);
-        final body = _body(tester);
-        expect(
-          body.validateTotalDuration('0'),
-          'Duration must be greater than 0',
-        );
-        expect(
-          body.validateTotalDuration('5h'),
-          contains('cannot exceed'),
-        );
-        expect(body.validateTotalDuration('2h'), isNull);
       },
     );
 
@@ -560,29 +517,5 @@ void main() {
         expect(body.sessionStartTimeController.hour, isNull);
       },
     );
-
-    testWidgets('formatDuration renders hours, half-hours, mixed, minutes', (
-      tester,
-    ) async {
-      await _pumpField(tester);
-      final body = _body(tester);
-      expect(body.formatDuration(60), '1h');
-      expect(body.formatDuration(90), '1h 30m');
-      expect(body.formatDuration(75), '1h 15m');
-      expect(body.formatDuration(15), '15m');
-    });
-
-    testWidgets('parseDuration accepts canonical and shorthand forms', (
-      tester,
-    ) async {
-      await _pumpField(tester);
-      final body = _body(tester);
-      expect(body.parseDuration('1h'), 60);
-      expect(body.parseDuration('1.5h'), 90);
-      expect(body.parseDuration('1h 30m'), 90);
-      expect(body.parseDuration('45m'), 45);
-      expect(body.parseDuration(''), isNull);
-      expect(body.parseDuration('xx'), isNull);
-    });
   });
 }

@@ -1,13 +1,14 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:cl_remote_store/cl_remote_store.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' show CircularProgressIndicator, Tooltip;
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart';
 
 import '../utils/member_write_messages.dart';
+import 'avatar_preview_dialog.dart';
 
 /// Picker function returning a [PickedImage] or `null` when the user
 /// cancels. Production callers should not override this; tests can.
@@ -52,25 +53,37 @@ class AvatarUploadAffordance extends ConsumerStatefulWidget {
       AvatarUploadAffordanceState();
 }
 
+/// State of [AvatarUploadAffordance]: the flow from the tap to the upload.
 class AvatarUploadAffordanceState
     extends ConsumerState<AvatarUploadAffordance> {
+  /// What the control reads on hover and to assistive technology.
+  static const String tooltip = 'Change photo';
+
+  /// Diameter of the round control.
+  static const double size = 36;
+
+  /// Size of the pencil, and of the spinner that takes its place.
+  static const double iconSize = 16;
+
   /// Guards the pick→preview→upload flow so a second tap on the pencil while
   /// the picker/preview is open can't launch a second file browser. The
   /// mutation provider's `isLoading` only covers the upload itself, not the
   /// picking phase, so it can't stand in for this.
-  bool _picking = false;
+  bool picking = false;
 
-  Future<void> _handleTap() async {
-    if (_picking) return;
-    setState(() => _picking = true);
+  /// Runs the pick→preview→upload flow, once at a time.
+  Future<void> handleTap() async {
+    if (picking) return;
+    setState(() => picking = true);
     try {
-      await _pickPreviewUpload();
+      await pickPreviewUpload();
     } finally {
-      if (mounted) setState(() => _picking = false);
+      if (mounted) setState(() => picking = false);
     }
   }
 
-  Future<void> _pickPreviewUpload() async {
+  /// Picks an image, shows it for confirmation and uploads it.
+  Future<void> pickPreviewUpload() async {
     final picked = await pickImageReportingErrors(
       context,
       picker: widget.picker ?? ref.read(imagePickerProvider),
@@ -129,23 +142,23 @@ class AvatarUploadAffordanceState
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    // The upload mutation drives the spinner; `_picking` only disables the
+    // The upload mutation drives the spinner; `picking` only disables the
     // control (so a second tap can't open another picker) without showing a
     // perpetual spinner through the pick/preview phase.
     final uploading = ref
         .watch(avatarMutationProvider(widget.username))
         .isLoading;
-    final disabled = _picking || uploading;
-    return Material(
-      color: Colors.transparent,
-      child: Tooltip(
-        message: 'Change photo',
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: disabled ? null : _handleTap,
+    final disabled = picking || uploading;
+    return Tooltip(
+      message: tooltip,
+      child: MouseRegion(
+        cursor: disabled ? MouseCursor.defer : SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: disabled ? null : handleTap,
           child: Container(
-            width: 36,
-            height: 36,
+            width: size,
+            height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: theme.colorScheme.background.withValues(alpha: 0.92),
@@ -154,116 +167,16 @@ class AvatarUploadAffordanceState
             alignment: Alignment.center,
             child: uploading
                 ? const SizedBox(
-                    width: 16,
-                    height: 16,
+                    width: iconSize,
+                    height: iconSize,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : Icon(
-                    Icons.edit,
-                    size: 16,
+                    LucideIcons.pencil,
+                    size: iconSize,
                     color: theme.colorScheme.foreground,
                   ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class PreviewDecision {
-  const PreviewDecision({required this.allowOthersToSee});
-  final bool allowOthersToSee;
-}
-
-Future<PreviewDecision?> showPreviewDialog(
-  BuildContext context,
-  PickedImage picked, {
-  required bool initialAllowOthersToSee,
-  bool showVisibilityChoice = true,
-}) {
-  return showShadDialog<PreviewDecision>(
-    context: context,
-    builder: (_) => AvatarPreviewDialog(
-      picked: picked,
-      initialAllowOthersToSee: initialAllowOthersToSee,
-      showVisibilityChoice: showVisibilityChoice,
-    ),
-  );
-}
-
-class AvatarPreviewDialog extends StatefulWidget {
-  const AvatarPreviewDialog({
-    required this.picked,
-    required this.initialAllowOthersToSee,
-    this.showVisibilityChoice = true,
-    super.key,
-  });
-  final PickedImage picked;
-  final bool initialAllowOthersToSee;
-
-  /// Whether the "Allow others to see my photo" checkbox is offered. False
-  /// for an admin changing a member's photo (club_client#35).
-  final bool showVisibilityChoice;
-
-  @override
-  State<AvatarPreviewDialog> createState() => AvatarPreviewDialogState();
-}
-
-class AvatarPreviewDialogState extends State<AvatarPreviewDialog> {
-  late bool allowOthersToSee = widget.initialAllowOthersToSee;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
-    return ShadDialog(
-      title: const Text('Update profile photo'),
-      child: SizedBox(
-        width: 320,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: AspectRatio(
-                aspectRatio: 1,
-                // Contain so the user sees the whole image they picked.
-                // Matches the BoxFit choice on the rendered avatar (#567).
-                child: Image.memory(
-                  Uint8List.fromList(widget.picked.bytes),
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-            if (widget.showVisibilityChoice) ...[
-              const SizedBox(height: 16),
-              ShadCheckbox(
-                value: allowOthersToSee,
-                onChanged: (v) => setState(() => allowOthersToSee = v),
-                label: Text(
-                  MemberWriteMessages.allowOthersToSeePhoto,
-                  style: theme.textTheme.small,
-                ),
-              ),
-            ],
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ShadButton.ghost(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
-                const SizedBox(width: 8),
-                ShadButton(
-                  onPressed: () => Navigator.of(context).pop(
-                    PreviewDecision(allowOthersToSee: allowOthersToSee),
-                  ),
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-          ],
         ),
       ),
     );

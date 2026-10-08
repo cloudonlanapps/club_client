@@ -5,7 +5,6 @@
 import 'package:cl_calendar/cl_calendar.dart' show CLDatePickerFormField;
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:cl_club_forms/src/widgets/event_schedule/duration_picker_column.dart';
-import 'package:cl_club_forms/src/widgets/event_schedule/duration_picker_dropdown.dart';
 import 'package:cl_club_forms/src/widgets/event_schedule/session_split_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,6 +12,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../support/camp_one_off_schedule_helpers.dart';
 import '../../support/form_harness.dart';
+import '../../support/programme_timetable_support.dart';
 
 const String _scheduleId = OneOffScheduleFormFields.scheduleId;
 const String _venueId = OneOffScheduleFormFields.venueId;
@@ -87,9 +87,9 @@ void main() {
       final state = await _pump(tester, _initial());
       expect(state.isDirty, isFalse);
 
-      await typeInRow(tester, 'Duration', '90m');
+      await pickDuration(tester, 1, 30);
       expect(state.isDirty, isTrue);
-      await typeInRow(tester, 'Duration', '2h');
+      await pickDuration(tester, 2);
       expect(state.isDirty, isFalse);
     });
 
@@ -239,7 +239,7 @@ void main() {
       expect(find.text('Hall'), findsNothing);
 
       // A session's length picker does not open, its remove button is dead.
-      await tester.tap(find.byType(DurationPickerDropdown).first);
+      await tester.tap(sessionLengthPickers().first);
       await tester.pumpAndSettle();
       expect(find.byType(DurationPickerColumn), findsNothing);
       for (final button in tester.widgetList<IconButton>(

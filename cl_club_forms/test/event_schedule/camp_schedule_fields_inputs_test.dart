@@ -12,6 +12,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../support/camp_one_off_schedule_helpers.dart';
 import '../support/form_harness.dart';
+import '../support/programme_timetable_support.dart';
 
 const _id = 'schedule';
 
@@ -117,7 +118,7 @@ void main() {
 
       expect(host.value, isNull);
       expect(textInRow('Training Days', '7'), findsOneWidget);
-      expect(textInRow('Duration', '2h'), findsOneWidget);
+      expect(textInRow('Duration', '2:00'), findsOneWidget);
 
       await pickScheduleDate(tester, DateTime(2026, 8, 3));
 
@@ -154,7 +155,7 @@ void main() {
       await typeInRow(tester, 'Training Days', '4');
       expect(host.reported.last, _seed().copyWith(trainingDays: 4));
 
-      await typeInRow(tester, 'Duration', '1h');
+      await pickDuration(tester, 1);
       expect(
         host.reported.last,
         _seed().copyWith(trainingDays: 4, durationMinutes: 60),
@@ -171,32 +172,10 @@ void main() {
 
       await typeInRow(tester, 'Training Days', '0');
       await typeInRow(tester, 'Training Days', 'x');
-      await typeInRow(tester, 'Duration', '0');
-      await typeInRow(tester, 'Duration', 'h');
 
       expect(host.reported, isEmpty);
       expect(host.value, _seed());
     });
-
-    for (final (text, minutes) in [
-      ('3h', 180),
-      ('1.5h', 90),
-      ('1.5', 90),
-      ('45m', 45),
-      ('2h 15m', 135),
-      ('2h15', 135),
-      (' 1H 30M ', 90),
-    ]) {
-      testWidgets('Issue 61: a duration typed as "$text" is $minutes '
-          'minutes', (tester) async {
-        final host = _Host();
-        await pumpForm(tester, host.build(initial: _seed()));
-
-        await typeInRow(tester, 'Duration', text);
-
-        expect(host.value!.durationMinutes, minutes);
-      });
-    }
 
     testWidgets('Issue 61: a new duration resets a split to one session', (
       tester,
@@ -210,7 +189,7 @@ void main() {
         [30, 90],
       );
 
-      await typeInRow(tester, 'Duration', '3h');
+      await pickDuration(tester, 3);
 
       expect(host.value!.sessions, isEmpty);
       expect(
@@ -275,7 +254,6 @@ void main() {
       await pumpForm(tester, host.build());
 
       await typeInRow(tester, 'Training Days', '');
-      await typeInRow(tester, 'Duration', '');
       expect(host.formKey.currentState!.saveAndValidate(), isFalse);
       await tester.pumpAndSettle();
 
@@ -286,10 +264,6 @@ void main() {
       expect(textInRow('Training Days', 'Required'), findsOneWidget);
       expect(
         textInRow('Start Time', 'Start time is required'),
-        findsOneWidget,
-      );
-      expect(
-        textInRow('Duration', 'Duration must be greater than 0'),
         findsOneWidget,
       );
     });

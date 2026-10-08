@@ -136,7 +136,8 @@ void main() {
       expect(body.selectedStartDate, DateTime(2026));
       expect(body.actualTrainingDays, 4);
       expect(body.durationMinutes, 90);
-      expect(body.durationController.text, '1h 30m');
+      // The Duration picker and the one session both show the length.
+      expect(find.text('1:30'), findsNWidgets(2));
       expect(body.trainingDaysController.text, '4');
     });
 
@@ -197,27 +198,12 @@ void main() {
           durationMinutes: 90,
         );
         final formKey = await _pumpField(tester, initialValue: initial);
-        final body = _body(tester)..onDurationTextChanged('2h');
+        final body = _body(tester)..onDurationChanged(120);
         await tester.pumpAndSettle();
         expect(body.durationMinutes, 120);
         expect(_read(formKey)!.durationMinutes, 120);
       },
     );
-
-    testWidgets('unparseable duration text leaves state unchanged', (
-      tester,
-    ) async {
-      final initial = CampScheduleData(
-        startDate: DateTime(2026),
-        trainingDays: 5,
-        sessionStartTime: const ShadTimeOfDay(hour: 9, minute: 0, second: 0),
-        durationMinutes: 90,
-      );
-      await _pumpField(tester, initialValue: initial);
-      final body = _body(tester)..onDurationTextChanged('xx');
-      await tester.pumpAndSettle();
-      expect(body.durationMinutes, 90);
-    });
 
     testWidgets(
       'Issue 702: splitting the daily session spills into a new segment and '
@@ -361,30 +347,6 @@ void main() {
       );
       final body = _body(tester);
       expect(body.durationDays, 7);
-    });
-
-    testWidgets('formatDuration renders minutes-only and decimal hours', (
-      tester,
-    ) async {
-      await _pumpField(tester);
-      final body = _body(tester);
-      expect(body.formatDuration(15), '15m');
-      expect(body.formatDuration(60), '1h');
-      expect(body.formatDuration(90), '1h 30m');
-      expect(body.formatDuration(75), '1h 15m');
-    });
-
-    testWidgets('parseDuration accepts canonical and shorthand forms', (
-      tester,
-    ) async {
-      await _pumpField(tester);
-      final body = _body(tester);
-      expect(body.parseDuration('2h'), 120);
-      expect(body.parseDuration('1.5h'), 90);
-      expect(body.parseDuration('1h 30m'), 90);
-      expect(body.parseDuration('45m'), 45);
-      expect(body.parseDuration(''), isNull);
-      expect(body.parseDuration('xx'), isNull);
     });
   });
 }

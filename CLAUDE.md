@@ -431,7 +431,7 @@ own isolated server.
 
 7. **Translate at the boundary, not in the form.** The form speaks flat UI fields and form-local value types. The SDK speaks typed domain models. An adapter layer bridges them — merging, assembling, denormalizing (`''` → `null`). The form never imports domain model classes for assembly. The shared forms in `cl_club_forms` are SDK-free precedents: `SignupForm` and `UserForm` both live in `cl_club_forms` (zero `club_sdk_2` dependency), expose form-local types (`SignupGender`, `FormAddress`), and leave SDK ↔ form adaptation to the caller (e.g. `cl_club_members` `user_form_helpers.dart`, `cl_member_auth` `signup_view.dart`).
 
-8. **isDirty from the framework.** Compare `ShadForm.initialValue` vs `ShadForm.value` using `mapEquals`. Normalize initial values (`null` → `''` for text fields) so comparison works cleanly.
+8. **isDirty from the framework.** Compare `ShadForm.initialValue` vs `ShadForm.value` using `mapEquals`. Normalize initial values (`null` → `''` for text fields) so comparison works cleanly. A form overrides `isDirty` when comparing the two maps would give the wrong answer: a composite field registers its inner inputs under generated ids; a value is a list; a field is not part of what is saved; or two values count as the same for the form though they are not equal (the same day, blank text and no value). The override says which in its doc comment.
 
 9. **Form-local values in, map out.** A shared form accepts a form-local `Map<String, dynamic>` of initial values (built by the caller's adapter from the domain model) and returns `Map<String, dynamic>` on submit. Adapter helpers — not the form — translate to and from SDK calls.
 

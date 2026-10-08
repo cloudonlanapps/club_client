@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart' show SectionEditButton;
 
 class _StubAuthNotifier extends AuthNotifier {
   _StubAuthNotifier(this._user);
@@ -62,11 +63,13 @@ void main() {
 
       // One edit pencil per section card (personal details, contact, address);
       // shown because the viewer is an admin acting on a mutable user.
-      expect(find.byIcon(LucideIcons.pencil), findsNWidgets(3));
+      // Counted by widget: the avatar's own pencil is not a section's
+      // (club_client#89).
+      expect(find.byType(SectionEditButton), findsNWidgets(3));
 
       // Tap an affordance to enter inline edit mode — should not throw layout
       // / overlay assertions.
-      await tester.tap(find.byIcon(LucideIcons.pencil).first);
+      await tester.tap(find.byType(SectionEditButton).first);
       await tester.pumpAndSettle();
 
       // Unmount the profile view by replacing the widget tree. This mimics

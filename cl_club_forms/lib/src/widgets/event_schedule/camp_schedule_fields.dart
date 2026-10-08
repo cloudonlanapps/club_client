@@ -7,8 +7,13 @@ import '../../models/camp_schedule_data.dart';
 import '../../models/session_input.dart';
 import '../form/labeled_form_row.dart';
 import 'camp_date_exclusion_calendar.dart';
+import 'schedule_duration_field.dart';
 import 'session_split_field.dart';
+import 'time_picker_empty_parts.dart';
 import 'two_column_grid.dart';
+
+/// The longest day of a camp the Duration picker offers.
+const int maxCampDurationMinutes = 8 * 60;
 
 /// `ShadForm`-compatible field for camp event schedule.
 ///
@@ -74,7 +79,7 @@ class CampScheduleFormFieldBodyState extends State<CampScheduleFormFieldBody> {
   late Set<DateTime> excludedDates;
   late List<SessionInput> sessions;
   final GlobalKey<SessionSplitFieldState> _splitKey = GlobalKey();
-  late TextEditingController durationController;
+  final GlobalKey<FormFieldState<ShadTimeOfDay>> _startTimeKey = GlobalKey();
   late TextEditingController trainingDaysController;
   late ShadTimePickerController sessionStartTimeController;
 
@@ -90,9 +95,6 @@ class CampScheduleFormFieldBodyState extends State<CampScheduleFormFieldBody> {
     durationMinutes = initial.durationMinutes;
     excludedDates = Set<DateTime>.from(initial.excludedDates);
     sessions = List<SessionInput>.from(initial.sessions);
-    durationController = TextEditingController(
-      text: formatDuration(durationMinutes),
-    );
     trainingDaysController = TextEditingController(
       text: actualTrainingDays.toString(),
     );
@@ -103,52 +105,14 @@ class CampScheduleFormFieldBodyState extends State<CampScheduleFormFieldBody> {
       // minute field is placeholder text, not a value.
       minute: initial.sessionStartTime?.minute ?? 0,
       second: 0,
-    );
+    )..addListener(onStartTimeControllerChanged);
   }
 
   @override
   void dispose() {
-    durationController.dispose();
     trainingDaysController.dispose();
     sessionStartTimeController.dispose();
     super.dispose();
-  }
-
-  String formatDuration(int minutes) {
-    final hours = minutes / 60;
-    if (hours == hours.truncateToDouble()) return '${hours.toInt()}h';
-    if (hours < 1) return '${minutes}m';
-    final whole = hours.truncate();
-    final fraction = minutes - whole * 60;
-    if (fraction == 30) return '${whole}h 30m';
-    return '${whole}h ${fraction}m';
-  }
-
-  int? parseDuration(String rawText) {
-    final text = rawText.trim().toLowerCase();
-    if (text.isEmpty) return null;
-    final compound = RegExp(r'^(\d+)h\s*(\d+)?m?$').firstMatch(text);
-    if (compound != null) {
-      final hours = int.tryParse(compound.group(1)!) ?? 0;
-      final mins = int.tryParse(compound.group(2) ?? '0') ?? 0;
-      return hours * 60 + mins;
-    }
-    final decimalHours = RegExp(r'^(\d+(?:\.\d+)?)h?$').firstMatch(text);
-    if (decimalHours != null) {
-      final hours = double.tryParse(decimalHours.group(1)!) ?? 0;
-      return (hours * 60).round();
-    }
-    final mOnly = RegExp(r'^(\d+)m$').firstMatch(text);
-    if (mOnly != null) return int.tryParse(mOnly.group(1)!);
-    return null;
-  }
-
-  String? validateDuration(String value) {
-    final parsed = parseDuration(value);
-    if (parsed == null || parsed <= 0) {
-      return 'Duration must be greater than 0';
-    }
-    return null;
   }
 
   void emit() {
@@ -164,14 +128,31 @@ class CampScheduleFormFieldBodyState extends State<CampScheduleFormFieldBody> {
     );
   }
 
-  void onDurationTextChanged(String value) {
-    final parsed = parseDuration(value);
-    if (parsed == null || parsed <= 0) return;
+  void onDurationChanged(int minutes) {
     // Changing the daily duration resets the session split to a single full
     // segment; the SessionSplitField mirrors this via its totalMinutes change.
     setState(() {
-      durationMinutes = parsed;
+      durationMinutes = minutes;
       sessions = const [];
+    });
+    emit();
+  }
+
+  /// The picker reports a time only once every part of it is filled. With
+  /// a part emptied the start time is empty too, so the required rule
+  /// refuses it.
+  void onStartTimeControllerChanged() {
+    if (sessionStartTimeController.value != null) return;
+    if (selectedSessionStartTime == null) return;
+    _startTimeKey.currentState?.didChange(null);
+  }
+
+  /// A start time that is set or moved takes the session split with it: the
+  /// split editor lays its rows out from the new start.
+  void onSessionStartTimeChanged(ShadTimeOfDay? time) {
+    setState(() {
+      selectedSessionStartTime = time;
+      sessions = _splitKey.currentState?.sessionsFrom(time) ?? sessions;
     });
     emit();
   }
@@ -265,46 +246,34 @@ class CampScheduleFormFieldBodyState extends State<CampScheduleFormFieldBody> {
             LabeledFormRow(
               label: 'Start Time',
               required: true,
-              field: ShadTimePickerFormField(
+              field: TimePickerEmptyParts(
                 controller: sessionStartTimeController,
-                initialValue: selectedSessionStartTime,
-                enabled: enabled,
-                showSeconds: false,
-                hourLabel: const SizedBox.shrink(),
-                minuteLabel: const SizedBox.shrink(),
-                // Match the plain inputs beside it: 14px digits (the picker
-                // defaults to 16) and no label gap (labels are hidden).
-                gap: 0,
-                style: ShadTheme.of(context).textTheme.muted,
-                validator: (time) =>
-                    time == null ? 'Start time is required' : null,
-                onChanged: (time) {
-                  setState(() => selectedSessionStartTime = time);
-                  emit();
-                },
+                child: ShadTimePickerFormField(
+                  key: _startTimeKey,
+                  controller: sessionStartTimeController,
+                  initialValue: selectedSessionStartTime,
+                  enabled: enabled,
+                  showSeconds: false,
+                  hourLabel: const SizedBox.shrink(),
+                  minuteLabel: const SizedBox.shrink(),
+                  // Match the plain inputs beside it: 14px digits (the picker
+                  // defaults to 16) and no label gap (labels are hidden).
+                  gap: 0,
+                  style: ShadTheme.of(context).textTheme.muted,
+                  validator: (time) =>
+                      time == null ? 'Start time is required' : null,
+                  onChanged: onSessionStartTimeChanged,
+                ),
               ),
             ),
             LabeledFormRow(
               label: 'Duration',
               required: true,
-              // Constrain to roughly the time picker's footprint (2×48 + gap)
-              // so the Duration box reads the same size as Start Time beside it
-              // rather than stretching the full column.
-              field: Align(
-                alignment: Alignment.centerLeft,
-                child: SizedBox(
-                  width: 104,
-                  child: ShadInputFormField(
-                    controller: durationController,
-                    enabled: enabled,
-                    keyboardType: TextInputType.text,
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    placeholder: const Text('2h'),
-                    validator: validateDuration,
-                    onChanged: onDurationTextChanged,
-                  ),
-                ),
+              field: ScheduleDurationField(
+                minutes: durationMinutes,
+                longestMinutes: maxCampDurationMinutes,
+                enabled: enabled,
+                onChanged: onDurationChanged,
               ),
             ),
           ],

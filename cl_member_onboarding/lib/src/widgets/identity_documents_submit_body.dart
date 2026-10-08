@@ -13,6 +13,7 @@ import '../models/identity_document_upload_errors.dart';
 import '../models/identity_documents_submit_sizes.dart';
 import '../models/identity_documents_submit_strings.dart';
 import '../models/onboarding_write_messages.dart';
+import 'identity_documents_privacy_policy_dialog.dart';
 import 'identity_documents_submit_actions.dart';
 import 'identity_documents_upload_tips.dart';
 
@@ -22,7 +23,8 @@ import 'identity_documents_upload_tips.dart';
 /// Documents are saved as they are added and removed
 /// (`IdentityDocumentsUploader`). Submit is available once one is there; it
 /// validates the consent (`IdentityDocumentsConsentForm`) and then moves the
-/// member to review.
+/// member to review. The consent line's link opens the privacy policy
+/// (`IdentityDocumentsPrivacyPolicyDialog`).
 class IdentityDocumentsSubmitBody extends ConsumerStatefulWidget {
   const IdentityDocumentsSubmitBody({
     required this.currentUser,
@@ -99,6 +101,16 @@ class IdentityDocumentsSubmitBodyState
         .discard(slot.id);
   }
 
+  /// Shows the privacy policy, from the link in the consent line.
+  void showPrivacyPolicy() {
+    unawaited(
+      showShadDialog<void>(
+        context: context,
+        builder: (_) => const IdentityDocumentsPrivacyPolicyDialog(),
+      ),
+    );
+  }
+
   /// Submits the application for review once the member has agreed to the
   /// privacy policy.
   Future<void> handleSubmit() async {
@@ -172,6 +184,7 @@ class IdentityDocumentsSubmitBodyState
                 IdentityDocumentsConsentForm(
                   key: consentKey,
                   enabled: !submitting,
+                  onShowPolicy: showPrivacyPolicy,
                 ),
                 const SizedBox(height: IdentityDocumentsSubmitSizes.gap),
                 IdentityDocumentsSubmitActions(

@@ -148,7 +148,7 @@ final List<_Case> _cases = [
   (
     name: 'IdentityDocumentsConsentForm',
     build: ({required enabled}) =>
-        IdentityDocumentsConsentForm(enabled: enabled),
+        IdentityDocumentsConsentForm(enabled: enabled, onShowPolicy: () {}),
     typed: false,
   ),
   (

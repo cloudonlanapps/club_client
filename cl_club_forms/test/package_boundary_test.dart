@@ -127,4 +127,21 @@ void main() {
       expect(unused, isEmpty, reason: 'exported, but used by no other package');
     });
   });
+
+  group('Issue 107: a form opens nothing', () {
+    test('Issue 107: cl_club_forms/lib calls no showShadDialog and holds no '
+        'dialog', () {
+      final files = _dartFiles('lib').toList();
+      expect(files, isNotEmpty);
+      final opens = RegExp(r'show\w*(Dialog|Sheet)\s*[<(]');
+      final builds = RegExp(r'\b\w*Dialog(\.\w+)?\(');
+      final offenders = [
+        for (final file in files)
+          if (_withoutComments(file.readAsStringSync()) case final code
+              when opens.hasMatch(code) || builds.hasMatch(code))
+            file.path,
+      ];
+      expect(offenders, isEmpty);
+    });
+  });
 }

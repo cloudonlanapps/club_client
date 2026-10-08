@@ -56,11 +56,27 @@ class UserPublicNameFieldsState extends State<UserPublicNameFields> {
           as bool? ??
       false;
 
+  /// Follows the public-profile tick. The public-name tick stays the same
+  /// field of the form and takes a new value: unticked when the profile is
+  /// made non-public, the value it opened with when it is made public.
+  void onPublicProfileChanged({required bool isPublic}) {
+    setState(() => isPublicProfile = isPublic);
+    final form = ShadForm.of(context);
+    form.setFieldValue<bool>(
+      UserFormFields.useNamePubliclyId,
+      isPublic &&
+          (form.initialValue[UserFormFields.useNamePubliclyId] as bool? ??
+              false),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final initial = ShadForm.of(context).initialValue;
     final initialUseName =
         initial[UserFormFields.useNamePubliclyId] as bool? ?? false;
+    final initialPublic =
+        initial[UserFormFields.isPublicProfileId] as bool? ?? false;
     final public = isPublicProfile;
 
     if (widget.canEditPublicProfile) {
@@ -68,19 +84,15 @@ class UserPublicNameFieldsState extends State<UserPublicNameFields> {
         children: [
           ShadCheckboxFormField(
             id: UserFormFields.isPublicProfileId,
-            initialValue: public,
+            initialValue: initialPublic,
             enabled: widget.enabled,
-            onChanged: (value) => setState(() => isPublicProfile = value),
+            onChanged: (value) => onPublicProfileChanged(isPublic: value),
             inputLabel: const Text(UserFormStrings.isPublicProfile),
           ),
           ShadCheckboxFormField(
-            // A new key per state of the tick above, so the field starts
-            // again unticked (and disabled) when the profile is made
-            // non-public.
-            key: ValueKey('${UserFormFields.useNamePubliclyId}-$public'),
             id: UserFormFields.useNamePubliclyId,
             enabled: widget.enabled && public,
-            initialValue: public && initialUseName,
+            initialValue: initialPublic && initialUseName,
             inputLabel: const Text(UserFormStrings.useMyNamePublicly),
           ),
         ],

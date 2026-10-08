@@ -14,6 +14,7 @@ import 'package:cl_remote_store/cl_remote_store.dart'
 import 'package:club_sdk_2/club_sdk_2.dart';
 
 import '../utils/camp_rrule_validator.dart';
+import '../utils/programme_schedule_sessions.dart';
 
 /// SDK ↔ `EventCreateForm` adapter (the form's single boundary).
 ///
@@ -126,7 +127,7 @@ class EventCreateFormSubmit {
         return (
           startTimeUtc: start.toUtc(),
           endTimeUtc: end.toUtc(),
-          rrule: _programmeRrule(data),
+          rrule: _programmeRrule(data, start),
           sessions: data.sessions.isNotEmpty
               ? _toSessions(data.sessions)
               : null,
@@ -142,15 +143,16 @@ class EventCreateFormSubmit {
       ),
   ];
 
-  static String? _programmeRrule(ProgrammeScheduleData data) {
+  /// The weekly rule of a programme whose first session starts at the local
+  /// [start]. The form speaks local weekdays; the rule names its days in
+  /// UTC, as the server expands it from the UTC start (club_client#119).
+  static String? _programmeRrule(ProgrammeScheduleData data, DateTime start) {
     if (data.weekdays.isEmpty) return null;
-    final byDay = (data.weekdays.toList()..sort())
-        .map((d) => ['', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'][d])
-        .join(',');
-    if (data.hasNoEndDate || data.endDate == null) {
-      return 'FREQ=WEEKLY;BYDAY=$byDay';
-    }
-    return 'FREQ=WEEKLY;BYDAY=$byDay;UNTIL=${_formatUntil(data.endDate!)}';
+    final weekly = programmeRruleFor(
+      shiftWeekdays(data.weekdays, -localDayShiftOf(start)),
+    );
+    if (data.hasNoEndDate || data.endDate == null) return weekly;
+    return '$weekly;UNTIL=${_formatUntil(data.endDate!)}';
   }
 
   static String _formatUntil(DateTime date) {

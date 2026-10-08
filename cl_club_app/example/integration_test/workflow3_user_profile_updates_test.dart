@@ -54,8 +54,8 @@ import 'package:cl_club_app/cl_club_app.dart';
 import 'package:cl_club_forms/cl_club_forms.dart' show SignupGender;
 import 'package:cl_club_forms/src/widgets/read_only_field.dart'
     show ReadOnlyField;
-import 'package:cl_club_members/src/views/user_profile_view.dart'
-    show AddressCard, PersonalDetailsCard;
+import 'package:cl_club_members/src/widgets/address_card.dart';
+import 'package:cl_club_members/src/widgets/personal_details_card.dart';
 import 'package:cl_club_members/src/widgets/user_contact_info_card.dart';
 import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'

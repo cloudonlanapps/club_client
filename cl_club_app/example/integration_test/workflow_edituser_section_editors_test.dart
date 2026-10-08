@@ -14,8 +14,8 @@
 //   5. Member confirms the updates on their own profile.
 //   6. Cleanup: admin soft-deletes the member; sudo soft-deletes admin + coach.
 
-import 'package:cl_club_members/src/views/user_profile_view.dart'
-    show AddressCard, PersonalDetailsCard;
+import 'package:cl_club_members/src/widgets/address_card.dart';
+import 'package:cl_club_members/src/widgets/personal_details_card.dart';
 import 'package:cl_club_members/src/widgets/user_contact_info_card.dart';
 import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'

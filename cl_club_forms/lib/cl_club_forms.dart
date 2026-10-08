@@ -121,6 +121,10 @@ export 'src/widgets/event_schedule/programme_schedule_adjust_form.dart'
     show ProgrammeScheduleAdjustForm, ProgrammeScheduleAdjustFormState;
 export 'src/widgets/event_schedule/programme_schedule_adjust_form_fields.dart'
     show ProgrammeScheduleAdjustFormFields;
+// The session split editor: its `HH:MM` helpers are the one reading and
+// writing of a session's times, for the adapters as for the forms.
+export 'src/widgets/event_schedule/session_split_field.dart'
+    show SessionSplitField;
 // A two-column layout that stacks on narrow surfaces
 export 'src/widgets/event_schedule/two_column_grid.dart' show TwoColumnGrid;
 // Group forms (pure UI, no SDK / no Riverpod). The shared eligibility field

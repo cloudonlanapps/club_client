@@ -31,13 +31,17 @@ class SessionSplitField extends StatefulWidget {
   final ValueChanged<List<SessionInput>> onChanged;
   final bool enabled;
 
+  /// Minutes in a day: where a session's times wrap to the next day.
+  static const int minutesPerDay = 24 * 60;
+
   /// Sum minutes from a `SessionInput` start/end pair. Tolerant of both
-  /// 24-hour `HH:MM[:SS]` and legacy `h:mm AM/PM` strings.
+  /// 24-hour `HH:MM[:SS]` and legacy `h:mm AM/PM` strings. An end earlier
+  /// than its start is on the next day.
   static int sessionMinutes(SessionInput s) {
     final start = parseHM(s.startTime);
     final end = parseHM(s.endTime);
     if (start == null || end == null) return 0;
-    return end - start;
+    return end >= start ? end - start : end + minutesPerDay - start;
   }
 
   static int? parseHM(String hm) =>
@@ -80,9 +84,12 @@ class SessionSplitField extends StatefulWidget {
     return hour * 60 + m + pmOffset;
   }
 
+  /// `HH:MM` for [minutes] past midnight; past the end of the day it wraps
+  /// to the next one, so no hour above 23 is written.
   static String formatHM(int minutes) {
-    final h = minutes ~/ 60;
-    final m = minutes % 60;
+    final ofDay = minutes % minutesPerDay;
+    final h = ofDay ~/ 60;
+    final m = ofDay % 60;
     return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
   }
 

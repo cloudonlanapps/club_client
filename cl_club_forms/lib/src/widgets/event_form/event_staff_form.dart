@@ -29,19 +29,18 @@ import 'event_staff_organizer_field.dart';
 /// `GlobalKey<EventStaffFormState>` ([FormContract]).
 class EventStaffForm extends StatefulWidget {
   const EventStaffForm({
-    required this.initialCoaches,
+    required this.initialValues,
     required this.onPickOrganizer,
     required this.onPickCoaches,
-    this.initialOrganizer,
     this.enabled = true,
     super.key,
   });
 
-  /// The event's organizer; null when it has none.
-  final EventStaffMember? initialOrganizer;
-
-  /// The event's coaches.
-  final List<EventStaffMember> initialCoaches;
+  /// Initial values: the event's organizer, an [EventStaffMember], under
+  /// [EventFormFields.organizerNameId] (none when left out), and its
+  /// coaches, a list of them, under [EventFormFields.coachNamesId] (none
+  /// when left out).
+  final Map<String, dynamic> initialValues;
 
   /// Picks the organizer to transfer to.
   final PickOrganizer onPickOrganizer;
@@ -88,13 +87,29 @@ class EventStaffFormState extends State<EventStaffForm>
         );
   }
 
+  /// The organizer the form opens with; null when the event has none.
+  EventStaffMember? get initialOrganizer =>
+      widget.initialValues[EventFormFields.organizerNameId]
+          as EventStaffMember?;
+
+  /// The coaches the form opens with.
+  List<EventStaffMember> get initialCoaches => [
+    for (final coach
+        in (widget.initialValues[EventFormFields.coachNamesId]
+                as List<dynamic>?) ??
+            const <dynamic>[])
+      coach as EventStaffMember,
+  ];
+
   @override
   Widget build(BuildContext context) {
+    final organizer = initialOrganizer;
+    final coaches = initialCoaches;
     return ShadForm(
       key: formKey,
       initialValue: {
-        EventFormFields.organizerNameId: widget.initialOrganizer,
-        EventFormFields.coachNamesId: widget.initialCoaches,
+        EventFormFields.organizerNameId: organizer,
+        EventFormFields.coachNamesId: coaches,
       },
       child: FormBody(
         error: formError,
@@ -104,7 +119,7 @@ class EventStaffFormState extends State<EventStaffForm>
             required: true,
             field: EventStaffOrganizerField(
               id: EventFormFields.organizerNameId,
-              initialValue: widget.initialOrganizer,
+              initialValue: organizer,
               enabled: widget.enabled,
               validator: EventStaffFormValidators.organizer,
               onPick: widget.onPickOrganizer,
@@ -114,7 +129,7 @@ class EventStaffFormState extends State<EventStaffForm>
             label: EventStaffFormStrings.coachesLabel,
             field: EventStaffCoachesField(
               id: EventFormFields.coachNamesId,
-              initialValue: widget.initialCoaches,
+              initialValue: coaches,
               enabled: widget.enabled,
               onPick: widget.onPickCoaches,
             ),

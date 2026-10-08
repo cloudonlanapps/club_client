@@ -48,7 +48,7 @@ Future<ProgrammeEndDateFormState> _mount(
     tester,
     ProgrammeEndDateForm(
       key: key,
-      initialDay: initialDay,
+      initialValues: {ProgrammeEndDateFormFields.lastDayId: initialDay},
       reasonRequired: reasonRequired,
       enabled: enabled,
       resultOf: (day) => 'Last session: day ${day.day}.',
@@ -232,6 +232,51 @@ void main() {
   });
 
   group('Issue 61: ProgrammeEndDateForm dirty check', () {
+    testWidgets('Issue 104: the form opens with its initialValues map, '
+        'clean, and another day makes it dirty', (tester) async {
+      final key = GlobalKey<ProgrammeEndDateFormState>();
+      await pumpForm(
+        tester,
+        ProgrammeEndDateForm(
+          key: key,
+          initialValues: {
+            ProgrammeEndDateFormFields.lastDayId: _day(9),
+            ProgrammeEndDateFormFields.reasonId: '',
+          },
+          reasonRequired: false,
+          resultOf: (day) => 'Last session: day ${day.day}.',
+        ),
+      );
+      final state = key.currentState!;
+
+      expect(find.text('Last session: day ${_day(9).day}.'), findsOneWidget);
+      expect(state.isDirty, isFalse);
+      expect(
+        state.validate()?[ProgrammeEndDateFormFields.lastDayId],
+        _day(9),
+      );
+
+      await _pick(tester, state, _day(10));
+      expect(state.isDirty, isTrue);
+    });
+
+    testWidgets('Issue 104: with nothing in initialValues the form opens '
+        'with no day, clean', (tester) async {
+      final key = GlobalKey<ProgrammeEndDateFormState>();
+      await pumpForm(
+        tester,
+        ProgrammeEndDateForm(
+          key: key,
+          initialValues: const {},
+          reasonRequired: false,
+          resultOf: (day) => 'Last session: day ${day.day}.',
+        ),
+      );
+
+      expect(find.textContaining('Last session'), findsNothing);
+      expect(key.currentState!.isDirty, isFalse);
+    });
+
     testWidgets('Issue 61: with no end yet, a picked day makes the form '
         'dirty and clearing it makes it clean', (tester) async {
       final state = await _mount(tester);
@@ -352,7 +397,9 @@ void main() {
       await expectFitsPhone(
         tester,
         ProgrammeEndDateForm(
-          initialDay: _day(9),
+          initialValues: {
+            ProgrammeEndDateFormFields.lastDayId: _day(9),
+          },
           reasonRequired: true,
           resultOf: (day) =>
               'Last session: Saturday 14 November 2026, then the programme '

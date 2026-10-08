@@ -27,6 +27,13 @@ Map<String, dynamic> buildVenueFormInitialValues(Venue? venue) {
   };
 }
 
+/// Builds the `LocationEditForm.initialValues` map from [venue]'s address
+/// and map link; each is empty when [venue] has none, or is null.
+Map<String, dynamic> buildLocationEditFormInitialValues(Venue? venue) => {
+  LocationEditFormFields.addressId: venue?.address ?? '',
+  LocationEditFormFields.mapUriId: venue?.mapUri ?? '',
+};
+
 /// Bridges the venue forms' values to the SDK create/update calls, and the
 /// server's refusals back to the forms.
 class VenueFormSubmit {

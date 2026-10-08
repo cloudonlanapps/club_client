@@ -58,6 +58,11 @@ class EventCancellationDialogState
       ? EventCancellationMessages.cancelCamp
       : EventCancellationMessages.callOff;
 
+  /// What the action's button reads while the server is asked.
+  String get inFlightLabel => isCamp
+      ? EventCancellationMessages.cancelling
+      : EventCancellationMessages.callingOff;
+
   /// The occurrence feed range holding the camp's remaining sessions.
   ClOccurrencesKey get sessionsRange =>
       (from: openedAt, to: lastOccurrenceEndUtc(widget.event));
@@ -161,7 +166,7 @@ class EventCancellationDialogState
         ),
         ShadButton.destructive(
           onPressed: canSubmit ? submit : null,
-          child: Text(actionLabel),
+          child: Text(isSubmitting ? inFlightLabel : actionLabel),
         ),
       ],
       child: Padding(

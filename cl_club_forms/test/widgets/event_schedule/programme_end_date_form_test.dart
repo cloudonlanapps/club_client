@@ -24,7 +24,7 @@ Future<ProgrammeEndDateFormState> _pump(
     ShadApp(
       home: Scaffold(
         body: ProgrammeEndDateForm(
-          initialDay: initialDay,
+          initialValues: {ProgrammeEndDateFormFields.lastDayId: initialDay},
           reasonRequired: reasonRequired,
           resultOf: (day) => 'Last session: day ${day.day}.',
         ),

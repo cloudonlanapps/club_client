@@ -33,16 +33,5 @@ abstract final class GroupEntries {
       formType: GroupEligibilityForm,
       builder: (key) => GroupEligibilityForm(key: key, initialValues: criteria),
     ),
-    FormDemoEntry(
-      id: 'group-eligibility-locked',
-      title: 'Group eligibility form, criteria locked',
-      group: FormDemoGroup.groups,
-      formType: GroupEligibilityForm,
-      builder: (key) => GroupEligibilityForm(
-        key: key,
-        criteriaLocked: true,
-        initialValues: criteria,
-      ),
-    ),
   ];
 }

@@ -14,17 +14,14 @@ import 'location_edit_form_fields.dart';
 /// `isDirty` to make an unchanged Save a no-op ([FormContract]).
 class LocationEditForm extends StatefulWidget {
   const LocationEditForm({
-    required this.initialAddress,
-    required this.initialMapUri,
+    required this.initialValues,
     this.enabled = true,
     super.key,
   });
 
-  /// The address the form starts with; empty when none is on file.
-  final String initialAddress;
-
-  /// The map link the form starts with; empty when none is on file.
-  final String initialMapUri;
+  /// Initial values, keyed by the ids of [LocationEditFormFields]: the
+  /// address and the map link, each a `String`; missing reads empty.
+  final Map<String, dynamic> initialValues;
 
   /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
@@ -52,8 +49,11 @@ class LocationEditFormState extends State<LocationEditForm>
     return ShadForm(
       key: formKey,
       initialValue: {
-        LocationEditFormFields.addressId: widget.initialAddress,
-        LocationEditFormFields.mapUriId: widget.initialMapUri,
+        for (final id in const [
+          LocationEditFormFields.addressId,
+          LocationEditFormFields.mapUriId,
+        ])
+          id: widget.initialValues[id] as String? ?? '',
       },
       child: FormBody(
         error: formError,

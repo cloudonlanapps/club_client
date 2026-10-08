@@ -61,6 +61,7 @@ export 'src/widgets/credentialed_network_image.dart'
 export 'src/widgets/credit/credit_count_chip.dart' show CreditCountChip;
 export 'src/widgets/date_day_label.dart' show DateDayLabel;
 export 'src/widgets/detail_row.dart' show DetailRow;
+export 'src/widgets/discard_changes_prompt.dart' show DiscardChangesPrompt;
 export 'src/widgets/error_view.dart' show ErrorTone, ErrorView;
 export 'src/widgets/evaluation/fill/evaluation_fill_body.dart'
     show EvaluationFillBody, EvaluationFillBodyState;

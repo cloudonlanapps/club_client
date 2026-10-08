@@ -158,7 +158,12 @@ void main() {
       expect(find.text(programmeNoEndDateLine), findsNothing);
 
       await _open(tester);
-      expect(_form(tester).widget.initialDay, _day(5));
+      expect(
+        _form(
+          tester,
+        ).widget.initialValues[ProgrammeEndDateFormFields.lastDayId],
+        _day(5),
+      );
       await _pick(tester, _day(9));
       await _press(tester, 'Save');
       expect(find.text(programmeEndDateChangedMessage), findsOneWidget);

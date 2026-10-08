@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cl_club_forms/cl_club_forms.dart'
     show GroupCreateForm, GroupCreateFormState, GroupFormFields;
 import 'package:cl_club_members/src/models/group_form_helpers.dart';
@@ -9,7 +11,7 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ConfirmDialog, TitleRow;
+import 'package:ui_lib/ui_lib.dart' show DiscardChangesPrompt, TitleRow;
 
 /// Admin create-group content view. No Scaffold — the host provides the shell.
 ///
@@ -145,32 +147,27 @@ class GroupCreateViewState extends ConsumerState<GroupCreateView> {
     );
   }
 
+  /// Leaves the view by Cancel, the back arrow or a system back. Asks first
+  /// when the form holds changes, read at that moment; does nothing while
+  /// the create is in flight.
   Future<void> confirmCancel() async {
+    if (isSubmitting) return;
     final dirty = createFormKey.currentState?.isDirty ?? false;
-    if (!dirty) {
-      widget.onCancel();
-      return;
+    if (dirty) {
+      final discard = await DiscardChangesPrompt.show(context);
+      if (!discard || !mounted) return;
     }
-    final confirmed = await ConfirmDialog.show(
-      context,
-      title: 'Discard changes?',
-      message: 'You have unsaved changes. Are you sure you want to leave?',
-      confirmLabel: 'Discard',
-      destructive: true,
-    );
-    if (confirmed && mounted) {
-      widget.onCancel();
-    }
+    widget.onCancel();
   }
 
   @override
   Widget build(BuildContext context) {
-    final dirty = createFormKey.currentState?.isDirty ?? false;
     return PopScope(
-      canPop: !dirty && !isSubmitting,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        await confirmCancel();
+      // A system back never pops by itself: whether the form holds changes
+      // is only known when back is pressed, so the handler decides.
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(confirmCancel());
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

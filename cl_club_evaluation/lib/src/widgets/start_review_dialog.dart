@@ -124,7 +124,11 @@ class StartReviewDialogState extends ConsumerState<StartReviewDialog> {
         ShadButton(
           enabled: !creating,
           onPressed: start,
-          child: const Text(EvaluationViewStrings.start),
+          child: Text(
+            creating
+                ? EvaluationViewStrings.starting
+                : EvaluationViewStrings.start,
+          ),
         ),
       ],
       child: EvaluationStartForm(

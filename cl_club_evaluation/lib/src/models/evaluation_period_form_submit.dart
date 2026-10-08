@@ -1,9 +1,27 @@
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEvaluationsMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart' as sdk;
-import 'package:ui_lib/ui_lib.dart' show EvaluationStartFormFields;
+import 'package:ui_lib/ui_lib.dart'
+    show EvaluationStartChoice, EvaluationStartFormFields;
 
 import 'evaluation_period_dates.dart';
+
+/// SDK → form for the Review Period section editor (form rule 18): builds
+/// the `EvaluationPeriodForm.initialValues` map from [evaluation]: its
+/// period as local days (none when it has no period, or is null), and its
+/// [event] as the form names it (`null` when the evaluation is general).
+Map<String, dynamic> buildEvaluationPeriodFormInitialValues(
+  sdk.EvaluationStaffView? evaluation, {
+  EvaluationStartChoice? event,
+}) => {
+  EvaluationStartFormFields.eventId: event,
+  EvaluationStartFormFields.periodStartId: EvaluationPeriodDates.toLocalDate(
+    evaluation?.periodStartUtc,
+  ),
+  EvaluationStartFormFields.periodEndId: EvaluationPeriodDates.toLocalDate(
+    evaluation?.periodEndUtc,
+  ),
+};
 
 /// Form → SDK for the Review Period section editor (form rule 18): sends
 /// the event and the period through `updateEvaluation`, each only when it

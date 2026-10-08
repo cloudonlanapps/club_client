@@ -7,6 +7,7 @@ import '../../models/camp_schedule_data.dart';
 import '../../models/session_input.dart';
 import '../form/labeled_form_row.dart';
 import 'camp_date_exclusion_calendar.dart';
+import 'camp_schedule_form_validators.dart';
 import 'schedule_duration_field.dart';
 import 'session_split_field.dart';
 import 'time_picker_empty_parts.dart';
@@ -193,8 +194,7 @@ class CampScheduleFormFieldBodyState extends State<CampScheduleFormFieldBody> {
                   child: CLDatePickerFormField(
                     initialValue: selectedStartDate,
                     enabled: enabled,
-                    validator: (date) =>
-                        date == null ? 'Start date is required' : null,
+                    validator: CampScheduleFormValidators.startDate,
                     onChanged: (date) {
                       setState(() => selectedStartDate = date);
                       emit();
@@ -216,14 +216,7 @@ class CampScheduleFormFieldBodyState extends State<CampScheduleFormFieldBody> {
                     enabled: enabled,
                     keyboardType: TextInputType.number,
                     placeholder: const Text('7'),
-                    validator: (v) {
-                      if (v.isEmpty) return 'Required';
-                      final days = int.tryParse(v);
-                      if (days == null || days < 1) {
-                        return 'Enter a valid number';
-                      }
-                      return null;
-                    },
+                    validator: CampScheduleFormValidators.trainingDays,
                     onChanged: (value) {
                       final days = int.tryParse(value);
                       if (days != null && days > 0) {
@@ -260,8 +253,7 @@ class CampScheduleFormFieldBodyState extends State<CampScheduleFormFieldBody> {
                   // defaults to 16) and no label gap (labels are hidden).
                   gap: 0,
                   style: ShadTheme.of(context).textTheme.muted,
-                  validator: (time) =>
-                      time == null ? 'Start time is required' : null,
+                  validator: CampScheduleFormValidators.startTime,
                   onChanged: onSessionStartTimeChanged,
                 ),
               ),

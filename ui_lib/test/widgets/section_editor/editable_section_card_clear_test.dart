@@ -3,11 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart';
 
-/// A host whose "form" is one flag: it holds a value until Reset empties it.
+/// A host whose "form" is one flag: it holds a value until Clear empties it.
 class _Host extends StatefulWidget {
-  const _Host({required this.offersReset, this.startsWithValue = true});
+  const _Host({required this.offersClear, this.startsWithValue = true});
 
-  final bool offersReset;
+  final bool offersClear;
   final bool startsWithValue;
 
   @override
@@ -16,7 +16,7 @@ class _Host extends StatefulWidget {
 
 class _HostState extends State<_Host> {
   late bool hasValue = widget.startsWithValue;
-  int resets = 0;
+  int clears = 0;
   final List<String> saved = [];
 
   @override
@@ -33,13 +33,13 @@ class _HostState extends State<_Host> {
         saved.add(value);
         return true;
       },
-      onReset: widget.offersReset
+      onClear: widget.offersClear
           ? () => setState(() {
               hasValue = false;
-              resets++;
+              clears++;
             })
           : null,
-      canReset: widget.offersReset ? () => hasValue : null,
+      canClear: widget.offersClear ? () => hasValue : null,
     );
   }
 }
@@ -56,70 +56,70 @@ Future<void> _openEditor(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('Issue 34: a card given no reset action shows no Reset', (
+  testWidgets('Issue 34: a card given no clear action shows no Clear', (
     tester,
   ) async {
-    await _pump(tester, const _Host(offersReset: false));
-    expect(find.text('Reset'), findsNothing);
+    await _pump(tester, const _Host(offersClear: false));
+    expect(find.text('Clear'), findsNothing);
 
     await _openEditor(tester);
 
     expect(find.text('Cancel'), findsOneWidget);
     expect(find.text('Save'), findsOneWidget);
-    expect(find.text('Reset'), findsNothing);
+    expect(find.text('Clear'), findsNothing);
   });
 
-  testWidgets('Issue 34: Reset shows in edit mode only, beside Cancel and '
+  testWidgets('Issue 34: Clear shows in edit mode only, beside Cancel and '
       'Save', (tester) async {
-    await _pump(tester, const _Host(offersReset: true));
-    expect(find.text('Reset'), findsNothing, reason: 'read mode');
+    await _pump(tester, const _Host(offersClear: true));
+    expect(find.text('Clear'), findsNothing, reason: 'read mode');
 
     await _openEditor(tester);
 
-    final reset = find.text('Reset');
-    expect(reset, findsOneWidget);
-    final resetBox = tester.getRect(reset);
+    final clear = find.text('Clear');
+    expect(clear, findsOneWidget);
+    final clearBox = tester.getRect(clear);
     final cancelBox = tester.getRect(find.text('Cancel'));
     final saveBox = tester.getRect(find.text('Save'));
-    expect(resetBox.center.dy, moreOrLessEquals(cancelBox.center.dy));
-    expect(resetBox.right, lessThan(cancelBox.left));
+    expect(clearBox.center.dy, moreOrLessEquals(cancelBox.center.dy));
+    expect(clearBox.right, lessThan(cancelBox.left));
     expect(cancelBox.right, lessThan(saveBox.left));
   });
 
-  testWidgets('Issue 34: Reset is hidden while the form holds no value', (
+  testWidgets('Issue 34: Clear is hidden while the form holds no value', (
     tester,
   ) async {
     await _pump(
       tester,
-      const _Host(offersReset: true, startsWithValue: false),
+      const _Host(offersClear: true, startsWithValue: false),
     );
     await _openEditor(tester);
 
     expect(find.text('Save'), findsOneWidget);
-    expect(find.text('Reset'), findsNothing);
+    expect(find.text('Clear'), findsNothing);
   });
 
-  testWidgets('Issue 34: pressing Reset calls the host, hides the button and '
+  testWidgets('Issue 34: pressing Clear calls the host, hides the button and '
       'keeps the card in edit mode without saving', (tester) async {
-    final host = await _pump(tester, const _Host(offersReset: true));
+    final host = await _pump(tester, const _Host(offersClear: true));
     await _openEditor(tester);
 
-    await tester.tap(find.text('Reset'));
+    await tester.tap(find.text('Clear'));
     await tester.pumpAndSettle();
 
-    expect(host.resets, 1);
+    expect(host.clears, 1);
     expect(host.saved, isEmpty);
     expect(find.text('EMPTY FORM'), findsOneWidget);
-    expect(find.text('Reset'), findsNothing);
+    expect(find.text('Clear'), findsNothing);
     expect(find.text('Save'), findsOneWidget, reason: 'still editing');
   });
 
-  testWidgets('Issue 34: Save after Reset saves the emptied form', (
+  testWidgets('Issue 34: Save after Clear saves the emptied form', (
     tester,
   ) async {
-    final host = await _pump(tester, const _Host(offersReset: true));
+    final host = await _pump(tester, const _Host(offersClear: true));
     await _openEditor(tester);
-    await tester.tap(find.text('Reset'));
+    await tester.tap(find.text('Clear'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Save'));

@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:cl_club_forms/cl_club_forms.dart'
     show VenueCreateForm, VenueCreateFormState;
 import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show TitleRow;
+import 'package:ui_lib/ui_lib.dart' show DiscardChangesPrompt, TitleRow;
 
 import '../models/venue_form_helpers.dart';
 import '../utils/venue_write_messages.dart';
@@ -74,42 +76,27 @@ class VenueCreateViewState extends ConsumerState<VenueCreateView> {
     }
   }
 
+  /// Leaves the view by Cancel, the back arrow or a system back. Asks first
+  /// when the form holds changes, read at that moment; does nothing while
+  /// the create is in flight.
   Future<void> confirmCancel() async {
+    if (isSubmitting) return;
     final dirty = venueFormKey.currentState?.isDirty ?? false;
-    if (!dirty) {
-      widget.onCancel();
-      return;
+    if (dirty) {
+      final discard = await DiscardChangesPrompt.show(context);
+      if (!discard || !mounted) return;
     }
-    final confirmed = await showShadDialog<bool>(
-      context: context,
-      builder: (context) => ShadDialog(
-        title: const Text('Discard changes?'),
-        description: const Text('You have unsaved changes.'),
-        actions: [
-          ShadButton.outline(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          ShadButton.destructive(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Discard'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true && mounted) {
-      widget.onCancel();
-    }
+    widget.onCancel();
   }
 
   @override
   Widget build(BuildContext context) {
-    final dirty = venueFormKey.currentState?.isDirty ?? false;
     return PopScope(
-      canPop: !dirty && !isSubmitting,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        await confirmCancel();
+      // A system back never pops by itself: whether the form holds changes
+      // is only known when back is pressed, so the handler decides.
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(confirmCancel());
       },
       child: Column(
         children: [
@@ -144,7 +131,7 @@ class VenueCreateViewState extends ConsumerState<VenueCreateView> {
                           ShadButton.outline(
                             onPressed: isSubmitting ? null : submit,
                             child: Text(
-                              isSubmitting ? 'Creating...' : 'Create venue',
+                              isSubmitting ? 'Creating…' : 'Create venue',
                             ),
                           ),
                         ],

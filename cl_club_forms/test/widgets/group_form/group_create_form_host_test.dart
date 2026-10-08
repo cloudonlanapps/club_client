@@ -114,7 +114,7 @@ void main() {
       expect(state.isDirty, isFalse);
     });
 
-    testWidgets('Issue 61: Reset on a group that started with criteria '
+    testWidgets('Issue 61: Clear on a group that started with criteria '
         'leaves it dirty', (tester) async {
       final state = await _pump(
         tester,
@@ -126,7 +126,7 @@ void main() {
       );
       expect(state.isDirty, isFalse);
 
-      await tester.tap(find.text(FormStrings.reset));
+      await tester.tap(find.text(FormStrings.clear));
       await tester.pumpAndSettle();
 
       expect(state.isDirty, isTrue);
@@ -176,7 +176,7 @@ void main() {
     });
 
     testWidgets('Issue 61: with enabled false no field of a criteria group '
-        'responds, nor does Reset', (tester) async {
+        'responds, nor does Clear', (tester) async {
       final initial = _initial(
         name: 'Juniors',
         mode: GroupMode.auto,
@@ -185,7 +185,7 @@ void main() {
       await _pump(tester, initialValues: initial, enabled: false);
 
       await expectNoFieldResponds(tester);
-      await tester.tap(find.text(FormStrings.reset), warnIfMissed: false);
+      await tester.tap(find.text(FormStrings.clear), warnIfMissed: false);
       await tester.pumpAndSettle();
       expect(formOf(tester).value, initial);
     });
@@ -194,7 +194,7 @@ void main() {
       await expectFitsPhone(tester, const GroupCreateForm());
     });
 
-    testWidgets('Issue 61: it fits a phone with its criteria and Reset', (
+    testWidgets('Issue 61: it fits a phone with its criteria and Clear', (
       tester,
     ) async {
       await expectFitsPhone(
@@ -207,7 +207,26 @@ void main() {
           ),
         ),
       );
-      expect(find.text(FormStrings.reset), findsOneWidget);
+      expect(find.text(FormStrings.clear), findsOneWidget);
     });
+  });
+
+  testWidgets('Issue 106: the eligibility block empties with a small ghost '
+      'button that reads Clear', (tester) async {
+    await _pump(
+      tester,
+      initialValues: _initial(
+        name: 'Juniors',
+        mode: GroupMode.auto,
+        gender: GroupGender.boys,
+      ),
+    );
+
+    expect(find.text('Reset'), findsNothing);
+    final button = tester.widget<ShadButton>(
+      find.widgetWithText(ShadButton, 'Clear'),
+    );
+    expect(button.variant, ShadButtonVariant.ghost);
+    expect(button.size, ShadButtonSize.sm);
   });
 }

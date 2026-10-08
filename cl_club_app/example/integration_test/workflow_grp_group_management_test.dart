@@ -9,6 +9,9 @@
 // lists the create and the member add, and a plain admin's dashboard has
 // no global Audit Log entry.
 //
+// Scene 1 also edits the Eligibility of groups that have members
+// (club_client#96): the server's two refusals show in the editor.
+//
 // Setup is sudo-via-SDK (one admin + four members) so the UI scenes can
 // concentrate on group CRUD and the member-facing surfaces. Cleanup
 // soft-deletes the three groups via the admin UI then sudo deletes the
@@ -22,6 +25,8 @@ import 'package:cl_club_forms/cl_club_forms.dart'
     show AgeEligibilityText, GroupGender, GroupMode;
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
     show AgeEligibilityFormFields;
+import 'package:cl_club_members/src/models/group_form_helpers.dart'
+    show GroupFormSubmit;
 import 'package:cl_club_members/src/models/group_list_filter.dart'
     show GroupListFilter, GroupTypeFilter;
 import 'package:cl_club_members/src/providers/group_list_filter.dart'
@@ -32,6 +37,8 @@ import 'package:cl_club_members/src/widgets/add_member_dialog.dart'
     show AddMemberResultDialog;
 import 'package:cl_club_members/src/widgets/cards/group_card.dart'
     show GroupCard;
+import 'package:cl_club_members/src/widgets/group_eligibility_section.dart'
+    show GroupEligibilitySection;
 import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
@@ -41,7 +48,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
-    show ActionButton, NoLongerEligibleLabel, UserSelectionDialogContent;
+    show
+        ActionButton,
+        NoLongerEligibleLabel,
+        SectionEditButton,
+        UserSelectionDialogContent;
 
 import '_helpers/audit_log.dart';
 import '_helpers/auth.dart';
@@ -79,6 +90,10 @@ const _kMaxAgeYears = 16;
 const _kInsideAgeYears = 12;
 const _kOutsideAgeYears = 30;
 const _kAgeSentence = 'Open to members aged $_kMinAgeYears to $_kMaxAgeYears';
+
+/// A maximum age below the age of the members inside the band
+/// (club_client#96): criteria with it leave them out.
+const int _kTooLowMaxAgeYears = _kInsideAgeYears - 2;
 final DateTime _kInsideDob = _bornYearsAgo(_kInsideAgeYears);
 final DateTime _kOutsideDob = _bornYearsAgo(_kOutsideAgeYears);
 
@@ -347,6 +362,49 @@ void main() {
       );
       expect(find.textContaining('no longer eligible'), findsNothing);
 
+      // Issue 96: the Semi-auto group has a member (A) and its Eligibility
+      // is edited like any other group's. A maximum age A is over is
+      // refused by the server: the editor stays open and names A inline,
+      // and the group keeps its band.
+      await _openEligibilityEditor(tester);
+      await enterTextById(
+        tester,
+        AgeEligibilityFormFields.maxAgeYearsId,
+        '$_kTooLowMaxAgeYears',
+      );
+      _invokeEligibilityButton(tester, 'Save');
+      final membersIneligible = find.descendant(
+        of: find.byType(GroupEligibilitySection),
+        matching: find.textContaining(
+          "don't meet the new criteria: $_kMemberA.",
+        ),
+      );
+      await waitFor(
+        tester,
+        () => membersIneligible.evaluate().isNotEmpty,
+        description:
+            'Issue 96: the Eligibility editor to name member A, who is '
+            'over the new maximum age',
+      );
+      expect(
+        _eligibilityButton('Save'),
+        findsOneWidget,
+        reason: 'Issue 96: the editor stays open on the refusal',
+      );
+      expect(
+        textById(tester, AgeEligibilityFormFields.maxAgeYearsId),
+        '$_kTooLowMaxAgeYears',
+        reason: 'Issue 96: what was typed is still there',
+      );
+      expect(
+        container(
+          tester,
+        ).read(clGroupsMasterProvider).valueOrNull![semiId]!.maxAge,
+        const Age(years: _kMaxAgeYears),
+        reason: 'Issue 96: a refused change stores nothing',
+      );
+      await _cancelEligibilityEditor(tester);
+
       // Eligible check on Manual: all four present (no criteria).
       await _backToGroupListAndOpen(tester, _kGroupManual);
       await _openAddMemberDialog(tester);
@@ -364,6 +422,43 @@ void main() {
         );
       }
       await _selectAndConfirmInDialog(tester, _kMemberD);
+
+      // Issue 96: the Manual group now has a member (D). Switching it to
+      // Auto is refused by the server, and the refusal shows on the Mode
+      // field of the editor; the group stays Manual.
+      await _openEligibilityEditor(tester);
+      _setEligibilityFormValues(tester, {'mode': GroupMode.auto});
+      await tester.pump();
+      await enterTextById(
+        tester,
+        AgeEligibilityFormFields.minAgeYearsId,
+        '$_kMinAgeYears',
+      );
+      _invokeEligibilityButton(tester, 'Save');
+      final membersExist = find.descendant(
+        of: find.byType(GroupEligibilitySection),
+        matching: find.text(GroupFormSubmit.membersExistMessage),
+      );
+      await waitFor(
+        tester,
+        () => membersExist.evaluate().isNotEmpty,
+        description:
+            'Issue 96: the Mode field to say the group still has members',
+      );
+      expect(
+        _eligibilityButton('Save'),
+        findsOneWidget,
+        reason: 'Issue 96: the editor stays open on the refusal',
+      );
+      expect(
+        container(
+          tester,
+        ).read(clGroupsMasterProvider).valueOrNull![manualId]!.kind,
+        GroupKind.manual,
+        reason: 'Issue 96: a refused change stores nothing',
+      );
+      await _cancelEligibilityEditor(tester);
+
       // Use semiId/manualId/autoId in later assertions.
       // ignore: unnecessary_statements
       [semiId, manualId, autoId];
@@ -780,6 +875,69 @@ Future<void> _createGroupViaUi(
     },
     description: 'group "$name" to appear in clGroupsMasterProvider',
     timeout: const Duration(seconds: 30),
+  );
+}
+
+/// The [label] button of the Eligibility section's open editor.
+Finder _eligibilityButton(String label) => find.descendant(
+  of: find.byType(GroupEligibilitySection),
+  matching: find.widgetWithText(ShadButton, label),
+);
+
+/// Opens the Eligibility editor of the group profile on screen, by the
+/// section's pencil (shown to an admin of an active group).
+Future<void> _openEligibilityEditor(WidgetTester tester) async {
+  final pencil = find.descendant(
+    of: find.byType(GroupEligibilitySection),
+    matching: find.byType(SectionEditButton),
+  );
+  await waitFor(
+    tester,
+    () => pencil.evaluate().isNotEmpty,
+    description: 'edit pencil on the Eligibility section',
+  );
+  tester.widget<SectionEditButton>(pencil.first).onTap.call();
+  await settle(tester);
+  await waitFor(
+    tester,
+    () => _eligibilityButton('Save').evaluate().isNotEmpty,
+    description: 'the Eligibility editor to open',
+  );
+}
+
+/// Invokes the [label] button of the Eligibility editor. The button may sit
+/// below the fold, where a tap would miss.
+void _invokeEligibilityButton(WidgetTester tester, String label) =>
+    invokeShadButton(
+      tester,
+      _eligibilityButton(label),
+      reason: 'Eligibility editor $label',
+    );
+
+/// Writes [values] into the Eligibility editor's form: the way to set a
+/// select (see `setShadFormValues`), scoped to this section's form.
+void _setEligibilityFormValues(
+  WidgetTester tester,
+  Map<String, dynamic> values,
+) {
+  tester
+      .state<ShadFormState>(
+        find.descendant(
+          of: find.byType(GroupEligibilitySection),
+          matching: find.byType(ShadForm),
+        ),
+      )
+      .setValue(values);
+}
+
+/// Cancels the Eligibility editor and waits for the section to read again.
+Future<void> _cancelEligibilityEditor(WidgetTester tester) async {
+  _invokeEligibilityButton(tester, 'Cancel');
+  await settle(tester);
+  await waitFor(
+    tester,
+    () => _eligibilityButton('Save').evaluate().isEmpty,
+    description: 'the Eligibility editor to close',
   );
 }
 

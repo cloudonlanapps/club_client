@@ -29,7 +29,7 @@ class EventEligibilityForm extends StatefulWidget {
   /// (`AgeEligibilityFormValues.initial`).
   final Map<String, dynamic> initialValues;
 
-  /// Called whenever a field's value changes, a reset included, so the host
+  /// Called whenever a field's value changes, a clear included, so the host
   /// can re-read [EventEligibilityFormState.hasValue].
   final VoidCallback? onChanged;
 
@@ -64,7 +64,7 @@ class EventEligibilityFormState extends State<EventEligibilityForm>
   String? crossFieldError(Map<String, dynamic> values) =>
       AgeEligibilityFormValidators.band(values);
 
-  /// Whether the form holds any eligibility a [reset] would empty.
+  /// Whether the form holds any eligibility a [clear] would empty.
   bool get hasValue {
     final form = formKey.currentState;
     return form != null && EventEligibilityForm.holdsValue(form.value);
@@ -73,7 +73,7 @@ class EventEligibilityFormState extends State<EventEligibilityForm>
   /// Puts Gender back to Any and empties both ages and the Strict age check.
   /// Nothing is stored: the form is then changed, and the host's Save sends
   /// the empty eligibility.
-  void reset() {
+  void clear() {
     formKey.currentState?.setValue({
       EventFormFields.genderId: EventGender.any,
       ...AgeEligibilityFormValues.initial(),

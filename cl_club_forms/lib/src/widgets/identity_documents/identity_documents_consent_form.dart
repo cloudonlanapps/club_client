@@ -5,6 +5,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../form/form_body.dart';
 import '../form/form_contract.dart';
 import 'identity_documents_consent_form_fields.dart';
+import 'identity_documents_consent_form_validators.dart';
 import 'identity_documents_consent_strings.dart';
 
 /// Pure-UI form holding a member's agreement to the privacy policy for
@@ -78,8 +79,7 @@ class IdentityDocumentsConsentFormState
           ShadCheckboxFormField(
             id: IdentityDocumentsConsentFormFields.privacyAcceptedId,
             initialValue: false,
-            validator: (accepted) =>
-                accepted ? null : IdentityDocumentsConsentStrings.required,
+            validator: IdentityDocumentsConsentFormValidators.consent,
             inputLabel: Text.rich(
               TextSpan(
                 children: [

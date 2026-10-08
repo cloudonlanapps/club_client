@@ -37,8 +37,10 @@ EventStaffForm _editor(
 }) {
   return EventStaffForm(
     key: key,
-    initialOrganizer: organizer,
-    initialCoaches: coaches,
+    initialValues: {
+      EventFormFields.organizerNameId: organizer,
+      EventFormFields.coachNamesId: coaches,
+    },
     onPickOrganizer: () async => transferTo,
     onPickCoaches: (exclude) async =>
         addCoaches.where((c) => !exclude.contains(c.username)).toList(),
@@ -251,8 +253,10 @@ void main() {
         _wrap(
           EventStaffForm(
             key: key,
-            initialOrganizer: _organizer,
-            initialCoaches: const [_coachA, _coachB],
+            initialValues: const {
+              EventFormFields.organizerNameId: _organizer,
+              EventFormFields.coachNamesId: [_coachA, _coachB],
+            },
             onPickOrganizer: () async => null,
             onPickCoaches: (exclude) async {
               excluded = {...exclude};
@@ -322,8 +326,10 @@ void main() {
           EventStaffForm(
             key: key,
             enabled: false,
-            initialOrganizer: _organizer,
-            initialCoaches: const [_coachA],
+            initialValues: const {
+              EventFormFields.organizerNameId: _organizer,
+              EventFormFields.coachNamesId: [_coachA],
+            },
             onPickOrganizer: () async => _coachC,
             onPickCoaches: (_) async => const [_coachC],
           ),

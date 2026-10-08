@@ -87,18 +87,37 @@ class EventManagementSectionState
     }
   }
 
+  /// Renames the event through the rename dialog, which stays open until
+  /// the title is saved; a refusal shows on its field.
   Future<void> handleRename() async {
-    final newName = await showEventRenameDialog(context, widget.event.title);
-    if (newName == null || !mounted) return;
-    await runChange(
-      (notifier) => EventFormSubmit.updateTitle(
-        eventId: widget.event.id,
-        title: newName,
-        notifier: notifier,
-      ),
-      done: EventManagementMessages.renamed,
-      failed: EventManagementMessages.renameFailed,
+    final toaster = ShadToaster.of(context);
+    final newName = await showEventRenameDialog(
+      context,
+      widget.event.title,
+      onSave: writeTitle,
     );
+    if (newName == null) return;
+    toaster.show(
+      const ShadToast(description: Text(EventManagementMessages.renamed)),
+    );
+  }
+
+  /// Writes [title]; `null` once saved, else the refusal, said for people.
+  Future<String?> writeTitle(String title) async {
+    try {
+      await EventFormSubmit.updateTitle(
+        eventId: widget.event.id,
+        title: title,
+        notifier: ref.read(clEventsMasterProvider.notifier),
+      );
+      return null;
+    } on Object catch (e, st) {
+      return eventManagementErrorMessage(
+        e,
+        stackTrace: st,
+        fallback: EventManagementMessages.renameFailed,
+      );
+    }
   }
 
   Future<void> handleArchive() async {

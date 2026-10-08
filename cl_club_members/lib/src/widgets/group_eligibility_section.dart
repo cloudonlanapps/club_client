@@ -3,7 +3,7 @@ import 'package:cl_club_forms/cl_club_forms.dart'
 import 'package:cl_club_members/src/models/group_form_helpers.dart'
     show GroupFormSubmit, buildGroupFormInitialValues;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clGroupMembersProvider, clGroupsMasterProvider, formAgeFromSdk;
+    show clGroupsMasterProvider, formAgeFromSdk;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,9 +15,11 @@ import 'package:ui_lib/ui_lib.dart' show EditableSectionCard;
 /// Read mode renders prose explaining the membership rules (kind, gender),
 /// then the age sentence with the server's dates and reference day beneath
 /// ([AgeEligibilitySummary]). When [canEdit] is true, the section flips into
-/// an inline [GroupEligibilityForm]; criteria are locked while the group has
-/// members so an edit can't strand existing members. With [canEdit] false it
-/// is a plain read-only card (e.g. a member viewing their own group).
+/// an inline [GroupEligibilityForm]. A group with members is edited like any
+/// other: what the server refuses (a manual group with members switched to
+/// auto, criteria a current member does not meet) shows in the form. With
+/// [canEdit] false it is a plain read-only card (e.g. a member viewing their
+/// own group).
 class GroupEligibilitySection extends ConsumerStatefulWidget {
   const GroupEligibilitySection({
     required this.group,
@@ -44,13 +46,6 @@ class _GroupEligibilitySectionState
     final theme = ShadTheme.of(context);
     final group = widget.group;
     final lines = _buildSentences(group);
-    // Only look at the member list when editing is possible — a read-only
-    // member view shouldn't trigger that fetch.
-    final hasMembers =
-        widget.canEdit &&
-        (ref.watch(clGroupMembersProvider(group.id)).valueOrNull?.isNotEmpty ??
-            false);
-
     final initialValues = buildGroupFormInitialValues(group);
 
     return EditableSectionCard<Map<String, dynamic>>(
@@ -80,21 +75,18 @@ class _GroupEligibilitySectionState
         key: _formKey,
         initialValues: initialValues,
         enabled: enabled,
-        criteriaLocked: hasMembers,
-        // The card's Reset shows only while the form holds a value.
+        // The card's Clear shows only while the form holds a value.
         onChanged: () => setState(() {}),
       ),
       onValidate: () => _formKey.currentState?.validate(),
       isDirty: () => _formKey.currentState?.isDirty ?? false,
       onSave: _save,
-      onReset: () => _formKey.currentState?.reset(),
-      // Never while the mode is locked. Before the form is mounted (the
-      // frame the editor opens on), what it is about to be seeded with
-      // answers.
-      canReset: () =>
-          !hasMembers &&
-          (_formKey.currentState?.hasValue ??
-              GroupEligibilityForm.holdsValue(initialValues)),
+      onClear: () => _formKey.currentState?.clear(),
+      // Before the form is mounted (the frame the editor opens on), what it
+      // is about to be seeded with answers.
+      canClear: () =>
+          _formKey.currentState?.hasValue ??
+          GroupEligibilityForm.holdsValue(initialValues),
     );
   }
 

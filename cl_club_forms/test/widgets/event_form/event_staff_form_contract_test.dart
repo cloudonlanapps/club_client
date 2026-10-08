@@ -53,8 +53,10 @@ Future<EventStaffFormState> _pump(
     tester,
     EventStaffForm(
       key: key,
-      initialOrganizer: organizer,
-      initialCoaches: coaches,
+      initialValues: {
+        EventFormFields.organizerNameId: organizer,
+        EventFormFields.coachNamesId: coaches,
+      },
       enabled: enabled,
       onPickOrganizer: () async =>
           transferQueue.isEmpty ? null : transferQueue.removeAt(0),
@@ -222,6 +224,36 @@ void main() {
   });
 
   group('Issue 61: EventStaffForm isDirty', () {
+    testWidgets('Issue 104: the form opens with its initialValues map, '
+        'clean, and a removed coach makes it dirty', (tester) async {
+      final form = await _pump(tester);
+
+      expect(find.text('Olivia Organizer'), findsOneWidget);
+      expect(find.text('Aaron Coach'), findsOneWidget);
+      expect(find.text('Bea Coach'), findsOneWidget);
+      expect(form.isDirty, isFalse);
+
+      await _tap(tester, _removeButtons().first);
+      expect(form.isDirty, isTrue);
+    });
+
+    testWidgets('Issue 104: with nothing in initialValues the form opens '
+        'unassigned with no coach, clean', (tester) async {
+      final key = GlobalKey<EventStaffFormState>();
+      await pumpForm(
+        tester,
+        EventStaffForm(
+          key: key,
+          initialValues: const {},
+          onPickOrganizer: () async => null,
+          onPickCoaches: (_) async => null,
+        ),
+      );
+
+      expect(_removeButtons(), findsNothing);
+      expect(key.currentState!.isDirty, isFalse);
+    });
+
     testWidgets('Issue 61: the organizer transferred, then transferred '
         'back', (tester) async {
       final form = await _pump(
@@ -319,8 +351,10 @@ void main() {
           builder: (context, value, _) => EventStaffForm(
             key: key,
             enabled: value,
-            initialOrganizer: _organizer,
-            initialCoaches: const [_coachA, _coachB],
+            initialValues: const {
+              EventFormFields.organizerNameId: _organizer,
+              EventFormFields.coachNamesId: [_coachA, _coachB],
+            },
             onPickOrganizer: () async {
               organizerAsked++;
               return _coachC;

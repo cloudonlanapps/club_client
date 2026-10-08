@@ -37,7 +37,7 @@ needs from the other side it gets one of three ways:
 - it speaks a form-local type and the host maps (`EventStaffMember` for a
   picked user, `FormAge` for an age);
 - for something tiny and stable, it keeps its own copy (`ReadOnlyField`,
-  `CommonFormValidators`, the *Reset* label, the single-column breakpoint).
+  `CommonFormValidators`, the *Clear* label, the single-column breakpoint).
 
 Evaluation's four forms are not here: they stay in `ui_lib` with the rest of
 evaluation's UI, whose models they share.

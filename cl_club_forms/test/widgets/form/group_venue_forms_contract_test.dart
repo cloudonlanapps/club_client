@@ -52,8 +52,10 @@ final List<_Case> _cases = [
     build: (key, {required enabled}) => LocationEditForm(
       key: key,
       enabled: enabled,
-      initialAddress: '1 Rink Rd',
-      initialMapUri: '',
+      initialValues: const {
+        LocationEditFormFields.addressId: '1 Rink Rd',
+        LocationEditFormFields.mapUriId: '',
+      },
     ),
     requiredLabels: [],
   ),
@@ -181,7 +183,7 @@ void main() {
     });
 
     testWidgets('Issue 55: GroupEligibilityForm puts a refused mode on the '
-        'Mode field, and a reset clears the form-level message', (
+        'Mode field, and a clear removes the form-level message', (
       tester,
     ) async {
       final key = GlobalKey<GroupEligibilityFormState>();
@@ -205,7 +207,7 @@ void main() {
       expect(find.text('Mode refused.'), findsOneWidget);
       expect(find.text(_refusal), findsOneWidget);
 
-      key.currentState!.reset();
+      key.currentState!.clear();
       await tester.pumpAndSettle();
       expect(find.text(_refusal), findsNothing);
     });
@@ -219,8 +221,10 @@ void main() {
         tester,
         LocationEditForm(
           key: key,
-          initialAddress: '1 Rink Rd',
-          initialMapUri: '',
+          initialValues: const {
+            LocationEditFormFields.addressId: '1 Rink Rd',
+            LocationEditFormFields.mapUriId: '',
+          },
         ),
       );
       expect(key.currentState!.isDirty, isFalse);

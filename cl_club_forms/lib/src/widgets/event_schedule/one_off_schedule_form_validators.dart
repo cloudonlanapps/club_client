@@ -1,6 +1,9 @@
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadTimeOfDay;
+
 import '../../models/one_off_schedule_data.dart';
 
-/// Pure validators for `OneOffScheduleForm`.
+/// Pure validators for `OneOffScheduleForm` and for the inputs of a
+/// one-off's schedule (`OneOffScheduleFormField`).
 class OneOffScheduleFormValidators {
   const OneOffScheduleFormValidators._();
 
@@ -13,9 +16,23 @@ class OneOffScheduleFormValidators {
   static const String postponeOnlyMessage =
       'A one-off can only be moved to a later time, not an earlier one.';
 
+  /// Shown when no date is chosen.
+  static const String dateRequiredMessage = 'Date is required';
+
+  /// Shown when no start time is chosen.
+  static const String startTimeRequiredMessage = 'Start time is required';
+
   /// A venue must be chosen.
   static String? venue(int? value) =>
       value == null ? venueRequiredMessage : null;
+
+  /// A date must be chosen.
+  static String? date(DateTime? value) =>
+      value == null ? dateRequiredMessage : null;
+
+  /// A start time must be chosen.
+  static String? startTime(ShadTimeOfDay? value) =>
+      value == null ? startTimeRequiredMessage : null;
 
   /// The local start [schedule] describes, or `null` while its date or
   /// start time is missing.

@@ -39,8 +39,10 @@ abstract final class EventEntries {
       formType: EventStaffForm,
       builder: (key) => EventStaffForm(
         key: key,
-        initialOrganizer: DemoSamples.organizer,
-        initialCoaches: DemoSamples.coaches,
+        initialValues: {
+          EventFormFields.organizerNameId: DemoSamples.organizer,
+          EventFormFields.coachNamesId: DemoSamples.coaches,
+        },
         onPickOrganizer: FakeHostCalls.pickOrganizer,
         onPickCoaches: FakeHostCalls.pickCoaches,
       ),

@@ -15,7 +15,7 @@ import '../../support/form_harness.dart';
 // its own has a validator (every limit is part of the rule across fields,
 // the age band, and shows inline), no field is required, and no parameter
 // hides or locks a field. Its other tests are in
-// event_eligibility_form_test.dart and event_eligibility_form_reset_test.dart.
+// event_eligibility_form_test.dart and event_eligibility_form_clear_test.dart.
 
 const String _genderId = EventFormFields.genderId;
 const String _minYears = AgeEligibilityFormFields.minAgeYearsId;
@@ -534,7 +534,7 @@ void main() {
       expect(find.text('Girls'), findsOneWidget);
     });
 
-    testWidgets('Issue 61: it draws no button: Reset and Save are the '
+    testWidgets('Issue 61: it draws no button: Clear and Save are the '
         "host's", (tester) async {
       await _pump(
         tester,
@@ -542,7 +542,7 @@ void main() {
       );
 
       expectNoHostChrome(tester);
-      expect(find.text('Reset'), findsNothing);
+      expect(find.text('Clear'), findsNothing);
       expect(find.text('Eligibility'), findsNothing);
     });
   });

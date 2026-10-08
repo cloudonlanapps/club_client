@@ -71,7 +71,7 @@ class GroupCreateFormState extends State<GroupCreateForm>
     return ShadForm(
       key: formKey,
       initialValue: initial,
-      // Rebuilds the eligibility block, whose Reset shows only while it
+      // Rebuilds the eligibility block, whose Clear shows only while it
       // holds a value.
       onChanged: () => setState(() {}),
       child: Column(
@@ -108,7 +108,7 @@ class GroupCreateFormState extends State<GroupCreateForm>
           ),
           GroupEligibilityFields(
             initialMode: initialMode,
-            showReset: true,
+            showClear: true,
             enabled: widget.enabled,
           ),
           FormBody(

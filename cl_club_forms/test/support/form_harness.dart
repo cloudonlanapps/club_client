@@ -215,7 +215,7 @@ void expectLabelsAreRows(WidgetTester tester) {
 
 /// The form draws no button that submits and no heading of its own: a
 /// [ShadButton] inside the form must be one of [allowedButtonTexts], the
-/// in-form actions (Reset, Transfer, ...).
+/// in-form actions (Clear, Transfer, ...).
 void expectNoHostChrome(
   WidgetTester tester, {
   Set<String> allowedButtonTexts = const {},

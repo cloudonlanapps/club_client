@@ -1,12 +1,5 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show
-        LocationEditForm,
-        LocationEditFormState,
-        RenameForm,
-        RenameFormFields,
-        RenameFormState,
-        TwoColumnGrid,
-        VenueFormValidators;
+    show LocationEditForm, LocationEditFormState, TwoColumnGrid;
 import 'package:cl_member_auth/cl_member_auth.dart'
     show authStateProvider, imageAuthHeadersProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -35,7 +28,9 @@ import 'package:ui_lib/ui_lib.dart'
         TitleRow,
         pickAndConfirmImage;
 
-import '../models/venue_form_helpers.dart' show VenueFormSubmit;
+import '../models/venue_form_helpers.dart'
+    show VenueFormSubmit, buildLocationEditFormInitialValues;
+import '../widgets/venue_rename_dialog.dart';
 
 /// Editable venue profile. Each section is a `ShadCard` with inline edit
 /// affordances — description (markdown popover), location (address dialog),
@@ -410,8 +405,7 @@ class VenueLocationCardState extends ConsumerState<VenueLocationCard> {
       ),
       editBuilder: ({required enabled}) => LocationEditForm(
         key: _formKey,
-        initialAddress: venue.address ?? '',
-        initialMapUri: venue.mapUri ?? '',
+        initialValues: buildLocationEditFormInitialValues(venue),
         enabled: enabled,
       ),
       onValidate: () => _formKey.currentState?.validate(),
@@ -573,27 +567,32 @@ class VenueManagementSectionState
     extends ConsumerState<VenueManagementSection> {
   bool isBusy = false;
 
+  /// Shown on the name field of the rename dialog when the save is refused.
+  static const String renameFailedMessage =
+      'Could not rename venue. Please try again.';
+
+  /// Renames the venue through the rename dialog, which stays open until the
+  /// name is saved; a refusal shows on its field.
   Future<void> handleRename() async {
-    final newName = await _showVenueRenameDialog(context, widget.venue.name);
-    if (newName == null || !mounted) return;
-    setState(() => isBusy = true);
+    final toaster = ShadToaster.of(context);
+    final newName = await showVenueRenameDialog(
+      context,
+      widget.venue.name,
+      onSave: writeName,
+    );
+    if (newName == null) return;
+    toaster.show(const ShadToast(description: Text('Venue renamed.')));
+  }
+
+  /// Writes [name]; `null` once saved, else the refusal, said for people.
+  Future<String?> writeName(String name) async {
     try {
       await ref
           .read(clVenuesMasterProvider.notifier)
-          .updateVenue(widget.venue.id, name: newName);
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        const ShadToast(description: Text('Venue renamed.')),
-      );
+          .updateVenue(widget.venue.id, name: name);
+      return null;
     } on Object catch (_) {
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        const ShadToast.destructive(
-          description: Text('Could not rename venue. Please try again.'),
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => isBusy = false);
+      return renameFailedMessage;
     }
   }
 
@@ -684,51 +683,4 @@ class VenueManagementSectionState
       ),
     );
   }
-}
-
-/// Hosts the shared [RenameForm] in a dialog. Resolves to the trimmed new
-/// name, or `null` on Cancel / dismiss / no-op (name unchanged).
-Future<String?> _showVenueRenameDialog(
-  BuildContext context,
-  String initialName,
-) {
-  final formKey = GlobalKey<RenameFormState>();
-  return showShadDialog<String?>(
-    context: context,
-    builder: (dialogContext) {
-      void save() {
-        final value =
-            formKey.currentState?.validate()?[RenameFormFields.valueId]
-                as String?;
-        if (value == null) return;
-        Navigator.of(
-          dialogContext,
-        ).pop(value == initialName.trim() ? null : value);
-      }
-
-      return PointerInterceptor(
-        child: ShadDialog(
-          title: const Text('Rename venue'),
-          actions: [
-            ShadButton.outline(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            ShadButton(onPressed: save, child: const Text('Save')),
-          ],
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: RenameForm(
-              key: formKey,
-              initialValue: initialName,
-              label: 'Venue name',
-              placeholder: 'e.g., Main Arena',
-              validator: VenueFormValidators.name,
-              onSubmitted: save,
-            ),
-          ),
-        ),
-      );
-    },
-  );
 }

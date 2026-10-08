@@ -1,5 +1,3 @@
-import 'package:cl_club_forms/cl_club_forms.dart'
-    show GroupFormValidators, RenameForm, RenameFormFields, RenameFormState;
 import 'package:cl_club_members/src/utils/group_hard_delete_error_message.dart';
 import 'package:cl_club_members/src/widgets/add_member_dialog.dart';
 import 'package:cl_club_members/src/widgets/group_eligibility_section.dart';
@@ -8,6 +6,7 @@ import 'package:cl_club_members/src/widgets/group_management_section.dart';
 import 'package:cl_club_members/src/widgets/group_member_list.dart';
 import 'package:cl_club_members/src/widgets/group_message_section.dart';
 import 'package:cl_club_members/src/widgets/group_pending_requests_card.dart';
+import 'package:cl_club_members/src/widgets/group_rename_dialog.dart';
 import 'package:cl_club_members/src/widgets/removed_group_view.dart';
 import 'package:cl_member_auth/cl_member_auth.dart'
     show authStateProvider, imageAuthHeadersProvider;
@@ -137,72 +136,34 @@ class AdminGroupProfileView extends ConsumerWidget {
     }
   }
 
+  /// Shown on the name field of the rename dialog when the save is refused.
+  static const String renameFailedMessage = 'Could not rename group.';
+
+  /// Renames the group through the rename dialog, which stays open until the
+  /// name is saved; a refusal shows on its field.
   Future<void> handleRename(WidgetRef ref, BuildContext context) async {
     final group = ref.read(clGroupsMasterProvider).valueOrNull?[groupId];
     if (group == null) return;
-    final newName = await _showGroupRenameDialog(context, group.name);
-    if (newName == null || !context.mounted) return;
+    final toaster = ShadToaster.of(context);
+    final newName = await showGroupRenameDialog(
+      context,
+      group.name,
+      onSave: (name) => writeName(ref, name),
+    );
+    if (newName == null) return;
+    toaster.show(const ShadToast(description: Text('Group renamed.')));
+  }
+
+  /// Writes [name]; `null` once saved, else the refusal, said for people.
+  Future<String?> writeName(WidgetRef ref, String name) async {
     try {
       await ref
           .read(clGroupsMasterProvider.notifier)
-          .updateGroup(groupId, name: newName);
-      if (!context.mounted) return;
-      ShadToaster.of(context).show(
-        const ShadToast(description: Text('Group renamed.')),
-      );
+          .updateGroup(groupId, name: name);
+      return null;
     } on Object catch (_) {
-      if (!context.mounted) return;
-      ShadToaster.of(context).show(
-        const ShadToast.destructive(
-          description: Text('Could not rename group.'),
-        ),
-      );
+      return renameFailedMessage;
     }
-  }
-
-  /// Hosts the shared [RenameForm] in a dialog. Resolves to the trimmed new
-  /// name, or `null` on Cancel / dismiss / no-op (name unchanged).
-  Future<String?> _showGroupRenameDialog(
-    BuildContext context,
-    String initialName,
-  ) {
-    final formKey = GlobalKey<RenameFormState>();
-    return showShadDialog<String?>(
-      context: context,
-      builder: (dialogContext) {
-        void save() {
-          final value =
-              formKey.currentState?.validate()?[RenameFormFields.valueId]
-                  as String?;
-          if (value == null) return;
-          Navigator.of(
-            dialogContext,
-          ).pop(value == initialName.trim() ? null : value);
-        }
-
-        return ShadDialog(
-          title: const Text('Rename group'),
-          actions: [
-            ShadButton.outline(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            ShadButton(onPressed: save, child: const Text('Save')),
-          ],
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: RenameForm(
-              key: formKey,
-              initialValue: initialName,
-              label: 'Group Name',
-              placeholder: 'e.g., U12 Boys',
-              validator: GroupFormValidators.name,
-              onSubmitted: save,
-            ),
-          ),
-        );
-      },
-    );
   }
 
   Future<void> handleRestore(WidgetRef ref, BuildContext context) async {

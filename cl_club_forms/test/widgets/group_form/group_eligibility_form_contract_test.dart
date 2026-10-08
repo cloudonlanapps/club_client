@@ -1,9 +1,9 @@
 // GroupEligibilityForm against the list of club_client#61, beside
-// group_eligibility_form_test.dart and group_eligibility_reset_test.dart,
-// which already cover the seeded band, hasValue and reset(). Every point
+// group_eligibility_form_test.dart and group_eligibility_clear_test.dart,
+// which already cover the seeded band, hasValue and clear(). Every point
 // applies. No field of it is required and none has a validator of its own:
 // its rules are the two across fields. It draws the section headings
-// "Membership" and "Eligibility criteria" and no button at all (its Reset is
+// "Membership" and "Eligibility criteria" and no button at all (its Clear is
 // the host card's). The age inputs are the shared age cluster's: only how
 // this form uses them is tested here.
 import 'package:cl_club_forms/cl_club_forms.dart';
@@ -52,7 +52,6 @@ Map<String, dynamic> _seeded({
 Future<GroupEligibilityFormState> _pump(
   WidgetTester tester,
   Map<String, dynamic> initialValues, {
-  bool criteriaLocked = false,
   bool enabled = true,
   VoidCallback? onChanged,
 }) async {
@@ -62,7 +61,6 @@ Future<GroupEligibilityFormState> _pump(
     GroupEligibilityForm(
       key: key,
       initialValues: initialValues,
-      criteriaLocked: criteriaLocked,
       enabled: enabled,
       onChanged: onChanged,
     ),
@@ -123,32 +121,9 @@ void main() {
       expectNoHostChrome(tester);
     });
 
-    testWidgets('Issue 61: unlocked, it explains the modes; locked, it says '
-        'why the mode cannot change', (tester) async {
+    testWidgets('Issue 61: it explains the modes', (tester) async {
       await _pump(tester, _seeded());
       expect(find.text(GroupMembershipHeading.modeHint), findsOneWidget);
-      expect(find.text(GroupMembershipHeading.lockedHint), findsNothing);
-
-      await tester.pumpWidget(const SizedBox.shrink());
-      await _pump(tester, _seeded(), criteriaLocked: true);
-      expect(find.text(GroupMembershipHeading.lockedHint), findsOneWidget);
-      expect(find.text(GroupMembershipHeading.modeHint), findsNothing);
-    });
-
-    testWidgets('Issue 61: locked criteria are shown as stored, and neither '
-        'the mode nor any criterion responds', (tester) async {
-      final seeded = _seeded(
-        gender: GroupGender.girls,
-        minAge: const FormAge(years: 5),
-        strictAge: true,
-      );
-      final state = await _pump(tester, seeded, criteriaLocked: true);
-
-      expect(rowLabels(tester), ['Mode', ..._criteriaRows]);
-      expect(find.text(GroupGender.girls.label), findsOneWidget);
-      await expectNoFieldResponds(tester);
-      expect(state.isDirty, isFalse);
-      expect(await _validate(tester, state), seeded);
     });
   });
 

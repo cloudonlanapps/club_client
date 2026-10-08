@@ -140,7 +140,7 @@ class CampDateExclusionCalendarState extends State<CampDateExclusionCalendar> {
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
-            onPressed: previousMonth,
+            onPressed: widget.enabled ? previousMonth : null,
           ),
           Text(
             DateFormat('MMMM yyyy').format(displayedMonth),
@@ -148,7 +148,7 @@ class CampDateExclusionCalendarState extends State<CampDateExclusionCalendar> {
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
-            onPressed: nextMonth,
+            onPressed: widget.enabled ? nextMonth : null,
           ),
         ],
       ),

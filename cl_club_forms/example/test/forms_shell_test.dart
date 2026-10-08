@@ -48,6 +48,10 @@ void main() {
         matching: find.byType(Scrollable),
       ),
     );
+    // Wholly into view: an item that only peeks in at the edge of the
+    // sidebar is found but its centre cannot be tapped.
+    await tester.ensureVisible(item);
+    await tester.pumpAndSettle();
     await tester.tap(item);
     await tester.pumpAndSettle();
 

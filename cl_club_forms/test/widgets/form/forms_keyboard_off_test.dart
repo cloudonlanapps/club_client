@@ -164,8 +164,10 @@ final List<_Case> _cases = [
     name: 'LocationEditForm',
     build: ({required enabled}) => LocationEditForm(
       enabled: enabled,
-      initialAddress: '1 Rink Rd',
-      initialMapUri: '',
+      initialValues: const {
+        LocationEditFormFields.addressId: '1 Rink Rd',
+        LocationEditFormFields.mapUriId: '',
+      },
     ),
     typed: true,
   ),
@@ -211,7 +213,9 @@ final List<_Case> _cases = [
     name: 'EventStaffForm',
     build: ({required enabled}) => EventStaffForm(
       enabled: enabled,
-      initialCoaches: const [],
+      initialValues: const {
+        EventFormFields.coachNamesId: <EventStaffMember>[],
+      },
       onPickOrganizer: () async => null,
       onPickCoaches: (_) async => null,
     ),
@@ -313,7 +317,9 @@ final List<_Case> _cases = [
     name: 'ProgrammeEndDateForm',
     build: ({required enabled}) => ProgrammeEndDateForm(
       enabled: enabled,
-      initialDay: _day,
+      initialValues: {
+        ProgrammeEndDateFormFields.lastDayId: _day,
+      },
       reasonRequired: true,
       resultOf: (day) => 'Last session: day ${day.day}.',
     ),

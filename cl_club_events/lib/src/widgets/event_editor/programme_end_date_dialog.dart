@@ -195,7 +195,10 @@ class ProgrammeEndDateDialogState
           padding: const EdgeInsets.symmetric(vertical: 12),
           child: ProgrammeEndDateForm(
             key: formKey,
-            initialDay: programmeEndDay(event, schedules: widget.schedules),
+            initialValues: buildProgrammeEndDateFormInitialValues(
+              event,
+              schedules: widget.schedules,
+            ),
             reasonRequired: !hasEnd,
             resultOf: (day) => programmeEndResultLine(
               event,

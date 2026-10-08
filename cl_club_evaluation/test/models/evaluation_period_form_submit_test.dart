@@ -13,6 +13,47 @@ Map<String, dynamic> _values({int? event, DateTime? start, DateTime? end}) => {
 };
 
 void main() {
+  group('Issue 104: buildEvaluationPeriodFormInitialValues', () {
+    test('Issue 104: an evaluation gives its event as named and its period '
+        'as local days', () {
+      final evaluation = staffView(
+        5,
+        eventId: 9,
+        periodStartUtc: DateTime.utc(2026, 5),
+        periodEndUtc: DateTime.utc(2026, 5, 31),
+      );
+
+      expect(
+        buildEvaluationPeriodFormInitialValues(
+          evaluation,
+          event: (id: 9, label: 'Spring camp'),
+        ),
+        {
+          EvaluationStartFormFields.eventId: (id: 9, label: 'Spring camp'),
+          EvaluationStartFormFields.periodStartId: DateTime(2026, 5),
+          EvaluationStartFormFields.periodEndId: DateTime(2026, 5, 31),
+        },
+      );
+    });
+
+    test('Issue 104: a general evaluation with no period gives no event '
+        'and no dates', () {
+      expect(buildEvaluationPeriodFormInitialValues(staffView(5)), {
+        EvaluationStartFormFields.eventId: null,
+        EvaluationStartFormFields.periodStartId: null,
+        EvaluationStartFormFields.periodEndId: null,
+      });
+    });
+
+    test('Issue 104: no evaluation gives no event and no dates', () {
+      expect(buildEvaluationPeriodFormInitialValues(null), {
+        EvaluationStartFormFields.eventId: null,
+        EvaluationStartFormFields.periodStartId: null,
+        EvaluationStartFormFields.periodEndId: null,
+      });
+    });
+  });
+
   group('Issue 173: EvaluationPeriodFormSubmit.updateReviewPeriod', () {
     final may1 = DateTime.utc(2026, 5);
     final may31 = DateTime.utc(2026, 5, 31);

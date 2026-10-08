@@ -52,8 +52,10 @@ final List<_Case> _cases = [
     build: (key, {required enabled}) => LocationEditForm(
       key: key,
       enabled: enabled,
-      initialAddress: '1 Rink Rd',
-      initialMapUri: '',
+      initialValues: const {
+        LocationEditFormFields.addressId: '1 Rink Rd',
+        LocationEditFormFields.mapUriId: '',
+      },
     ),
     requiredLabels: [],
   ),
@@ -219,8 +221,10 @@ void main() {
         tester,
         LocationEditForm(
           key: key,
-          initialAddress: '1 Rink Rd',
-          initialMapUri: '',
+          initialValues: const {
+            LocationEditFormFields.addressId: '1 Rink Rd',
+            LocationEditFormFields.mapUriId: '',
+          },
         ),
       );
       expect(key.currentState!.isDirty, isFalse);

@@ -21,15 +21,17 @@ import 'programme_end_date_form_validators.dart';
 /// reason, and shows a refusal with `showErrors`.
 class ProgrammeEndDateForm extends StatefulWidget {
   const ProgrammeEndDateForm({
+    required this.initialValues,
     required this.reasonRequired,
     required this.resultOf,
-    this.initialDay,
     this.enabled = true,
     super.key,
   });
 
-  /// The day the programme ends on now; `null` when it has no end.
-  final DateTime? initialDay;
+  /// Initial values, keyed by the ids of [ProgrammeEndDateFormFields]: the
+  /// day the programme ends on now, a local `DateTime` (none when it has no
+  /// end), and the reason, a `String`; missing reads empty.
+  final Map<String, dynamic> initialValues;
 
   /// Whether a reason must be given (setting an end where there is none).
   final bool reasonRequired;
@@ -52,8 +54,12 @@ class ProgrammeEndDateFormState extends State<ProgrammeEndDateForm>
   @override
   bool get focusFirstInvalid => false;
 
+  /// The day the programme ends on now; `null` when it has no end.
+  DateTime? get initialDay =>
+      widget.initialValues[ProgrammeEndDateFormFields.lastDayId] as DateTime?;
+
   /// The day chosen now.
-  late DateTime? lastDay = widget.initialDay;
+  late DateTime? lastDay = initialDay;
 
   /// The reason typed so far, trimmed.
   String get reason =>
@@ -75,7 +81,7 @@ class ProgrammeEndDateFormState extends State<ProgrammeEndDateForm>
     final day =
         formKey.currentState?.value[ProgrammeEndDateFormFields.lastDayId]
             as DateTime?;
-    final initial = widget.initialDay;
+    final initial = initialDay;
     if (day == null || initial == null) return day != initial;
     return !DateUtils.isSameDay(day, initial);
   }
@@ -87,8 +93,11 @@ class ProgrammeEndDateFormState extends State<ProgrammeEndDateForm>
     return ShadForm(
       key: formKey,
       initialValue: {
-        ProgrammeEndDateFormFields.lastDayId: widget.initialDay,
-        ProgrammeEndDateFormFields.reasonId: '',
+        ProgrammeEndDateFormFields.lastDayId: initialDay,
+        ProgrammeEndDateFormFields.reasonId:
+            widget.initialValues[ProgrammeEndDateFormFields.reasonId]
+                as String? ??
+            '',
       },
       child: FormBody(
         error: formError,
@@ -98,7 +107,7 @@ class ProgrammeEndDateFormState extends State<ProgrammeEndDateForm>
             required: true,
             field: CLDatePickerFormField(
               id: ProgrammeEndDateFormFields.lastDayId,
-              initialValue: widget.initialDay,
+              initialValue: initialDay,
               enabled: widget.enabled,
               yearsBefore: 0,
               validator: ProgrammeEndDateFormValidators.lastDay,

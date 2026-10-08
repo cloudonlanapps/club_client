@@ -177,8 +177,10 @@ void main() {
         wrapEvaluation(
           EvaluationPeriodForm(
             key: key,
-            initialStart: DateTime(2026, 5),
-            initialEnd: DateTime(2026, 6),
+            initialValues: {
+              EvaluationStartFormFields.periodStartId: DateTime(2026, 5),
+              EvaluationStartFormFields.periodEndId: DateTime(2026, 6),
+            },
           ),
         ),
       );
@@ -199,7 +201,9 @@ void main() {
           EvaluationPeriodForm(
             key: key,
             events: const [(id: 9, label: 'Spring camp')],
-            initialEvent: const (id: 9, label: 'Spring camp'),
+            initialValues: const {
+              EvaluationStartFormFields.eventId: (id: 9, label: 'Spring camp'),
+            },
           ),
         ),
       );
@@ -227,7 +231,9 @@ void main() {
           EvaluationPeriodForm(
             key: key,
             events: const [(id: 9, label: 'Spring camp')],
-            initialEvent: const (id: 4, label: 'Old camp'),
+            initialValues: const {
+              EvaluationStartFormFields.eventId: (id: 4, label: 'Old camp'),
+            },
           ),
         ),
       );
@@ -246,13 +252,65 @@ void main() {
       expect(key.currentState!.isDirty, isTrue);
     });
 
+    testWidgets('Issue 104: the form opens with its initialValues map, clean, '
+        'and a changed date makes it dirty', (tester) async {
+      final key = GlobalKey<EvaluationPeriodFormState>();
+      await tester.pumpWidget(
+        wrapEvaluation(
+          EvaluationPeriodForm(
+            key: key,
+            events: const [(id: 9, label: 'Spring camp')],
+            initialValues: {
+              EvaluationStartFormFields.eventId: (id: 9, label: 'Spring camp'),
+              EvaluationStartFormFields.periodStartId: DateTime(2026, 5),
+              EvaluationStartFormFields.periodEndId: DateTime(2026, 6),
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final state = key.currentState!;
+      expect(find.text('Spring camp'), findsOneWidget);
+      expect(state.isDirty, isFalse);
+      expect(state.validate(), {
+        EvaluationStartFormFields.eventId: 9,
+        EvaluationStartFormFields.periodStartId: DateTime(2026, 5),
+        EvaluationStartFormFields.periodEndId: DateTime(2026, 6),
+      });
+
+      state.formKey.currentState!.setFieldValue<DateTime?>(
+        EvaluationStartFormFields.periodEndId,
+        DateTime(2026, 6, 2),
+      );
+      await tester.pumpAndSettle();
+      expect(state.isDirty, isTrue);
+    });
+
+    testWidgets('Issue 104: with no initialValues the form opens on General '
+        'with no period, clean', (tester) async {
+      final key = GlobalKey<EvaluationPeriodFormState>();
+      await tester.pumpWidget(wrapEvaluation(EvaluationPeriodForm(key: key)));
+      await tester.pumpAndSettle();
+      expect(key.currentState!.isDirty, isFalse);
+      expect(key.currentState!.validate(), {
+        EvaluationStartFormFields.eventId: null,
+        EvaluationStartFormFields.periodStartId: null,
+        EvaluationStartFormFields.periodEndId: null,
+      });
+    });
+
     testWidgets('Issue 173: one date alone shows the form-level message', (
       tester,
     ) async {
       final key = GlobalKey<EvaluationPeriodFormState>();
       await tester.pumpWidget(
         wrapEvaluation(
-          EvaluationPeriodForm(key: key, initialStart: DateTime(2026, 5)),
+          EvaluationPeriodForm(
+            key: key,
+            initialValues: {
+              EvaluationStartFormFields.periodStartId: DateTime(2026, 5),
+            },
+          ),
         ),
       );
       await tester.pumpAndSettle();

@@ -23,8 +23,10 @@ void main() {
       _wrap(
         LocationEditForm(
           key: key,
-          initialAddress: '1 Rink Rd',
-          initialMapUri: 'https://maps.example/x',
+          initialValues: const {
+            LocationEditFormFields.addressId: '1 Rink Rd',
+            LocationEditFormFields.mapUriId: 'https://maps.example/x',
+          },
         ),
       ),
     );
@@ -44,8 +46,10 @@ void main() {
       _wrap(
         LocationEditForm(
           key: key,
-          initialAddress: '',
-          initialMapUri: '',
+          initialValues: const {
+            LocationEditFormFields.addressId: '',
+            LocationEditFormFields.mapUriId: '',
+          },
         ),
       ),
     );
@@ -70,8 +74,10 @@ void main() {
         tester,
         LocationEditForm(
           key: key,
-          initialAddress: address,
-          initialMapUri: mapUri,
+          initialValues: {
+            LocationEditFormFields.addressId: address,
+            LocationEditFormFields.mapUriId: mapUri,
+          },
           enabled: enabled,
         ),
       );
@@ -161,6 +167,30 @@ void main() {
       expect(state.isDirty, isFalse);
     });
 
+    testWidgets('Issue 104: the form opens with its initialValues map, '
+        'clean, and typing makes it dirty', (tester) async {
+      final state = await pump(tester);
+
+      expect(find.text('1 Rink Rd'), findsOneWidget);
+      expect(find.text('https://maps.example/x'), findsOneWidget);
+      expect(state.isDirty, isFalse);
+
+      await enterField(tester, _F.mapUriId, 'https://maps.example/y');
+      expect(state.isDirty, isTrue);
+    });
+
+    testWidgets('Issue 104: a value missing from initialValues reads '
+        'empty', (tester) async {
+      final key = GlobalKey<LocationEditFormState>();
+      await pumpForm(
+        tester,
+        LocationEditForm(key: key, initialValues: const {}),
+      );
+
+      expect(key.currentState!.isDirty, isFalse);
+      expect(key.currentState!.validate(), {_F.addressId: '', _F.mapUriId: ''});
+    });
+
     testWidgets('Issue 61: showErrors puts a message on a field and one '
         'inline', (tester) async {
       final state = await pump(tester);
@@ -190,8 +220,12 @@ void main() {
       await expectFitsPhone(
         tester,
         const LocationEditForm(
-          initialAddress: '12 Long Street Name, Some Neighbourhood, A City',
-          initialMapUri: 'https://maps.example/a/very/long/link/to/the/rink',
+          initialValues: {
+            LocationEditFormFields.addressId:
+                '12 Long Street Name, Some Neighbourhood, A City',
+            LocationEditFormFields.mapUriId:
+                'https://maps.example/a/very/long/link/to/the/rink',
+          },
         ),
       );
     });

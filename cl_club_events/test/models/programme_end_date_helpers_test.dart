@@ -1,5 +1,7 @@
 import 'package:cl_club_events/src/models/programme_schedule_form_helpers.dart';
 import 'package:cl_club_events/src/utils/programme_end_date.dart';
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show ProgrammeEndDateFormFields;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -99,6 +101,50 @@ void main() {
       final event = programmeFixture(untilTimeUtc: localNoon(-2).toUtc());
 
       expect(programmeHasEnded(event), isTrue);
+    });
+  });
+
+  group('Issue 104: buildProgrammeEndDateFormInitialValues', () {
+    test('Issue 104: a programme with an end gives the day of its last '
+        'session and no reason', () {
+      final event = programmeFixture(untilTimeUtc: localNoon(6).toUtc());
+
+      expect(buildProgrammeEndDateFormInitialValues(event), {
+        ProgrammeEndDateFormFields.lastDayId: _day(5),
+        ProgrammeEndDateFormFields.reasonId: '',
+      });
+    });
+
+    test('Issue 104: with a change pending, the day is a session of the '
+        'pending schedule', () {
+      final pendingFrom = localNoon(10).toUtc();
+      final event = programmeFixture(untilTimeUtc: localNoon(15).toUtc());
+      final schedules = [
+        scheduleFixture(21, localNoon(-20).toUtc(), until: pendingFrom),
+        scheduleFixture(22, pendingFrom),
+      ];
+
+      expect(
+        buildProgrammeEndDateFormInitialValues(
+          event,
+          schedules: schedules,
+        )[ProgrammeEndDateFormFields.lastDayId],
+        programmeEndDay(event, schedules: schedules),
+      );
+    });
+
+    test('Issue 104: a programme with no end gives no day', () {
+      expect(buildProgrammeEndDateFormInitialValues(programmeFixture()), {
+        ProgrammeEndDateFormFields.lastDayId: null,
+        ProgrammeEndDateFormFields.reasonId: '',
+      });
+    });
+
+    test('Issue 104: no programme gives no day', () {
+      expect(buildProgrammeEndDateFormInitialValues(null), {
+        ProgrammeEndDateFormFields.lastDayId: null,
+        ProgrammeEndDateFormFields.reasonId: '',
+      });
     });
   });
 

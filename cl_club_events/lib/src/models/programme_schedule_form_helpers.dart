@@ -1,5 +1,6 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
     show
+        ProgrammeEndDateFormFields,
         ProgrammeScheduleAdjustFormFields,
         ProgrammeScheduleAdjustValue,
         ProgrammeScheduleData;
@@ -17,7 +18,8 @@ import '../utils/session_inputs.dart';
 /// **Adjust Schedule** ([buildProgrammeScheduleAdjustInitialValues],
 /// [programmeAdjustFromOptions],
 /// [ProgrammeScheduleFormSubmit.adjustSchedule]) and **Adjust end date**
-/// ([ProgrammeScheduleFormSubmit.adjustEndDate]).
+/// ([buildProgrammeEndDateFormInitialValues],
+/// [ProgrammeScheduleFormSubmit.adjustEndDate]).
 
 /// How many upcoming sessions the From picker offers.
 const int programmeAdjustFromOptionCount = 12;
@@ -89,6 +91,19 @@ ProgrammeScheduleAdjustValue programmeScheduleAdjustValueOf(
           as ProgrammeScheduleData,
   venueId: values[ProgrammeScheduleAdjustFormFields.venueId] as int?,
 );
+
+/// Builds the `ProgrammeEndDateForm.initialValues` map: the local day
+/// [event] ends on now ([programmeEndDay]) — none when it has no end, or is
+/// null — and an empty reason.
+Map<String, dynamic> buildProgrammeEndDateFormInitialValues(
+  Event? event, {
+  List<EventSchedule>? schedules,
+}) => {
+  ProgrammeEndDateFormFields.lastDayId: event == null
+      ? null
+      : programmeEndDay(event, schedules: schedules),
+  ProgrammeEndDateFormFields.reasonId: '',
+};
 
 /// Bridges the programme Schedule block's forms to the master's calls.
 class ProgrammeScheduleFormSubmit {

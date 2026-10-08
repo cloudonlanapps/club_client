@@ -28,7 +28,8 @@ import 'package:ui_lib/ui_lib.dart'
         TitleRow,
         pickAndConfirmImage;
 
-import '../models/venue_form_helpers.dart' show VenueFormSubmit;
+import '../models/venue_form_helpers.dart'
+    show VenueFormSubmit, buildLocationEditFormInitialValues;
 import '../widgets/venue_rename_dialog.dart';
 
 /// Editable venue profile. Each section is a `ShadCard` with inline edit
@@ -404,8 +405,7 @@ class VenueLocationCardState extends ConsumerState<VenueLocationCard> {
       ),
       editBuilder: ({required enabled}) => LocationEditForm(
         key: _formKey,
-        initialAddress: venue.address ?? '',
-        initialMapUri: venue.mapUri ?? '',
+        initialValues: buildLocationEditFormInitialValues(venue),
         enabled: enabled,
       ),
       onValidate: () => _formKey.currentState?.validate(),

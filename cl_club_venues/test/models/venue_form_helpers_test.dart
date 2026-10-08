@@ -1,5 +1,5 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show VenueCreateForm, VenueFormFields;
+    show LocationEditFormFields, VenueCreateForm, VenueFormFields;
 import 'package:cl_club_venues/src/models/venue_form_helpers.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -49,6 +49,45 @@ void main() {
       expect(values[VenueFormFields.addressId], '');
       expect(values[VenueFormFields.descriptionId], '');
       expect(values[VenueFormFields.mapUriId], '');
+    });
+  });
+
+  group('Issue 104: buildLocationEditFormInitialValues', () {
+    test('Issue 104: a venue gives its address and its map link', () {
+      final venue = Venue(
+        id: 1,
+        name: 'Main Arena',
+        address: '1 Rink Rd',
+        mapUri: 'https://maps.example/x',
+        createdAtUtc: DateTime.utc(2025),
+        updatedAtUtc: DateTime.utc(2025),
+      );
+
+      expect(buildLocationEditFormInitialValues(venue), {
+        LocationEditFormFields.addressId: '1 Rink Rd',
+        LocationEditFormFields.mapUriId: 'https://maps.example/x',
+      });
+    });
+
+    test('Issue 104: a venue with neither gives both empty', () {
+      final venue = Venue(
+        id: 2,
+        name: 'Bare',
+        createdAtUtc: DateTime.utc(2025),
+        updatedAtUtc: DateTime.utc(2025),
+      );
+
+      expect(buildLocationEditFormInitialValues(venue), {
+        LocationEditFormFields.addressId: '',
+        LocationEditFormFields.mapUriId: '',
+      });
+    });
+
+    test('Issue 104: no venue gives both empty', () {
+      expect(buildLocationEditFormInitialValues(null), {
+        LocationEditFormFields.addressId: '',
+        LocationEditFormFields.mapUriId: '',
+      });
     });
   });
 }

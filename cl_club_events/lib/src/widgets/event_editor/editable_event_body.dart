@@ -405,10 +405,10 @@ class OrganizerCoachesSectionState
       ),
       editBuilder: ({required enabled}) => EventStaffForm(
         key: _editorKey,
-        initialOrganizer: organizer == null
-            ? null
-            : eventStaffMemberOf(organizer),
-        initialCoaches: [for (final c in coaches) eventStaffMemberOf(c)],
+        initialValues: buildEventStaffFormInitialValues(
+          organizer: organizer,
+          coaches: coaches,
+        ),
         enabled: enabled,
         onPickOrganizer: () async {
           final picked = await _pickOrganizer();

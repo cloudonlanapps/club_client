@@ -119,7 +119,11 @@ abstract final class ScheduleEntries {
       formType: ProgrammeEndDateForm,
       builder: (key) => ProgrammeEndDateForm(
         key: key,
-        initialDay: DemoSamples.inDays(DemoSamples.laterDays),
+        initialValues: {
+          ProgrammeEndDateFormFields.lastDayId: DemoSamples.inDays(
+            DemoSamples.laterDays,
+          ),
+        },
         reasonRequired: true,
         resultOf: FakeHostCalls.endDateResult,
       ),

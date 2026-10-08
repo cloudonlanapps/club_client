@@ -103,8 +103,18 @@ void main() {
         wrapEvaluation(
           EvaluationPeriodForm(
             key: key,
-            initialStart: DateTime(now.year, now.month, now.day),
-            initialEnd: DateTime(now.year, now.month, now.day + 3),
+            initialValues: {
+              EvaluationStartFormFields.periodStartId: DateTime(
+                now.year,
+                now.month,
+                now.day,
+              ),
+              EvaluationStartFormFields.periodEndId: DateTime(
+                now.year,
+                now.month,
+                now.day + 3,
+              ),
+            },
           ),
         ),
       );

@@ -13,7 +13,6 @@ import 'package:ui_lib/ui_lib.dart'
         EvaluationStartChoice;
 
 import '../constants/evaluation_view_strings.dart';
-import '../models/evaluation_period_dates.dart';
 import '../models/evaluation_period_form_submit.dart';
 import '../utils/evaluation_error_message.dart';
 import '../utils/evaluation_names.dart';
@@ -113,9 +112,10 @@ class EvaluationPeriodCardState extends ConsumerState<EvaluationPeriodCard> {
       editBuilder: ({required enabled}) => EvaluationPeriodForm(
         key: formKey,
         events: events,
-        initialEvent: current,
-        initialStart: EvaluationPeriodDates.toLocalDate(e.periodStartUtc),
-        initialEnd: EvaluationPeriodDates.toLocalDate(e.periodEndUtc),
+        initialValues: buildEvaluationPeriodFormInitialValues(
+          e,
+          event: current,
+        ),
         enabled: enabled,
       ),
       onValidate: () => formKey.currentState?.validate(),

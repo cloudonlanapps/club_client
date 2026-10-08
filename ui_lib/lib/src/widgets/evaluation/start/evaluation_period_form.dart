@@ -21,13 +21,10 @@ import 'evaluation_start_select.dart';
 /// [EvaluationPeriodFormState.isDirty] and shows a server refusal with
 /// [EvaluationPeriodFormState.showErrors].
 class EvaluationPeriodForm extends StatefulWidget {
-  /// Edits the event seeded with [initialEvent] and the period seeded with
-  /// [initialStart] and [initialEnd].
+  /// Edits the event and the period seeded with [initialValues].
   const EvaluationPeriodForm({
     this.events = const [],
-    this.initialEvent,
-    this.initialStart,
-    this.initialEnd,
+    this.initialValues = const {},
     this.enabled = true,
     super.key,
   });
@@ -35,15 +32,14 @@ class EvaluationPeriodForm extends StatefulWidget {
   /// The events to choose from, besides *General*.
   final List<EvaluationStartChoice> events;
 
-  /// The seeded event, or `null` for *General*. Offered even when it is not
-  /// among [events].
-  final EvaluationStartChoice? initialEvent;
-
-  /// The seeded first day.
-  final DateTime? initialStart;
-
-  /// The seeded last day.
-  final DateTime? initialEnd;
+  /// Initial values, keyed by the ids of [EvaluationStartFormFields]: under
+  /// [EvaluationStartFormFields.eventId] the event, an
+  /// [EvaluationStartChoice] (*General* when left out), offered even when
+  /// it is not among [events]; under
+  /// [EvaluationStartFormFields.periodStartId] and
+  /// [EvaluationStartFormFields.periodEndId] the first and the last day,
+  /// each a local `DateTime` (none when left out).
+  final Map<String, dynamic> initialValues;
 
   /// Whether the fields can change (off while the host saves).
   final bool enabled;
@@ -61,8 +57,22 @@ class EvaluationPeriodFormState extends State<EvaluationPeriodForm>
   @override
   bool get focusFirstInvalid => false;
 
+  /// The seeded event, or `null` for *General*.
+  EvaluationStartChoice? get initialEvent =>
+      widget.initialValues[EvaluationStartFormFields.eventId]
+          as EvaluationStartChoice?;
+
+  /// The seeded first day.
+  DateTime? get initialStart =>
+      widget.initialValues[EvaluationStartFormFields.periodStartId]
+          as DateTime?;
+
+  /// The seeded last day.
+  DateTime? get initialEnd =>
+      widget.initialValues[EvaluationStartFormFields.periodEndId] as DateTime?;
+
   /// The seeded event as the select holds it.
-  EvaluationStartEvent get initialEventValue => switch (widget.initialEvent) {
+  EvaluationStartEvent get initialEventValue => switch (initialEvent) {
     final e? => (id: e.id, label: e.label),
     null => EvaluationStartForm.general,
   };
@@ -71,7 +81,7 @@ class EvaluationPeriodFormState extends State<EvaluationPeriodForm>
   /// among the offered ones, then the offered events.
   List<(EvaluationStartEvent, String)> get eventOptions {
     final offered = widget.events;
-    final current = widget.initialEvent;
+    final current = initialEvent;
     return [
       const (EvaluationStartForm.general, EvaluationStrings.general),
       if (current != null && !offered.any((e) => e.id == current.id))
@@ -110,8 +120,8 @@ class EvaluationPeriodFormState extends State<EvaluationPeriodForm>
       key: formKey,
       initialValue: {
         EvaluationStartFormFields.eventId: initialEventValue,
-        EvaluationStartFormFields.periodStartId: widget.initialStart,
-        EvaluationStartFormFields.periodEndId: widget.initialEnd,
+        EvaluationStartFormFields.periodStartId: initialStart,
+        EvaluationStartFormFields.periodEndId: initialEnd,
       },
       child: EvaluationFormBody(
         error: formError,
@@ -126,8 +136,8 @@ class EvaluationPeriodFormState extends State<EvaluationPeriodForm>
             onChanged: (_) => setFormError(null),
           ),
           EvaluationPeriodFields(
-            initialStart: widget.initialStart,
-            initialEnd: widget.initialEnd,
+            initialStart: initialStart,
+            initialEnd: initialEnd,
             enabled: widget.enabled,
             onChanged: () => setFormError(null),
           ),

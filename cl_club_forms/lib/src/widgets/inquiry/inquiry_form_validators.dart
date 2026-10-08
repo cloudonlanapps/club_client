@@ -1,4 +1,4 @@
-import '../club_identity_form/club_identity_form_validators.dart';
+import '../common_form_validators.dart';
 
 /// Static, SDK-free validators for `InquiryForm`.
 ///
@@ -22,10 +22,7 @@ class InquiryFormValidators {
   }) {
     final t = value.trim();
     if (t.isEmpty) return requiredMessage;
-    if (!ClubIdentityFormValidators.emailPattern.hasMatch(t)) {
-      return invalidMessage;
-    }
-    return null;
+    return CommonFormValidators.isEmail(t) ? null : invalidMessage;
   }
 
   /// The visitor's phone: optional, taken as typed. The host completes it

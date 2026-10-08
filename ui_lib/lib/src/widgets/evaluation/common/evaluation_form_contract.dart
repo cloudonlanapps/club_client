@@ -102,9 +102,54 @@ mixin EvaluationFormContract<T extends StatefulWidget> on State<T> {
     refusedFieldIds.clear();
   }
 
-  /// Sets the inline form-level message; null clears it.
+  /// What each field held when the form-level message was last set; null
+  /// while none shows.
+  Map<String, dynamic>? valuesAtFormError;
+
+  /// Whether [clearFormErrorOnEdit] is due after the next frame.
+  bool watchingForEdit = false;
+
+  /// What each field holds now, by field id: the fields' own values, which
+  /// stay the same objects until a field changes.
+  Map<String, dynamic>? get fieldValues {
+    final fields = formKey.currentState?.fields;
+    if (fields == null) return null;
+    return {for (final entry in fields.entries) entry.key: entry.value.value};
+  }
+
+  /// Sets the inline form-level message; null clears it. A message goes on
+  /// the next edit of the form ([clearFormErrorOnEdit]), so no form clears
+  /// it from its own `onChanged`.
   void setFormError(String? message) {
+    valuesAtFormError = message == null ? null : fieldValues;
+    if (valuesAtFormError != null && !watchingForEdit) {
+      watchingForEdit = true;
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => clearFormErrorOnEdit(),
+      );
+    }
     if (formError == message || !mounted) return;
     setState(() => formError = message);
+  }
+
+  /// Clears the form-level message once a field holds something else than
+  /// when the message was set. An edit always draws a frame, so this runs
+  /// after each frame while a message shows, and not at all otherwise.
+  void clearFormErrorOnEdit() {
+    final shown = valuesAtFormError;
+    final now = fieldValues;
+    watchingForEdit = false;
+    if (!mounted || shown == null || now == null) {
+      valuesAtFormError = null;
+      return;
+    }
+    if (!EvaluationFormEquality.mapsEqual(shown, now)) {
+      setFormError(null);
+      return;
+    }
+    watchingForEdit = true;
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => clearFormErrorOnEdit(),
+    );
   }
 }

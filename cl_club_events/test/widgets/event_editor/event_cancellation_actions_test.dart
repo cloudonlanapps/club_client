@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:cl_club_events/src/models/event_cancellation_form_helpers.dart';
 import 'package:cl_club_events/src/models/event_cancellation_messages.dart';
 import 'package:cl_club_events/src/widgets/event_editor/event_management_section.dart';
+import 'package:cl_club_forms/cl_club_forms.dart' show EventCancellationForm;
 import 'package:cl_club_forms/src/widgets/event_cancellation/event_cancellation_form_validators.dart'
     show EventCancellationFormValidators;
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -317,6 +320,38 @@ void main() {
       expect(find.text(EventCancellationMessages.tooClose), findsOneWidget);
       expect(find.textContaining('raw server text'), findsNothing);
       expect(find.byType(ShadDialog), findsOneWidget);
+    });
+
+    testWidgets('Issue 97: a server that cannot be reached is a toast, not '
+        'a message in the cancellation form, and the dialog is on again', (
+      tester,
+    ) async {
+      final events = await _pump(tester, _event(EventType.camp));
+      events.refusal = TimeoutException('connection closed');
+      await _press(tester, EventCancellationMessages.cancelCamp);
+      await _typeReason(tester, _reason);
+
+      await _press(tester, EventCancellationMessages.cancelCamp);
+
+      const unreachable =
+          'Could not reach the server. Check the connection and try again.';
+      expect(find.byType(ShadToast), findsOneWidget);
+      expect(find.text(unreachable), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(EventCancellationForm),
+          matching: find.text(unreachable),
+        ),
+        findsNothing,
+      );
+      expect(find.textContaining('connection closed'), findsNothing);
+      expect(find.byType(ShadDialog), findsOneWidget);
+      expect(
+        tester
+            .widget<EventCancellationForm>(find.byType(EventCancellationForm))
+            .enabled,
+        isTrue,
+      );
     });
 
     testWidgets('Issue 40: Undo cancel asks, then undoes the cancellation', (

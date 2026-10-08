@@ -1,4 +1,9 @@
+import 'dart:async';
+
+import 'package:cl_club_events/src/models/camp_event_form_helpers.dart'
+    show EventFormSubmit;
 import 'package:cl_club_events/src/widgets/event_editor/event_eligibility_card.dart';
+import 'package:cl_club_forms/cl_club_forms.dart' show EventEligibilityForm;
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_fields.dart'
     show AgeEligibilityFields;
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
@@ -58,6 +63,9 @@ class _RecordingEvents extends ClEventsMasterNotifier {
   final Event event;
   final List<_Sent> sent = [];
 
+  /// When set, every write throws this instead of applying.
+  Exception? refusal;
+
   @override
   Future<Map<int, Event>> build() async => {event.id: event};
 
@@ -79,6 +87,8 @@ class _RecordingEvents extends ClEventsMasterNotifier {
     List<EventSession>? Function()? sessions,
   }) async {
     sent.add(_Sent('update', minAge, maxAge, strictAge: strictAge));
+    final refused = refusal;
+    if (refused != null) throw refused;
     return event;
   }
 
@@ -246,5 +256,63 @@ void main() {
     expect(sent.minAge!(), isNull);
     expect(sent.maxAge!(), const Age(years: 12));
     expect(sent.strictAge, isFalse);
+  });
+
+  group('Issue 97: the Eligibility editor shows a refusal where it '
+      'belongs', () {
+    Future<void> saveRefused(WidgetTester tester, Exception refusal) async {
+      final events = await _pump(tester, _event());
+      events.refusal = refusal;
+      await _openEditor(tester);
+      await tester.enterText(
+        _input(AgeEligibilityFormFields.minAgeYearsId),
+        '6',
+      );
+      await tester.pumpAndSettle();
+      await _save(tester);
+      expect(events.sent, hasLength(1));
+    }
+
+    testWidgets('Issue 97: a band the server refuses shows inline in the '
+        'form, with no toast, and the editor is on again', (tester) async {
+      await saveRefused(
+        tester,
+        const ServerException(
+          statusCode: 422,
+          code: SdkErrorCode.invalidState,
+          message: 'raw server text',
+        ),
+      );
+
+      expect(
+        find.descendant(
+          of: find.byType(EventEligibilityForm),
+          matching: find.text(EventFormSubmit.invertedBandMessage),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(ShadToast), findsNothing);
+      expect(find.textContaining('raw server text'), findsNothing);
+      expect(
+        tester
+            .widget<EventEligibilityForm>(find.byType(EventEligibilityForm))
+            .enabled,
+        isTrue,
+      );
+    });
+
+    testWidgets('Issue 97: a server that cannot be reached is a toast, and '
+        'the editor stays open', (tester) async {
+      await saveRefused(tester, TimeoutException('connection closed'));
+
+      expect(find.byType(ShadToast), findsOneWidget);
+      expect(
+        find.text(
+          'Could not reach the server. Check the connection and try again.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Save'), findsOneWidget, reason: 'still editing');
+    });
   });
 }

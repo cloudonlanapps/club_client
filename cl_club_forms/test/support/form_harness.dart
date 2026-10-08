@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+export 'form_refusal_harness.dart';
+
 /// A surface tall enough that no form scrolls its fields out of reach.
 const Size kFormSurface = Size(1024, 2400);
 

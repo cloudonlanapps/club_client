@@ -15,7 +15,6 @@ class EvaluationPeriodFields extends StatelessWidget {
     this.initialStart,
     this.initialEnd,
     this.enabled = true,
-    this.onChanged,
     super.key,
   });
 
@@ -27,9 +26,6 @@ class EvaluationPeriodFields extends StatelessWidget {
 
   /// Whether the dates can change.
   final bool enabled;
-
-  /// Called after either date changes.
-  final VoidCallback? onChanged;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -43,7 +39,6 @@ class EvaluationPeriodFields extends StatelessWidget {
           placeholder: const Text(EvaluationStrings.periodNone),
           initialValue: initialStart,
           enabled: enabled,
-          onChanged: (_) => onChanged?.call(),
         ),
       ),
       LabeledFormRow(
@@ -53,7 +48,6 @@ class EvaluationPeriodFields extends StatelessWidget {
           placeholder: const Text(EvaluationStrings.periodNone),
           initialValue: initialEnd,
           enabled: enabled,
-          onChanged: (_) => onChanged?.call(),
         ),
       ),
     ],

@@ -48,6 +48,16 @@ class EventEligibilityCardState extends ConsumerState<EventEligibilityCard> {
       return true;
     } on Object catch (e, st) {
       if (!mounted) return false;
+      // What the server refuses about the criteria shows on the form;
+      // anything else is a failed save.
+      final refusal = EventFormSubmit.eligibilityRefusal(e);
+      if (refusal != null) {
+        formKey.currentState?.showErrors(
+          fieldErrors: refusal.fieldErrors,
+          formError: refusal.formError,
+        );
+        return false;
+      }
       ShadToaster.of(context).show(
         ShadToast.destructive(
           description: Text(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cl_club_events/src/models/programme_schedule_form_helpers.dart';
 import 'package:cl_club_events/src/utils/programme_end_date.dart';
 import 'package:cl_club_events/src/widgets/event_editor/event_schedule_section.dart';
@@ -379,5 +381,39 @@ void main() {
     expect(value.from, from);
     expect(value.schedule, schedule);
     expect(value.venueId, 9);
+  });
+
+  testWidgets('Issue 97: a server that cannot be reached is a toast, not a '
+      'message in the Adjust Schedule form, and the dialog is on again', (
+    tester,
+  ) async {
+    final events = await _pump(tester, programmeFixture());
+    events.error = TimeoutException('connection closed');
+
+    await _openAdjust(tester);
+    await _pickTuesdayAndSaturday(tester);
+    await _save(tester);
+
+    const unreachable =
+        'Could not reach the server. Check the connection and try again.';
+    expect(find.byType(ShadToast), findsOneWidget);
+    expect(find.text(unreachable), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(ProgrammeScheduleAdjustForm),
+        matching: find.text(unreachable),
+      ),
+      findsNothing,
+    );
+    expect(find.textContaining('connection closed'), findsNothing);
+    expect(find.byType(ProgrammeAdjustScheduleDialog), findsOneWidget);
+    expect(
+      tester
+          .widget<ProgrammeScheduleAdjustForm>(
+            find.byType(ProgrammeScheduleAdjustForm),
+          )
+          .enabled,
+      isTrue,
+    );
   });
 }

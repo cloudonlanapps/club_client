@@ -460,6 +460,40 @@ void main() {
       expect(find.textContaining('connection refused'), findsNothing);
     });
 
+    testWidgets('Issue 97: a failure that is not about the inquiry is a '
+        'toast, not a message in the form, which keeps what was typed and '
+        'is on again', (tester) async {
+      final notifier = await _pump(
+        tester,
+        capabilities: _noCountryCode,
+        strings: _siteCopy,
+      );
+      notifier.failure = Exception('connection refused');
+
+      await _fillAndSend(tester, '');
+
+      expect(find.byType(ShadToast), findsOneWidget);
+      expect(find.text('Something went wrong.'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(InquiryForm),
+          matching: find.text('Something went wrong.'),
+        ),
+        findsNothing,
+      );
+      expect(find.text('Robin Example'), findsOneWidget);
+      expect(
+        tester.widget<InquiryForm>(find.byType(InquiryForm)).enabled,
+        true,
+      );
+      expect(
+        tester
+            .widget<ShadButton>(find.widgetWithText(ShadButton, 'Send'))
+            .onPressed,
+        isNotNull,
+      );
+    });
+
     test(
       'Issue 84: cl_club_website/lib builds no input control of its own',
       () {

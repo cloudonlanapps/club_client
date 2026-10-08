@@ -12,8 +12,14 @@ abstract final class EvaluationErrorMessage {
   static String of(
     Object error, {
     String fallback = EvaluationViewStrings.saveFailed,
-  }) {
-    if (error is! ServerException) return fallback;
+  }) => refusalOf(error) ?? fallback;
+
+  /// The message for a refusal by the server that says what is wrong with
+  /// what was sent, to show in the form. Null for a failure that is not
+  /// about it — the server not reached, an unexpected error — which the
+  /// host reports in a toast.
+  static String? refusalOf(Object error) {
+    if (error is! ServerException) return null;
     return switch (error.code) {
       SdkErrorCode.templateInUse => EvaluationViewStrings.templateInUse,
       SdkErrorCode.originMismatch => error.message,
@@ -29,7 +35,7 @@ abstract final class EvaluationErrorMessage {
         EvaluationViewStrings.duplicateEvaluation,
       SdkErrorCode.periodInFuture => EvaluationViewStrings.periodInFuture,
       SdkErrorCode.eventNotFound => EvaluationViewStrings.eventNotFound,
-      _ => fallback,
+      _ => null,
     };
   }
 

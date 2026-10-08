@@ -75,7 +75,6 @@ class ClubAddressFormState extends State<ClubAddressForm>
         translatedIds: ClubAddressFormFields.translatedIds,
         languages: widget.languages,
       ),
-      onChanged: () => setFormError(null),
       child: FormBody(
         error: formError,
         children: [

@@ -10,6 +10,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart';
 
 import '../models/identity_document_upload_errors.dart';
+import '../models/identity_documents_form_helpers.dart';
 import '../models/identity_documents_submit_sizes.dart';
 import '../models/identity_documents_submit_strings.dart';
 import '../models/onboarding_write_messages.dart';
@@ -128,13 +129,20 @@ class IdentityDocumentsSubmitBodyState
       ref.read(authStateProvider.notifier).setUser(updated);
     } on Object catch (error) {
       if (!mounted) return;
-      ShadToaster.of(context).show(
-        ShadToast.destructive(
-          description: Text(
-            writeFailureMessage(error, fallback: submissionFailedMessage),
+      // A submission the server refuses for want of a document says so
+      // inline; anything else is a failed submission.
+      final refused = IdentityDocumentsFormSubmit.formErrorFor(error);
+      if (refused != null) {
+        consentKey.currentState?.showErrors(formError: refused);
+      } else {
+        ShadToaster.of(context).show(
+          ShadToast.destructive(
+            description: Text(
+              writeFailureMessage(error, fallback: submissionFailedMessage),
+            ),
           ),
-        ),
-      );
+        );
+      }
     } finally {
       if (mounted) setState(() => submitting = false);
     }

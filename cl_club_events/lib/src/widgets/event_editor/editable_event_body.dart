@@ -348,6 +348,16 @@ class OrganizerCoachesSectionState
       return true;
     } on Object catch (e, st) {
       if (!mounted) return false;
+      // An organizer or a coach the server refuses shows on that field, a
+      // clash inline; anything else is a failed save.
+      final refusal = EventFormSubmit.staffRefusal(e);
+      if (refusal != null) {
+        _editorKey.currentState?.showErrors(
+          fieldErrors: refusal.fieldErrors,
+          formError: refusal.formError,
+        );
+        return false;
+      }
       ShadToaster.of(context).show(
         ShadToast.destructive(
           description: Text(

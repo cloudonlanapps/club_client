@@ -636,6 +636,15 @@ class PersonalDetailsCard extends ConsumerStatefulWidget {
 class _PersonalDetailsCardState extends ConsumerState<PersonalDetailsCard> {
   final _formKey = GlobalKey<UserPersonalDetailsFormState>();
 
+  /// Shows what the server refuses about a field on that field. Returns
+  /// whether [error] named one.
+  bool _showRefusedFields(ServerException error) {
+    final fieldErrors = UserFormSubmit.personalDetailsFieldErrors(error);
+    if (fieldErrors.isEmpty) return false;
+    _formKey.currentState?.showErrors(fieldErrors: fieldErrors);
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = widget.user;
@@ -692,6 +701,7 @@ class _PersonalDetailsCardState extends ConsumerState<PersonalDetailsCard> {
           notifier: notifier,
         ),
         successMessage: 'Personal details updated.',
+        onRefused: _showRefusedFields,
       ),
     );
   }

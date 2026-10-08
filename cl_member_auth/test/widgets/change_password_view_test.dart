@@ -125,4 +125,40 @@ void main() {
       expect(cancelled, 1);
     });
   });
+
+  group('Issue 97: ChangePasswordView reports any failure', () {
+    testWidgets('Issue 97: a change that throws something else than a '
+        'server refusal is a toast, and the form is on again', (tester) async {
+      var succeeded = 0;
+      await _pump(
+        tester,
+        onSuccess: () => succeeded++,
+        onChangePassword: (_, _) async => throw StateError('raw failure text'),
+      );
+      await _fillAndUpdate(tester);
+
+      expect(succeeded, 0);
+      expect(
+        find.text('Could not change password. Please try again.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('raw failure text'), findsNothing);
+      expect(
+        tester
+            .widget<ShadInputFormField>(
+              _field(ChangePasswordFormFields.currentId),
+            )
+            .enabled,
+        isTrue,
+      );
+      expect(
+        tester
+            .widget<ShadButton>(
+              find.widgetWithText(ShadButton, 'Update password'),
+            )
+            .onPressed,
+        isNotNull,
+      );
+    });
+  });
 }

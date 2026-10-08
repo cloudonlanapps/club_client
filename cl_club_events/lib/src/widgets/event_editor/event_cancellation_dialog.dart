@@ -14,6 +14,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../models/event_cancellation_form_helpers.dart';
 import '../../models/event_cancellation_messages.dart';
 import '../../utils/event_cancellation_error.dart';
+import '../../utils/event_refusal.dart';
 
 /// Dialog that cancels a camp from a chosen upcoming session, or calls a
 /// one-off off, with a reason (club_client#40).
@@ -92,12 +93,13 @@ class EventCancellationDialogState
       Navigator.of(context).pop(true);
     } on Object catch (e, st) {
       if (!mounted) return;
+      final fallback = isCamp
+          ? EventCancellationMessages.cancelCampFailed
+          : EventCancellationMessages.callOffFailed;
       final message = eventCancellationErrorMessage(
         e,
         stackTrace: st,
-        fallback: isCamp
-            ? EventCancellationMessages.cancelCampFailed
-            : EventCancellationMessages.callOffFailed,
+        fallback: fallback,
       );
       if (e is StaleVersionException) {
         ShadToaster.of(context).show(
@@ -107,7 +109,13 @@ class EventCancellationDialogState
         return;
       }
       setState(() => isSubmitting = false);
-      if (isCamp && isAboutSession(e)) {
+      // A failure that is not about the cancellation is a toast; the
+      // dialog stays, on again, for another try.
+      if (!isRefusalToShowInForm(e, message: message, fallback: fallback)) {
+        ShadToaster.of(context).show(
+          ShadToast.destructive(description: Text(message)),
+        );
+      } else if (isCamp && isAboutSession(e)) {
         formKey.currentState?.showErrors(
           fieldErrors: {EventCancellationFormFields.fromSessionId: message},
         );

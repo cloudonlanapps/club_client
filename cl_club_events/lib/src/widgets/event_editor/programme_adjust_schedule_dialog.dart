@@ -13,6 +13,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../models/programme_schedule_form_helpers.dart';
 import '../../models/stale_version_message.dart';
+import '../../utils/event_refusal.dart';
 import '../../utils/programme_end_date.dart';
 import '../../utils/schedule_save_error.dart';
 
@@ -103,7 +104,15 @@ class ProgrammeAdjustScheduleDialogState
         fallback: programmeScheduleAdjustFailedMessage,
       );
       final fieldId = refusedFieldId(e);
-      if (fieldId == null) {
+      // A failure that is not about the schedule is a toast; the dialog
+      // stays, on again, for another try.
+      if (!isRefusalToShowInForm(
+        e,
+        message: message,
+        fallback: programmeScheduleAdjustFailedMessage,
+      )) {
+        toaster.show(ShadToast.destructive(description: Text(message)));
+      } else if (fieldId == null) {
         form.showErrors(formError: message);
       } else {
         form.showErrors(fieldErrors: {fieldId: message});

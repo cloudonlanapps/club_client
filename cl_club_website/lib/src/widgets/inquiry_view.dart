@@ -113,12 +113,21 @@ class InquiryViewState extends ConsumerState<InquiryView> {
         isSending = false;
         isSent = true;
       });
-    } on Exception catch (error) {
+    } on Object catch (error) {
       if (!mounted) return;
       setState(() => isSending = false);
-      formKey.currentState?.showErrors(
-        formError: InquiryFormSubmit.refusalMessage(error, strings),
-      );
+      // What the server refuses about the inquiry shows in the form; a
+      // failure that is not about it is a toast.
+      final refused = InquiryFormSubmit.formErrorFor(error, strings);
+      if (refused != null) {
+        formKey.currentState?.showErrors(formError: refused);
+      } else {
+        ShadToaster.of(context).show(
+          ShadToast.destructive(
+            description: Text(InquiryFormSubmit.failureMessage(strings)),
+          ),
+        );
+      }
     }
   }
 

@@ -2,7 +2,8 @@ import 'package:cl_club_forms/cl_club_forms.dart'
     show SignupGender, UserFormFields;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClUsersMasterNotifier;
-import 'package:club_sdk_2/club_sdk_2.dart' show Gender, UserPrivate;
+import 'package:club_sdk_2/club_sdk_2.dart'
+    show Gender, SdkErrorCode, ServerException, UserPrivate;
 import 'package:ui_lib/ui_lib.dart' show PhoneNumber;
 
 /// SDK → form: the reapply form's initial values for [user], keyed by
@@ -25,6 +26,30 @@ Map<String, dynamic> buildReapplyFormInitialValues(UserPrivate user) {
 /// Form → SDK adapter for the reapply form (`SignupForm`, which lives
 /// SDK-free in `cl_club_forms`).
 abstract final class ReapplyFormSubmit {
+  /// Shown on the email when another account has it.
+  static const String emailRegisteredMessage =
+      'That email is already registered.';
+
+  /// Shown on the date of birth when the server does not take it.
+  static const String dateOfBirthRefusedMessage =
+      'That date of birth was not accepted. Pick it again.';
+
+  /// What the form shows for a refused resubmission: a message on the field
+  /// the server's answer names, keyed by field id. Empty when [error] names
+  /// no field; the host then reports a failed resubmission.
+  static Map<String, String> fieldErrorsFor(Object error) {
+    if (error is! ServerException) return const {};
+    return switch (error.code) {
+      SdkErrorCode.duplicateEmail => const {
+        UserFormFields.emailId: emailRegisteredMessage,
+      },
+      SdkErrorCode.invalidDobNotUtcMidnight => const {
+        UserFormFields.dateOfBirthUtcId: dateOfBirthRefusedMessage,
+      },
+      _ => const {},
+    };
+  }
+
   /// Resubmits the member's own registration with the form's [values]
   /// (keyed by [UserFormFields] ids, as `SignupFormState.validate` returns
   /// them) and returns the server's answer.

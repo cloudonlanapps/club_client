@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cl_club_events/src/utils/programme_end_date.dart';
 import 'package:cl_club_events/src/widgets/event_editor/event_schedule_section.dart';
 import 'package:cl_club_events/src/widgets/event_editor/programme_end_date_dialog.dart';
@@ -311,5 +313,61 @@ void main() {
     await _pump(tester, programmeFixture(), canEdit: false);
 
     expect(_action, findsNothing);
+  });
+
+  testWidgets('Issue 97: a server that cannot be reached is a toast, not a '
+      'message in the End Date form, and the dialog is on again', (
+    tester,
+  ) async {
+    final events = await _pump(
+      tester,
+      programmeFixture(untilTimeUtc: localNoon(6).toUtc()),
+    );
+    events.error = TimeoutException('connection closed');
+
+    await _open(tester);
+    await _pick(tester, _day(9));
+    await _press(tester, 'Save');
+
+    const unreachable =
+        'Could not reach the server. Check the connection and try again.';
+    expect(find.byType(ShadToast), findsOneWidget);
+    expect(find.text(unreachable), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(ProgrammeEndDateForm),
+        matching: find.text(unreachable),
+      ),
+      findsNothing,
+    );
+    expect(find.byType(ProgrammeEndDateDialog), findsOneWidget);
+    expect(
+      tester
+          .widget<ProgrammeEndDateForm>(find.byType(ProgrammeEndDateForm))
+          .enabled,
+      isTrue,
+    );
+  });
+
+  testWidgets('Issue 97: a refusal the dialog has no words for is a toast '
+      'with the fixed message', (tester) async {
+    final events = await _pump(
+      tester,
+      programmeFixture(untilTimeUtc: localNoon(6).toUtc()),
+    );
+    events.error = const ServerException(
+      statusCode: 400,
+      code: 'SOMETHING_NEW',
+      message: 'raw server text',
+    );
+
+    await _open(tester);
+    await _pick(tester, _day(9));
+    await _press(tester, 'Save');
+
+    expect(find.byType(ShadToast), findsOneWidget);
+    expect(find.text(programmeEndDateFailedMessage), findsOneWidget);
+    expect(find.textContaining('raw server text'), findsNothing);
+    expect(find.byType(ProgrammeEndDateDialog), findsOneWidget);
   });
 }

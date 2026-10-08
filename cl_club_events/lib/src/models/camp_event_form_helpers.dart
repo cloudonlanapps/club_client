@@ -3,7 +3,17 @@ import 'package:cl_club_forms/cl_club_forms.dart'
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier, formAgeFromSdk, sdkAgeFromForm;
 import 'package:club_sdk_2/club_sdk_2.dart'
-    show Age, Event, EventType, Gender, Visibility;
+    show
+        Age,
+        Event,
+        EventType,
+        Gender,
+        SdkErrorCode,
+        ServerException,
+        StaleVersionException,
+        Visibility;
+
+import '../utils/event_refusal.dart';
 
 /// SDK ↔ form adapter for the camp-event section editors — the one place that
 /// bridges the forms' flat `Map<String, dynamic>` (keyed by [EventFormFields],
@@ -129,6 +139,74 @@ class EventFormSubmit {
       strictAge: strictAge,
     );
   }
+
+  /// Shown inline when the server refuses a minimum age above the maximum.
+  static const String invertedBandMessage =
+      'Minimum age must not be greater than maximum age.';
+
+  /// Shown on the organizer when the server no longer knows them.
+  static const String organizerGoneMessage =
+      'The organizer no longer has an account. Pick another.';
+
+  /// Shown on the coaches when the server no longer knows one of them.
+  static const String coachGoneMessage =
+      'A coach no longer has an account. Remove them and save again.';
+
+  /// How the server's message for a missing user starts when it is the
+  /// organizer; any other missing user of a staff save is a coach.
+  static const String organizerNotFoundPrefix = 'Organizer';
+
+  /// The status of a body that names something the server does not have.
+  static const int notFoundStatus = 404;
+
+  /// What the eligibility editor shows for [error], or `null` when the
+  /// refusal names nothing the form holds (the host then reports a failed
+  /// save).
+  static EventFormRefusal? eligibilityRefusal(Object error) {
+    if (error is! ServerException || error is StaleVersionException) {
+      return null;
+    }
+    return switch (error.code) {
+      SdkErrorCode.invalidState => (
+        fieldErrors: const {},
+        formError: invertedBandMessage,
+      ),
+      _ => null,
+    };
+  }
+
+  /// What the organizer and coaches editor shows for [error], or `null`
+  /// when the refusal names nothing the form holds (the host then reports
+  /// a failed save).
+  ///
+  /// An organizer or a coach without an account shows on that field: the
+  /// server answers both with `USER_NOT_FOUND` and tells them apart in its
+  /// message. A programme's clash with another booking shows inline.
+  static EventFormRefusal? staffRefusal(Object error) {
+    if (error is! ServerException || error is StaleVersionException) {
+      return null;
+    }
+    switch (error.code) {
+      case SdkErrorCode.userNotFound when error.statusCode == notFoundStatus:
+        final organizer = error.message.startsWith(organizerNotFoundPrefix);
+        return (
+          fieldErrors: organizer
+              ? const {EventFormFields.organizerNameId: organizerGoneMessage}
+              : const {EventFormFields.coachNamesId: coachGoneMessage},
+          formError: null,
+        );
+      case SdkErrorCode.conflict:
+      case SdkErrorCode.timeConflict:
+        return (fieldErrors: const {}, formError: staffClashMessage);
+      default:
+        return null;
+    }
+  }
+
+  /// Shown inline when the organizer is booked elsewhere at the same time.
+  static const String staffClashMessage =
+      'That clashes with another booking of the organizer, a coach or the '
+      'venue.';
 
   /// Organizer & coaches section. `organizerName` is a direct field (sending
   /// the trimmed value, possibly empty); `coachNames` is a clearable list.

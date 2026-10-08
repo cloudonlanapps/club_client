@@ -67,8 +67,8 @@ class EvaluationTemplateCreateForm extends StatefulWidget {
 class EvaluationTemplateCreateFormState
     extends State<EvaluationTemplateCreateForm>
     with
-        EvaluationFormFocus<EvaluationTemplateCreateForm>,
-        EvaluationFormContract<EvaluationTemplateCreateForm> {
+        EvaluationFormContract<EvaluationTemplateCreateForm>,
+        EvaluationFormFocus<EvaluationTemplateCreateForm> {
   // The layout field owns no focusable input.
   @override
   bool get focusFirstInvalid => false;
@@ -129,8 +129,6 @@ class EvaluationTemplateCreateFormState
               onEditItem: widget.onEditItem,
               onEditSectionTitle: widget.onEditSectionTitle,
               onPickExisting: widget.onPickExisting,
-              // A fixed layout clears the message about it.
-              onChanged: (_) => setFormError(null),
             ),
           ),
         ],

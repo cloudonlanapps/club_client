@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:cl_club_forms/cl_club_forms.dart'
     show SignupForm, UserFormFields;
 import 'package:cl_member_auth/cl_member_auth.dart'
     show AuthNotifier, authStateProvider;
 import 'package:cl_member_onboarding/src/models/onboarding_write_messages.dart';
+import 'package:cl_member_onboarding/src/models/reapply_form_helpers.dart';
 import 'package:cl_member_onboarding/src/widgets/reapply_variant.dart';
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
@@ -42,12 +45,19 @@ class _Auth extends AuthNotifier {
   void setUser(UserPrivate user) => stored = user;
 }
 
-/// Records what a reapplication carried, or has the server refuse it when
-/// [fails].
-class _Users extends ClUsersMasterNotifier {
-  _Users({required this.fails});
+/// The failure of a reapplication the server refuses for no reason the
+/// form can show.
+const _unknownRefusal = ServerException(
+  statusCode: 400,
+  code: 'SOMETHING_NEW',
+  message: 'raw failure text',
+);
 
-  final bool fails;
+/// Records what a reapplication carried, or fails it with [failure].
+class _Users extends ClUsersMasterNotifier {
+  _Users({this.failure});
+
+  final Exception? failure;
   final lastNames = <String?>[];
 
   @override
@@ -63,13 +73,8 @@ class _Users extends ClUsersMasterNotifier {
     String? phone,
     String? email,
   }) async {
-    if (fails) {
-      throw const ServerException(
-        statusCode: 400,
-        code: 'SOMETHING_NEW',
-        message: 'raw failure text',
-      );
-    }
+    final failure = this.failure;
+    if (failure != null) throw failure;
     lastNames.add(lastName);
     return _user(lastName: lastName);
   }
@@ -80,13 +85,13 @@ Finder _field(String id) =>
 
 Future<(_Users, _Auth)> _pump(
   WidgetTester tester, {
-  bool fails = false,
+  Exception? failure,
   VoidCallback? onContinue,
   String countryCode = '91',
 }) async {
   await tester.binding.setSurfaceSize(const Size(900, 2000));
   addTearDown(() => tester.binding.setSurfaceSize(null));
-  final users = _Users(fails: fails);
+  final users = _Users(failure: failure);
   final auth = _Auth();
   await tester.pumpWidget(
     ProviderScope(
@@ -151,7 +156,11 @@ void main() {
     testWidgets('Issue 53: a failed resubmission is a fixed toast and the '
         'form takes input again', (tester) async {
       var continued = 0;
-      await _pump(tester, fails: true, onContinue: () => continued++);
+      await _pump(
+        tester,
+        failure: _unknownRefusal,
+        onContinue: () => continued++,
+      );
 
       await _submit(tester);
 
@@ -164,6 +173,62 @@ void main() {
             .enabled,
         isTrue,
       );
+    });
+  });
+
+  group('Issue 97: ReapplyVariant shows a refusal where it belongs', () {
+    testWidgets('Issue 97: an email another account has shows on the email '
+        'field, with no toast, and the form takes input again', (
+      tester,
+    ) async {
+      var continued = 0;
+      await _pump(
+        tester,
+        failure: const ServerException(
+          statusCode: 409,
+          code: SdkErrorCode.duplicateEmail,
+          message: 'raw failure text',
+        ),
+        onContinue: () => continued++,
+      );
+
+      await _submit(tester);
+
+      expect(continued, 0);
+      expect(
+        find.descendant(
+          of: _field(UserFormFields.emailId),
+          matching: find.text(ReapplyFormSubmit.emailRegisteredMessage),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(ShadToast), findsNothing);
+      expect(find.textContaining('raw failure text'), findsNothing);
+      expect(
+        tester
+            .widget<ShadInputFormField>(_field(UserFormFields.emailId))
+            .enabled,
+        isTrue,
+      );
+      expect(
+        tester
+            .widget<ShadButton>(
+              find.widgetWithText(ShadButton, 'Submit changes'),
+            )
+            .onPressed,
+        isNotNull,
+      );
+    });
+
+    testWidgets('Issue 97: a server that cannot be reached is a toast, and '
+        'no field shows a message', (tester) async {
+      await _pump(tester, failure: TimeoutException('connection closed'));
+
+      await _submit(tester);
+
+      expect(find.byType(ShadToast), findsOneWidget);
+      expect(find.text(ReapplyFormSubmit.emailRegisteredMessage), findsNothing);
+      expect(find.textContaining('connection closed'), findsNothing);
     });
   });
 

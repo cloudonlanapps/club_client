@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../models/programme_schedule_form_helpers.dart';
+import '../../utils/event_refusal.dart';
 import '../../utils/programme_end_date.dart';
 import '../../utils/schedule_save_error.dart';
 
@@ -147,7 +148,15 @@ class ProgrammeEndDateDialogState
       if (!mounted) return;
       setState(() => saving = false);
       final message = failureOf(e);
-      if (isAboutLastDay(e) && lastDay != null) {
+      // A failure that is not about the end date is a toast; the dialog
+      // stays, on again, for another try.
+      if (!isRefusalToShowInForm(
+        e,
+        message: message,
+        fallback: programmeEndDateFailedMessage,
+      )) {
+        toaster.show(ShadToast.destructive(description: Text(message)));
+      } else if (isAboutLastDay(e) && lastDay != null) {
         formKey.currentState?.showErrors(
           fieldErrors: {ProgrammeEndDateFormFields.lastDayId: message},
         );

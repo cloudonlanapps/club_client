@@ -29,6 +29,69 @@ Future<void> pumpForm(
     ),
   );
   await tester.pumpAndSettle();
+  // Fields mounted on their own, outside a form, have nothing to keep the
+  // focus off them.
+  if (tester.allStates.any((state) => state is FormContract)) {
+    expectNoInputOffHasFocus(tester);
+  }
+}
+
+/// The text inputs on screen, in order.
+final Finder _textInputs = find.byType(EditableText);
+
+/// No text input that is turned off has the keyboard focus, so none takes
+/// typing. [pumpForm] checks it on every form it mounts, which covers a
+/// form that opens turned off with a field that asks for the focus.
+void expectNoInputOffHasFocus(WidgetTester tester) {
+  for (final input in tester.widgetList<ShadInput>(find.byType(ShadInput))) {
+    if (input.enabled) continue;
+    final texts = tester.widgetList<EditableText>(
+      find.descendant(of: find.byWidget(input), matching: _textInputs),
+    );
+    expect(
+      texts.where((text) => text.focusNode.hasFocus),
+      isEmpty,
+      reason: 'a text input that is off has the keyboard focus',
+    );
+  }
+}
+
+/// The keyboard check of a form: a text input that has the focus when the
+/// form is turned off takes no typing. [build] gives the same form with
+/// `enabled` on or off, as a host rebuilds it while it saves.
+///
+/// Every text input the form shows is tried in turn: it takes the focus,
+/// the form is turned off, and the keyboard types. The input must have lost
+/// the focus and the form's values must be as they were. Returns how many
+/// inputs were tried.
+Future<int> expectKeyboardIgnoredWhenOff(
+  WidgetTester tester,
+  Widget Function({required bool enabled}) build, {
+  Size size = kFormSurface,
+}) async {
+  await pumpForm(tester, build(enabled: true), size: size);
+  final count = _textInputs.evaluate().length;
+  var tried = 0;
+  for (var i = 0; i < count; i++) {
+    await pumpForm(tester, build(enabled: true), size: size);
+    if (i >= _textInputs.evaluate().length) break;
+    await tester.showKeyboard(_textInputs.at(i));
+    await tester.pumpAndSettle();
+    final focus = tester.widget<EditableText>(_textInputs.at(i)).focusNode;
+    // A read-only input takes no focus to begin with.
+    if (!focus.hasFocus) continue;
+    tried++;
+
+    final form = tester.state<ShadFormState>(find.byType(ShadForm).first);
+    final before = Map<String, dynamic>.of(form.value);
+    await pumpForm(tester, build(enabled: false), size: size);
+    expect(focus.hasFocus, isFalse, reason: 'input $i kept the focus');
+
+    tester.testTextInput.enterText('typed while off');
+    await tester.pumpAndSettle();
+    expect(form.value, before, reason: 'typing changed input $i');
+  }
+  return tried;
 }
 
 /// The labels of the form's rows, top to bottom, as shown: a required row's

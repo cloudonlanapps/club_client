@@ -167,7 +167,8 @@ void main() {
         expect(await _validate(tester, state), isNull);
         expect(
           find.text(
-            'Set at least one criterion (age or gender) for an '
+            'Set at least one criterion (age or gender) for '
+            '${mode == GroupMode.auto ? 'an' : 'a'} '
             '${mode.label.toLowerCase()} group.',
           ),
           findsOneWidget,

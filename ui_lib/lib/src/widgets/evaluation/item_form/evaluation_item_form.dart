@@ -7,6 +7,7 @@ import '../../../models/evaluation_item_kind.dart';
 import '../../../models/evaluation_rating_style.dart';
 import '../../../utils/evaluation_answer_rules.dart';
 import '../../../utils/evaluation_form_equality.dart';
+import '../common/evaluation_form_focus.dart';
 import 'evaluation_item_form_fields.dart';
 import 'evaluation_item_form_validators.dart';
 import 'evaluation_item_form_values.dart';
@@ -48,7 +49,8 @@ class EvaluationItemForm extends StatefulWidget {
 
 /// State of [EvaluationItemForm]: the form, and its values as of the last
 /// change, which decide the dependent fields.
-class EvaluationItemFormState extends State<EvaluationItemForm> {
+class EvaluationItemFormState extends State<EvaluationItemForm>
+    with EvaluationFormFocus<EvaluationItemForm> {
   /// The form.
   final GlobalKey<ShadFormState> formKey = GlobalKey<ShadFormState>();
 

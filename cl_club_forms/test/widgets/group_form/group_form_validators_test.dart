@@ -143,7 +143,8 @@ void main() {
         'age limit is refused, as one with no gender was', () {
       for (final mode in [GroupMode.auto, GroupMode.semiAuto]) {
         final message =
-            'Set at least one criterion (age or gender) for an '
+            'Set at least one criterion (age or gender) for '
+            '${mode == GroupMode.auto ? 'an' : 'a'} '
             '${mode.label.toLowerCase()} group.';
         expect(
           GroupFormValidators.eligibility(
@@ -246,7 +247,24 @@ void main() {
           GroupMode.semiAuto,
           hasAnyCriterion: false,
         ),
-        'Set at least one criterion (age or gender) for an semi-auto group.',
+        'Set at least one criterion (age or gender) for a semi-auto group.',
+      );
+    });
+
+    test('Issue 73: the article follows the name of the mode', () {
+      expect(
+        GroupFormValidators.criteriaForMode(
+          GroupMode.semiAuto,
+          hasAnyCriterion: false,
+        ),
+        endsWith('for a semi-auto group.'),
+      );
+      expect(
+        GroupFormValidators.criteriaForMode(
+          GroupMode.auto,
+          hasAnyCriterion: false,
+        ),
+        endsWith('for an auto group.'),
       );
     });
 

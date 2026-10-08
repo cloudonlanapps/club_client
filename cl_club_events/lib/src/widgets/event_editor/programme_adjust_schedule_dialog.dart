@@ -142,7 +142,7 @@ class ProgrammeAdjustScheduleDialogState
         ),
         ShadButton(
           onPressed: saving ? null : save,
-          child: const Text('Save'),
+          child: Text(saving ? 'Saving…' : 'Save'),
         ),
       ],
       child: ConstrainedBox(

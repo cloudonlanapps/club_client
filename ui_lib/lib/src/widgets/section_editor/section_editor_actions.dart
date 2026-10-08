@@ -5,7 +5,7 @@ import '../../theme/text_theme_extensions.dart';
 
 /// The action row under an inline section editor: an optional Clear, then
 /// Cancel and Save. Used by `EditableSectionCard`; every action is disabled
-/// while [saving].
+/// while [saving], and Save then reads [savingLabel].
 class SectionEditorActions extends StatelessWidget {
   const SectionEditorActions({
     required this.saving,
@@ -31,11 +31,11 @@ class SectionEditorActions extends StatelessWidget {
   static const String cancelLabel = 'Cancel';
   static const String saveLabel = 'Save';
 
+  /// What Save reads while the save is in flight.
+  static const String savingLabel = 'Saving…';
+
   /// Gap between two actions.
   static const double gap = 8;
-
-  /// Side of the in-flight spinner inside Save.
-  static const double spinnerSize = 14;
 
   @override
   Widget build(BuildContext context) {
@@ -58,13 +58,10 @@ class SectionEditorActions extends StatelessWidget {
         ShadButton(
           enabled: !saving,
           onPressed: saving ? null : onSave,
-          child: saving
-              ? const SizedBox(
-                  width: spinnerSize,
-                  height: spinnerSize,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(saveLabel, style: theme.textTheme.buttonLabel),
+          child: Text(
+            saving ? savingLabel : saveLabel,
+            style: theme.textTheme.buttonLabel,
+          ),
         ),
       ],
     );

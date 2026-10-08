@@ -7,11 +7,17 @@ abstract final class EventCancellationMessages {
   /// Button that cancels a camp.
   static const String cancelCamp = 'Cancel camp';
 
+  /// What [cancelCamp] reads while the camp is being cancelled.
+  static const String cancelling = 'Cancelling…';
+
   /// Button that undoes a camp's cancellation.
   static const String undoCancel = 'Undo cancel';
 
   /// Button that calls a one-off off.
   static const String callOff = 'Call off';
+
+  /// What [callOff] reads while the one-off is being called off.
+  static const String callingOff = 'Calling off…';
 
   /// Button that reinstates a called-off one-off.
   static const String reinstate = 'Reinstate';

@@ -159,7 +159,11 @@ class TemplateCreateViewState extends ConsumerState<TemplateCreateView> {
               ),
               ShadButton(
                 onPressed: creating ? null : create,
-                child: const Text(EvaluationViewStrings.create),
+                child: Text(
+                  creating
+                      ? EvaluationViewStrings.creating
+                      : EvaluationViewStrings.create,
+                ),
               ),
             ],
           ),

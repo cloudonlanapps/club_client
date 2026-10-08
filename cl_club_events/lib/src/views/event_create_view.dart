@@ -158,7 +158,7 @@ class EventCreateViewState extends ConsumerState<EventCreateView> {
                         onPressed: isSubmitting ? null : create,
                         child: Text(
                           isSubmitting
-                              ? 'Creating...'
+                              ? 'Creating…'
                               : 'Create ${label.toLowerCase()}',
                         ),
                       ),

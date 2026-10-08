@@ -70,11 +70,17 @@ abstract final class EvaluationViewStrings {
   /// Starts an evaluation from a template.
   static const String start = 'Start';
 
+  /// What Start reads while the draft is created.
+  static const String starting = 'Starting…';
+
   /// Opens the template designer.
   static const String addTemplate = 'Add template';
 
   /// Creates the template.
   static const String create = 'Create';
+
+  /// What Create reads while the template is created.
+  static const String creating = 'Creating…';
 
   /// Leaves without saving.
   static const String cancel = 'Cancel';

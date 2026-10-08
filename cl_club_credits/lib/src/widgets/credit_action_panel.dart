@@ -19,6 +19,9 @@ class CreditActionPanel extends StatelessWidget {
   /// The submit button's text unless the host gives another.
   static const String defaultSubmitLabel = 'Save';
 
+  /// The submit button's text while the action is in flight.
+  static const String savingLabel = 'Saving…';
+
   /// Gap between the heading, the form and the buttons.
   static const double sectionGap = 16;
 
@@ -31,7 +34,8 @@ class CreditActionPanel extends StatelessWidget {
   /// The credit form.
   final Widget form;
 
-  /// Whether the action is in flight: both buttons are then off.
+  /// Whether the action is in flight: both buttons are then off, and the
+  /// submit button reads [savingLabel].
   final bool saving;
 
   /// Validates the form and runs the action.
@@ -62,7 +66,7 @@ class CreditActionPanel extends StatelessWidget {
             ),
             ShadButton(
               onPressed: saving ? null : onSubmit,
-              child: Text(submitLabel),
+              child: Text(saving ? savingLabel : submitLabel),
             ),
           ],
         ),

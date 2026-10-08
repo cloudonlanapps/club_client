@@ -32,8 +32,8 @@ Future<void> _pumpEditing(
   await tester.pumpAndSettle();
 }
 
-/// The editor's actions, Cancel then Save. Save shows a spinner in place of
-/// its label while the save is in flight, so they are found by position.
+/// The editor's actions, Cancel then Save. Save reads "Saving…" while the
+/// save is in flight, so they are found by position.
 ShadButton _cancel(WidgetTester tester) =>
     tester.widget<ShadButton>(find.byType(ShadButton).first);
 

@@ -6,6 +6,7 @@ import '../../constants/form_spacing.dart';
 import '../../models/programme_schedule_data.dart';
 import '../../models/session_input.dart';
 import '../form/labeled_form_row.dart';
+import 'programme_schedule_form_validators.dart';
 import 'schedule_duration_field.dart';
 import 'session_split_field.dart';
 import 'time_picker_empty_parts.dart';
@@ -234,8 +235,7 @@ class ProgrammeScheduleFormFieldBodyState
           required: true,
           field: FormField<Set<int>>(
             initialValue: selectedWeekdays,
-            validator: (days) =>
-                (days == null || days.isEmpty) ? 'Pick at least one day' : null,
+            validator: ProgrammeScheduleFormValidators.weekdays,
             builder: (field) => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -272,8 +272,7 @@ class ProgrammeScheduleFormFieldBodyState
                 field: CLDatePickerFormField(
                   initialValue: selectedStartDate,
                   enabled: enabled,
-                  validator: (date) =>
-                      date == null ? 'Start date is required' : null,
+                  validator: ProgrammeScheduleFormValidators.startDate,
                   onChanged: (date) {
                     setState(() => selectedStartDate = date);
                     emit();
@@ -340,8 +339,7 @@ class ProgrammeScheduleFormFieldBodyState
                   // defaults to 16) and no label gap (labels are hidden).
                   gap: 0,
                   style: ShadTheme.of(context).textTheme.muted,
-                  validator: (time) =>
-                      time == null ? 'Start time is required' : null,
+                  validator: ProgrammeScheduleFormValidators.startTime,
                   onChanged: onSessionStartTimeChanged,
                 ),
               ),

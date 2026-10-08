@@ -120,12 +120,7 @@ class OccurrenceRescheduleDialogState
         ),
         ShadButton(
           onPressed: _submitting ? null : _save,
-          child: _submitting
-              ? const SizedBox.square(
-                  dimension: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Save'),
+          child: Text(_submitting ? 'Saving…' : 'Save'),
         ),
       ],
       child: OccurrenceRescheduleForm(

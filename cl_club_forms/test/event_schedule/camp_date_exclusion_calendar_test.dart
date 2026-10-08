@@ -240,4 +240,39 @@ void main() {
       lessThanOrEqualTo(kPhoneSurface.width - 32),
     );
   });
+
+  group('Issue 108: the month arrows follow the form', () {
+    testWidgets('Issue 108: the arrows move the month while the form is on', (
+      tester,
+    ) async {
+      await pumpForm(tester, _Host().build());
+
+      await tester.tap(find.byIcon(Icons.chevron_right));
+      await tester.pumpAndSettle();
+      expect(find.text('September 2026'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.chevron_left));
+      await tester.pumpAndSettle();
+      expect(find.text('August 2026'), findsOneWidget);
+    });
+
+    testWidgets('Issue 108: neither arrow takes a tap while the form is off', (
+      tester,
+    ) async {
+      await pumpForm(tester, _Host().build(enabled: false));
+
+      for (final arrow in [Icons.chevron_left, Icons.chevron_right]) {
+        expect(
+          tester
+              .widget<IconButton>(find.widgetWithIcon(IconButton, arrow))
+              .onPressed,
+          isNull,
+          reason: '$arrow',
+        );
+        await tester.tap(find.byIcon(arrow));
+        await tester.pumpAndSettle();
+        expect(find.text('August 2026'), findsOneWidget, reason: '$arrow');
+      }
+    });
+  });
 }

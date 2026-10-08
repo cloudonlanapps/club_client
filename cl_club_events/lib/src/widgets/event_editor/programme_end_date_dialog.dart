@@ -63,6 +63,10 @@ class ProgrammeEndDateDialog extends ConsumerStatefulWidget {
   /// The widest the dialog's form grows.
   static const double maxFormWidth = 420;
 
+  /// The widest the dialog grows: room for its three actions side by side
+  /// while Save reads "Saving…".
+  static const double maxWidth = 560;
+
   @override
   ConsumerState<ProgrammeEndDateDialog> createState() =>
       ProgrammeEndDateDialogState();
@@ -175,6 +179,9 @@ class ProgrammeEndDateDialogState
     final event = widget.event;
     return ShadDialog(
       title: const Text(ProgrammeEndDateDialog.title),
+      constraints: const BoxConstraints(
+        maxWidth: ProgrammeEndDateDialog.maxWidth,
+      ),
       actions: [
         ShadButton.outline(
           onPressed: saving ? null : () => Navigator.of(context).pop(),
@@ -185,7 +192,10 @@ class ProgrammeEndDateDialogState
             onPressed: saving ? null : clear,
             child: const Text(ProgrammeEndDateDialog.clearLabel),
           ),
-        ShadButton(onPressed: saving ? null : save, child: const Text('Save')),
+        ShadButton(
+          onPressed: saving ? null : save,
+          child: Text(saving ? 'Saving…' : 'Save'),
+        ),
       ],
       child: ConstrainedBox(
         constraints: const BoxConstraints(

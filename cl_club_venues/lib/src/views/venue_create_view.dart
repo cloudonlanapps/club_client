@@ -131,7 +131,7 @@ class VenueCreateViewState extends ConsumerState<VenueCreateView> {
                           ShadButton.outline(
                             onPressed: isSubmitting ? null : submit,
                             child: Text(
-                              isSubmitting ? 'Creating...' : 'Create venue',
+                              isSubmitting ? 'Creating…' : 'Create venue',
                             ),
                           ),
                         ],

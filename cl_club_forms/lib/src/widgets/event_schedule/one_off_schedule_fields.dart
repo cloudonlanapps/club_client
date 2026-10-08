@@ -5,6 +5,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../constants/form_spacing.dart';
 import '../../models/one_off_schedule_data.dart';
 import '../form/labeled_form_row.dart';
+import 'one_off_schedule_form_validators.dart';
 import 'schedule_duration_field.dart';
 import 'time_picker_empty_parts.dart';
 import 'two_column_grid.dart';
@@ -135,7 +136,7 @@ class OneOffScheduleFormFieldBodyState
               field: CLDatePickerFormField(
                 initialValue: selectedDate,
                 enabled: enabled,
-                validator: (date) => date == null ? 'Date is required' : null,
+                validator: OneOffScheduleFormValidators.date,
                 onChanged: (date) {
                   setState(() => selectedDate = date);
                   emit();
@@ -165,8 +166,7 @@ class OneOffScheduleFormFieldBodyState
                   // defaults to 16) and no label gap (labels are hidden).
                   gap: 0,
                   style: ShadTheme.of(context).textTheme.muted,
-                  validator: (time) =>
-                      time == null ? 'Start time is required' : null,
+                  validator: OneOffScheduleFormValidators.startTime,
                   onChanged: (time) {
                     setState(() => selectedStartTime = time);
                     emit();

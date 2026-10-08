@@ -163,6 +163,23 @@ void main() {
       );
     });
 
+    test('Issue 72: a full link with a fragment passes', () {
+      for (final url in [
+        'https://club.example/a#d',
+        'http://club.example#top',
+        'https://club.example/a?b=c#d',
+        'https://club.example/a#',
+      ]) {
+        expect(ClubIdentityFormValidators.url(url), isNull, reason: url);
+      }
+    });
+
+    test('Issue 72: a fragment does not excuse a missing scheme or host', () {
+      for (final url in ['club.example/a#d', '/a#d', '#d', 'https:///a#d']) {
+        expect(ClubIdentityFormValidators.url(url), message, reason: url);
+      }
+    });
+
     test('Issue 61: a link without a scheme, with another scheme or '
         'without a host is refused', () {
       for (final url in [

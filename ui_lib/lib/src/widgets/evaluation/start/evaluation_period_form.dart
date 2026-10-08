@@ -132,14 +132,11 @@ class EvaluationPeriodFormState extends State<EvaluationPeriodForm>
             initialValue: initialEventValue,
             enabled: widget.enabled,
             options: eventOptions,
-            // A changed event or date clears the message about them.
-            onChanged: (_) => setFormError(null),
           ),
           EvaluationPeriodFields(
             initialStart: initialStart,
             initialEnd: initialEnd,
             enabled: widget.enabled,
-            onChanged: () => setFormError(null),
           ),
         ],
       ),

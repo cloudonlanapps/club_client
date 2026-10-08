@@ -41,25 +41,62 @@ Map<String, dynamic> buildOccurrenceRescheduleInitialValues(
 /// Maps a server reschedule-guard [ServerException] to a friendly,
 /// admin-facing message. Falls back to the server's own message for codes the
 /// reschedule flow doesn't special-case.
-String occurrenceRescheduleErrorMessage(ServerException e) {
+String occurrenceRescheduleErrorMessage(ServerException e) =>
+    occurrenceRescheduleRefusal(e)?.message ?? e.message;
+
+/// What the reschedule form shows for a save the server refused with [e]:
+/// a fixed message, and the id of the form's field it is about (`null` when
+/// it is about none of them and shows inline). `null` when the flow has no
+/// words for the refusal; the host then reports a failed save in a toast.
+({String message, String? fieldId})? occurrenceRescheduleRefusal(
+  ServerException e,
+) {
   if (e is StaleVersionException) {
-    return staleVersionMessage(e, subject: 'This session');
+    return (
+      message: staleVersionMessage(e, subject: 'This session'),
+      fieldId: null,
+    );
   }
-  switch (e.code) {
-    case 'PAST_RESCHEDULE_TIME':
-      return 'The new start time must be in the future.';
-    case 'RESCHEDULE_LEAD_TIME_VIOLATED':
-      return 'This session is too close to start — it can no longer be '
-          'rescheduled.';
-    case 'VENUE_NOT_FOUND':
-      return 'The selected venue is no longer available.';
-    case 'CANCELLED_OCCURRENCE':
-      return 'This session is cancelled and cannot be rescheduled.';
-    case 'NOTHING_TO_RESCHEDULE':
-      return 'Change the date, time, duration, or venue before saving.';
-    default:
-      return e.message;
-  }
+  const schedule = OccurrenceRescheduleFormFields.scheduleId;
+  return switch (e.code) {
+    'PAST_RESCHEDULE_TIME' => (
+      message: 'The new start time must be in the future.',
+      fieldId: schedule,
+    ),
+    SdkErrorCode.postponeOnly => (
+      message:
+          'A session can only be moved to a later time, not an earlier '
+          'one.',
+      fieldId: schedule,
+    ),
+    SdkErrorCode.invalidSessions => (
+      message: 'This session has a timetable, so its duration cannot change.',
+      fieldId: schedule,
+    ),
+    SdkErrorCode.venueNotFound => (
+      message: 'The selected venue is no longer available.',
+      fieldId: OccurrenceRescheduleFormFields.venueId,
+    ),
+    SdkErrorCode.rescheduleLeadTimeViolated => (
+      message:
+          'This session is too close to start — it can no longer be '
+          'rescheduled.',
+      fieldId: null,
+    ),
+    SdkErrorCode.pastOccurrence => (
+      message: 'This session has already started and cannot be rescheduled.',
+      fieldId: null,
+    ),
+    SdkErrorCode.cancelledOccurrence => (
+      message: 'This session is cancelled and cannot be rescheduled.',
+      fieldId: null,
+    ),
+    SdkErrorCode.nothingToReschedule => (
+      message: 'Change the date, time, duration, or venue before saving.',
+      fieldId: null,
+    ),
+    _ => null,
+  };
 }
 
 /// Bridges `OccurrenceRescheduleForm` to the SDK occurrence-reschedule call.

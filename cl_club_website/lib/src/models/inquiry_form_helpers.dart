@@ -74,10 +74,17 @@ abstract final class InquiryFormSubmit {
     );
   }
 
-  /// What to tell the visitor when sending failed with [error]: fixed text
-  /// from [strings], never the error itself.
-  static String refusalMessage(Object error, SiteStrings strings) =>
+  /// What the form shows inline when the server refuses the inquiry with
+  /// [error]: too many from this visitor just now. Null for a failure that
+  /// is not about the inquiry; the host then shows [failureMessage] in a
+  /// toast.
+  static String? formErrorFor(Object error, SiteStrings strings) =>
       error is ServerException && error.statusCode == rateLimitedStatus
       ? strings.contactFormErrorRateLimited
-      : strings.contactFormErrorGeneric;
+      : null;
+
+  /// What to tell the visitor when sending failed for a reason that is not
+  /// about the inquiry: fixed text from [strings], never the error itself.
+  static String failureMessage(SiteStrings strings) =>
+      strings.contactFormErrorGeneric;
 }

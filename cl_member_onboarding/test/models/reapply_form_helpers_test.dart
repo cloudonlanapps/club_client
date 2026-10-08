@@ -106,4 +106,37 @@ void main() {
       expect(RegExp(r"""['"]\w+['"]:""").hasMatch(source), isFalse);
     });
   });
+
+  group('Issue 97: ReapplyFormSubmit.fieldErrorsFor', () {
+    ServerException refused(String code) =>
+        ServerException(statusCode: 409, code: code, message: 'raw text');
+
+    test('Issue 97: a taken email is on the email field and a refused date '
+        'of birth on its field', () {
+      expect(
+        ReapplyFormSubmit.fieldErrorsFor(
+          refused(SdkErrorCode.duplicateEmail),
+        ),
+        {UserFormFields.emailId: ReapplyFormSubmit.emailRegisteredMessage},
+      );
+      expect(
+        ReapplyFormSubmit.fieldErrorsFor(
+          refused(SdkErrorCode.invalidDobNotUtcMidnight),
+        ),
+        {
+          UserFormFields.dateOfBirthUtcId:
+              ReapplyFormSubmit.dateOfBirthRefusedMessage,
+        },
+      );
+    });
+
+    test('Issue 97: a refusal about the account, and a failure that is no '
+        'refusal, name no field', () {
+      expect(
+        ReapplyFormSubmit.fieldErrorsFor(refused(SdkErrorCode.invalidState)),
+        isEmpty,
+      );
+      expect(ReapplyFormSubmit.fieldErrorsFor(StateError('down')), isEmpty);
+    });
+  });
 }

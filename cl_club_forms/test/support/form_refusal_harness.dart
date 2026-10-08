@@ -1,6 +1,7 @@
 // The part of the form harness that plays a refused save: what a form does
 // once its host has called `showErrors` and turned it on again.
 import 'package:cl_club_forms/src/widgets/form/form_contract.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -139,4 +140,53 @@ Future<int> expectFocusAfterRefusal(
   await refuse(const {}, formError: onForm);
   expect(onScreen(find.text(onForm)), isTrue, reason: 'message off screen');
   return focused;
+}
+
+/// The form-level message of a form goes on the next edit: `showErrors`
+/// puts one inline, a field changes, and the message is gone. [build]
+/// gives the form. The edit is typing into the first text input, or, where
+/// that changes nothing, switching or emptying a field. Returns whether
+/// the form had a field to edit.
+Future<bool> expectFormErrorGoesOnEdit(
+  WidgetTester tester,
+  Widget Function({required bool enabled}) build,
+) async {
+  const onForm = 'Could not save.';
+  await pumpForm(tester, build(enabled: true));
+  final state = tester.allStates.whereType<FormContract>().first;
+  final form = state.formKey.currentState!;
+  state.showErrors(formError: onForm);
+  await tester.pumpAndSettle();
+  expect(find.text(onForm), findsOneWidget);
+  // Frames alone, with nothing edited, leave the message.
+  await tester.pump(const Duration(seconds: 1));
+  expect(find.text(onForm), findsOneWidget);
+
+  // The first of these that changes a value is the edit.
+  final typed = find.byWidgetPredicate(
+    (w) => w is EditableText && !w.readOnly,
+  );
+  final before = Map<String, dynamic>.of(form.value);
+  final edits = <Future<void> Function()>[
+    if (typed.evaluate().isNotEmpty) ...[
+      () => tester.enterText(typed.first, 'edited'),
+      () => tester.enterText(typed.first, '7'),
+    ],
+    for (final field in form.fields.values)
+      if (field.value case final bool on)
+        () async => field.didChange(!on)
+      else if (field.value != null)
+        () async => field.didChange(null),
+  ];
+  var edited = false;
+  for (final edit in edits) {
+    await edit();
+    await tester.pump();
+    edited = !mapEquals(before, form.value);
+    if (edited) break;
+  }
+  if (!edited) return false;
+  await tester.pumpAndSettle();
+  expect(find.text(onForm), findsNothing, reason: 'message stayed');
+  return true;
 }

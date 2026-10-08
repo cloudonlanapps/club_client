@@ -142,18 +142,15 @@ void main() {
         message: 'internal detail',
       );
 
+      // Issue 97: only the rate limit is the form's to show; the rest is
+      // the host's toast.
+      expect(InquiryFormSubmit.formErrorFor(refused(429), strings), 'Too many');
+      expect(InquiryFormSubmit.formErrorFor(refused(422), strings), isNull);
       expect(
-        InquiryFormSubmit.refusalMessage(refused(429), strings),
-        'Too many',
+        InquiryFormSubmit.formErrorFor(Exception('offline'), strings),
+        isNull,
       );
-      expect(
-        InquiryFormSubmit.refusalMessage(refused(422), strings),
-        'Try again',
-      );
-      expect(
-        InquiryFormSubmit.refusalMessage(Exception('offline'), strings),
-        'Try again',
-      );
+      expect(InquiryFormSubmit.failureMessage(strings), 'Try again');
     });
 
     test('Issue 84: a required mark in the copy is left to the form', () {

@@ -20,8 +20,9 @@ import 'review_note_banner.dart';
 ///
 /// Hosts the SDK-free [SignupForm] in its reapply mode with the heading,
 /// the admin's note and the Submit changes action. It validates the form,
-/// resubmits through `clUsersMasterProvider`, holds the in-flight flag, and
-/// on success stores the updated user before calling [onContinue].
+/// resubmits through `clUsersMasterProvider`, holds the in-flight flag, puts
+/// what the server refuses back on the form's fields, and on success stores
+/// the updated user before calling [onContinue].
 class ReapplyVariant extends ConsumerStatefulWidget {
   const ReapplyVariant({
     required this.currentUser,
@@ -61,7 +62,13 @@ class ReapplyVariantState extends ConsumerState<ReapplyVariant> {
         values: values,
       );
     } on Object catch (error) {
-      showError(writeFailureMessage(error, fallback: reapplyFailedMessage));
+      // What the server refuses about a field shows on that field; anything
+      // else is a failed resubmission.
+      final fieldErrors = ReapplyFormSubmit.fieldErrorsFor(error);
+      formKey.currentState?.showErrors(fieldErrors: fieldErrors);
+      if (fieldErrors.isEmpty) {
+        showError(writeFailureMessage(error, fallback: reapplyFailedMessage));
+      }
     } finally {
       if (mounted) setState(() => isSubmitting = false);
     }

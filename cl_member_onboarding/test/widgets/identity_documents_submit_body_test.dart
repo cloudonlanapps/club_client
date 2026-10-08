@@ -1,6 +1,7 @@
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:cl_member_auth/cl_member_auth.dart';
 import 'package:cl_member_onboarding/src/models/identity_documents_submit_strings.dart';
+import 'package:cl_member_onboarding/src/models/onboarding_write_messages.dart';
 import 'package:cl_member_onboarding/src/widgets/identity_documents_privacy_policy_dialog.dart';
 import 'package:cl_member_onboarding/src/widgets/identity_documents_submit_body.dart';
 import 'package:cl_remote_store/cl_remote_store.dart';
@@ -37,6 +38,11 @@ IdentityDocumentSlot _slot(String id) {
 
 /// Counts the submissions in place of the server.
 class _FakeUsers extends ClUsersMasterNotifier {
+  _FakeUsers({this.failure});
+
+  /// What a submission fails with; null lets it through.
+  final Exception? failure;
+
   int submissions = 0;
 
   @override
@@ -45,6 +51,8 @@ class _FakeUsers extends ClUsersMasterNotifier {
   @override
   Future<UserPrivate> submitForReviewForSelf() async {
     submissions++;
+    final failure = this.failure;
+    if (failure != null) throw failure;
     return _user(status: UserStatus.pending);
   }
 }
@@ -58,8 +66,9 @@ class _FakeAuth extends AuthNotifier {
 Future<_FakeUsers> _pump(
   WidgetTester tester, {
   required List<IdentityDocumentSlot> items,
+  Exception? failure,
 }) async {
-  final users = _FakeUsers();
+  final users = _FakeUsers(failure: failure);
   await tester.binding.setSurfaceSize(const Size(1024, 1400));
   addTearDown(() => tester.binding.setSurfaceSize(null));
   await tester.pumpWidget(
@@ -72,10 +81,12 @@ Future<_FakeUsers> _pump(
         authStateProvider.overrideWith(_FakeAuth.new),
       ],
       child: ShadApp(
-        home: Scaffold(
-          body: IdentityDocumentsSubmitBody(
-            currentUser: _user(),
-            initialItems: items,
+        home: ShadToaster(
+          child: Scaffold(
+            body: IdentityDocumentsSubmitBody(
+              currentUser: _user(),
+              initialItems: items,
+            ),
           ),
         ),
       ),
@@ -238,6 +249,63 @@ void main() {
         tester.getSize(find.byType(ShadDialog)).width,
         lessThanOrEqualTo(390),
       );
+    });
+  });
+
+  group('Issue 97: IdentityDocumentsSubmitBody shows a failed submission '
+      'where it belongs', () {
+    Future<void> submit(WidgetTester tester) async {
+      await _tickConsent(tester);
+      _submitButton(tester).onPressed!();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+
+    testWidgets('Issue 97: a submission the server refuses for want of a '
+        'document says so inline in the consent form, with no toast', (
+      tester,
+    ) async {
+      final users = await _pump(
+        tester,
+        items: [_slot('a')],
+        failure: const ServerException(
+          statusCode: 422,
+          code: SdkErrorCode.identityDocumentRequired,
+          message: 'raw failure text',
+        ),
+      );
+      await submit(tester);
+
+      expect(users.submissions, 1);
+      expect(
+        find.descendant(
+          of: find.byType(IdentityDocumentsConsentForm),
+          matching: find.text(IdentityDocumentsSubmitStrings.needsDocument),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(ShadToast), findsNothing);
+      expect(find.textContaining('raw failure text'), findsNothing);
+      expect(_submitButton(tester).onPressed, isNotNull);
+    });
+
+    testWidgets('Issue 97: a submission that fails for another reason is a '
+        'toast, and Submit is on again', (tester) async {
+      await _pump(
+        tester,
+        items: [_slot('a')],
+        failure: const ServerException(
+          statusCode: 409,
+          code: SdkErrorCode.invalidState,
+          message: 'raw failure text',
+        ),
+      );
+      await submit(tester);
+
+      expect(find.byType(ShadToast), findsOneWidget);
+      expect(find.text(submissionFailedMessage), findsOneWidget);
+      expect(find.textContaining('raw failure text'), findsNothing);
+      expect(_submitButton(tester).onPressed, isNotNull);
     });
   });
 }

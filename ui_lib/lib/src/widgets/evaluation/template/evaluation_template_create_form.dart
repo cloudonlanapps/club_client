@@ -129,8 +129,6 @@ class EvaluationTemplateCreateFormState
               onEditItem: widget.onEditItem,
               onEditSectionTitle: widget.onEditSectionTitle,
               onPickExisting: widget.onPickExisting,
-              // A fixed layout clears the message about it.
-              onChanged: (_) => setFormError(null),
             ),
           ),
         ],

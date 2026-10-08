@@ -166,8 +166,6 @@ class EvaluationStartFormState extends State<EvaluationStartForm>
               requiredMessage: EvaluationStrings.templateRequired,
               enabled: w.enabled,
               options: [for (final t in w.templates) (t, t.label)],
-              // A changed choice or date clears the form-level message.
-              onChanged: (_) => setFormError(null),
             ),
           if (w.fixedMember case final m?)
             EvaluationStartFixedValue(
@@ -182,10 +180,7 @@ class EvaluationStartFormState extends State<EvaluationStartForm>
               requiredMessage: EvaluationStrings.memberRequired,
               enabled: w.enabled,
               options: [for (final m in w.members) (m, m.label)],
-              onChanged: (m) => setState(() {
-                memberUsername = m?.username;
-                formError = null;
-              }),
+              onChanged: (m) => setState(() => memberUsername = m?.username),
             ),
           if (w.fixedEvent case final e?)
             EvaluationStartFixedValue(
@@ -208,11 +203,9 @@ class EvaluationStartFormState extends State<EvaluationStartForm>
                 for (final e in eventOptions)
                   ((id: e.id, label: e.label), e.label),
               ],
-              onChanged: (_) => setFormError(null),
             ),
           EvaluationPeriodFields(
             enabled: w.enabled,
-            onChanged: () => setFormError(null),
           ),
         ],
       ),

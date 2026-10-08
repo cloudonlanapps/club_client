@@ -87,7 +87,6 @@ class InquiryFormState extends State<InquiryForm>
         InquiryFormFields.messageId: '',
         InquiryFormFields.honeypotId: '',
       },
-      onChanged: () => setFormError(null),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

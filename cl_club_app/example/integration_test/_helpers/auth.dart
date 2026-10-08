@@ -80,7 +80,13 @@ Future<void> loginViaUi(
   await ensureTextById(tester, 'username', username);
   await ensureTextById(tester, 'password', password);
   final beforeSubmit = loginFormState(tester);
-  await submitFormContaining(tester, fieldId: 'username', label: 'Sign in');
+  // Enter in the password field may already have started the sign-in. The
+  // form then stays on screen, turned off, and its button reads
+  // "Signing in…": there is no "Sign in" to press.
+  final auth = container(tester).read(authStateProvider);
+  if (!auth.isLoading && auth.valueOrNull == null) {
+    await submitFormContaining(tester, fieldId: 'username', label: 'Sign in');
+  }
 
   try {
     await waitFor(

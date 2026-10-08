@@ -31,7 +31,7 @@ import 'evaluation_period_rows.dart';
 /// (`EvaluationPeriodFormSubmit.updateReviewPeriod`) sends only what
 /// changed. A server refusal (`DUPLICATE_EVALUATION`, `NOT_ELIGIBLE`,
 /// `PERIOD_IN_FUTURE`, `EVENT_NOT_FOUND`) shows inline under the form,
-/// which stays open.
+/// which stays open; a failure that is not about them shows in a toast.
 class EvaluationPeriodCard extends ConsumerStatefulWidget {
   /// The Review Period section of [evaluation].
   const EvaluationPeriodCard({required this.evaluation, super.key});
@@ -51,7 +51,7 @@ class EvaluationPeriodCardState extends ConsumerState<EvaluationPeriodCard> {
       GlobalKey<EvaluationPeriodFormState>();
 
   /// Writes the event and the period; `true` once saved. A refusal shows
-  /// inline.
+  /// inline, any other failure in a toast.
   Future<bool> save(Map<String, dynamic> values) async {
     final toaster = ShadToaster.of(context);
     try {
@@ -65,9 +65,18 @@ class EvaluationPeriodCardState extends ConsumerState<EvaluationPeriodCard> {
       );
       return true;
     } on Object catch (e) {
-      formKey.currentState?.showErrors(
-        formError: EvaluationErrorMessage.of(e),
-      );
+      // What the server refuses about the event or the period shows in the
+      // form; a failure that is not about them is a toast.
+      final refused = EvaluationErrorMessage.refusalOf(e);
+      if (refused != null) {
+        formKey.currentState?.showErrors(formError: refused);
+      } else {
+        toaster.show(
+          const ShadToast.destructive(
+            description: Text(EvaluationViewStrings.saveFailed),
+          ),
+        );
+      }
       return false;
     }
   }

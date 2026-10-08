@@ -182,6 +182,45 @@ class UserFormSubmit {
     return const {};
   }
 
+  /// The server's code for a change to fields only a super admin may edit;
+  /// its `fields` names them.
+  static const String protectedFieldsCode = 'PROTECTED_FIELDS';
+
+  /// Where [protectedFieldsCode] lists the fields it is about.
+  static const String protectedFieldsKey = 'fields';
+
+  /// The server's name for the gender, as [protectedFieldsCode] gives it.
+  static const String serverGender = 'gender';
+
+  /// The server's name for the date of birth.
+  static const String serverDateOfBirth = 'dateOfBirthUtc';
+
+  /// The form's field for each field [protectedFieldsCode] can name.
+  static const Map<String, String> protectedFieldIds = {
+    serverGender: UserFormFields.genderId,
+    serverDateOfBirth: UserFormFields.dateOfBirthUtcId,
+  };
+
+  /// What the personal-details editor shows for a refused save: a message
+  /// on each field the server's answer names, keyed by field id. Empty when
+  /// [error] names no field.
+  static Map<String, String> personalDetailsFieldErrors(
+    ServerException error,
+  ) {
+    if (error.code == SdkErrorCode.invalidDobNotUtcMidnight) {
+      return const {
+        UserFormFields.dateOfBirthUtcId: MemberWriteMessages.dateOfBirthRefused,
+      };
+    }
+    if (error.code != protectedFieldsCode) return const {};
+    final named = error.details?[protectedFieldsKey];
+    return {
+      if (named is List)
+        for (final name in named)
+          ?protectedFieldIds[name]: MemberWriteMessages.protectedField,
+    };
+  }
+
   /// Partial update of the personal-details section (names, nickname, and —
   /// when the editor was allowed to change them — public-name flag, gender,
   /// and date of birth). Only the keys present in [values] are sent, so other

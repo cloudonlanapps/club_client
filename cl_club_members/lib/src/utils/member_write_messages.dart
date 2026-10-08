@@ -48,6 +48,14 @@ abstract final class MemberWriteMessages {
   /// field.
   static const emailRegistered = 'That email is already registered.';
 
+  /// Saving a gender or a date of birth only a super admin may change;
+  /// shown on that field.
+  static const protectedField = 'Only a super admin can change this.';
+
+  /// Saving a date of birth the server does not take; shown on that field.
+  static const dateOfBirthRefused =
+      'That date of birth was not accepted. Pick it again.';
+
   /// Approving, sending back or blocking an application under review.
   static const reviewDecisionFailed = 'Could not record the decision.';
 

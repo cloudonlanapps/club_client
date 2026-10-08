@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../models/login_form_helpers.dart';
 import '../providers/auth.dart';
 import '../utils/login_error_messages.dart';
 import 'account_blocked_view.dart';
@@ -17,7 +18,8 @@ import 'login_panel.dart';
 /// Login view — no Scaffold, returns content body only.
 ///
 /// Branches on [authStateProvider]:
-///   - loading            → loading indicator
+///   - loading            → loading indicator; while this view signs in,
+///                          the login form, turned off
 ///   - data == null       → login form
 ///   - data != null       → calls [onLoginSuccess]; the host router
 ///                          drives the status-aware destination
@@ -25,7 +27,9 @@ import 'login_panel.dart';
 ///                          /onboarding/welcome)
 ///   - error: blocked     → AccountBlockedView
 ///   - error: left        → AccountLeftView
-///   - error: other       → login form + error toast
+///   - error: other       → login form, with the refusal inline when it
+///                          is about the username and password, and in a
+///                          toast otherwise
 ///
 /// Every message is fixed text from [LoginErrorMessages]; the raw error is
 /// logged, never shown.
@@ -78,18 +82,24 @@ class LoginViewState extends ConsumerState<LoginView> {
     );
   }
 
-  /// Signs in and reports the outcome.
+  /// Signs in and reports the outcome. Whatever happens, the form is on
+  /// again afterwards.
   Future<void> handleLogin(String username, String password) async {
     setState(() => isSubmitting = true);
-
-    if (widget.onLogin != null) {
-      await widget.onLogin!(username, password);
-    } else {
-      await ref.read(authStateProvider.notifier).login(username, password);
+    Object? thrown;
+    try {
+      if (widget.onLogin != null) {
+        await widget.onLogin!(username, password);
+      } else {
+        await ref.read(authStateProvider.notifier).login(username, password);
+      }
+    } on Object catch (error) {
+      thrown = error;
+    } finally {
+      if (mounted) setState(() => isSubmitting = false);
     }
-
     if (!mounted) return;
-    setState(() => isSubmitting = false);
+    if (thrown != null) return reportFailure(thrown);
 
     ref
         .read(authStateProvider)
@@ -98,16 +108,23 @@ class LoginViewState extends ConsumerState<LoginView> {
             if (user != null) widget.onLoginSuccess();
           },
           loading: () {},
-          error: (e, _) => showErrorToast(e),
+          error: (e, _) => reportFailure(e),
         );
   }
 
-  void showErrorToast(Object error) {
+  /// Reports a sign-in that failed with [error]: inline in the form when
+  /// the server refuses the username and password, in a toast otherwise.
+  void reportFailure(Object error) {
     developer.log(
       'Login failed',
       name: 'cl_member_auth',
       error: error,
     );
+    final refused = LoginFormSubmit.formErrorFor(error);
+    if (refused != null) {
+      formKey.currentState?.showErrors(formError: refused);
+      return;
+    }
     ShadToaster.of(context).show(
       ShadToast.destructive(
         description: Text(LoginErrorMessages.forError(error)),
@@ -130,6 +147,13 @@ class LoginViewState extends ConsumerState<LoginView> {
     });
 
     final auth = ref.watch(authStateProvider);
+    final panel = LoginPanel(
+      formKey: formKey,
+      isSubmitting: isSubmitting,
+      onSubmit: submit,
+      onForgotPassword: widget.onNavigateToForgotPassword,
+      onSignUp: widget.onNavigateToSignup,
+    );
 
     return Center(
       child: ConstrainedBox(
@@ -137,19 +161,14 @@ class LoginViewState extends ConsumerState<LoginView> {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: auth.when(
-            loading: () => const LoadingIndicator(message: 'Signing you in…'),
-            data: (user) {
-              if (user != null) {
-                return const LoadingIndicator(message: 'Redirecting…');
-              }
-              return LoginPanel(
-                formKey: formKey,
-                isSubmitting: isSubmitting,
-                onSubmit: submit,
-                onForgotPassword: widget.onNavigateToForgotPassword,
-                onSignUp: widget.onNavigateToSignup,
-              );
-            },
+            // While this view signs in the form stays, turned off, so it
+            // keeps what was typed.
+            loading: () => isSubmitting
+                ? panel
+                : const LoadingIndicator(message: 'Signing you in…'),
+            data: (user) => user != null
+                ? const LoadingIndicator(message: 'Redirecting…')
+                : panel,
             error: (error, _) {
               final code = error is SdkException ? error.code : null;
               if (code == SdkErrorCode.accountBlocked) {
@@ -159,36 +178,7 @@ class LoginViewState extends ConsumerState<LoginView> {
                   code == SdkErrorCode.accountLeft) {
                 return AccountLeftView(onBack: resetAuth);
               }
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.errorContainer,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                    child: Text(
-                      LoginErrorMessages.forError(error),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onErrorContainer,
-                      ),
-                    ),
-                  ),
-                  LoginPanel(
-                    formKey: formKey,
-                    isSubmitting: isSubmitting,
-                    onSubmit: submit,
-                    onForgotPassword: widget.onNavigateToForgotPassword,
-                    onSignUp: widget.onNavigateToSignup,
-                  ),
-                ],
-              );
+              return panel;
             },
           ),
         ),

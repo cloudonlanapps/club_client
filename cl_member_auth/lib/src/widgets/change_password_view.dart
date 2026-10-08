@@ -69,8 +69,10 @@ class ChangePasswordViewState extends ConsumerState<ChangePasswordView> {
             .changePassword(currentPassword: current, newPassword: next);
       }
       success = true;
-    } on ServerException catch (e) {
-      if (e.code == SdkErrorCode.invalidCredentials) {
+    } on Object catch (e) {
+      // A current password the server refuses shows on its field; any
+      // other failure, whatever it is, is a toast.
+      if (e is ServerException && e.code == SdkErrorCode.invalidCredentials) {
         formKey.currentState?.showErrors(
           fieldErrors: {
             ChangePasswordFormFields.currentId:

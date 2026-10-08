@@ -3,7 +3,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../theme/text_theme_extensions.dart';
 
-/// The action row under an inline section editor: an optional Reset, then
+/// The action row under an inline section editor: an optional Clear, then
 /// Cancel and Save. Used by `EditableSectionCard`; every action is disabled
 /// while [saving].
 class SectionEditorActions extends StatelessWidget {
@@ -11,7 +11,7 @@ class SectionEditorActions extends StatelessWidget {
     required this.saving,
     required this.onCancel,
     required this.onSave,
-    this.onReset,
+    this.onClear,
     super.key,
   });
 
@@ -24,10 +24,10 @@ class SectionEditorActions extends StatelessWidget {
   /// Validates and saves the section.
   final VoidCallback onSave;
 
-  /// Empties the form. `null` shows no Reset.
-  final VoidCallback? onReset;
+  /// Empties the form. `null` shows no Clear.
+  final VoidCallback? onClear;
 
-  static const String resetLabel = 'Reset';
+  static const String clearLabel = 'Clear';
   static const String cancelLabel = 'Cancel';
   static const String saveLabel = 'Save';
 
@@ -44,11 +44,11 @@ class SectionEditorActions extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       spacing: gap,
       children: [
-        if (onReset != null)
+        if (onClear != null)
           ShadButton.outline(
             enabled: !saving,
-            onPressed: saving ? null : onReset,
-            child: const Text(resetLabel),
+            onPressed: saving ? null : onClear,
+            child: const Text(clearLabel),
           ),
         ShadButton.outline(
           enabled: !saving,

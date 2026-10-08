@@ -99,13 +99,13 @@ void main() {
       }
     });
 
-    testWidgets('Issue 34: the editor draws no Reset of its own (the card '
+    testWidgets('Issue 34: the editor draws no Clear of its own (the card '
         'supplies it)', (tester) async {
       await _pumpEditor(tester, _seeded(minAge: const FormAge(years: 5)));
-      expect(find.text('Reset'), findsNothing);
+      expect(find.text('Clear'), findsNothing);
     });
 
-    testWidgets('Issue 34: reset empties the criteria, sets the mode to '
+    testWidgets('Issue 34: clear empties the criteria, sets the mode to '
         'Manual and leaves the form changed', (tester) async {
       final changes = <int>[];
       final form = await _pumpEditor(
@@ -121,7 +121,7 @@ void main() {
       );
       expect(form.isDirty, isFalse);
 
-      form.reset();
+      form.clear();
       await tester.pumpAndSettle();
 
       expect(form.hasValue, isFalse);
@@ -140,7 +140,7 @@ void main() {
       expect(AgeEligibilityFormValues.strictAge(values), isFalse);
     });
 
-    testWidgets('Issue 34: after a reset, choosing a criteria mode again '
+    testWidgets('Issue 34: after a clear, choosing a criteria mode again '
         'shows empty criteria', (tester) async {
       final form = await _pumpEditor(
         tester,
@@ -150,7 +150,7 @@ void main() {
           strictAge: true,
         ),
       );
-      form.reset();
+      form.clear();
       await tester.pumpAndSettle();
 
       await _pickMode(
@@ -191,19 +191,19 @@ void main() {
     bool holdsValue(GroupCreateFormState form) =>
         GroupEligibilityFields.holdsValue(form.formKey.currentState!.value);
 
-    testWidgets('Issue 34: no Reset on a fresh Manual group, nor on a '
+    testWidgets('Issue 34: no Clear on a fresh Manual group, nor on a '
         'criteria mode with nothing filled', (tester) async {
       final form = await pumpCreate(tester);
-      expect(find.text('Reset'), findsNothing);
+      expect(find.text('Clear'), findsNothing);
       expect(holdsValue(form), isFalse);
 
       await _pickMode(tester, from: GroupMode.manual, mode: GroupMode.auto);
 
       expect(find.text(AgeEligibilityFields.minAgeTitle), findsOneWidget);
-      expect(find.text('Reset'), findsNothing);
+      expect(find.text('Clear'), findsNothing);
     });
 
-    testWidgets('Issue 34: Reset appears inside the eligibility block once a '
+    testWidgets('Issue 34: Clear appears inside the eligibility block once a '
         'criterion is set', (tester) async {
       final form = await pumpCreate(tester);
       await _pickMode(tester, from: GroupMode.manual, mode: GroupMode.auto);
@@ -214,21 +214,21 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final reset = find.text('Reset');
-      expect(reset, findsOneWidget);
+      final clear = find.text('Clear');
+      expect(clear, findsOneWidget);
       expect(holdsValue(form), isTrue);
       // Inside the block: under the criteria, above the "add me" switch.
       expect(
-        tester.getTopLeft(reset).dy,
+        tester.getTopLeft(clear).dy,
         greaterThan(tester.getTopLeft(find.text('Gender')).dy),
       );
       expect(
-        tester.getTopLeft(reset).dy,
+        tester.getTopLeft(clear).dy,
         lessThan(tester.getTopLeft(find.text('Add me into the group')).dy),
       );
     });
 
-    testWidgets('Issue 34: pressing Reset empties the criteria, sets the '
+    testWidgets('Issue 34: pressing Clear empties the criteria, sets the '
         'mode to Manual, hides the button and keeps the name', (tester) async {
       final form = await pumpCreate(tester);
       await tester.enterText(_input(GroupFormFields.nameId), 'Juniors');
@@ -240,10 +240,10 @@ void main() {
       await tester.tap(find.byType(ShadCheckbox));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Reset'));
+      await tester.tap(find.text('Clear'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Reset'), findsNothing);
+      expect(find.text('Clear'), findsNothing);
       expect(find.text(AgeEligibilityFields.minAgeTitle), findsNothing);
       expect(find.text(GroupMode.manual.label), findsOneWidget);
       expect(holdsValue(form), isFalse);

@@ -196,18 +196,18 @@ Future<void> _pickMode(
 
 void main() {
   group('Issue 34: the group Eligibility section', () {
-    testWidgets('Issue 34: no Reset in read mode, nor in the editor of a '
+    testWidgets('Issue 34: no Clear in read mode, nor in the editor of a '
         'Manual group', (tester) async {
       await _pumpSection(tester, _group(kind: GroupKind.manual));
-      expect(find.text('Reset'), findsNothing);
+      expect(find.text('Clear'), findsNothing);
 
       await _openEditor(tester);
 
       expect(find.text('Save'), findsOneWidget);
-      expect(find.text('Reset'), findsNothing);
+      expect(find.text('Clear'), findsNothing);
     });
 
-    testWidgets('Issue 34: Reset shows as soon as the editor opens on a '
+    testWidgets('Issue 34: Clear shows as soon as the editor opens on a '
         'group with a gender, an age or the Strict age check', (tester) async {
       for (final group in [
         _group(gender: Gender.female),
@@ -216,21 +216,21 @@ void main() {
         _group(minAge: const Age(years: 5), strictAge: true),
       ]) {
         await _pumpSection(tester, group);
-        expect(find.text('Reset'), findsNothing, reason: 'read mode');
+        expect(find.text('Clear'), findsNothing, reason: 'read mode');
 
         await _openEditor(tester);
 
-        expect(find.text('Reset'), findsOneWidget, reason: '$group');
+        expect(find.text('Clear'), findsOneWidget, reason: '$group');
         await tester.pumpWidget(const SizedBox.shrink());
       }
     });
 
-    testWidgets('Issue 34: Reset appears once a criterion is typed into a '
+    testWidgets('Issue 34: Clear appears once a criterion is typed into a '
         'Manual group switched to Semi-auto', (tester) async {
       await _pumpSection(tester, _group(kind: GroupKind.manual));
       await _openEditor(tester);
       await _pickMode(tester, from: 'Manual', mode: 'Semi-auto');
-      expect(find.text('Reset'), findsNothing);
+      expect(find.text('Clear'), findsNothing);
 
       await tester.enterText(
         _input(AgeEligibilityFormFields.minAgeYearsId),
@@ -238,10 +238,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Reset'), findsOneWidget);
+      expect(find.text('Clear'), findsOneWidget);
     });
 
-    testWidgets('Issue 34: pressing Reset empties the criteria, sets the '
+    testWidgets('Issue 34: pressing Clear empties the criteria, sets the '
         'mode to Manual, hides the button and stores nothing', (tester) async {
       final groups = await _pumpSection(
         tester,
@@ -254,16 +254,16 @@ void main() {
       );
       await _openEditor(tester);
 
-      await _tap(tester, 'Reset');
+      await _tap(tester, 'Clear');
 
-      expect(find.text('Reset'), findsNothing);
+      expect(find.text('Clear'), findsNothing);
       expect(find.text('Save'), findsOneWidget, reason: 'still editing');
       expect(find.text('Manual'), findsOneWidget);
       expect(find.text(AgeEligibilityFields.minAgeTitle), findsNothing);
       expect(groups.updated, isEmpty);
     });
 
-    testWidgets('Issue 34: Save after Reset stores a Manual group with no '
+    testWidgets('Issue 34: Save after Clear stores a Manual group with no '
         'eligibility', (tester) async {
       final groups = await _pumpSection(
         tester,
@@ -275,7 +275,7 @@ void main() {
         ),
       );
       await _openEditor(tester);
-      await _tap(tester, 'Reset');
+      await _tap(tester, 'Clear');
 
       await _tap(tester, 'Save');
 
@@ -288,14 +288,14 @@ void main() {
       expect(sent.semiAuto, isNull, reason: 'Manual');
     });
 
-    testWidgets('Issue 34: Cancel after Reset stores nothing and the editor '
+    testWidgets('Issue 34: Cancel after Clear stores nothing and the editor '
         'reopens on the old values', (tester) async {
       final groups = await _pumpSection(
         tester,
         _group(minAge: const Age(years: 5), maxAge: const Age(years: 18)),
       );
       await _openEditor(tester);
-      await _tap(tester, 'Reset');
+      await _tap(tester, 'Clear');
 
       await _tap(tester, 'Cancel');
 
@@ -307,7 +307,7 @@ void main() {
       expect(find.text('Semi-auto'), findsOneWidget);
       expect(_text(tester, AgeEligibilityFormFields.minAgeYearsId), '5');
       expect(_text(tester, AgeEligibilityFormFields.maxAgeYearsId), '18');
-      expect(find.text('Reset'), findsOneWidget);
+      expect(find.text('Clear'), findsOneWidget);
     });
   });
 
@@ -317,13 +317,13 @@ void main() {
       GroupCreateView(onCreated: () {}, onCancel: () {}),
     );
 
-    testWidgets('Issue 34: no Reset on a fresh Manual group; it appears in '
+    testWidgets('Issue 34: no Clear on a fresh Manual group; it appears in '
         'the eligibility block once a criterion is set', (tester) async {
       await pumpCreate(tester);
-      expect(find.text('Reset'), findsNothing);
+      expect(find.text('Clear'), findsNothing);
 
       await _pickMode(tester, from: 'Manual', mode: 'Auto');
-      expect(find.text('Reset'), findsNothing);
+      expect(find.text('Clear'), findsNothing);
 
       await tester.enterText(
         _input(AgeEligibilityFormFields.maxAgeYearsId),
@@ -331,16 +331,16 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final reset = find.text('Reset');
-      expect(reset, findsOneWidget);
+      final clear = find.text('Clear');
+      expect(clear, findsOneWidget);
       // Inside the eligibility block, not down with Cancel / Create group.
       expect(
-        tester.getTopLeft(reset).dy,
+        tester.getTopLeft(clear).dy,
         lessThan(tester.getTopLeft(find.text('Add me into the group')).dy),
       );
     });
 
-    testWidgets('Issue 34: Reset empties the block and sets the mode to '
+    testWidgets('Issue 34: Clear empties the block and sets the mode to '
         'Manual; Create group then stores a group with no eligibility', (
       tester,
     ) async {
@@ -354,9 +354,9 @@ void main() {
       await tester.tap(find.byType(ShadCheckbox));
       await tester.pumpAndSettle();
 
-      await _tap(tester, 'Reset');
+      await _tap(tester, 'Clear');
 
-      expect(find.text('Reset'), findsNothing);
+      expect(find.text('Clear'), findsNothing);
       expect(find.text('Manual'), findsOneWidget);
       expect(find.text(AgeEligibilityFields.maxAgeTitle), findsNothing);
       expect(groups.created, isEmpty);

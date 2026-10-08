@@ -41,8 +41,8 @@ class EditableSectionCard<T> extends StatefulWidget {
     this.isDirty,
     this.onBeforeEdit,
     this.editMaxWidth,
-    this.onReset,
-    this.canReset,
+    this.onClear,
+    this.canClear,
     super.key,
   });
 
@@ -97,14 +97,14 @@ class EditableSectionCard<T> extends StatefulWidget {
   /// desktop layouts from stretching the form full width.
   final double? editMaxWidth;
 
-  /// Optional reset action, shown beside Cancel and Save in edit mode while
-  /// [canReset] returns true. Empties the host's form; nothing is stored
+  /// Optional clear action, shown beside Cancel and Save in edit mode while
+  /// [canClear] returns true. Empties the host's form; nothing is stored
   /// until Save.
-  final VoidCallback? onReset;
+  final VoidCallback? onClear;
 
-  /// Whether the form holds a value to reset. The host rebuilds the card
+  /// Whether the form holds a value to clear. The host rebuilds the card
   /// when the answer may have changed.
-  final bool Function()? canReset;
+  final bool Function()? canClear;
 
   @override
   State<EditableSectionCard<T>> createState() => _EditableSectionCardState<T>();
@@ -235,7 +235,7 @@ class _EditableSectionCardState<T> extends State<EditableSectionCard<T>> {
           saving: _saving,
           onCancel: _cancel,
           onSave: _save,
-          onReset: (widget.canReset?.call() ?? false) ? widget.onReset : null,
+          onClear: (widget.canClear?.call() ?? false) ? widget.onClear : null,
         ),
       ],
     );

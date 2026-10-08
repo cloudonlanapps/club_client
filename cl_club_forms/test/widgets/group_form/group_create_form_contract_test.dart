@@ -1,9 +1,9 @@
 // GroupCreateForm against the list of club_client#61, beside
-// group_create_form_test.dart and group_eligibility_reset_test.dart, which
-// already cover the defaults, the seeded band and the Reset action. Every
+// group_create_form_test.dart and group_eligibility_clear_test.dart, which
+// already cover the defaults, the seeded band and the Clear action. Every
 // point applies. The form draws the section headings "Membership" and
 // "Eligibility criteria" of its eligibility block, and one in-form action,
-// Reset; it has no title and no button that submits. The age inputs are the
+// Clear; it has no title and no button that submits. The age inputs are the
 // shared age cluster's: only how this form uses them is tested here.
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:cl_club_forms/src/constants/form_strings.dart';
@@ -112,14 +112,14 @@ void main() {
       });
     }
 
-    testWidgets('Issue 61: it has no button that submits; Reset is its only '
+    testWidgets('Issue 61: it has no button that submits; Clear is its only '
         'action, and only once a criterion is set', (tester) async {
       await _pump(tester, initialValues: _initial(mode: GroupMode.auto));
       expectNoHostChrome(tester);
 
       await pickOption(tester, from: 'Any', to: GroupGender.boys.label);
       expect(find.byType(ShadButton), findsOneWidget);
-      expectNoHostChrome(tester, allowedButtonTexts: {FormStrings.reset});
+      expectNoHostChrome(tester, allowedButtonTexts: {FormStrings.clear});
     });
   });
 

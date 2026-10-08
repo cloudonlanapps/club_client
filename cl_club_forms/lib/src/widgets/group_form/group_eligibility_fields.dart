@@ -18,13 +18,13 @@ import 'group_membership_heading.dart';
 /// The criteria fields appear only when the selected mode uses criteria
 /// (auto / semi-auto).
 ///
-/// With [showReset] the cluster carries its own Reset action, shown while it
+/// With [showClear] the cluster carries its own Clear action, shown while it
 /// holds a value (group create, which has no section card to carry it). The
 /// embedding form rebuilds the cluster when a value changes.
 class GroupEligibilityFields extends StatefulWidget {
   const GroupEligibilityFields({
     required this.initialMode,
-    this.showReset = false,
+    this.showClear = false,
     this.enabled = true,
     super.key,
   });
@@ -32,8 +32,8 @@ class GroupEligibilityFields extends StatefulWidget {
   /// The mode the selector starts on.
   final GroupMode initialMode;
 
-  /// Whether the cluster shows its own Reset action.
-  final bool showReset;
+  /// Whether the cluster shows its own Clear action.
+  final bool showClear;
 
   /// Whether the fields respond; false while the host saves.
   final bool enabled;
@@ -63,7 +63,7 @@ class GroupEligibilityFields extends StatefulWidget {
   /// Puts Gender back to Any, empties both ages and the Strict age check of
   /// [form] and sets its mode to Manual: a group with no criteria is a
   /// Manual group.
-  static void reset(ShadFormState form) {
+  static void clear(ShadFormState form) {
     form.setValue({
       GroupFormFields.genderId: GroupGender.any,
       ...AgeEligibilityFormValues.initial(),
@@ -85,8 +85,8 @@ class GroupEligibilityFieldsState extends State<GroupEligibilityFields> {
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
     final form = ShadForm.of(context);
-    final resettable =
-        widget.showReset && GroupEligibilityFields.holdsValue(form.value);
+    final clearable =
+        widget.showClear && GroupEligibilityFields.holdsValue(form.value);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -144,14 +144,15 @@ class GroupEligibilityFieldsState extends State<GroupEligibilityFields> {
               ),
             ],
           ),
-        if (resettable)
+        if (clearable)
           Align(
             alignment: Alignment.centerRight,
-            child: ShadButton.outline(
+            child: ShadButton.ghost(
+              size: ShadButtonSize.sm,
               onPressed: widget.enabled
-                  ? () => GroupEligibilityFields.reset(form)
+                  ? () => GroupEligibilityFields.clear(form)
                   : null,
-              child: const Text(FormStrings.reset),
+              child: const Text(FormStrings.clear),
             ),
           ),
       ],

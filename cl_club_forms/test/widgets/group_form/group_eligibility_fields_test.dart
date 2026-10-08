@@ -2,7 +2,7 @@
 // GroupEligibilityForm share, mounted alone under a bare ShadForm. It has no
 // validator and no rule of its own (the forms apply
 // GroupFormValidators.eligibility) and returns no values itself. Its in-form
-// action is Reset. The age inputs inside it are the shared age cluster's,
+// action is Clear. The age inputs inside it are the shared age cluster's,
 // tested in test/widgets/age_eligibility/.
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:cl_club_forms/src/constants/form_strings.dart';
@@ -49,14 +49,14 @@ Map<String, dynamic> _values({
 Widget _cluster(
   GlobalKey<ShadFormState> key,
   Map<String, dynamic> values, {
-  bool showReset = false,
+  bool showClear = false,
   bool enabled = true,
 }) => ClusterHost(
   formKey: key,
   initialValue: values,
   builder: (_) => GroupEligibilityFields(
     initialMode: values[GroupFormFields.modeId] as GroupMode,
-    showReset: showReset,
+    showClear: showClear,
     enabled: enabled,
   ),
 );
@@ -64,7 +64,7 @@ Widget _cluster(
 Future<ShadFormState> _pump(
   WidgetTester tester,
   Map<String, dynamic> values, {
-  bool showReset = false,
+  bool showClear = false,
   bool enabled = true,
 }) async {
   final key = GlobalKey<ShadFormState>();
@@ -73,7 +73,7 @@ Future<ShadFormState> _pump(
     _cluster(
       key,
       values,
-      showReset: showReset,
+      showClear: showClear,
       enabled: enabled,
     ),
   );
@@ -285,7 +285,7 @@ void main() {
     });
   });
 
-  group('Issue 61: GroupEligibilityFields Reset', () {
+  group('Issue 61: GroupEligibilityFields Clear', () {
     final filled = _values(
       mode: GroupMode.auto,
       gender: GroupGender.boys,
@@ -294,11 +294,11 @@ void main() {
       strictAge: true,
     );
 
-    testWidgets('Issue 61: reset empties the gender, both ages and the '
+    testWidgets('Issue 61: clear empties the gender, both ages and the '
         'Strict age check, and sets the mode to Manual', (tester) async {
       final form = await _pump(tester, filled);
 
-      GroupEligibilityFields.reset(form);
+      GroupEligibilityFields.clear(form);
       await tester.pumpAndSettle();
 
       expect(form.value, _values());
@@ -306,32 +306,32 @@ void main() {
       expect(find.text(GroupMode.manual.label), findsOneWidget);
     });
 
-    testWidgets('Issue 61: without showReset it never draws a Reset', (
+    testWidgets('Issue 61: without showClear it never draws a Clear', (
       tester,
     ) async {
       await _pump(tester, filled);
 
-      expect(find.text(FormStrings.reset), findsNothing);
+      expect(find.text(FormStrings.clear), findsNothing);
       expectNoHostChrome(tester);
     });
 
-    testWidgets('Issue 61: with showReset, Reset shows only while a '
+    testWidgets('Issue 61: with showClear, Clear shows only while a '
         'criterion is held, and pressing it empties them', (tester) async {
       final form = await _pump(
         tester,
         _values(mode: GroupMode.semiAuto),
-        showReset: true,
+        showClear: true,
       );
-      expect(find.text(FormStrings.reset), findsNothing);
+      expect(find.text(FormStrings.clear), findsNothing);
 
       await tester.tap(find.byType(ShadCheckbox));
       await tester.pumpAndSettle();
-      expect(find.text(FormStrings.reset), findsOneWidget);
-      expectNoHostChrome(tester, allowedButtonTexts: {FormStrings.reset});
+      expect(find.text(FormStrings.clear), findsOneWidget);
+      expectNoHostChrome(tester, allowedButtonTexts: {FormStrings.clear});
 
       await tester.tap(find.byType(ShadCheckbox));
       await tester.pumpAndSettle();
-      expect(find.text(FormStrings.reset), findsNothing);
+      expect(find.text(FormStrings.clear), findsNothing);
 
       await enterField(tester, _A.maxAgeMonthsId, '6');
       await pickOption(
@@ -339,18 +339,18 @@ void main() {
         from: GroupGender.any.label,
         to: GroupGender.girls.label,
       );
-      await tester.tap(find.text(FormStrings.reset));
+      await tester.tap(find.text(FormStrings.clear));
       await tester.pumpAndSettle();
 
       expect(form.value, _values());
-      expect(find.text(FormStrings.reset), findsNothing);
+      expect(find.text(FormStrings.clear), findsNothing);
     });
 
-    testWidgets('Issue 61: with enabled false Reset is drawn but does '
+    testWidgets('Issue 61: with enabled false Clear is drawn but does '
         'nothing', (tester) async {
-      final form = await _pump(tester, filled, showReset: true, enabled: false);
+      final form = await _pump(tester, filled, showClear: true, enabled: false);
 
-      await tester.tap(find.text(FormStrings.reset), warnIfMissed: false);
+      await tester.tap(find.text(FormStrings.clear), warnIfMissed: false);
       await tester.pumpAndSettle();
 
       expect(form.value, filled);
@@ -390,14 +390,14 @@ void main() {
       await expectNoFieldResponds(tester);
     });
 
-    testWidgets('Issue 61: it fits a phone, criteria and Reset included', (
+    testWidgets('Issue 61: it fits a phone, criteria and Clear included', (
       tester,
     ) async {
       await expectFitsPhone(
         tester,
-        _cluster(GlobalKey<ShadFormState>(), seeded, showReset: true),
+        _cluster(GlobalKey<ShadFormState>(), seeded, showClear: true),
       );
-      expect(find.text(FormStrings.reset), findsOneWidget);
+      expect(find.text(FormStrings.clear), findsOneWidget);
     });
   });
 }

@@ -27,7 +27,7 @@ class GroupEligibilityForm extends StatefulWidget {
   /// out.
   final Map<String, dynamic> initialValues;
 
-  /// Called whenever a field's value changes, a reset included, so the host
+  /// Called whenever a field's value changes, a clear included, so the host
   /// can re-read [GroupEligibilityFormState.hasValue].
   final VoidCallback? onChanged;
 
@@ -51,7 +51,7 @@ class GroupEligibilityFormState extends State<GroupEligibilityForm>
   String? crossFieldError(Map<String, dynamic> values) =>
       GroupFormValidators.eligibility(values);
 
-  /// Whether the form holds criteria a [reset] would empty.
+  /// Whether the form holds criteria a [clear] would empty.
   bool get hasValue {
     final form = formKey.currentState;
     return form != null && GroupEligibilityFields.holdsValue(form.value);
@@ -59,10 +59,10 @@ class GroupEligibilityFormState extends State<GroupEligibilityForm>
 
   /// Empties the criteria and sets the mode to Manual. Nothing is stored:
   /// the form is then changed, and the host's Save sends a Manual group.
-  void reset() {
+  void clear() {
     final form = formKey.currentState;
     if (form == null) return;
-    GroupEligibilityFields.reset(form);
+    GroupEligibilityFields.clear(form);
     setFormError(null);
   }
 

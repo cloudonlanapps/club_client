@@ -91,7 +91,7 @@ void main() {
     expect(changes, isNotEmpty);
   });
 
-  testWidgets('Issue 34: reset empties gender, both ages and the Strict age '
+  testWidgets('Issue 34: clear empties gender, both ages and the Strict age '
       'check, and leaves the form changed', (tester) async {
     final changes = <int>[];
     final form = await _pump(
@@ -106,7 +106,7 @@ void main() {
     );
     expect(form.isDirty, isFalse);
 
-    form.reset();
+    form.clear();
     await tester.pumpAndSettle();
 
     expect(form.hasValue, isFalse);
@@ -143,7 +143,7 @@ void main() {
     expect(AgeEligibilityFormValues.strictAge(values), isFalse);
   });
 
-  testWidgets('Issue 78: Gender on Any is no value, and Reset puts a picked '
+  testWidgets('Issue 78: Gender on Any is no value, and Clear puts a picked '
       'gender back to Any', (tester) async {
     expect(EventEligibilityForm.holdsValue(_seeded()), isFalse);
     expect(
@@ -154,7 +154,7 @@ void main() {
     final form = await _pump(tester, _seeded(gender: EventGender.boys));
     expect(form.hasValue, isTrue);
 
-    form.reset();
+    form.clear();
     await tester.pumpAndSettle();
 
     expect(form.hasValue, isFalse);
@@ -164,7 +164,9 @@ void main() {
     expect(form.validate()![EventFormFields.genderId], EventGender.any);
   });
 
-  testWidgets('Issue 34: reset clears the inline band message', (tester) async {
+  testWidgets('Issue 34: clear removes the inline band message', (
+    tester,
+  ) async {
     final form = await _pump(
       tester,
       _seeded(
@@ -176,7 +178,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(AgeEligibilityFormValidators.bandMessage), findsOneWidget);
 
-    form.reset();
+    form.clear();
     await tester.pumpAndSettle();
 
     expect(find.text(AgeEligibilityFormValidators.bandMessage), findsNothing);

@@ -1,9 +1,9 @@
 // GroupEligibilityForm against the list of club_client#61, beside
-// group_eligibility_form_test.dart and group_eligibility_reset_test.dart,
-// which already cover the seeded band, hasValue and reset(). Every point
+// group_eligibility_form_test.dart and group_eligibility_clear_test.dart,
+// which already cover the seeded band, hasValue and clear(). Every point
 // applies. No field of it is required and none has a validator of its own:
 // its rules are the two across fields. It draws the section headings
-// "Membership" and "Eligibility criteria" and no button at all (its Reset is
+// "Membership" and "Eligibility criteria" and no button at all (its Clear is
 // the host card's). The age inputs are the shared age cluster's: only how
 // this form uses them is tested here.
 import 'package:cl_club_forms/cl_club_forms.dart';

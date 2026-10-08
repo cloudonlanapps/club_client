@@ -19,7 +19,7 @@ Event _event({
 }) => Event(
   id: 1,
   version: 4,
-  title: 'workflow_reset',
+  title: 'workflow_clear',
   description: '',
   type: type,
   visibility: Visibility.public,
@@ -162,18 +162,18 @@ Future<void> _tap(WidgetTester tester, String label) async {
 }
 
 void main() {
-  testWidgets('Issue 34: no Reset in read mode, nor in the editor of an '
+  testWidgets('Issue 34: no Clear in read mode, nor in the editor of an '
       'event with no eligibility', (tester) async {
     await _pump(tester, _event());
-    expect(find.text('Reset'), findsNothing);
+    expect(find.text('Clear'), findsNothing);
 
     await _openEditor(tester);
 
     expect(find.text('Save'), findsOneWidget);
-    expect(find.text('Reset'), findsNothing);
+    expect(find.text('Clear'), findsNothing);
   });
 
-  testWidgets('Issue 34: Reset shows as soon as the editor opens on an '
+  testWidgets('Issue 34: Clear shows as soon as the editor opens on an '
       'event with a gender, an age or the Strict age check', (tester) async {
     for (final event in [
       _event(gender: Gender.female),
@@ -182,31 +182,31 @@ void main() {
       _event(strictAge: true),
     ]) {
       await _pump(tester, event);
-      expect(find.text('Reset'), findsNothing, reason: 'read mode');
+      expect(find.text('Clear'), findsNothing, reason: 'read mode');
 
       await _openEditor(tester);
 
-      expect(find.text('Reset'), findsOneWidget, reason: '$event');
+      expect(find.text('Clear'), findsOneWidget, reason: '$event');
       await tester.pumpWidget(const SizedBox.shrink());
     }
   });
 
-  testWidgets('Issue 34: Reset appears once an age is typed and goes when '
+  testWidgets('Issue 34: Clear appears once an age is typed and goes when '
       'it is emptied again', (tester) async {
     await _pump(tester, _event());
     await _openEditor(tester);
-    expect(find.text('Reset'), findsNothing);
+    expect(find.text('Clear'), findsNothing);
 
     await tester.enterText(_input(AgeEligibilityFormFields.minAgeYearsId), '5');
     await tester.pumpAndSettle();
-    expect(find.text('Reset'), findsOneWidget);
+    expect(find.text('Clear'), findsOneWidget);
 
     await tester.enterText(_input(AgeEligibilityFormFields.minAgeYearsId), '');
     await tester.pumpAndSettle();
-    expect(find.text('Reset'), findsNothing);
+    expect(find.text('Clear'), findsNothing);
   });
 
-  testWidgets('Issue 34: Reset appears when only the Strict age check is '
+  testWidgets('Issue 34: Clear appears when only the Strict age check is '
       'ticked', (tester) async {
     await _pump(tester, _event());
     await _openEditor(tester);
@@ -214,10 +214,10 @@ void main() {
     await tester.tap(find.byType(ShadCheckbox));
     await tester.pumpAndSettle();
 
-    expect(find.text('Reset'), findsOneWidget);
+    expect(find.text('Clear'), findsOneWidget);
   });
 
-  testWidgets('Issue 34: pressing Reset empties the fields, hides the '
+  testWidgets('Issue 34: pressing Clear empties the fields, hides the '
       'button and stores nothing', (tester) async {
     final events = await _pump(
       tester,
@@ -230,9 +230,9 @@ void main() {
     );
     await _openEditor(tester);
 
-    await _tap(tester, 'Reset');
+    await _tap(tester, 'Clear');
 
-    expect(find.text('Reset'), findsNothing);
+    expect(find.text('Clear'), findsNothing);
     expect(find.text('Save'), findsOneWidget, reason: 'still editing');
     expect(_text(tester, AgeEligibilityFormFields.minAgeYearsId), isEmpty);
     expect(_text(tester, AgeEligibilityFormFields.maxAgeYearsId), isEmpty);
@@ -241,7 +241,7 @@ void main() {
     expect(events.sent, isEmpty);
   });
 
-  testWidgets('Issue 34: Save after Reset stores an event with no '
+  testWidgets('Issue 34: Save after Clear stores an event with no '
       'eligibility', (tester) async {
     final events = await _pump(
       tester,
@@ -253,7 +253,7 @@ void main() {
       ),
     );
     await _openEditor(tester);
-    await _tap(tester, 'Reset');
+    await _tap(tester, 'Clear');
 
     await _tap(tester, 'Save');
 
@@ -266,7 +266,7 @@ void main() {
     expect(sent.strictAge, isFalse);
   });
 
-  testWidgets("Issue 34: a programme's reset is saved as a correction", (
+  testWidgets("Issue 34: a programme's clear is saved as a correction", (
     tester,
   ) async {
     final events = await _pump(
@@ -274,13 +274,13 @@ void main() {
       _event(type: EventType.programme, maxAge: const Age(years: 12)),
     );
     await _openEditor(tester);
-    await _tap(tester, 'Reset');
+    await _tap(tester, 'Clear');
 
     await _tap(tester, 'Save');
 
     final sent = events.sent.single;
     expect(sent.verb, 'correction');
-    // The programme had no gender and Reset leaves Gender on Any: unchanged,
+    // The programme had no gender and Clear leaves Gender on Any: unchanged,
     // so it is not sent (club_client#78).
     expect(sent.gender, isNull);
     expect(sent.minAge!(), isNull);
@@ -288,14 +288,14 @@ void main() {
     expect(sent.strictAge, isFalse);
   });
 
-  testWidgets('Issue 34: Cancel after Reset stores nothing and the editor '
+  testWidgets('Issue 34: Cancel after Clear stores nothing and the editor '
       'reopens on the old values', (tester) async {
     final events = await _pump(
       tester,
       _event(minAge: const Age(years: 5), maxAge: const Age(years: 18)),
     );
     await _openEditor(tester);
-    await _tap(tester, 'Reset');
+    await _tap(tester, 'Clear');
 
     await _tap(tester, 'Cancel');
 
@@ -306,6 +306,6 @@ void main() {
 
     expect(_text(tester, AgeEligibilityFormFields.minAgeYearsId), '5');
     expect(_text(tester, AgeEligibilityFormFields.maxAgeYearsId), '18');
-    expect(find.text('Reset'), findsOneWidget);
+    expect(find.text('Clear'), findsOneWidget);
   });
 }

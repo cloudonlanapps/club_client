@@ -45,8 +45,8 @@ class EvaluationSingleChoiceInput extends StatelessWidget {
         ],
       ),
       if (value != null && enabled)
-        ShadButton.link(
-          padding: EdgeInsets.zero,
+        ShadButton.ghost(
+          size: ShadButtonSize.sm,
           onPressed: () => onChanged(null),
           child: const Text(EvaluationStrings.clear),
         ),

@@ -226,11 +226,11 @@ void main() {
       expect(find.text('Eligibility updated.'), findsOneWidget);
     });
 
-    testWidgets('Issue 96: Reset is offered for a group with members that '
+    testWidgets('Issue 96: Clear is offered for a group with members that '
         'holds criteria', (tester) async {
       await _openEditorOf(tester, _group());
 
-      expect(find.text('Reset'), findsOneWidget);
+      expect(find.text('Clear'), findsOneWidget);
     });
 
     testWidgets('Issue 96: the section does not read the member list', (

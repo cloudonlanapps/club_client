@@ -16,7 +16,7 @@ import '../event_eligibility_read.dart';
 /// Eligibility section — gender and the age band, edited in place.
 ///
 /// While the editor holds a value (gender, an age or the Strict age check)
-/// the card offers Reset beside Cancel and Save: it empties the form, and
+/// the card offers Clear beside Cancel and Save: it empties the form, and
 /// Save then stores an event with no eligibility.
 class EventEligibilityCard extends ConsumerStatefulWidget {
   const EventEligibilityCard({required this.event, super.key});
@@ -76,16 +76,16 @@ class EventEligibilityCardState extends ConsumerState<EventEligibilityCard> {
         key: formKey,
         initialValues: initialValues,
         enabled: enabled,
-        // The card's Reset shows only while the form holds a value.
+        // The card's Clear shows only while the form holds a value.
         onChanged: () => setState(() {}),
       ),
       onValidate: () => formKey.currentState?.validate(),
       isDirty: () => formKey.currentState?.isDirty ?? false,
       onSave: save,
-      onReset: () => formKey.currentState?.reset(),
+      onClear: () => formKey.currentState?.clear(),
       // Before the form is mounted (the frame the editor opens on), what it
       // is about to be seeded with answers.
-      canReset: () =>
+      canClear: () =>
           formKey.currentState?.hasValue ??
           EventEligibilityForm.holdsValue(initialValues),
     );

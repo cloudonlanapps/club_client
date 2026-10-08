@@ -75,16 +75,16 @@ class _GroupEligibilitySectionState
         key: _formKey,
         initialValues: initialValues,
         enabled: enabled,
-        // The card's Reset shows only while the form holds a value.
+        // The card's Clear shows only while the form holds a value.
         onChanged: () => setState(() {}),
       ),
       onValidate: () => _formKey.currentState?.validate(),
       isDirty: () => _formKey.currentState?.isDirty ?? false,
       onSave: _save,
-      onReset: () => _formKey.currentState?.reset(),
+      onClear: () => _formKey.currentState?.clear(),
       // Before the form is mounted (the frame the editor opens on), what it
       // is about to be seeded with answers.
-      canReset: () =>
+      canClear: () =>
           _formKey.currentState?.hasValue ??
           GroupEligibilityForm.holdsValue(initialValues),
     );

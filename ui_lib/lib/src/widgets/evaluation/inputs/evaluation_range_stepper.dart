@@ -80,8 +80,8 @@ class EvaluationRangeStepper extends StatelessWidget {
           style: theme.muted,
         ),
         if (current != null && enabled)
-          ShadButton.link(
-            padding: EdgeInsets.zero,
+          ShadButton.ghost(
+            size: ShadButtonSize.sm,
             onPressed: () => onChanged(null),
             child: const Text(EvaluationStrings.clear),
           ),

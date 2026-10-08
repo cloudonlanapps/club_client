@@ -15,26 +15,8 @@ import 'package:ui_lib/ui_lib.dart'
 import '../../models/programme_schedule_form_helpers.dart';
 import '../../utils/event_refusal.dart';
 import '../../utils/programme_end_date.dart';
-import '../../utils/schedule_save_error.dart';
-
-/// Shown when a programme that had no end date is given one.
-const String programmeEndDateSetMessage = 'End date set.';
-
-/// Shown when a programme's end date is moved.
-const String programmeEndDateChangedMessage = 'End date changed.';
-
-/// Shown when a programme's end date is removed.
-const String programmeEndDateClearedMessage = 'End date cleared.';
-
-/// Shown when the server refuses an end-date change because the end was
-/// set, cleared or passed in the meantime.
-const String programmeEndDateOutdatedMessage =
-    "This programme's end date has changed or has passed. Close this and "
-    'check its schedule.';
-
-/// Shown when an end-date change fails with no more specific explanation.
-const String programmeEndDateFailedMessage =
-    'Could not change the end date. Please try again.';
+import '../../utils/programme_end_date_messages.dart';
+import 'programme_end_date_dialog_body.dart';
 
 /// The **Adjust end date** dialog of a programme whose end has not passed:
 /// hosts the SDK-free [ProgrammeEndDateForm] and commits through
@@ -149,7 +131,7 @@ class ProgrammeEndDateDialogState
     } on Object catch (e) {
       if (!mounted) return;
       setState(() => saving = false);
-      final message = failureOf(e);
+      final message = programmeEndDateFailureOf(e);
       // A failure that is not about the end date is a toast; the dialog
       // stays, on again, for another try.
       if (!isRefusalToShowInForm(
@@ -158,7 +140,7 @@ class ProgrammeEndDateDialogState
         fallback: programmeEndDateFailedMessage,
       )) {
         toaster.show(ShadToast.destructive(description: Text(message)));
-      } else if (isAboutLastDay(e) && lastDay != null) {
+      } else if (programmeEndDateIsAboutLastDay(e) && lastDay != null) {
         formKey.currentState?.showErrors(
           fieldErrors: {ProgrammeEndDateFormFields.lastDayId: message},
         );
@@ -168,26 +150,8 @@ class ProgrammeEndDateDialogState
     }
   }
 
-  /// Whether the refusal [error] is about the day chosen: too far ahead, or
-  /// a last session too close to now.
-  bool isAboutLastDay(Object error) =>
-      error is ServerException &&
-      (error.code == SdkErrorCode.beyondSchedulingHorizon ||
-          error.code == SdkErrorCode.cutoffTooSoon);
-
-  String failureOf(Object error) {
-    if (error is ServerException && error.code == SdkErrorCode.invalidState) {
-      return programmeEndDateOutdatedMessage;
-    }
-    return scheduleSaveErrorMessage(
-      error,
-      fallback: programmeEndDateFailedMessage,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final event = widget.event;
     return SavingDialogScope(
       saving: saving,
       child: ShadDialog(
@@ -211,27 +175,11 @@ class ProgrammeEndDateDialogState
             child: Text(saving ? 'Saving…' : 'Save'),
           ),
         ],
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: ProgrammeEndDateDialog.maxFormWidth,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: ProgrammeEndDateForm(
-              key: formKey,
-              initialValues: buildProgrammeEndDateFormInitialValues(
-                event,
-                schedules: widget.schedules,
-              ),
-              reasonRequired: !hasEnd,
-              resultOf: (day) => programmeEndResultLine(
-                event,
-                day,
-                schedules: widget.schedules,
-              ),
-              enabled: !saving,
-            ),
-          ),
+        child: ProgrammeEndDateDialogBody(
+          formKey: formKey,
+          event: widget.event,
+          schedules: widget.schedules,
+          enabled: !saving,
         ),
       ),
     );

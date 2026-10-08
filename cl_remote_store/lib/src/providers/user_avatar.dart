@@ -1,7 +1,7 @@
 import 'package:cl_remote_store/src/providers/client.dart';
 import 'package:cl_remote_store/src/providers/media_download_url.dart';
 import 'package:cl_remote_store/src/providers/mutation_guard.dart';
-import 'package:club_sdk_2/club_sdk_2.dart';
+import 'package:cl_remote_store/src/utils/media_by_uuid.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -54,27 +54,10 @@ final FutureProviderFamily<bool, String> avatarVisibilityProvider =
       if (links.isEmpty) return false;
       final sorted = [...links]
         ..sort((a, b) => b.createdAtUtc.compareTo(a.createdAtUtc));
-      final current = await findAvatarMedia(client, sorted.first.mediaUuid);
+      final current = await findMediaByUuid(client, sorted.first.mediaUuid);
       if (current == null) return false;
       return current.accessRoles.contains(kAvatarPublicAccessRoles.single);
     });
-
-/// The media record with [mediaUuid], or null when no file has that uuid or
-/// the caller may not read it (the server answers both 404).
-///
-/// A media link carries the uuid; the calls that change a file take the id
-/// this record holds (club_client#86).
-Future<Media?> findAvatarMedia(SecureClient client, String mediaUuid) async {
-  try {
-    return await client.media.getByUuid(mediaUuid);
-  } on ServerException catch (e) {
-    if (e.statusCode == kNotFoundStatus) return null;
-    rethrow;
-  }
-}
-
-/// HTTP status of a file that does not exist or the caller may not read.
-const int kNotFoundStatus = 404;
 
 /// Mutation surface for a single user's avatar.
 ///
@@ -168,7 +151,7 @@ class AvatarMutationNotifier extends FamilyAsyncNotifier<void, String>
       final current = links.reduce(
         (a, b) => b.createdAtUtc.isAfter(a.createdAtUtc) ? b : a,
       );
-      final media = await findAvatarMedia(client, current.mediaUuid);
+      final media = await findMediaByUuid(client, current.mediaUuid);
       if (media == null) throw StateError('The current avatar is not yours');
       await client.media.patch(
         media.id,
@@ -192,7 +175,7 @@ class AvatarMutationNotifier extends FamilyAsyncNotifier<void, String>
       await client.userMedia.detachTag(username, kUserAvatarTag);
       for (final link in links) {
         try {
-          await softDeleteByUuid(client, link.mediaUuid);
+          await softDeleteMediaByUuid(client, link.mediaUuid);
         } on Object catch (e, st) {
           debugPrint(
             'avatarMutationProvider.clear: softDelete failed for '
@@ -243,13 +226,5 @@ class AvatarMutationNotifier extends FamilyAsyncNotifier<void, String>
       mediaUuid: media.uuid,
     );
     refetchAvatar(username);
-  }
-
-  /// Soft-delete the media with [mediaUuid], if [findAvatarMedia] resolves
-  /// it. Best-effort cleanup: an unresolved uuid stays an orphan media row.
-  Future<void> softDeleteByUuid(SecureClient client, String mediaUuid) async {
-    final media = await findAvatarMedia(client, mediaUuid);
-    if (media == null) return;
-    await client.media.softDelete(media.id);
   }
 }

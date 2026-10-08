@@ -52,7 +52,6 @@ Map<String, dynamic> _seeded({
 Future<GroupEligibilityFormState> _pump(
   WidgetTester tester,
   Map<String, dynamic> initialValues, {
-  bool criteriaLocked = false,
   bool enabled = true,
   VoidCallback? onChanged,
 }) async {
@@ -62,7 +61,6 @@ Future<GroupEligibilityFormState> _pump(
     GroupEligibilityForm(
       key: key,
       initialValues: initialValues,
-      criteriaLocked: criteriaLocked,
       enabled: enabled,
       onChanged: onChanged,
     ),
@@ -123,32 +121,9 @@ void main() {
       expectNoHostChrome(tester);
     });
 
-    testWidgets('Issue 61: unlocked, it explains the modes; locked, it says '
-        'why the mode cannot change', (tester) async {
+    testWidgets('Issue 61: it explains the modes', (tester) async {
       await _pump(tester, _seeded());
       expect(find.text(GroupMembershipHeading.modeHint), findsOneWidget);
-      expect(find.text(GroupMembershipHeading.lockedHint), findsNothing);
-
-      await tester.pumpWidget(const SizedBox.shrink());
-      await _pump(tester, _seeded(), criteriaLocked: true);
-      expect(find.text(GroupMembershipHeading.lockedHint), findsOneWidget);
-      expect(find.text(GroupMembershipHeading.modeHint), findsNothing);
-    });
-
-    testWidgets('Issue 61: locked criteria are shown as stored, and neither '
-        'the mode nor any criterion responds', (tester) async {
-      final seeded = _seeded(
-        gender: GroupGender.girls,
-        minAge: const FormAge(years: 5),
-        strictAge: true,
-      );
-      final state = await _pump(tester, seeded, criteriaLocked: true);
-
-      expect(rowLabels(tester), ['Mode', ..._criteriaRows]);
-      expect(find.text(GroupGender.girls.label), findsOneWidget);
-      await expectNoFieldResponds(tester);
-      expect(state.isDirty, isFalse);
-      expect(await _validate(tester, state), seeded);
     });
   });
 

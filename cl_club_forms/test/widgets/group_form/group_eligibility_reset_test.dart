@@ -43,7 +43,6 @@ Future<void> _pumpHost(WidgetTester tester, Widget form) async {
 Future<GroupEligibilityFormState> _pumpEditor(
   WidgetTester tester,
   Map<String, dynamic> initialValues, {
-  bool criteriaLocked = false,
   List<int>? changes,
 }) async {
   final key = GlobalKey<GroupEligibilityFormState>();
@@ -52,7 +51,6 @@ Future<GroupEligibilityFormState> _pumpEditor(
     GroupEligibilityForm(
       key: key,
       initialValues: initialValues,
-      criteriaLocked: criteriaLocked,
       onChanged: () => changes?.add(1),
     ),
   );
@@ -180,24 +178,6 @@ void main() {
       );
       expect(find.text(GroupGender.any.label), findsOneWidget);
       expect(form.hasValue, isFalse);
-    });
-
-    testWidgets('Issue 34: while the criteria are locked the form reports no '
-        'value and reset changes nothing', (tester) async {
-      final form = await _pumpEditor(
-        tester,
-        _seeded(minAge: const FormAge(years: 5)),
-        criteriaLocked: true,
-      );
-      expect(form.hasValue, isFalse);
-
-      form.reset();
-      await tester.pumpAndSettle();
-
-      expect(form.isDirty, isFalse);
-      final values = form.validate();
-      expect(values![GroupFormFields.modeId], GroupMode.semiAuto);
-      expect(AgeEligibilityFormValues.minAge(values), const FormAge(years: 5));
     });
   });
 

@@ -16,18 +16,14 @@ import 'group_membership_heading.dart';
 /// `ShadForm`.
 ///
 /// The criteria fields appear only when the selected mode uses criteria
-/// (auto / semi-auto). When [criteriaLocked] is true — the group already has
-/// members, so the server forbids changing what computes membership — the
-/// mode selector and criteria are disabled.
+/// (auto / semi-auto).
 ///
 /// With [showReset] the cluster carries its own Reset action, shown while it
-/// holds a value and is not locked (group create, which has no section card
-/// to carry it). The embedding form rebuilds the cluster when a value
-/// changes.
+/// holds a value (group create, which has no section card to carry it). The
+/// embedding form rebuilds the cluster when a value changes.
 class GroupEligibilityFields extends StatefulWidget {
   const GroupEligibilityFields({
     required this.initialMode,
-    this.criteriaLocked = false,
     this.showReset = false,
     this.enabled = true,
     super.key,
@@ -35,10 +31,6 @@ class GroupEligibilityFields extends StatefulWidget {
 
   /// The mode the selector starts on.
   final GroupMode initialMode;
-
-  /// Whether the mode and the criteria are read-only because the group
-  /// already has members.
-  final bool criteriaLocked;
 
   /// Whether the cluster shows its own Reset action.
   final bool showReset;
@@ -92,12 +84,9 @@ class GroupEligibilityFieldsState extends State<GroupEligibilityFields> {
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    final editable = widget.enabled && !widget.criteriaLocked;
     final form = ShadForm.of(context);
     final resettable =
-        widget.showReset &&
-        !widget.criteriaLocked &&
-        GroupEligibilityFields.holdsValue(form.value);
+        widget.showReset && GroupEligibilityFields.holdsValue(form.value);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -109,13 +98,13 @@ class GroupEligibilityFieldsState extends State<GroupEligibilityFields> {
           mainAxisSize: MainAxisSize.min,
           spacing: FormSpacing.rowGap,
           children: [
-            GroupMembershipHeading(criteriaLocked: widget.criteriaLocked),
+            const GroupMembershipHeading(),
             LabeledFormRow(
               label: 'Mode',
               field: ShadSelectFormField<GroupMode>(
                 id: GroupFormFields.modeId,
                 initialValue: widget.initialMode,
-                enabled: editable,
+                enabled: widget.enabled,
                 options: [
                   for (final m in GroupMode.values)
                     ShadOption(value: m, child: Text(m.label)),
@@ -140,12 +129,12 @@ class GroupEligibilityFieldsState extends State<GroupEligibilityFields> {
                 GroupEligibilityFields.criteriaTitle,
                 style: theme.textTheme.small,
               ),
-              AgeEligibilityFields(enabled: editable),
+              AgeEligibilityFields(enabled: widget.enabled),
               LabeledFormRow(
                 label: 'Gender',
                 field: ShadSelectFormField<GroupGender>(
                   id: GroupFormFields.genderId,
-                  enabled: editable,
+                  enabled: widget.enabled,
                   options: [
                     for (final g in GroupGender.values)
                       ShadOption(value: g, child: Text(g.label)),

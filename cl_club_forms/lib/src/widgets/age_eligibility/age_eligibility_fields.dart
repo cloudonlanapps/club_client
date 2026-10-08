@@ -14,7 +14,7 @@ import 'age_input_row.dart';
 class AgeEligibilityFields extends StatelessWidget {
   const AgeEligibilityFields({this.enabled = true, super.key});
 
-  /// False renders the cluster read-only (a group whose criteria are locked).
+  /// False renders the cluster read-only (while the host saves).
   final bool enabled;
 
   static const String minAgeTitle = 'Minimum age';

@@ -49,7 +49,6 @@ Map<String, dynamic> _values({
 Widget _cluster(
   GlobalKey<ShadFormState> key,
   Map<String, dynamic> values, {
-  bool criteriaLocked = false,
   bool showReset = false,
   bool enabled = true,
 }) => ClusterHost(
@@ -57,7 +56,6 @@ Widget _cluster(
   initialValue: values,
   builder: (_) => GroupEligibilityFields(
     initialMode: values[GroupFormFields.modeId] as GroupMode,
-    criteriaLocked: criteriaLocked,
     showReset: showReset,
     enabled: enabled,
   ),
@@ -66,7 +64,6 @@ Widget _cluster(
 Future<ShadFormState> _pump(
   WidgetTester tester,
   Map<String, dynamic> values, {
-  bool criteriaLocked = false,
   bool showReset = false,
   bool enabled = true,
 }) async {
@@ -76,7 +73,6 @@ Future<ShadFormState> _pump(
     _cluster(
       key,
       values,
-      criteriaLocked: criteriaLocked,
       showReset: showReset,
       enabled: enabled,
     ),
@@ -350,14 +346,6 @@ void main() {
       expect(find.text(FormStrings.reset), findsNothing);
     });
 
-    testWidgets('Issue 61: with showReset, locked criteria draw no Reset', (
-      tester,
-    ) async {
-      await _pump(tester, filled, showReset: true, criteriaLocked: true);
-
-      expect(find.text(FormStrings.reset), findsNothing);
-    });
-
     testWidgets('Issue 61: with enabled false Reset is drawn but does '
         'nothing', (tester) async {
       final form = await _pump(tester, filled, showReset: true, enabled: false);
@@ -373,14 +361,14 @@ void main() {
     });
   });
 
-  group('Issue 61: GroupEligibilityFields locked, disabled and narrow', () {
+  group('Issue 61: GroupEligibilityFields disabled and narrow', () {
     final seeded = _values(
       mode: GroupMode.semiAuto,
       gender: GroupGender.girls,
       minAge: const FormAge(years: 5),
     );
 
-    testWidgets('Issue 61: unlocked, every field responds', (tester) async {
+    testWidgets('Issue 61: every field responds', (tester) async {
       final form = await _pump(tester, seeded);
 
       expect(
@@ -392,25 +380,6 @@ void main() {
       );
       await enterField(tester, _A.minAgeYearsId, '7');
       expect(form.value[_A.minAgeYearsId], '7');
-    });
-
-    testWidgets('Issue 61: locked criteria say why, and neither the mode nor '
-        'any criterion responds', (tester) async {
-      await _pump(tester, seeded, criteriaLocked: true);
-
-      expect(find.text(GroupMembershipHeading.lockedHint), findsOneWidget);
-      expect(find.text(GroupMembershipHeading.modeHint), findsNothing);
-      expect(rowLabels(tester), ['Mode', ..._criteriaRows]);
-      await expectNoFieldResponds(tester);
-    });
-
-    testWidgets('Issue 61: a locked Manual group shows its mode, which does '
-        'not respond', (tester) async {
-      await _pump(tester, _values(), criteriaLocked: true);
-
-      expect(rowLabels(tester), ['Mode']);
-      expect(find.text(GroupMembershipHeading.lockedHint), findsOneWidget);
-      await expectNoFieldResponds(tester);
     });
 
     testWidgets('Issue 61: with enabled false no field responds, and the '

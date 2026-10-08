@@ -33,7 +33,6 @@ Map<String, dynamic> _seeded({
 Future<GroupEligibilityFormState> _pump(
   WidgetTester tester,
   Map<String, dynamic> initialValues, {
-  bool criteriaLocked = false,
   bool enabled = true,
   VoidCallback? onChanged,
 }) async {
@@ -43,7 +42,6 @@ Future<GroupEligibilityFormState> _pump(
     GroupEligibilityForm(
       key: key,
       initialValues: initialValues,
-      criteriaLocked: criteriaLocked,
       enabled: enabled,
       onChanged: onChanged,
     ),
@@ -173,22 +171,17 @@ void main() {
       );
     });
 
-    testWidgets('Issue 61: it fits a phone with its criteria, locked or '
-        'not', (tester) async {
-      for (final locked in [false, true]) {
-        await expectFitsPhone(
-          tester,
-          GroupEligibilityForm(
-            initialValues: _seeded(
-              gender: GroupGender.girls,
-              minAge: const FormAge(years: 100, months: 11, days: 30),
-              maxAge: const FormAge(years: 150, months: 11, days: 30),
-            ),
-            criteriaLocked: locked,
+    testWidgets('Issue 61: it fits a phone with its criteria', (tester) async {
+      await expectFitsPhone(
+        tester,
+        GroupEligibilityForm(
+          initialValues: _seeded(
+            gender: GroupGender.girls,
+            minAge: const FormAge(years: 100, months: 11, days: 30),
+            maxAge: const FormAge(years: 150, months: 11, days: 30),
           ),
-        );
-        await tester.pumpWidget(const SizedBox.shrink());
-      }
+        ),
+      );
     });
   });
 }

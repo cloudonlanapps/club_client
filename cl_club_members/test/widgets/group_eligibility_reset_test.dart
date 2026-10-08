@@ -309,23 +309,6 @@ void main() {
       expect(_text(tester, AgeEligibilityFormFields.maxAgeYearsId), '18');
       expect(find.text('Reset'), findsOneWidget);
     });
-
-    testWidgets('Issue 34: Reset is not shown while the mode is locked '
-        'because the group has members', (tester) async {
-      await _pumpSection(
-        tester,
-        _group(minAge: const Age(years: 5), maxAge: const Age(years: 18)),
-        members: const [GroupMember(membername: 'workflow_a')],
-      );
-      await _openEditor(tester);
-
-      expect(
-        find.text('Mode cannot be changed — the group already has members.'),
-        findsOneWidget,
-      );
-      expect(find.text('Save'), findsOneWidget);
-      expect(find.text('Reset'), findsNothing);
-    });
   });
 
   group('Issue 34: group create', () {

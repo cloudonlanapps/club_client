@@ -185,31 +185,4 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(AgeEligibilityFormValidators.bandMessage), findsOneWidget);
   });
-
-  testWidgets('Issue 33: locked criteria disable the age inputs and the '
-      'Strict age check', (tester) async {
-    await _setSurface(tester);
-    await tester.pumpWidget(
-      _wrap(
-        GroupEligibilityForm(
-          initialValues: seeded(minAge: const FormAge(years: 5)),
-          criteriaLocked: true,
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(
-      tester
-          .widget<ShadInputFormField>(
-            input(AgeEligibilityFormFields.minAgeYearsId),
-          )
-          .enabled,
-      isFalse,
-    );
-    expect(
-      tester.widget<ShadCheckbox>(find.byType(ShadCheckbox)).enabled,
-      isFalse,
-    );
-  });
 }

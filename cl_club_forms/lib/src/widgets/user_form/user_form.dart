@@ -77,6 +77,14 @@ class UserFormState extends State<UserForm>
   @override
   bool get asksForUsername => true;
 
+  /// Follows the default-password tick: ticked, the password fields go and
+  /// what was typed into them is cleared.
+  void onUseDefaultPasswordChanged({required bool useDefault}) {
+    setState(() => useDefaultPassword = useDefault);
+    final form = formKey.currentState;
+    if (useDefault && form != null) UserPasswordFields.clear(form);
+  }
+
   @override
   ValueChanged<bool>? get canSubmitListener => widget.onCanSubmitChanged;
 
@@ -125,7 +133,7 @@ class UserFormState extends State<UserForm>
                     value: useDefaultPassword,
                     enabled: enabled,
                     onChanged: (value) =>
-                        setState(() => useDefaultPassword = value),
+                        onUseDefaultPasswordChanged(useDefault: value),
                     onShow: widget.onShowDefaultPassword,
                   ),
                   if (!useDefaultPassword) UserPasswordFields(enabled: enabled),

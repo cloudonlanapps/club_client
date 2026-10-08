@@ -1,5 +1,7 @@
 import 'package:club_sdk_2/club_sdk_2.dart' show EventType;
 
+import 'programme_schedule_sessions.dart';
+
 /// The currency the club charges in.
 ///
 /// The server used to send `currency` alongside every fee and no longer does.
@@ -91,15 +93,20 @@ int? rruleCount(String? rrule) {
 
 /// A schedule phrase from an rrule: its days ("Mon, Tue"), "Daily", or
 /// "Weekly"; null when it says none of these.
-String? deriveScheduleFromRrule(String? rrule) {
+///
+/// A rule names its weekdays in UTC, counted from [startTimeUtc]; the phrase
+/// names them in the viewer's time zone, Monday first, as the session times
+/// beside it are shown (club_client#120).
+String? deriveScheduleFromRrule(String? rrule, DateTime startTimeUtc) {
   if (rrule == null || rrule.isEmpty) return null;
 
-  final byDayMatch = RegExp('BYDAY=([A-Z,]+)').firstMatch(rrule);
-  if (byDayMatch != null) {
-    return byDayMatch
-        .group(1)!
-        .split(',')
-        .map((abbr) => kRruleDayNames[abbr] ?? abbr)
+  final weekdays = shiftWeekdays(
+    programmeRuleWeekdays(rrule),
+    localDayShiftOf(startTimeUtc),
+  );
+  if (weekdays.isNotEmpty) {
+    return (weekdays.toList()..sort())
+        .map((day) => kRruleDayNames[programmeByDayCodes[day - 1]])
         .join(', ');
   }
   if (rrule.contains('FREQ=DAILY')) return 'Daily';
@@ -107,10 +114,15 @@ String? deriveScheduleFromRrule(String? rrule) {
   return null;
 }
 
-/// The first `BYDAY` code of an rrule ("SA" for `FREQ=WEEKLY;BYDAY=SA,SU`).
-String? firstRruleDay(String? rrule) {
+/// The weekday (1 = Monday … 7 = Sunday), in the viewer's time zone, of the
+/// first `BYDAY` code of an rrule whose sessions start at [startTimeUtc];
+/// null when the rule names no day.
+int? firstRruleLocalWeekday(String? rrule, DateTime startTimeUtc) {
   if (rrule == null) return null;
-  return RegExp('BYDAY=([A-Z]{2})').firstMatch(rrule)?.group(1);
+  final code = RegExp('BYDAY=([A-Z]{2})').firstMatch(rrule)?.group(1);
+  final day = code == null ? -1 : programmeByDayCodes.indexOf(code);
+  if (day < 0) return null;
+  return shiftWeekdays({day + 1}, localDayShiftOf(startTimeUtc)).single;
 }
 
 /// A duration phrase from an occurrence's window: a programme's clock range,

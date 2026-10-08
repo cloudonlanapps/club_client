@@ -29,4 +29,49 @@ void main() {
     },
     skip: skipUnlessDayApart,
   );
+
+  test(
+    'Issue 120: the landing page tells programmes apart by their local '
+    'weekday, not by the UTC day their rules name',
+    () {
+      final time = dayApartTime;
+      // Local Monday, on the neighbouring UTC day.
+      final monday = DateTime(2026, 10, 19, time.hour, time.minute);
+      // Noon on that neighbouring day: the same UTC weekday, another local
+      // one.
+      final mondayUtc = monday.toUtc();
+      final noon = DateTime(mondayUtc.year, mondayUtc.month, mondayUtc.day, 12);
+      final sameUtcDay = 'FREQ=WEEKLY;BYDAY=${utcByDay(monday)}';
+
+      PublicEventView programme(String id, DateTime start) => testEventView(
+        testPublicEvent(
+          publicId: id,
+          type: EventType.programme,
+          rrule: sameUtcDay,
+          start: start,
+        ),
+      );
+
+      final picked = selectLandingEvents(EventType.programme, [
+        programme('early', monday),
+        programme('noon', noon),
+        programme('early-again', monday.add(const Duration(days: 7))),
+      ]);
+
+      expect(picked.map((e) => e.publicId), ['early', 'noon']);
+    },
+    skip: skipUnlessDayApart,
+  );
+
+  test('Issue 120: at noon the derived schedule names the rule\'s days', () {
+    final view = testEventView(
+      testPublicEvent(
+        type: EventType.programme,
+        rrule: 'FREQ=WEEKLY;BYDAY=WE,MO',
+        start: DateTime(2026, 10, 19, 12),
+      ),
+    );
+
+    expect(view.effectiveSchedule, 'Mon, Wed');
+  });
 }

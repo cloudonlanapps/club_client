@@ -13,11 +13,12 @@ import '../utils/public_event_format.dart';
 /// reads the same whether or not anyone filled the field in.
 extension PublicEventViewTiming on PublicEventView {
   /// The marketing schedule text if set, else derived from the rrule
-  /// ("Mon, Tue", "Daily"); null if neither is available.
+  /// ("Mon, Tue", "Daily"), its weekdays in the viewer's timezone; null if
+  /// neither is available.
   String? get effectiveSchedule {
     final text = schedule;
     if (text != null && text.isNotEmpty) return text;
-    return deriveScheduleFromRrule(rrule);
+    return deriveScheduleFromRrule(rrule, startTimeUtc);
   }
 
   /// The marketing duration text if set, else derived from the event's own

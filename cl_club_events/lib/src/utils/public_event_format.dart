@@ -84,13 +84,6 @@ String formatTimeOnly(DateTime dateTime) {
   return '$hour12:$minuteStr $period';
 }
 
-/// The number of occurrences an rrule's `COUNT` names, or null.
-int? rruleCount(String? rrule) {
-  if (rrule == null || !rrule.contains('COUNT=')) return null;
-  final match = RegExp(r'COUNT=(\d+)').firstMatch(rrule);
-  return match == null ? null : int.tryParse(match.group(1)!) ?? 1;
-}
-
 /// A schedule phrase from an rrule: its days ("Mon, Tue"), "Daily", or
 /// "Weekly"; null when it says none of these.
 ///

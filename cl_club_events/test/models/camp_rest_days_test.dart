@@ -3,6 +3,7 @@
 // A camp's COUNT is the days it is held: rest days are not counted
 // (club_client#122, club_server#30).
 import 'package:cl_club_events/src/models/camp_schedule_form_helpers.dart';
+import 'package:cl_club_events/src/utils/camp_rest_days.dart';
 import 'package:cl_club_forms/cl_club_forms.dart'
     show CampScheduleData, EventFormType;
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -51,20 +52,81 @@ void main() {
 
   test('Issue 122: a rule of four days held and one rest day opens as '
       'four training days', () {
-    final event = Event(
-      id: 1,
-      title: 'Camp',
-      description: '',
-      type: EventType.camp,
-      visibility: Visibility.public,
-      venueId: 7,
-      startTimeUtc: DateTime(2026, 10, 19, 17).toUtc(),
-      endTimeUtc: DateTime(2026, 10, 19, 18).toUtc(),
-      createdAtUtc: DateTime.utc(2026),
-      updatedAtUtc: DateTime.utc(2026),
-      rrule: 'FREQ=DAILY;COUNT=4\nEXDATE:20261021T113000Z',
+    final opened = buildCampScheduleInitialValues(
+      _campEvent('FREQ=DAILY;COUNT=4\nEXDATE:${_exdate(_restDaySession)}'),
     );
 
-    expect(buildCampScheduleInitialValues(event).trainingDays, 4);
+    expect(opened.trainingDays, 4);
+    expect(opened.excludedDates, {DateTime(2026, 10, 21)});
+  });
+
+  test('Issue 122: a camp opens as the schedule that was saved', () {
+    final fields = assembleCampSchedule(_camp);
+    final saved = _campEvent(fields.rrule);
+
+    expect(buildCampScheduleInitialValues(saved), _camp);
+  });
+
+  test('Issue 122: an excluded instant that is no session start is not a '
+      'rest day', () {
+    // What the app sent before: the rest day's local midnight.
+    final midnight = DateTime(2026, 10, 21).toUtc();
+    final opened = buildCampScheduleInitialValues(
+      _campEvent('FREQ=DAILY;COUNT=5\nEXDATE:${_exdate(midnight)}'),
+    );
+
+    expect(opened.trainingDays, 5);
+    expect(opened.excludedDates, isEmpty);
+  });
+
+  test('Issue 122: a camp spans its days held and its rest days', () {
+    final start = DateTime(2026, 10, 19, 17).toUtc();
+    final rrule = assembleCampSchedule(_camp).rrule;
+
+    expect(campSpanDays(rrule, start), 5);
+    expect(campSpanDays('FREQ=DAILY;COUNT=4', start), 4);
+    expect(campSpanDays(null, start), isNull);
+  });
+
+  test('Issue 122: a rest day past the last day held removes nothing', () {
+    final start = DateTime(2026, 10, 19, 17).toUtc();
+    final after = start.add(const Duration(days: 6));
+
+    expect(
+      campRestDayOffsets('FREQ=DAILY;COUNT=4\nEXDATE:${_exdate(after)}', start),
+      isEmpty,
+    );
+  });
+
+  test('Issue 122: a rescheduled camp moves its rest day to the new session '
+      'start', () {
+    final fields = assembleCampSchedule(
+      _camp.copyWith(
+        sessionStartTime: () =>
+            const ShadTimeOfDay(hour: 9, minute: 0, second: 0),
+      ),
+    );
+
+    expect(_exdatesOf(fields.rrule), [DateTime(2026, 10, 21, 9).toUtc()]);
   });
 }
+
+/// A camp event from Monday 19 October 2026 at five, an hour a day, on
+/// [rrule].
+Event _campEvent(String rrule) => Event(
+  id: 1,
+  title: 'Camp',
+  description: '',
+  type: EventType.camp,
+  visibility: Visibility.public,
+  venueId: 7,
+  startTimeUtc: DateTime(2026, 10, 19, 17).toUtc(),
+  endTimeUtc: DateTime(2026, 10, 19, 18).toUtc(),
+  createdAtUtc: DateTime.utc(2026),
+  updatedAtUtc: DateTime.utc(2026),
+  rrule: rrule,
+);
+
+/// [instant] as an `EXDATE` value.
+String _exdate(DateTime instant) =>
+    RruleUtil().buildRruleWithExdates('', [instant]).split('EXDATE:').last;

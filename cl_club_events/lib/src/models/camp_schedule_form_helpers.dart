@@ -3,9 +3,9 @@ import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/foundation.dart' show listEquals;
-import 'package:flutter/material.dart' show DateUtils;
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadTimeOfDay;
 
+import '../utils/camp_rest_days.dart';
 import '../utils/camp_rrule_validator.dart';
 import '../utils/session_inputs.dart';
 
@@ -18,15 +18,6 @@ import '../utils/session_inputs.dart';
 /// ways: [buildCampScheduleInitialValues] (SDK → form, the inverse of the
 /// create flow's assembly) and [CampScheduleFormSubmit.updateSchedule]
 /// (form → SDK).
-
-final RruleUtil _rruleUtil = RruleUtil();
-
-/// `COUNT=n` from an rrule, or `null` when absent. (The SDK's `rruleCount`
-/// helper isn't exported, so we read it the same way here.)
-int? _rruleCount(String rrule) {
-  final match = RegExp(r'COUNT=(\d+)').firstMatch(rrule);
-  return match == null ? null : int.tryParse(match.group(1)!);
-}
 
 /// Builds the [CampScheduleData] that seeds `CampScheduleForm` from an existing
 /// camp [event]. This is the exact inverse of the create flow's camp assembly
@@ -45,16 +36,14 @@ CampScheduleData buildCampScheduleInitialValues(Event event) {
       .difference(event.startTimeUtc)
       .inMinutes;
 
-  // rrule is `FREQ=DAILY;COUNT=<total>` plus optional EXDATE rest days. The
-  // EXDATEs were written as each rest day's local midnight converted to UTC
-  // (the forward path's `_formatExdateUtc`), so convert back to the same
-  // local date-only the exclusion calendar compares against.
-  final (rrule, exdates) = _rruleUtil.parseRruleWithExdates(event.rrule ?? '');
-  final totalDays = _rruleCount(rrule) ?? 1;
+  // The rule is `FREQ=DAILY;COUNT=<days held>` plus one EXDATE per rest
+  // day, at the start of the session it removes (club_client#122). Each is
+  // read back as the local day that session would fall on.
+  final trainingDays = campDaysHeld(event.rrule) ?? 1;
   final excludedDates = <DateTime>{
-    for (final d in exdates) DateUtils.dateOnly(d.toLocal()),
+    for (final offset in campRestDayOffsets(event.rrule, event.startTimeUtc))
+      DateTime(startDate.year, startDate.month, startDate.day + offset),
   };
-  final trainingDays = (totalDays - excludedDates.length).clamp(1, totalDays);
 
   // The named-session split, walked from the daily start time to match
   // `SessionSplitField.buildSessions` (HH:MM, names verbatim). A single
@@ -118,7 +107,9 @@ typedef CampScheduleFields = ({
 });
 
 /// Assembles a [CampScheduleData] into SDK schedule fields — the same shape the
-/// create flow sends to `createEvent`.
+/// create flow sends to `createEvent`. The rule counts the training days and
+/// names each rest day by the start of the session it removes
+/// ([campRruleFor]).
 CampScheduleFields assembleCampSchedule(CampScheduleData data) {
   final start = DateTime(
     data.startDate!.year,
@@ -128,10 +119,11 @@ CampScheduleFields assembleCampSchedule(CampScheduleData data) {
     data.sessionStartTime!.minute,
   );
   final end = start.add(Duration(minutes: data.durationMinutes));
-  final totalDays = data.trainingDays + data.excludedDates.length;
-  final rrule = _rruleUtil.buildRruleWithExdates(
-    'FREQ=DAILY;COUNT=$totalDays',
-    data.excludedDates.toList()..sort(),
+  final rrule = campRruleFor(
+    startTimeUtc: start.toUtc(),
+    startDate: data.startDate!,
+    trainingDays: data.trainingDays,
+    restDays: data.excludedDates,
   );
   final rruleError = CampRruleValidator.validate(rrule);
   if (rruleError != null) throw ArgumentError(rruleError);

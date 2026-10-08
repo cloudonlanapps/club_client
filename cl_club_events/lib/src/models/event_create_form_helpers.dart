@@ -13,6 +13,7 @@ import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart';
 
+import '../utils/camp_rest_days.dart';
 import '../utils/camp_rrule_validator.dart';
 import '../utils/programme_schedule_sessions.dart';
 
@@ -37,8 +38,6 @@ typedef _AssembledSchedule = ({
 /// Translates the flat form values into the minimal `createEvent` call.
 class EventCreateFormSubmit {
   EventCreateFormSubmit._();
-
-  static final RruleUtil _rruleUtil = RruleUtil();
 
   /// Create an event from the form's flat [values]. Only the minimal fields
   /// flow through here — title, visibility, venue and the schedule; the rest
@@ -97,10 +96,11 @@ class EventCreateFormSubmit {
           data.sessionStartTime!.minute,
         );
         final end = start.add(Duration(minutes: data.durationMinutes));
-        final totalDays = data.trainingDays + data.excludedDates.length;
-        final combinedRrule = _rruleUtil.buildRruleWithExdates(
-          'FREQ=DAILY;COUNT=$totalDays',
-          data.excludedDates.toList()..sort(),
+        final combinedRrule = campRruleFor(
+          startTimeUtc: start.toUtc(),
+          startDate: data.startDate!,
+          trainingDays: data.trainingDays,
+          restDays: data.excludedDates,
         );
         final rruleError = CampRruleValidator.validate(combinedRrule);
         if (rruleError != null) {

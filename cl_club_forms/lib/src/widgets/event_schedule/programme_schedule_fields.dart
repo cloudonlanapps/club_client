@@ -225,6 +225,16 @@ class ProgrammeScheduleFormFieldBodyState
     emit();
   }
 
+  /// A start time that is set or moved takes the session split with it: the
+  /// split editor lays its rows out from the new start.
+  void onSessionStartTimeChanged(ShadTimeOfDay? time) {
+    setState(() {
+      selectedSessionStartTime = time;
+      sessions = _splitKey.currentState?.sessionsFrom(time) ?? sessions;
+    });
+    emit();
+  }
+
   // Session-split operations delegate to the shared [SessionSplitField], the
   // single owner of the segment editor. Kept as instance methods/getters so
   // callers (and tests) can drive the split through this body.
@@ -358,10 +368,7 @@ class ProgrammeScheduleFormFieldBodyState
                 style: ShadTheme.of(context).textTheme.muted,
                 validator: (time) =>
                     time == null ? 'Start time is required' : null,
-                onChanged: (time) {
-                  setState(() => selectedSessionStartTime = time);
-                  emit();
-                },
+                onChanged: onSessionStartTimeChanged,
               ),
             ),
             LabeledFormRow(

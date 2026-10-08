@@ -225,8 +225,13 @@ class SessionSplitFieldState extends State<SessionSplitField> {
 
   /// Returns `[]` for the trivial single-row case so the host doesn't store a
   /// redundant `[Session 1]` list.
-  List<SessionInput> buildSessions() {
-    final start = widget.startTime;
+  List<SessionInput> buildSessions() => sessionsFrom(widget.startTime);
+
+  /// The split laid out from [start], for a host whose start time was set
+  /// or moved: the rows keep their names and lengths without a start time,
+  /// and take their times from the one given. `[]` while there is none, and
+  /// for the trivial single-row case.
+  List<SessionInput> sessionsFrom(ShadTimeOfDay? start) {
     if (start == null || sessionDurations.length <= 1) {
       return const [];
     }

@@ -70,6 +70,10 @@ class EvaluationFillBodyState extends State<EvaluationFillBody> {
   /// The form.
   final GlobalKey<ShadFormState> formKey = GlobalKey<ShadFormState>();
 
+  /// The ids of the fields now showing a message [markIncomplete] put
+  /// there.
+  final Set<String> incompleteFieldIds = <String>{};
+
   /// The answers as they stand, by item id.
   Map<int, EvaluationAnswerValue> get answers {
     final values = formKey.currentState?.value ?? const {};
@@ -100,6 +104,7 @@ class EvaluationFillBodyState extends State<EvaluationFillBody> {
   /// without an answer, or an answer whose coach note is required and
   /// missing — in layout order. Empty means the evaluation can be saved.
   List<int> validateForSave() {
+    clearIncomplete();
     // Custom fields own no focusable input: scroll to the first error
     // rather than focusing it.
     formKey.currentState?.validate(
@@ -116,14 +121,30 @@ class EvaluationFillBodyState extends State<EvaluationFillBody> {
   }
 
   /// Shows "Complete this answer." under each of [itemIds] — e.g. the items
-  /// the server named when it refused to save.
+  /// the server named when it refused to save. The messages replace those
+  /// of an earlier call and stay until the next [validateForSave], which
+  /// judges each answer by what it holds then.
   void markIncomplete(Iterable<int> itemIds) {
+    clearIncomplete();
     final fields = formKey.currentState?.fields ?? const {};
     for (final id in itemIds) {
-      fields[EvaluationFillFields.idFor(id)]?.setError(
-        EvaluationStrings.incomplete,
-      );
+      final fieldId = EvaluationFillFields.idFor(id);
+      final field = fields[fieldId];
+      if (field == null) continue;
+      field.setError(EvaluationStrings.incomplete);
+      incompleteFieldIds.add(fieldId);
     }
+  }
+
+  /// Takes the messages [markIncomplete] put on the questions off again. A
+  /// question showing one keeps it whatever its answer, so
+  /// [validateForSave] clears them before it checks the answers.
+  void clearIncomplete() {
+    final fields = formKey.currentState?.fields ?? const {};
+    for (final fieldId in incompleteFieldIds) {
+      fields[fieldId]?.setError(null);
+    }
+    incompleteFieldIds.clear();
   }
 
   @override

@@ -19,6 +19,7 @@ class EvaluationLabelRow extends StatefulWidget {
     this.number,
     this.onMoveUp,
     this.onMoveDown,
+    this.enabled = true,
     super.key,
   });
 
@@ -39,6 +40,9 @@ class EvaluationLabelRow extends StatefulWidget {
 
   /// Moves the row down; `null` when last.
   final VoidCallback? onMoveDown;
+
+  /// Whether the label can be edited or removed.
+  final bool enabled;
 
   @override
   State<EvaluationLabelRow> createState() => EvaluationLabelRowState();
@@ -80,6 +84,7 @@ class EvaluationLabelRowState extends State<EvaluationLabelRow> {
         Expanded(
           child: ShadInput(
             controller: controller,
+            enabled: widget.enabled,
             placeholder: const Text(EvaluationStrings.labelPlaceholder),
             onChanged: widget.onChanged,
           ),
@@ -97,7 +102,7 @@ class EvaluationLabelRowState extends State<EvaluationLabelRow> {
         EvaluationIconAction(
           label: EvaluationStrings.delete,
           icon: LucideIcons.x,
-          onPressed: widget.onRemove,
+          onPressed: widget.enabled ? widget.onRemove : null,
         ),
       ],
     );

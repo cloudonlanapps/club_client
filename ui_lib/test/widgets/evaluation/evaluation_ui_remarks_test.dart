@@ -122,7 +122,7 @@ void main() {
         wrapEvaluation(EvaluationPeriodForm(key: key)),
       );
       await tester.pumpAndSettle();
-      key.currentState!.showRefusal('Already exists.');
+      key.currentState!.showErrors(formError: 'Already exists.');
       await tester.pump();
       expect(find.text('Already exists.'), findsOneWidget);
     });
@@ -226,7 +226,11 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      key.currentState!.setNameError('Name taken.');
+      key.currentState!.showErrors(
+        fieldErrors: {
+          EvaluationTemplateCreateFormFields.nameId: 'Name taken.',
+        },
+      );
       await tester.pump();
       expect(find.text('Name taken.'), findsOneWidget);
     });

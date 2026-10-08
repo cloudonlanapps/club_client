@@ -51,4 +51,11 @@ enum EvaluationItemKind {
   bool get hasChoices =>
       this == EvaluationItemKind.singleChoice ||
       this == EvaluationItemKind.multipleChoice;
+
+  /// Whether the item's editor has fields of the kind's own: a rating's
+  /// scale, a yes / no question's labels, a choice question's choices.
+  bool get hasKindFields =>
+      this == EvaluationItemKind.rating ||
+      this == EvaluationItemKind.yesNo ||
+      hasChoices;
 }

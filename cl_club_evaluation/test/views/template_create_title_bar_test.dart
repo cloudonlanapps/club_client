@@ -20,7 +20,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       final title = tester.getRect(find.text('New template'));
-      final name = tester.getTopLeft(find.text('Template name')).dy;
+      final name = tester.getTopLeft(find.text('Template name *')).dy;
       for (final action in ['Cancel', 'Create']) {
         final rect = tester.getRect(find.text(action));
         expect(rect.top, lessThan(name), reason: action);

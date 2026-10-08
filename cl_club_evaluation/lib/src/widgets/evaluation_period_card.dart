@@ -66,7 +66,9 @@ class EvaluationPeriodCardState extends ConsumerState<EvaluationPeriodCard> {
       );
       return true;
     } on Object catch (e) {
-      formKey.currentState?.showRefusal(EvaluationErrorMessage.of(e));
+      formKey.currentState?.showErrors(
+        formError: EvaluationErrorMessage.of(e),
+      );
       return false;
     }
   }

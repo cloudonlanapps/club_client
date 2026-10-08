@@ -171,7 +171,8 @@ class TemplateDetailBodyState extends ConsumerState<TemplateDetailBody> {
               : null,
           child: EvaluationLayoutEditor(
             layout: layout,
-            readOnly: frozen || writing,
+            readOnly: frozen,
+            enabled: !writing,
             onLayoutChanged: (next) => changeLayout(layout, next),
             onEditItem: (item) => showEvaluationItemDialog(context, item),
             onEditSectionTitle: (title) =>

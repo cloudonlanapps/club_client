@@ -21,7 +21,8 @@ import '../utils/start_review_choices.dart';
 /// The caller fixes what its context already says: a member's profile the
 /// member ([username]); an enrolment row the member and the event
 /// ([eventId]); a template's *Start* the template ([templateId]). A refusal
-/// (e.g. `NOT_ELIGIBLE`) shows inline and the dialog stays open.
+/// (e.g. `NOT_ELIGIBLE`) shows inline, in the form, and the dialog stays
+/// open. While the draft is created the form and both buttons are off.
 Future<int?> showStartReviewDialog({
   required BuildContext context,
   required UserPrivate currentUser,
@@ -72,8 +73,7 @@ class StartReviewDialog extends ConsumerStatefulWidget {
   ConsumerState<StartReviewDialog> createState() => StartReviewDialogState();
 }
 
-/// State of [StartReviewDialog]: the form, the create in flight and the
-/// server's refusal.
+/// State of [StartReviewDialog]: the form and the create in flight.
 class StartReviewDialogState extends ConsumerState<StartReviewDialog> {
   /// The start form.
   final GlobalKey<EvaluationStartFormState> formKey =
@@ -82,17 +82,12 @@ class StartReviewDialogState extends ConsumerState<StartReviewDialog> {
   /// Whether the draft is being created.
   bool creating = false;
 
-  /// The server's refusal, said for people; `null` when none.
-  String? refusal;
-
-  /// Validates the form and creates the draft; pops with its id.
+  /// Validates the form and creates the draft; pops with its id. A refusal
+  /// shows in the form, said for people.
   Future<void> start() async {
     final values = formKey.currentState?.validate();
     if (values == null) return;
-    setState(() {
-      creating = true;
-      refusal = null;
-    });
+    setState(() => creating = true);
     try {
       final created = await EvaluationStartFormSubmit.create(
         values: values,
@@ -101,17 +96,14 @@ class StartReviewDialogState extends ConsumerState<StartReviewDialog> {
       if (mounted) Navigator.of(context).pop(created.id);
     } on Object catch (e) {
       if (!mounted) return;
-      setState(() {
-        creating = false;
-        refusal = EvaluationErrorMessage.of(e);
-      });
+      setState(() => creating = false);
+      formKey.currentState?.showErrors(formError: EvaluationErrorMessage.of(e));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final w = widget;
-    final theme = ShadTheme.of(context);
     final options = StartReviewChoices.read(
       ref,
       coach: w.currentUser,
@@ -119,7 +111,6 @@ class StartReviewDialogState extends ConsumerState<StartReviewDialog> {
       username: w.username,
       eventId: w.eventId,
     );
-    final message = refusal;
     return ShadDialog(
       title: const Text(EvaluationViewStrings.startReview),
       constraints: const BoxConstraints(
@@ -127,7 +118,7 @@ class StartReviewDialogState extends ConsumerState<StartReviewDialog> {
       ),
       actions: [
         ShadButton.outline(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: creating ? null : () => Navigator.of(context).pop(),
           child: const Text(EvaluationViewStrings.cancel),
         ),
         ShadButton(
@@ -136,30 +127,16 @@ class StartReviewDialogState extends ConsumerState<StartReviewDialog> {
           child: const Text(EvaluationViewStrings.start),
         ),
       ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        spacing: EvaluationViewSizes.smallGap,
-        children: [
-          EvaluationStartForm(
-            key: formKey,
-            templates: options.templates,
-            members: options.members,
-            events: options.events,
-            eventsByMember: options.eventsByMember,
-            fixedTemplate: options.fixedTemplate,
-            fixedMember: options.fixedMember,
-            fixedEvent: options.fixedEvent,
-            enabled: !creating,
-          ),
-          if (message != null)
-            Text(
-              message,
-              style: theme.textTheme.small.copyWith(
-                color: theme.colorScheme.destructive,
-              ),
-            ),
-        ],
+      child: EvaluationStartForm(
+        key: formKey,
+        templates: options.templates,
+        members: options.members,
+        events: options.events,
+        eventsByMember: options.eventsByMember,
+        fixedTemplate: options.fixedTemplate,
+        fixedMember: options.fixedMember,
+        fixedEvent: options.fixedEvent,
+        enabled: !creating,
       ),
     );
   }

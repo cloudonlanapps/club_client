@@ -26,6 +26,10 @@ import 'evaluation_outline_rows.dart';
 /// tapping a section awaits [onEditSectionTitle]; the host shows its dialog
 /// and resolves to an `EvaluationOutlineEdit` — the edited value or a
 /// delete — or `null` to cancel.
+///
+/// [enabled] off is for the time a save takes: Sort, the "+" bars and the
+/// arrows stay on screen, greyed, and the rows do not answer. [readOnly] is
+/// for a viewer who may not edit: Sort and add are removed.
 class EvaluationLayoutEditor extends StatefulWidget {
   /// Edits [layout].
   const EvaluationLayoutEditor({
@@ -36,6 +40,7 @@ class EvaluationLayoutEditor extends StatefulWidget {
     this.onPickExisting,
     this.onViewItem,
     this.readOnly = false,
+    this.enabled = true,
     super.key,
   });
 
@@ -61,6 +66,10 @@ class EvaluationLayoutEditor extends StatefulWidget {
   /// [onViewItem], never [onEditItem]; a section's row is inert.
   final bool readOnly;
 
+  /// Whether the outline answers (off while the host saves): its controls
+  /// show greyed and nothing can be edited, added, moved or viewed.
+  final bool enabled;
+
   @override
   State<EvaluationLayoutEditor> createState() => EvaluationLayoutEditorState();
 }
@@ -70,9 +79,9 @@ class EvaluationLayoutEditorState extends State<EvaluationLayoutEditor> {
   /// Whether the reorder arrows show.
   bool sorting = false;
 
-  /// Reports [next] unless read-only or gone.
+  /// Reports [next] unless read-only, turned off or gone.
   void emit(List<EvaluationLayoutEntry>? next) {
-    if (next == null || widget.readOnly || !mounted) return;
+    if (next == null || widget.readOnly || !widget.enabled || !mounted) return;
     widget.onLayoutChanged(next);
   }
 
@@ -137,6 +146,7 @@ class EvaluationLayoutEditorState extends State<EvaluationLayoutEditor> {
   Widget build(BuildContext context) {
     final layout = widget.layout;
     final readOnly = widget.readOnly;
+    final enabled = widget.enabled;
     final existing = widget.onPickExisting;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -147,6 +157,7 @@ class EvaluationLayoutEditorState extends State<EvaluationLayoutEditor> {
             alignment: AlignmentDirectional.centerEnd,
             child: ShadCheckbox(
               value: sorting,
+              enabled: enabled,
               label: Text(
                 EvaluationStrings.sort,
                 style: ShadTheme.of(context).textTheme.small,
@@ -158,8 +169,11 @@ class EvaluationLayoutEditorState extends State<EvaluationLayoutEditor> {
           layout: layout,
           sorting: sorting && !readOnly,
           readOnly: readOnly,
-          onEditItem: readOnly && widget.onViewItem == null ? null : editItem,
-          onEditSection: readOnly ? null : editSection,
+          enabled: enabled,
+          onEditItem: !enabled || (readOnly && widget.onViewItem == null)
+              ? null
+              : editItem,
+          onEditSection: readOnly || !enabled ? null : editSection,
           onMove: (pos, delta) =>
               emit(EvaluationLayoutOps.move(widget.layout, pos, delta)),
           onAddToSection: (kind, section) => addItem(kind, section: section),
@@ -169,6 +183,7 @@ class EvaluationLayoutEditorState extends State<EvaluationLayoutEditor> {
         ),
         if (!readOnly)
           EvaluationAddBar(
+            enabled: enabled,
             onAddItem: addItem,
             onAddSection: addSection,
             onAddExisting: existing == null ? null : addExisting,

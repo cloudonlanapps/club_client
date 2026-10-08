@@ -35,7 +35,7 @@ void main() {
       final key = await _pump(tester);
       await tester.enterText(find.byType(EditableText).first, 'Skating');
       await tester.pump();
-      expect(key.currentState!.handleSubmit(), isNull);
+      expect(key.currentState!.validate(), isNull);
       await tester.pump();
       expect(find.text('Add at least one question.'), findsOneWidget);
     });
@@ -52,7 +52,7 @@ void main() {
           ],
         },
       );
-      expect(key.currentState!.handleSubmit(), isNull);
+      expect(key.currentState!.validate(), isNull);
     });
 
     testWidgets('Issue 173: the name is required', (tester) async {
@@ -63,7 +63,7 @@ void main() {
           EvaluationTemplateCreateFormFields.layoutId: sampleLayout,
         },
       );
-      expect(key.currentState!.handleSubmit(), isNull);
+      expect(key.currentState!.validate(), isNull);
       await tester.pump();
       expect(find.text('Template name is required'), findsOneWidget);
     });
@@ -78,14 +78,11 @@ void main() {
           EvaluationTemplateCreateFormFields.layoutId: sampleLayout,
         },
       );
-      final value = key.currentState!.handleSubmit();
-      expect(
-        value,
-        const EvaluationTemplateCreateValue(
-          name: 'Skating term 1',
-          layout: sampleLayout,
-        ),
-      );
+      final value = key.currentState!.validate();
+      expect(value, {
+        EvaluationTemplateCreateFormFields.nameId: 'Skating term 1',
+        EvaluationTemplateCreateFormFields.layoutId: sampleLayout,
+      });
     });
 
     testWidgets('Issue 173: items added in the editor reach the submit', (
@@ -97,9 +94,12 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Number'));
       await tester.pumpAndSettle();
-      final value = key.currentState!.handleSubmit();
-      expect(value?.layout.single.item?.kind, EvaluationItemKind.number);
-      expect(value?.layout.single.item?.text, 'Edges');
+      final value = key.currentState!.validate();
+      final layout =
+          value?[EvaluationTemplateCreateFormFields.layoutId]
+              as List<EvaluationLayoutEntry>?;
+      expect(layout?.single.item?.kind, EvaluationItemKind.number);
+      expect(layout?.single.item?.text, 'Edges');
     });
 
     testWidgets('Issue 173: isDirty follows the name and the layout', (

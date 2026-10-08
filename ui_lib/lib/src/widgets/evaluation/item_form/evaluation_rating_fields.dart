@@ -3,7 +3,9 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../constants/evaluation_spacing.dart';
 import '../../../constants/evaluation_strings.dart';
+import '../../../constants/form_spacing.dart';
 import '../../../models/evaluation_rating_style.dart';
+import '../../labeled_form_row.dart';
 import 'evaluation_item_form_fields.dart';
 import 'evaluation_item_form_validators.dart';
 import 'evaluation_label_list_form_field.dart';
@@ -25,24 +27,29 @@ class EvaluationRatingFields extends StatelessWidget {
         EvaluationRatingStyle.stars;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: EvaluationSpacing.fieldGap,
+      spacing: FormSpacing.rowGap,
       children: [
-        ShadSelectFormField<EvaluationRatingStyle>(
-          id: EvaluationItemFormFields.ratingStyleId,
-          label: const Text(EvaluationStrings.scale),
-          options: [
-            for (final s in EvaluationRatingStyle.values)
-              ShadOption(value: s, child: Text(s.label)),
-          ],
-          selectedOptionBuilder: (_, s) => Text(s.label),
+        LabeledFormRow(
+          label: EvaluationStrings.scale,
+          field: ShadSelectFormField<EvaluationRatingStyle>(
+            id: EvaluationItemFormFields.ratingStyleId,
+            options: [
+              for (final s in EvaluationRatingStyle.values)
+                ShadOption(value: s, child: Text(s.label)),
+            ],
+            selectedOptionBuilder: (_, s) => Text(s.label),
+          ),
         ),
         if (style == EvaluationRatingStyle.levels)
-          EvaluationLabelListFormField(
-            id: EvaluationItemFormFields.levelsId,
+          LabeledFormRow(
             label: EvaluationStrings.levels,
-            addLabel: EvaluationStrings.level,
-            numbered: true,
-            validator: EvaluationItemFormValidators.levels,
+            required: true,
+            field: EvaluationLabelListFormField(
+              id: EvaluationItemFormFields.levelsId,
+              addLabel: EvaluationStrings.level,
+              numbered: true,
+              validator: EvaluationItemFormValidators.levels,
+            ),
           )
         else
           Row(
@@ -50,25 +57,31 @@ class EvaluationRatingFields extends StatelessWidget {
             spacing: EvaluationSpacing.fieldGap,
             children: [
               Expanded(
-                child: ShadInputFormField(
-                  id: EvaluationItemFormFields.rateMinId,
-                  label: const Text(EvaluationStrings.rateMin),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    signed: true,
+                child: LabeledFormRow(
+                  label: EvaluationStrings.rateMin,
+                  required: true,
+                  field: ShadInputFormField(
+                    id: EvaluationItemFormFields.rateMinId,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      signed: true,
+                    ),
+                    validator: EvaluationItemFormValidators.rateMin,
                   ),
-                  validator: EvaluationItemFormValidators.rateMin,
                 ),
               ),
               Expanded(
-                child: ShadInputFormField(
-                  id: EvaluationItemFormFields.rateMaxId,
-                  label: const Text(EvaluationStrings.rateMax),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    signed: true,
-                  ),
-                  validator: (v) => EvaluationItemFormValidators.rateMax(
-                    v,
-                    '${values[EvaluationItemFormFields.rateMinId] ?? ''}',
+                child: LabeledFormRow(
+                  label: EvaluationStrings.rateMax,
+                  required: true,
+                  field: ShadInputFormField(
+                    id: EvaluationItemFormFields.rateMaxId,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      signed: true,
+                    ),
+                    validator: (v) => EvaluationItemFormValidators.rateMax(
+                      v,
+                      '${values[EvaluationItemFormFields.rateMinId] ?? ''}',
+                    ),
                   ),
                 ),
               ),

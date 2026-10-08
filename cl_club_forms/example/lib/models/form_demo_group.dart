@@ -22,7 +22,10 @@ enum FormDemoGroup {
   venues('Venues'),
 
   /// The club's own details.
-  clubIdentity('Club identity');
+  clubIdentity('Club identity'),
+
+  /// What a visitor of the club's website fills.
+  website('Website');
 
   const FormDemoGroup(this.title);
 

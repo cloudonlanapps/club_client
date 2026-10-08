@@ -12,6 +12,8 @@ dependencies:
     path: ../cl_club_branding
   cl_club_events:
     path: ../cl_club_events
+  cl_club_forms:
+    path: ../cl_club_forms
   cl_club_members:
     path: ../cl_club_members
   cl_club_venues:

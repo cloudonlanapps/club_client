@@ -136,6 +136,13 @@ export 'src/widgets/group_form/group_form_validators.dart'
 // The privacy consent a member gives with their identity documents
 export 'src/widgets/identity_documents/identity_documents_consent_form.dart'
     show IdentityDocumentsConsentForm, IdentityDocumentsConsentFormState;
+// The public inquiry form: contact, or an expression of interest (pure UI,
+// no SDK / no Riverpod). Its wording arrives from the host.
+export 'src/widgets/inquiry/inquiry_choice.dart' show InquiryChoice;
+export 'src/widgets/inquiry/inquiry_form.dart'
+    show InquiryForm, InquiryFormState;
+export 'src/widgets/inquiry/inquiry_form_copy.dart' show InquiryFormCopy;
+export 'src/widgets/inquiry/inquiry_form_fields.dart' show InquiryFormFields;
 // Location section editor: an address and a map link
 export 'src/widgets/location_edit/location_edit_form.dart'
     show LocationEditForm, LocationEditFormState;

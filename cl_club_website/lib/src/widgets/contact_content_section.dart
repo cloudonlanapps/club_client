@@ -1,3 +1,4 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show InquiryChoice;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:ui_lib/ui_lib.dart' show MapEmbed;
@@ -6,7 +7,7 @@ import '../models/contact_map_config.dart';
 import '../page_content/contact/contact_page_labels.dart';
 import '../page_content/site_copy.dart';
 import 'club_contact_card.dart';
-import 'inquiry_form.dart';
+import 'inquiry_view.dart';
 
 /// Contact content section with info card and map.
 class ContactContentSection extends StatelessWidget {
@@ -28,7 +29,7 @@ class ContactContentSection extends StatelessWidget {
     final strings = SiteCopy.of(context).strings;
     final form = ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 560),
-      child: InquiryForm(
+      child: InquiryView(
         kind: InquiryKind.contact,
         title: contactPageLabels.form.title,
         description: contactPageLabels.form.description,

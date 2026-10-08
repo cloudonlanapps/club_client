@@ -57,7 +57,7 @@ export 'src/site/website_main.dart' show websiteMain;
 export 'src/widgets/club_logo.dart' show ClubLogo;
 // Constants
 export 'src/widgets/hero_section.dart' show heroThemeToggleTag;
-export 'src/widgets/inquiry_form.dart' show InquiryChoice, InquiryForm;
+export 'src/widgets/inquiry_view.dart' show InquiryView;
 export 'src/widgets/not_found_page.dart' show NotFoundPage;
 export 'src/widgets/page_data_scaffold.dart' show CtaSection, PageDataContent;
 // Shared utilities (for navbar in app)

@@ -1,10 +1,11 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show InquiryChoice;
 import 'package:club_sdk_2/club_sdk_2.dart' show InquiryKind;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show ClubTextTheme;
 
 import '../page_content/site_copy.dart';
-import '../widgets/inquiry_form.dart';
+import '../widgets/inquiry_view.dart';
 import '../widgets/public_page_shell.dart';
 
 /// Where the event cards' "Register Now" and "Join Now" land.
@@ -71,7 +72,7 @@ class SignupPage extends StatelessWidget {
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 600),
-                  child: InquiryForm(
+                  child: InquiryView(
                     kind: InquiryKind.interest,
                     title: strings.interestFormTitle,
                     description: strings.interestFormDescription,

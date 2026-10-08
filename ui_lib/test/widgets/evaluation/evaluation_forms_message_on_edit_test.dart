@@ -25,8 +25,10 @@ final Map<String, Widget Function()> _forms = {
     events: [(id: 9, label: 'Spring camp')],
   ),
   'EvaluationPeriodForm': () => EvaluationPeriodForm(
-    initialStart: DateTime(2026, 5),
-    initialEnd: DateTime(2026, 5, 31),
+    initialValues: {
+      EvaluationStartFormFields.periodStartId: DateTime(2026, 5),
+      EvaluationStartFormFields.periodEndId: DateTime(2026, 5, 31),
+    },
   ),
   'EvaluationItemForm': () => EvaluationItemForm(
     kind: qaItem.kind,

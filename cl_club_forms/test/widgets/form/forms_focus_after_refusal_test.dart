@@ -36,7 +36,9 @@ void main() {
           ({required enabled}) => ProgrammeEndDateForm(
             key: key,
             enabled: enabled,
-            initialDay: DateTime(2030, 5, 14),
+            initialValues: {
+              ProgrammeEndDateFormFields.lastDayId: DateTime(2030, 5, 14),
+            },
             reasonRequired: true,
             resultOf: (day) => 'Last session: day ${day.day}.',
           ),

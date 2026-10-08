@@ -17,6 +17,8 @@ import 'package:ui_lib/ui_lib.dart' show NoLongerEligibleLabel;
 
 const _member = 'workflow_member';
 
+final DateTime _start = DateTime.now().toUtc().add(const Duration(days: 30));
+
 Event _event(int id, String title, {EventType type = EventType.programme}) =>
     Event(
       id: id,
@@ -25,8 +27,9 @@ Event _event(int id, String title, {EventType type = EventType.programme}) =>
       type: type,
       visibility: Visibility.private,
       venueId: 1,
-      startTimeUtc: DateTime.utc(2026, 6, 1, 6),
-      endTimeUtc: DateTime.utc(2026, 6, 1, 8),
+      // Still to come: the section lists current events (club_client#88).
+      startTimeUtc: _start,
+      endTimeUtc: _start.add(const Duration(hours: 2)),
       createdAtUtc: DateTime.utc(2026),
       updatedAtUtc: DateTime.utc(2026),
     );

@@ -111,7 +111,7 @@ packages:
     source: path
     version: "0.1.0"
   cl_club_forms:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       path: "../../cl_club_forms"
       relative: true

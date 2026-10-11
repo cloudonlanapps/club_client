@@ -1,5 +1,5 @@
 name: cl_club_website_example
-description: A neutral club website over club_core. The template a club's site is generated from; its test/ checks the brand files.
+description: A neutral club website over club_core. The template a club's site is generated from; its test/ checks the brand files, and integration_test/ runs the site against a real server.
 version: 0.1.0+1
 publish_to: none
 
@@ -14,11 +14,36 @@ dependencies:
     sdk: flutter
 
 dev_dependencies:
-  # For the brand-file test: the contact file must parse the way the site reads it.
+  # Only integration_test/ imports this and the others below, except for
+  # cl_remote_store.
+  cl_club_events:
+    path: ../../cl_club_events
+  cl_club_forms:
+    path: ../../cl_club_forms
+  cl_club_members:
+    path: ../../cl_club_members
+  cl_club_venues:
+    path: ../../cl_club_venues
+  # For the brand-file test: the contact file must parse the way the site reads
+  # it. integration_test/ overrides its providers too.
   cl_remote_store:
     path: ../../cl_remote_store
+  cl_server_config:
+    path: ../../cl_server_config
+  # The ref must match club_core's.
+  club_sdk_2:
+    git:
+      url: https://github.com/cloudonlanapps/club_sdk.git
+      ref: ec1473f657440e255530109c42cd4fc4f5ff43f0
+  flutter_riverpod: 2.6.1
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
+  media_kit: 1.2.6
+  shadcn_ui: 0.56.1
+  ui_lib:
+    path: ../../ui_lib
   very_good_analysis: 10.3.0
 
 flutter:
@@ -30,3 +55,7 @@ flutter:
     - assets/images/
     - assets/l10n/
     - assets/media/
+
+#dependency_overrides:
+#  club_sdk_2:
+#    path: ../../../packages/club_sdk

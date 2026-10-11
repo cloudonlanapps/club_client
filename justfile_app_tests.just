@@ -1,5 +1,6 @@
-# UI integration suite — cl_club_app/example on the Linux desktop, against a
-# fresh isolated club_server stack per server conf.
+# UI integration suites, on the Linux desktop, each against a fresh isolated
+# club_server stack per server conf: the member app's (cl_club_app/example,
+# `app-test`) and the website's (cl_club_website/example, `website-test`).
 #
 # The stack is started by native_deploy's background_server.sh from a conf at
 # this repo's root. native_deploy is cloned from git into .native_deploy/
@@ -11,6 +12,7 @@
 # Tests decide what to expect from GET /v1/capabilities, never from the club.
 
 APP_EXAMPLE_DIR := "cl_club_app/example"
+WEBSITE_EXAMPLE_DIR := "cl_club_website/example"
 APP_TEST_FILE_TIMEOUT := "600"
 APP_TEST_CONFS := "app_test_server1.conf app_test_server2.conf"
 NATIVE_DEPLOY_URL := env("NATIVE_DEPLOY_URL", "https://github.com/cloudonlanapps/native_deploy.git")
@@ -46,9 +48,10 @@ _native-deploy:
     [ -x "{{BACKGROUND_SERVER}}" ] || { echo "ERROR: {{BACKGROUND_SERVER}} is missing." >&2; exit 1; }
 
 # Internal: start a fresh stack from CONF, run each file matching TARGET
-# (a glob under cl_club_app/example/) with `flutter test -d linux`, and tear
-# the stack down on exit (unless `keep` is non-empty).
-_app-test CONF TARGET keep="": _native-deploy
+# (a glob under DIR, the example that holds the suite) with
+# `flutter test -d linux`, and tear the stack down on exit (unless `keep` is
+# non-empty).
+_app-test DIR CONF TARGET keep="": _native-deploy
     #!/usr/bin/env bash
     set -uo pipefail
     json=$("{{BACKGROUND_SERVER}}" {{CONF}} start --auto-ports) || exit 1
@@ -60,10 +63,10 @@ _app-test CONF TARGET keep="": _native-deploy
     else
         trap '"{{BACKGROUND_SERVER}}" {{CONF}} cleanup port=$port db_port=$db_port' EXIT
     fi
-    echo "==> UI integration (linux) against $base ({{CONF}})"
+    echo "==> UI integration (linux), {{DIR}} against $base ({{CONF}})"
     # A subshell keeps this shell at the repo root, where the trap's conf path resolves.
     (
-        cd {{APP_EXAMPLE_DIR}}
+        cd {{DIR}}
         # Kill every process still carrying run id $1 in its environment.
         sweep_app_test_run() {
             local pids
@@ -101,7 +104,7 @@ _app-test CONF TARGET keep="": _native-deploy
             elif grep -qE '~[0-9]+: All tests (passed|skipped)|~[0-9]+: Some tests' "$out"; then
                 # A skip is not a pass: name it, with the reasons the tests gave.
                 echo "    [SKIP] $f ({{CONF}})"
-                grep -E '^\s+(known issue, club_core#[0-9]+|.* is (on|off) on this stack)' "$out" | sort -u | sed 's/^\s*/           /'
+                grep -E '^\s+(known issue, club_(core|client)#[0-9]+|.* is (on|off) on this stack)' "$out" | sort -u | sed 's/^\s*/           /'
             else echo "    [PASS] $f ({{CONF}})"; fi
             rm -f "$out"
         done
@@ -118,14 +121,33 @@ app-test CONF="" keep="":
     set -u
     fail=0
     for conf in {{ if CONF == "" { APP_TEST_CONFS } else { CONF } }}; do
-        just _app-test "$conf" "integration_test/workflow*_test.dart" "{{keep}}" || fail=1
+        just _app-test "{{APP_EXAMPLE_DIR}}" "$conf" "integration_test/workflow*_test.dart" "{{keep}}" || fail=1
     done
     exit $fail
 
 #   just app-test-one app_test_server1.conf workflow1_password_reset_by_user_test.dart [keep=1]
 # Run one UI integration test file against one server conf.
 [group('app integration')]
-app-test-one CONF FILE keep="": (_app-test (CONF) ("integration_test/" + FILE) keep)
+app-test-one CONF FILE keep="": (_app-test (APP_EXAMPLE_DIR) (CONF) ("integration_test/" + FILE) keep)
+
+#   just website-test                        # every conf, auto-teardown
+#   just website-test app_test_server2.conf  # one conf
+#   just website-test app_test_server1.conf keep=1
+# Run the website's integration suite once per server conf (or against one).
+[group('app integration')]
+website-test CONF="" keep="":
+    #!/usr/bin/env bash
+    set -u
+    fail=0
+    for conf in {{ if CONF == "" { APP_TEST_CONFS } else { CONF } }}; do
+        just _app-test "{{WEBSITE_EXAMPLE_DIR}}" "$conf" "integration_test/workflow*_test.dart" "{{keep}}" || fail=1
+    done
+    exit $fail
+
+#   just website-test-one app_test_server1.conf workflow_emptysite_every_route_test.dart [keep=1]
+# Run one website integration test file against one server conf.
+[group('app integration')]
+website-test-one CONF FILE keep="": (_app-test (WEBSITE_EXAMPLE_DIR) (CONF) ("integration_test/" + FILE) keep)
 
 # Prints one JSON line (name, base_url, server_port, db_port, run_dir,
 # tmux_session, server_log). Watch logs: tmux attach -t <tmux_session>

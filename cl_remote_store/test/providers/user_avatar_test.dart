@@ -15,6 +15,8 @@ import '../support/fake_secure_client.dart';
 /// removes the user's other links under that tag, the ones in [hidden]
 /// included: those are links the caller may not view, so `listByTag` leaves
 /// them out.
+///
+/// [calls] names every call received, in order.
 class _FakeUserMedia extends Fake implements UserMediaSource {
   _FakeUserMedia(this.links, {this.hidden = const {}});
 
@@ -27,10 +29,16 @@ class _FakeUserMedia extends Fake implements UserMediaSource {
   String? attachedUuid;
   final List<String> detached = [];
 
+  /// The name of every method called, in order.
+  final List<String> calls = [];
+
   @override
-  Future<List<MediaLink>> listByTag(String ownerId, String tag) async => links
-      .where((l) => l.tag == tag && !hidden.contains(l.mediaUuid))
-      .toList();
+  Future<List<MediaLink>> listByTag(String ownerId, String tag) async {
+    calls.add('listByTag');
+    return links
+        .where((l) => l.tag == tag && !hidden.contains(l.mediaUuid))
+        .toList();
+  }
 
   @override
   Future<MediaLink> attach(
@@ -39,6 +47,7 @@ class _FakeUserMedia extends Fake implements UserMediaSource {
     required String mediaUuid,
     String? metadata,
   }) async {
+    calls.add('attach');
     attachedTag = tag;
     attachedUuid = mediaUuid;
     if (tag == kUserAvatarTag) links.removeWhere((l) => l.tag == tag);
@@ -49,12 +58,14 @@ class _FakeUserMedia extends Fake implements UserMediaSource {
 
   @override
   Future<void> detach(String ownerId, String tag, String mediaUuid) async {
+    calls.add('detach');
     detached.add(mediaUuid);
     links.removeWhere((l) => l.tag == tag && l.mediaUuid == mediaUuid);
   }
 
   @override
   Future<void> detachTag(String ownerId, String tag) async {
+    calls.add('detachTag');
     links.removeWhere((l) => l.tag == tag);
   }
 }
@@ -63,6 +74,8 @@ class _FakeUserMedia extends Fake implements UserMediaSource {
 /// resolves a uuid to its record (and so its id), and `softDelete` records
 /// and removes by id. The two listings only count their calls: nothing in
 /// the avatar code pages through them (club_client#86).
+///
+/// [calls] names every call received, in order.
 class _FakeMedia extends Fake implements MediaSource {
   _FakeMedia(this.files);
 
@@ -83,8 +96,12 @@ class _FakeMedia extends Fake implements MediaSource {
   /// How many times `list` or `listMyFiles` was called.
   int listingCalls = 0;
 
+  /// The name of every method called, in order.
+  final List<String> calls = [];
+
   @override
   Future<Media> getByUuid(String uuid) async {
+    calls.add('getByUuid');
     lookups.add(uuid);
     for (final media in [...files, ...othersFiles]) {
       if (media.uuid == uuid) return media;
@@ -108,6 +125,7 @@ class _FakeMedia extends Fake implements MediaSource {
     bool encrypt = false,
     String? ownerUsername,
   }) async {
+    calls.add('upload');
     uploadedAccessRoles = accessRoles;
     uploadedOwnerUsername = ownerUsername;
     final media = _media(id: 200, uuid: 'new', accessRoles: accessRoles!);
@@ -122,6 +140,7 @@ class _FakeMedia extends Fake implements MediaSource {
     String? mediaType,
     String? conversionStatus,
   }) async {
+    calls.add('listMyFiles');
     listingCalls++;
     return PaginatedList<Media>(
       items: List.of(files),
@@ -139,6 +158,7 @@ class _FakeMedia extends Fake implements MediaSource {
     String? conversionStatus,
     bool includeDeleted = false,
   }) async {
+    calls.add('list');
     listingCalls++;
     final all = [...files, ...othersFiles];
     return PaginatedList<Media>(
@@ -151,6 +171,7 @@ class _FakeMedia extends Fake implements MediaSource {
 
   @override
   Future<Media> patch(int id, {required List<String> accessRoles}) async {
+    calls.add('patch');
     patched[id] = accessRoles;
     final index = files.indexWhere((m) => m.id == id);
     final updated = _media(
@@ -164,6 +185,7 @@ class _FakeMedia extends Fake implements MediaSource {
 
   @override
   Future<void> softDelete(int id) async {
+    calls.add('softDelete');
     softDeleted.add(id);
     files.removeWhere((m) => m.id == id);
     othersFiles.removeWhere((m) => m.id == id);
@@ -420,6 +442,49 @@ void main() {
       expect(userMedia.links.map((l) => l.mediaUuid), const ['old']);
       expect(userMedia.detached, isEmpty);
       expect(media.softDeleted, isEmpty);
+    },
+  );
+
+  test(
+    'Issue 124: replacing a photo makes two calls, the upload and the '
+    'attach, for the member and for an admin',
+    () async {
+      // The prior avatar is one the caller can list and read, so a client
+      // that still tidied up after itself would find it and act on it.
+      for (final onBehalf in [false, true]) {
+        final userMedia = _FakeUserMedia([
+          _link('old', kUserAvatarTag, 'image'),
+        ]);
+        final media = _FakeMedia([
+          _media(id: 100, uuid: 'old', accessRoles: const ['self']),
+        ]);
+        final container = _makeContainer(media: media, userMedia: userMedia);
+        final notifier = container.read(
+          avatarMutationProvider('alice').notifier,
+        );
+
+        if (onBehalf) {
+          await notifier.uploadOnBehalf(
+            bytes: const [1],
+            filename: 'alice.png',
+            contentType: 'image/png',
+          );
+        } else {
+          await notifier.upload(
+            bytes: const [1],
+            filename: 'me.png',
+            contentType: 'image/png',
+            allowOthersToSee: false,
+          );
+        }
+
+        // Nothing watches the avatar here, so the fakes saw the calls of
+        // the replacement alone: no listing of the prior links, no detach,
+        // no lookup or delete of the old file.
+        final reason = onBehalf ? 'uploadOnBehalf' : 'upload';
+        expect(media.calls, const ['upload'], reason: reason);
+        expect(userMedia.calls, const ['attach'], reason: reason);
+      }
     },
   );
 

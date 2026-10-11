@@ -271,7 +271,7 @@ void main() {
         ),
       );
       skipKnownFailure(
-        issue: 85,
+        issue: 128,
         what:
             'an interest sent without a note is refused: the server '
             'requires a message',

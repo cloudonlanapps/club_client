@@ -5,6 +5,7 @@ import 'package:cl_remote_store/src/providers/notifications_master.dart';
 import 'package:cl_remote_store/src/providers/pending_actions_master.dart';
 import 'package:cl_remote_store/src/utils/fetch_all_pages.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
+import 'package:cl_remote_store/src/utils/writes_during_load.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,8 +25,10 @@ clUsersMasterProvider =
 
 /// Notifier managing all user state and mutations.
 class ClUsersMasterNotifier extends AsyncNotifier<Map<String, UserInfo>> {
+  final _writes = WritesDuringLoad<String, UserInfo>();
+
   @override
-  Future<Map<String, UserInfo>> build() async {
+  Future<Map<String, UserInfo>> build() => _writes.load(() async {
     ref.watch(clManualRefreshProvider);
     final client = await ref.watch(secureClientProvider.future);
     final currentUser = ref.watch(currentUserProvider);
@@ -49,7 +52,7 @@ class ClUsersMasterNotifier extends AsyncNotifier<Map<String, UserInfo>> {
 
     // Non-admin: just self.
     return {currentUser.username: currentUser};
-  }
+  });
 
   // -- Create / Update / Delete -----------------------------------------------
 
@@ -349,16 +352,14 @@ class ClUsersMasterNotifier extends AsyncNotifier<Map<String, UserInfo>> {
 
   /// Replace or add a user in the master map.
   void replaceLocally(UserInfo updated) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData({...current, updated.username: updated});
+    final next = _writes.put(state.valueOrNull, updated.username, updated);
+    if (next != null) state = AsyncData(next);
   }
 
   /// Remove a user from the master map.
   void removeLocally(String username) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData(Map.of(current)..remove(username));
+    final next = _writes.remove(state.valueOrNull, username);
+    if (next != null) state = AsyncData(next);
   }
 
   /// Optimistic status mutation with revert on failure.

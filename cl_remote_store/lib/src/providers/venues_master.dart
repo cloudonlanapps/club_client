@@ -2,6 +2,7 @@ import 'package:cl_remote_store/src/providers/client.dart';
 import 'package:cl_remote_store/src/providers/manual_refresh.dart';
 import 'package:cl_remote_store/src/utils/fetch_all_pages.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
+import 'package:cl_remote_store/src/utils/writes_during_load.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,15 +19,17 @@ clVenuesMasterProvider =
 
 /// Notifier managing all venue state and mutations.
 class ClVenuesMasterNotifier extends AsyncNotifier<Map<int, Venue>> {
+  final _writes = WritesDuringLoad<int, Venue>();
+
   @override
-  Future<Map<int, Venue>> build() async {
+  Future<Map<int, Venue>> build() => _writes.load(() async {
     ref.watch(clManualRefreshProvider);
     final client = await ref.watch(secureClientProvider.future);
     final items = await fetchAllPages(
       client.venues.getVenues,
     );
     return {for (final v in items) v.id: v};
-  }
+  });
 
   /// Create a new venue.
   Future<Venue> createVenue({
@@ -116,15 +119,13 @@ class ClVenuesMasterNotifier extends AsyncNotifier<Map<int, Venue>> {
 
   /// Replace or add a venue in the local map.
   void replaceLocally(Venue venue) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData({...current, venue.id: venue});
+    final next = _writes.put(state.valueOrNull, venue.id, venue);
+    if (next != null) state = AsyncData(next);
   }
 
   /// Remove a venue from the local map.
   void removeLocally(int id) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData(Map.of(current)..remove(id));
+    final next = _writes.remove(state.valueOrNull, id);
+    if (next != null) state = AsyncData(next);
   }
 }

@@ -4,6 +4,7 @@ import 'package:cl_remote_store/src/providers/manual_refresh.dart';
 import 'package:cl_remote_store/src/utils/bump_evaluations_version.dart';
 import 'package:cl_remote_store/src/utils/fetch_all_pages.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
+import 'package:cl_remote_store/src/utils/writes_during_load.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meta/meta.dart';
@@ -32,14 +33,16 @@ clEvaluationTemplatesMasterProvider =
 /// Notifier over the evaluation template library and its writes.
 class ClEvaluationTemplatesMasterNotifier
     extends AsyncNotifier<Map<int, EvaluationTemplate>> {
+  final _writes = WritesDuringLoad<int, EvaluationTemplate>();
+
   @override
-  Future<Map<int, EvaluationTemplate>> build() async {
+  Future<Map<int, EvaluationTemplate>> build() => _writes.load(() async {
     ref.watch(clManualRefreshProvider);
     if (ref.watch(evaluationsProvider) != true) return const {};
     final client = await ref.watch(secureClientProvider.future);
     final templates = await fetchAllPages(client.evaluations.listTemplates);
     return {for (final t in templates) t.id: t};
-  }
+  });
 
   /// Creates a template whole, its items inline in [layout]; the server
   /// assigns their ids. Admin only.
@@ -96,9 +99,8 @@ class ClEvaluationTemplatesMasterNotifier
 
   /// Replaces or adds [template] in the local map.
   void replaceLocally(EvaluationTemplate template) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData({...current, template.id: template});
+    final next = _writes.put(state.valueOrNull, template.id, template);
+    if (next != null) state = AsyncData(next);
   }
 
   /// After a template write that may have landed: reload the library and

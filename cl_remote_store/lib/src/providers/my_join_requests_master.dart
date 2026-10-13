@@ -2,6 +2,7 @@ import 'package:cl_remote_store/src/providers/client.dart';
 import 'package:cl_remote_store/src/providers/manual_refresh.dart';
 import 'package:cl_remote_store/src/providers/user_groups.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
+import 'package:cl_remote_store/src/utils/writes_during_load.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -28,13 +29,16 @@ clMyJoinRequestsMasterProvider =
 
 class ClMyJoinRequestsMasterNotifier
     extends FamilyAsyncNotifier<Map<int, JoinRequest>, String> {
+  final _writes = WritesDuringLoad<int, JoinRequest>();
+
   @override
-  Future<Map<int, JoinRequest>> build(String username) async {
-    ref.watch(clManualRefreshProvider);
-    final client = await ref.watch(secureClientProvider.future);
-    final requests = await client.myGroups.listMyRequests(username);
-    return {for (final r in requests) r.id: r};
-  }
+  Future<Map<int, JoinRequest>> build(String username) =>
+      _writes.load(() async {
+        ref.watch(clManualRefreshProvider);
+        final client = await ref.watch(secureClientProvider.future);
+        final requests = await client.myGroups.listMyRequests(username);
+        return {for (final r in requests) r.id: r};
+      });
 
   /// Cancel a still-pending join request. Replaces local state with
   /// the server's updated [JoinRequest] (status `cancelled`).
@@ -51,9 +55,9 @@ class ClMyJoinRequestsMasterNotifier
   /// `clMyGroupsMasterProvider.join`) to fold a newly created request
   /// into local state.
   void replaceLocally(JoinRequest request) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData({...current, request.id: request});
+    final next = _writes.put(state.valueOrNull, request.id, request);
+    if (next == null) return;
+    state = AsyncData(next);
     // When a request is approved (server-side, by admin) and the user
     // is added to the group, the next view that re-reads
     // `clUserGroupsProvider` should reflect that — invalidate to be safe.

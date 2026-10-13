@@ -5,6 +5,7 @@ import 'package:cl_remote_store/src/providers/notifications_master.dart';
 import 'package:cl_remote_store/src/providers/pending_actions_master.dart';
 import 'package:cl_remote_store/src/providers/user_groups.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
+import 'package:cl_remote_store/src/utils/writes_during_load.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,13 +32,15 @@ clGroupRequestsMasterProvider =
 
 class ClGroupRequestsMasterNotifier
     extends FamilyAsyncNotifier<Map<int, JoinRequest>, int> {
+  final _writes = WritesDuringLoad<int, JoinRequest>();
+
   @override
-  Future<Map<int, JoinRequest>> build(int groupId) async {
+  Future<Map<int, JoinRequest>> build(int groupId) => _writes.load(() async {
     ref.watch(clManualRefreshProvider);
     final client = await ref.watch(secureClientProvider.future);
     final requests = await client.groups.listRequests(groupId);
     return {for (final r in requests) r.id: r};
-  }
+  });
 
   /// Approve a pending request. Replaces local state with the server's
   /// updated [JoinRequest]. On approve, the user becomes a group member;
@@ -92,8 +95,7 @@ class ClGroupRequestsMasterNotifier
   }
 
   void _replaceLocally(JoinRequest request) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData({...current, request.id: request});
+    final next = _writes.put(state.valueOrNull, request.id, request);
+    if (next != null) state = AsyncData(next);
   }
 }

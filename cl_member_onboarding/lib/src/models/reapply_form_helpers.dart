@@ -1,7 +1,7 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
     show SignupGender, UserFormFields;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show ClUsersMasterNotifier;
+    show ClUsersMasterNotifier, schemaFieldErrors;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show Gender, SdkErrorCode, ServerException, UserPrivate;
 import 'package:ui_lib/ui_lib.dart' show PhoneNumber;
@@ -34,9 +34,43 @@ abstract final class ReapplyFormSubmit {
   static const String dateOfBirthRefusedMessage =
       'That date of birth was not accepted. Pick it again.';
 
+  /// The server's name for the email.
+  static const String serverEmail = 'email';
+
+  /// The server's name for the phone number.
+  static const String serverPhone = 'phone';
+
+  /// The server's name for the date of birth.
+  static const String serverDateOfBirth = 'dateOfBirthUtc';
+
+  /// The server's name for the gender.
+  static const String serverGender = 'gender';
+
+  /// The server's name for the first name.
+  static const String serverFirstName = 'firstName';
+
+  /// The server's name for the middle name.
+  static const String serverMiddleName = 'middleName';
+
+  /// The server's name for the last name.
+  static const String serverLastName = 'lastName';
+
+  /// The fields of a resubmission, as the server names them, each with the
+  /// id of the form field that holds it.
+  static const Map<String, String> schemaFieldIds = {
+    serverEmail: UserFormFields.emailId,
+    serverPhone: UserFormFields.phoneId,
+    serverDateOfBirth: UserFormFields.dateOfBirthUtcId,
+    serverGender: UserFormFields.genderId,
+    serverFirstName: UserFormFields.firstNameId,
+    serverMiddleName: UserFormFields.middleNameId,
+    serverLastName: UserFormFields.lastNameId,
+  };
+
   /// What the form shows for a refused resubmission: a message on the field
-  /// the server's answer names, keyed by field id. Empty when [error] names
-  /// no field; the host then reports a failed resubmission.
+  /// the server's answer names, keyed by field id, a schema rejection
+  /// included (club_client#114). Empty when [error] names no field; the
+  /// host then reports a failed resubmission.
   static Map<String, String> fieldErrorsFor(Object error) {
     if (error is! ServerException) return const {};
     return switch (error.code) {
@@ -46,7 +80,7 @@ abstract final class ReapplyFormSubmit {
       SdkErrorCode.invalidDobNotUtcMidnight => const {
         UserFormFields.dateOfBirthUtcId: dateOfBirthRefusedMessage,
       },
-      _ => const {},
+      _ => schemaFieldErrors(error, schemaFieldIds),
     };
   }
 

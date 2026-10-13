@@ -14,7 +14,6 @@ import 'package:ui_lib/ui_lib.dart'
 
 import '../../models/programme_schedule_form_helpers.dart';
 import '../../models/stale_version_message.dart';
-import '../../utils/event_refusal.dart';
 import '../../utils/programme_end_date.dart';
 import '../../utils/programme_end_date_messages.dart';
 import 'programme_end_date_dialog_body.dart';
@@ -141,21 +140,20 @@ class ProgrammeEndDateDialogState
     } on Object catch (e) {
       if (!mounted) return;
       setState(() => saving = false);
-      final message = programmeEndDateFailureOf(e);
+      final refusal = programmeEndDateRefusal(e, dayChosen: lastDay != null);
       // A failure that is not about the end date is a toast; the dialog
       // stays, on again, for another try.
-      if (!isRefusalToShowInForm(
-        e,
-        message: message,
-        fallback: programmeEndDateFailedMessage,
-      )) {
-        toaster.show(ShadToast.destructive(description: Text(message)));
-      } else if (programmeEndDateIsAboutLastDay(e) && lastDay != null) {
-        formKey.currentState?.showErrors(
-          fieldErrors: {ProgrammeEndDateFormFields.lastDayId: message},
+      if (refusal == null) {
+        toaster.show(
+          ShadToast.destructive(
+            description: Text(programmeEndDateFailureOf(e)),
+          ),
         );
       } else {
-        formKey.currentState?.showErrors(formError: message);
+        formKey.currentState?.showErrors(
+          fieldErrors: refusal.fieldErrors,
+          formError: refusal.formError,
+        );
       }
     }
   }

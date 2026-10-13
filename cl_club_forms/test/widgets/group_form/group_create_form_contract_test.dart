@@ -9,8 +9,6 @@ import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:cl_club_forms/src/constants/form_strings.dart';
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_fields.dart'
     show AgeEligibilityFields;
-import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
-    show AgeEligibilityFormFields;
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_validators.dart'
     show AgeEligibilityFormValidators;
 import 'package:flutter/material.dart';

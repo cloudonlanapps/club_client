@@ -105,4 +105,76 @@ void main() {
       expect(sent.sentBoth, isTrue);
     });
   });
+
+  group('Issue 114: a schema rejection shows on the venue field it names', () {
+    ServerException rejection(List<String> names) => ServerException(
+      statusCode: 422,
+      code: SdkErrorCode.validationError,
+      message: 'refused',
+      details: {
+        ServerException.refusedFieldsKey: [
+          for (final name in names)
+            {
+              'loc': ['body', name],
+              'msg': 'refused',
+            },
+        ],
+      },
+    );
+
+    test('Issue 114: venue create puts it on each field the form holds', () {
+      expect(
+        VenueFormSubmit.createFieldErrors(
+          rejection([
+            'name',
+            'address',
+            'description',
+            'mapUri',
+            'isDefault',
+            'isFeatured',
+          ]),
+        ).keys,
+        {
+          VenueFormFields.nameId,
+          VenueFormFields.addressId,
+          VenueFormFields.descriptionId,
+          VenueFormFields.mapUriId,
+          VenueFormFields.isDefaultId,
+          VenueFormFields.isFeaturedId,
+        },
+      );
+    });
+
+    test('Issue 114: the location editor puts it on the address and the '
+        'map link', () {
+      expect(
+        VenueFormSubmit.locationFieldErrors(rejection(['address', 'mapUri'])),
+        {
+          LocationEditFormFields.addressId: 'Refused',
+          LocationEditFormFields.mapUriId: 'Refused',
+        },
+      );
+      expect(
+        VenueFormSubmit.locationFieldErrors(Exception('offline')),
+        isEmpty,
+      );
+    });
+
+    test('Issue 114: venue rename shows the reason on the name', () {
+      expect(
+        VenueFormSubmit.renameRefusal(
+          rejection(['name']),
+          fallback: 'Could not rename venue.',
+        ),
+        'Refused',
+      );
+      expect(
+        VenueFormSubmit.renameRefusal(
+          rejection(['version']),
+          fallback: 'Could not rename venue.',
+        ),
+        'Could not rename venue.',
+      );
+    });
+  });
 }

@@ -3,8 +3,6 @@
 // refused, enabled false and the phone width.
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:cl_club_forms/src/constants/form_strings.dart';
-import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
-    show AgeEligibilityFormFields;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';

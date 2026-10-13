@@ -1,3 +1,4 @@
+import 'package:cl_club_members/src/models/group_form_helpers.dart';
 import 'package:cl_club_members/src/utils/group_hard_delete_error_message.dart';
 import 'package:cl_club_members/src/widgets/add_member_dialog.dart';
 import 'package:cl_club_members/src/widgets/group_eligibility_section.dart';
@@ -161,8 +162,8 @@ class AdminGroupProfileView extends ConsumerWidget {
           .read(clGroupsMasterProvider.notifier)
           .updateGroup(groupId, name: name);
       return null;
-    } on Object catch (_) {
-      return renameFailedMessage;
+    } on Object catch (e) {
+      return GroupFormSubmit.renameRefusal(e, fallback: renameFailedMessage);
     }
   }
 

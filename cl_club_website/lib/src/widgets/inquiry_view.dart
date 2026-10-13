@@ -116,11 +116,16 @@ class InquiryViewState extends ConsumerState<InquiryView> {
     } on Object catch (error) {
       if (!mounted) return;
       setState(() => isSending = false);
-      // What the server refuses about the inquiry shows in the form; a
-      // failure that is not about it is a toast.
+      // What the server refuses about the inquiry shows in the form, on
+      // the field it names when it names one; a failure that is not about
+      // it is a toast.
       final refused = InquiryFormSubmit.formErrorFor(error, strings);
-      if (refused != null) {
-        formKey.currentState?.showErrors(formError: refused);
+      final fieldErrors = InquiryFormSubmit.fieldErrorsFor(error);
+      if (refused != null || fieldErrors.isNotEmpty) {
+        formKey.currentState?.showErrors(
+          fieldErrors: fieldErrors,
+          formError: refused,
+        );
       } else {
         ShadToaster.of(context).show(
           ShadToast.destructive(

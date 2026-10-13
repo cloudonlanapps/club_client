@@ -1,7 +1,11 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
     show AgeEligibilityFormValues, EventFormFields, EventGender;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show ClEventsMasterNotifier, formAgeFromSdk, sdkAgeFromForm;
+    show
+        ClEventsMasterNotifier,
+        formAgeFromSdk,
+        schemaFieldErrors,
+        sdkAgeFromForm;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show
         Age,
@@ -17,6 +21,7 @@ import 'package:flutter/foundation.dart' show listEquals;
 
 import '../utils/event_refusal.dart';
 import '../utils/schedule_save_error.dart';
+import 'event_schema_fields.dart';
 
 /// SDK ↔ form adapter for the event section editors — the one place that
 /// bridges the forms' flat `Map<String, dynamic>` (keyed by [EventFormFields],
@@ -190,8 +195,21 @@ class EventFormSubmit {
         fieldErrors: const {},
         formError: invertedBandMessage,
       ),
-      _ => null,
+      _ => schemaRefusal(error, EventSchemaFields.eligibility),
     };
+  }
+
+  /// What a section editor shows for a schema rejection: each refused field
+  /// of [fieldIds] it holds, or `null` when [error] names none
+  /// (club_client#114).
+  static EventFormRefusal? schemaRefusal(
+    Object error,
+    Map<String, String> fieldIds,
+  ) {
+    final fieldErrors = schemaFieldErrors(error, fieldIds);
+    return fieldErrors.isEmpty
+        ? null
+        : (fieldErrors: fieldErrors, formError: null);
   }
 
   /// What the organizer and coaches editor shows for [error], or `null`
@@ -230,7 +248,7 @@ class EventFormSubmit {
       case SdkErrorCode.timeConflict:
         return (fieldErrors: const {}, formError: staffClashMessage);
       default:
-        return null;
+        return schemaRefusal(error, EventSchemaFields.staff);
     }
   }
 

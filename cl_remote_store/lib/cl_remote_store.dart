@@ -189,6 +189,7 @@ export 'src/providers/venue_media.dart'
 export 'src/providers/venues.dart';
 export 'src/providers/venues_master.dart';
 export 'src/utils/age_form_adapter.dart' show formAgeFromSdk, sdkAgeFromForm;
+export 'src/utils/age_schema_fields.dart' show ageSchemaFieldIds;
 export 'src/utils/club_content_from_server.dart' show defaultClubValueIconName;
 export 'src/utils/contact_info_from_server.dart' show contactInfoFromServer;
 export 'src/utils/credit_funding.dart' show usableCreditsFor;
@@ -197,6 +198,7 @@ export 'src/utils/enrollment_error_messages.dart'
 export 'src/utils/evaluation_incomplete.dart' show evaluationIncompleteItemIds;
 export 'src/utils/event_eligibility.dart'
     show EligibilityFailure, EligibilityFailureReason, checkEventEligibility;
+export 'src/utils/schema_refusal.dart' show schemaFieldErrors;
 export 'src/utils/uncertain_write.dart' show writeMayHaveLanded;
 export 'src/utils/write_failure_message.dart'
     show uncertainWriteMessage, writeFailureMessage;

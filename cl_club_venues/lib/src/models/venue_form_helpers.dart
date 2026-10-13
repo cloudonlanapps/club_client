@@ -1,7 +1,7 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
     show LocationEditFormFields, VenueCreateForm, VenueFormFields;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show ClVenuesMasterNotifier;
+    show ClVenuesMasterNotifier, schemaFieldErrors;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show SdkErrorCode, ServerException, Venue;
 
@@ -43,16 +43,67 @@ class VenueFormSubmit {
   static const String defaultVenueExistsMessage =
       'A default venue already exists.';
 
+  /// The server's name for a venue's name.
+  static const String serverName = 'name';
+
+  /// The server's name for a venue's address.
+  static const String serverAddress = 'address';
+
+  /// The server's name for a venue's description.
+  static const String serverDescription = 'description';
+
+  /// The server's name for a venue's map link.
+  static const String serverMapUri = 'mapUri';
+
+  /// The server's name for the default-venue flag.
+  static const String serverIsDefault = 'isDefault';
+
+  /// The server's name for the featured flag.
+  static const String serverIsFeatured = 'isFeatured';
+
+  /// The fields of a new venue, as the server names them in a schema
+  /// rejection (club_client#114), each with the id of the create form's
+  /// field that holds it.
+  static const Map<String, String> createSchemaFieldIds = {
+    serverName: VenueFormFields.nameId,
+    serverAddress: VenueFormFields.addressId,
+    serverDescription: VenueFormFields.descriptionId,
+    serverMapUri: VenueFormFields.mapUriId,
+    serverIsDefault: VenueFormFields.isDefaultId,
+    serverIsFeatured: VenueFormFields.isFeaturedId,
+  };
+
+  /// The fields of a venue's location, as the server names them, each with
+  /// the id of the location editor's field that holds it.
+  static const Map<String, String> locationSchemaFieldIds = {
+    serverAddress: LocationEditFormFields.addressId,
+    serverMapUri: LocationEditFormFields.mapUriId,
+  };
+
   /// The fields of the create form the server refused with [error], as
-  /// field id → message for the form's `showErrors`. Empty when the refusal
-  /// names no field (the host then reports a failed create).
+  /// field id → message for the form's `showErrors`, a schema rejection
+  /// included (club_client#114). Empty when the refusal names no field (the
+  /// host then reports a failed create).
   static Map<String, String> createFieldErrors(Object error) {
     if (error is ServerException &&
         error.code == SdkErrorCode.defaultVenueExists) {
       return const {VenueFormFields.isDefaultId: defaultVenueExistsMessage};
     }
-    return const {};
+    return schemaFieldErrors(error, createSchemaFieldIds);
   }
+
+  /// The fields of the location editor the server refused with [error] at
+  /// its schema, as field id → message. Empty when [error] names no field
+  /// (the host then reports a failed save).
+  static Map<String, String> locationFieldErrors(Object error) =>
+      schemaFieldErrors(error, locationSchemaFieldIds);
+
+  /// What the rename dialog shows on the name for a rename that failed with
+  /// [error]: the server's reason when its schema rejects the name, else
+  /// [fallback].
+  static String renameRefusal(Object error, {required String fallback}) =>
+      schemaFieldErrors(error, const {serverName: serverName})[serverName] ??
+      fallback;
 
   static String? _nullIfEmpty(Object? v) {
     final s = (v as String?)?.trim();

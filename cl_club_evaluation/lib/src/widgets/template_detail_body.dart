@@ -99,7 +99,10 @@ class TemplateDetailBodyState extends ConsumerState<TemplateDetailBody> {
       );
       return null;
     } on Object catch (e) {
-      return EvaluationErrorMessage.of(e);
+      return EvaluationTemplateFormSubmit.renameRefusal(
+        e,
+        fallback: EvaluationErrorMessage.of(e),
+      );
     }
   }
 

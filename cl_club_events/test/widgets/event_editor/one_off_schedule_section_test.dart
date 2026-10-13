@@ -318,6 +318,39 @@ void main() {
     expect(find.byType(OneOffScheduleForm), findsNothing);
   });
 
+  testWidgets('Issue 114: a venue the schema rejects shows on the venue, '
+      'with its reason and no toast', (tester) async {
+    final start = _hoursFromNow(48);
+    final events = await _pump(tester, _oneOff(startLocal: start));
+    events.error = const ServerException(
+      statusCode: 422,
+      code: SdkErrorCode.validationError,
+      message: 'schema reason',
+      details: {
+        ServerException.refusedFieldsKey: [
+          {
+            'loc': ['body', 'venueId'],
+            'msg': 'schema reason',
+          },
+        ],
+      },
+    );
+
+    await _openEditor(tester);
+    await _moveTo(tester, start.add(const Duration(days: 1)));
+    await _save(tester);
+
+    expect(
+      find.descendant(
+        of: find.byType(EventVenueSelectField),
+        matching: find.text('Schema reason'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byType(ShadToast), findsNothing);
+    expect(find.byType(OneOffScheduleForm), findsOneWidget);
+  });
+
   test('Issue 54: oneOffScheduleValueOf reads the form values', () {
     final schedule = OneOffScheduleData(
       date: DateTime(2030, 5, 14),

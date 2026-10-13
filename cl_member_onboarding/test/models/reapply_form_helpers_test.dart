@@ -139,4 +139,56 @@ void main() {
       expect(ReapplyFormSubmit.fieldErrorsFor(StateError('down')), isEmpty);
     });
   });
+
+  group('Issue 114: ReapplyFormSubmit.fieldErrorsFor', () {
+    ServerException rejection(List<List<Object>> fields) => ServerException(
+      statusCode: 422,
+      code: SdkErrorCode.validationError,
+      message: 'refused',
+      details: {
+        ServerException.refusedFieldsKey: [
+          for (final loc in fields) {'loc': loc, 'msg': 'refused'},
+        ],
+      },
+    );
+
+    test('Issue 114: a schema rejection shows on each field the form '
+        'holds', () {
+      expect(
+        ReapplyFormSubmit.fieldErrorsFor(
+          rejection([
+            ['body', 'email'],
+            ['body', 'phone'],
+            ['body', 'dateOfBirthUtc'],
+            ['body', 'gender'],
+            ['body', 'firstName'],
+            ['body', 'middleName'],
+            ['body', 'lastName'],
+          ]),
+        ).keys,
+        {
+          UserFormFields.emailId,
+          UserFormFields.phoneId,
+          UserFormFields.dateOfBirthUtcId,
+          UserFormFields.genderId,
+          UserFormFields.firstNameId,
+          UserFormFields.middleNameId,
+          UserFormFields.lastNameId,
+        },
+      );
+    });
+
+    test('Issue 114: a schema rejection that names none of its fields '
+        'names no field', () {
+      expect(
+        ReapplyFormSubmit.fieldErrorsFor(
+          rejection([
+            ['body'],
+            ['body', 'notAField'],
+          ]),
+        ),
+        isEmpty,
+      );
+    });
+  });
 }

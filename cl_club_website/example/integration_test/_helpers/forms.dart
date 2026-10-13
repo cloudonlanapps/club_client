@@ -7,6 +7,7 @@
 //                         the ShadForm's value map.
 //   * invokeShadButton  - call a ShadButton's onPressed, on or off screen.
 //   * firstErrorToastMessage - the text of the error toast showing, if any.
+//   * fieldErrorById    - the message showing on a form field, if any.
 //
 // The same helpers as cl_club_app/example/integration_test/_helpers/forms.dart.
 
@@ -91,4 +92,12 @@ String? firstErrorToastMessage(WidgetTester tester) {
     }
   }
   return null;
+}
+
+/// The message showing on the field [fieldId] of the ShadForm on screen, or
+/// null when the field shows none or no form is on screen.
+String? fieldErrorById(WidgetTester tester, String fieldId) {
+  final form = find.byType(ShadForm);
+  if (form.evaluate().isEmpty) return null;
+  return tester.state<ShadFormState>(form).fields[fieldId]?.errorText;
 }

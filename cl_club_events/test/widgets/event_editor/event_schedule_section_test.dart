@@ -290,4 +290,37 @@ void main() {
     expect(find.textContaining('changed by coach_a'), findsOneWidget);
     expect(find.byType(EventTimetableForm), findsNothing);
   });
+
+  testWidgets('Issue 114: a timetable the schema rejects shows on the '
+      'sessions, with its reason and no toast', (tester) async {
+    final events = await _pump(
+      tester,
+      _event(EventType.camp, startUtc: _hoursFromNow(-30)),
+    );
+    events.error = const ServerException(
+      statusCode: 422,
+      code: SdkErrorCode.validationError,
+      message: 'schema reason',
+      details: {
+        ServerException.refusedFieldsKey: [
+          {
+            'loc': ['body', 'sessions'],
+            'msg': 'schema reason',
+          },
+        ],
+      },
+    );
+
+    await _openEditor(tester);
+    await _splitDay(tester, totalHours: 2);
+    await _save(tester);
+
+    expect(find.text('Schema reason'), findsOneWidget);
+    expect(find.byType(ShadToast), findsNothing);
+    expect(
+      find.byType(EventTimetableForm),
+      findsOneWidget,
+      reason: 'the editor stays open for a retry',
+    );
+  });
 }

@@ -87,8 +87,9 @@ Finder get _send => find.descendant(
 /// seconds.
 ///
 /// Returns null once the thank-you with [thanksTitle] shows in place of the
-/// form, or the text of the error toast when the site reports that sending
-/// failed.
+/// form. When the site reports that sending failed, returns what it says:
+/// the text of the error toast, or the reason the server gave on the
+/// message field when it refused the message (club_client#114).
 Future<String?> _sendInquiry(
   WidgetTester tester, {
   required String route,
@@ -115,10 +116,14 @@ Future<String?> _sendInquiry(
     tester,
     () =>
         find.byType(InquiryThanksCard).evaluate().isNotEmpty ||
-        firstErrorToastMessage(tester) != null,
+        firstErrorToastMessage(tester) != null ||
+        fieldErrorById(tester, InquiryFormFields.messageId) != null,
     description: 'the thank-you of $route, or an error',
   );
-  if (firstErrorToastMessage(tester) case final String failure) {
+  final failure =
+      firstErrorToastMessage(tester) ??
+      fieldErrorById(tester, InquiryFormFields.messageId);
+  if (failure != null) {
     expect(find.byType(InquiryThanksCard), findsNothing);
     return failure;
   }
@@ -253,10 +258,11 @@ void main() {
     if (failure != null) {
       // The form lets the note be left out, and the site then sends an empty
       // message, which the server refuses: it requires one of every inquiry.
-      // The visitor is told sending failed, and nothing is stored. Shown
-      // here on the same request, so the skip names its cause.
-      final strings = container(tester).read(siteStringsProvider).requireValue;
-      expect(failure, strings.contactFormErrorGeneric);
+      // The server's reason shows on the note, with no toast
+      // (club_client#114), and nothing is stored. Shown here on the same
+      // request, so the skip names its cause.
+      expect(fieldErrorById(tester, InquiryFormFields.messageId), failure);
+      expect(firstErrorToastMessage(tester), isNull);
       expect(await stored(), hasLength(before));
       await expectLater(
         admin.public.submitInquiry(

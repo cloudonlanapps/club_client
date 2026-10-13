@@ -181,4 +181,48 @@ void main() {
       expect(copy.emailInvalid, 'Not an email');
     });
   });
+
+  group('Issue 114: a schema rejection shows on the inquiry field it '
+      'names', () {
+    ServerException rejection(List<String> names) => ServerException(
+      statusCode: 422,
+      code: SdkErrorCode.validationError,
+      message: 'refused',
+      details: {
+        ServerException.refusedFieldsKey: [
+          for (final name in names)
+            {
+              'loc': ['body', name],
+              'msg': 'refused',
+            },
+        ],
+      },
+    );
+
+    test('Issue 114: the name, the email, the phone and the message each '
+        'take it', () {
+      expect(
+        InquiryFormSubmit.fieldErrorsFor(
+          rejection(['name', 'email', 'phone', 'message']),
+        ),
+        {
+          InquiryFormFields.nameId: 'Refused',
+          InquiryFormFields.emailId: 'Refused',
+          InquiryFormFields.phoneId: 'Refused',
+          InquiryFormFields.messageId: 'Refused',
+        },
+      );
+    });
+
+    test('Issue 114: a rejection of what the visitor cannot see, and any '
+        'other failure, name no field', () {
+      expect(
+        InquiryFormSubmit.fieldErrorsFor(
+          rejection(['token', 'website', 'kind']),
+        ),
+        isEmpty,
+      );
+      expect(InquiryFormSubmit.fieldErrorsFor(Exception('offline')), isEmpty);
+    });
+  });
 }

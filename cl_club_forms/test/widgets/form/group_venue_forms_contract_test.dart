@@ -1,6 +1,4 @@
 import 'package:cl_club_forms/cl_club_forms.dart';
-import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
-    show AgeEligibilityFormFields;
 import 'package:cl_club_forms/src/widgets/form/form_contract.dart';
 import 'package:cl_club_forms/src/widgets/form/labeled_form_row.dart';
 import 'package:flutter/material.dart';

@@ -132,9 +132,9 @@ class CreditActionFormState extends ConsumerState<CreditActionForm> {
   /// Shows [refusal] on the field it is about. False when it is about none
   /// of the form's fields, which leaves it to a toast.
   bool showRefusal(ServerException refusal) {
-    final fieldId = creditActionRefusedFieldId(refusal, widget.kind);
-    if (fieldId == null) return false;
-    showErrors({fieldId: creditActionErrorMessage(refusal)});
+    final fieldErrors = creditActionFieldErrors(refusal, widget.kind);
+    if (fieldErrors.isEmpty) return false;
+    showErrors(fieldErrors);
     return true;
   }
 

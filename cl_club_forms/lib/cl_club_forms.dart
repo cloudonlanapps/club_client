@@ -27,6 +27,8 @@ export 'src/widgets/account/login_form.dart' show LoginForm, LoginFormState;
 export 'src/widgets/account/login_form_fields.dart' show LoginFormFields;
 // Age band of the eligibility editors (pure UI, no SDK / no Riverpod): its
 // values and the read view.
+export 'src/widgets/age_eligibility/age_eligibility_form_fields.dart'
+    show AgeEligibilityFormFields;
 export 'src/widgets/age_eligibility/age_eligibility_form_values.dart'
     show AgeEligibilityFormValues;
 export 'src/widgets/age_eligibility/age_eligibility_summary.dart'

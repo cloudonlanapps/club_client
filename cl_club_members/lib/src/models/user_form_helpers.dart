@@ -1,12 +1,14 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
     show FormAddress, SignupGender, UserFormAssembly, UserFormFields;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show ClUsersMasterNotifier;
+    show ClUsersMasterNotifier, schemaFieldErrors;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show Address, Gender, SdkErrorCode, ServerException, UserPrivate;
 import 'package:ui_lib/ui_lib.dart' show PhoneNumber;
 
 import '../utils/member_write_messages.dart';
+import '../utils/profile_save_error_message.dart';
+import 'user_schema_fields.dart';
 
 /// Default password applied when an admin creates a user with the
 /// "Use default password" toggle on. Admins are expected to know this
@@ -166,8 +168,8 @@ class UserFormSubmit {
   }
 
   /// What the create form shows for a refused creation: a message on the
-  /// field the server's answer names, keyed by field id. Empty when [error]
-  /// names no field.
+  /// field the server's answer names, keyed by field id, a schema rejection
+  /// included (club_client#114). Empty when [error] names no field.
   static Map<String, String> fieldErrorsFor(ServerException error) {
     if (error.code == SdkErrorCode.duplicateUsername) {
       return const {
@@ -179,8 +181,23 @@ class UserFormSubmit {
         UserFormFields.emailId: MemberWriteMessages.emailRegistered,
       };
     }
-    return const {};
+    return schemaFieldErrors(error, UserSchemaFields.fieldIds);
   }
+
+  /// What the contact editor shows for a refused save: an email another
+  /// account has, and a schema rejection, each on the field it names. Empty
+  /// when [error] names no field.
+  static Map<String, String> contactFieldErrors(ServerException error) {
+    if (error.code == SdkErrorCode.duplicateEmail) {
+      return {UserFormFields.emailId: profileSaveErrorMessage(error)};
+    }
+    return schemaFieldErrors(error, UserSchemaFields.fieldIds);
+  }
+
+  /// What the address editor shows for a refused save: a schema rejection
+  /// on the field it names. Empty when [error] names no field.
+  static Map<String, String> addressFieldErrors(ServerException error) =>
+      schemaFieldErrors(error, UserSchemaFields.fieldIds);
 
   /// The server's code for a change to fields only a super admin may edit;
   /// its `fields` names them.
@@ -202,8 +219,9 @@ class UserFormSubmit {
   };
 
   /// What the personal-details editor shows for a refused save: a message
-  /// on each field the server's answer names, keyed by field id. Empty when
-  /// [error] names no field.
+  /// on each field the server's answer names, keyed by field id, a schema
+  /// rejection included (club_client#114). Empty when [error] names no
+  /// field.
   static Map<String, String> personalDetailsFieldErrors(
     ServerException error,
   ) {
@@ -212,7 +230,9 @@ class UserFormSubmit {
         UserFormFields.dateOfBirthUtcId: MemberWriteMessages.dateOfBirthRefused,
       };
     }
-    if (error.code != protectedFieldsCode) return const {};
+    if (error.code != protectedFieldsCode) {
+      return schemaFieldErrors(error, UserSchemaFields.fieldIds);
+    }
     final named = error.details?[protectedFieldsKey];
     return {
       if (named is List)

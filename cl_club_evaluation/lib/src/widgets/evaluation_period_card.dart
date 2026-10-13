@@ -68,7 +68,10 @@ class EvaluationPeriodCardState extends ConsumerState<EvaluationPeriodCard> {
       // What the server refuses about the event or the period shows in the
       // form; a failure that is not about them is a toast.
       final refused = EvaluationErrorMessage.refusalOf(e);
-      if (refused != null) {
+      final fieldErrors = EvaluationPeriodFormSubmit.fieldErrorsFor(e);
+      if (fieldErrors.isNotEmpty) {
+        formKey.currentState?.showErrors(fieldErrors: fieldErrors);
+      } else if (refused != null) {
         formKey.currentState?.showErrors(formError: refused);
       } else {
         toaster.show(

@@ -1,4 +1,5 @@
 import 'package:cl_club_forms/cl_club_forms.dart' show CreditFormFields;
+import 'package:cl_remote_store/cl_remote_store.dart' show schemaFieldErrors;
 import 'package:club_sdk_2/club_sdk_2.dart' show SdkErrorCode, ServerException;
 
 import '../models/credit_action_kind.dart';
@@ -37,4 +38,51 @@ String? creditActionRefusedFieldId(ServerException e, CreditActionKind kind) {
       kind == CreditActionKind.grant ? CreditFormFields.programmeId : null,
     _ => null,
   };
+}
+
+/// The server's name for a number of credits.
+const String creditServerCredits = 'credits';
+
+/// The server's name for a transfer's penalty.
+const String creditServerPenalty = 'penalty';
+
+/// The server's name for the first day a package is valid.
+const String creditServerValidFrom = 'validFromUtc';
+
+/// The server's name for the last day a package is valid.
+const String creditServerValidUntil = 'validUntilUtc';
+
+/// The server's name for the programme a package is for.
+const String creditServerEventId = 'eventId';
+
+/// The server's name for the trial flag.
+const String creditServerIsTrial = 'isTrial';
+
+/// The server's name for the reason.
+const String creditServerReason = 'reason';
+
+/// The fields of the credit actions, as the server names them in a schema
+/// rejection (club_client#114), each with the id of the form field that
+/// holds it.
+const Map<String, String> creditSchemaFieldIds = {
+  creditServerCredits: CreditFormFields.creditsId,
+  creditServerPenalty: CreditFormFields.penaltyId,
+  creditServerValidFrom: CreditFormFields.validFromId,
+  creditServerValidUntil: CreditFormFields.validUntilId,
+  creditServerEventId: CreditFormFields.programmeId,
+  creditServerIsTrial: CreditFormFields.trialId,
+  creditServerReason: CreditFormFields.reasonId,
+};
+
+/// What [kind]'s form shows for the refusal [e]: its fixed message on the
+/// field the refusal is about ([creditActionRefusedFieldId]), or the
+/// server's reason on each field its schema rejects. Empty when [e] is
+/// about none of the form's fields, which leaves it to a toast.
+Map<String, String> creditActionFieldErrors(
+  ServerException e,
+  CreditActionKind kind,
+) {
+  final fieldId = creditActionRefusedFieldId(e, kind);
+  if (fieldId != null) return {fieldId: creditActionErrorMessage(e)};
+  return schemaFieldErrors(e, creditSchemaFieldIds);
 }

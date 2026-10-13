@@ -1,5 +1,9 @@
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show ProgrammeEndDateFormFields;
 import 'package:club_sdk_2/club_sdk_2.dart' show SdkErrorCode, ServerException;
 
+import '../models/event_schema_fields.dart';
+import 'event_refusal.dart';
 import 'schedule_save_error.dart';
 
 /// Shown when a programme that had no end date is given one.
@@ -38,3 +42,20 @@ String programmeEndDateFailureOf(Object error) {
     fallback: programmeEndDateFailedMessage,
   );
 }
+
+/// Where the end date form shows a change that failed with [error], or
+/// `null` when the failure is a toast ([programmeEndDateFailureOf]): on the
+/// last day when the refusal is about the day chosen ([dayChosen] says one
+/// was), on the field a schema rejection names, else inline.
+EventFormRefusal? programmeEndDateRefusal(
+  Object error, {
+  required bool dayChosen,
+}) => eventFormRefusal(
+  error,
+  message: programmeEndDateFailureOf(error),
+  fallback: programmeEndDateFailedMessage,
+  schemaFieldIds: EventSchemaFields.programmeEndDate,
+  fieldId: dayChosen && programmeEndDateIsAboutLastDay(error)
+      ? ProgrammeEndDateFormFields.lastDayId
+      : null,
+);

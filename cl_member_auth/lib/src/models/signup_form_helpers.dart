@@ -1,8 +1,11 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
     show SignupGender, UserFormFields;
+import 'package:cl_remote_store/cl_remote_store.dart' show schemaFieldErrors;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show AuthSource, Gender, SdkErrorCode, ServerException;
 import 'package:ui_lib/ui_lib.dart' show PhoneNumber;
+
+import 'signup_server_fields.dart';
 
 /// Form → SDK adapter for `SignupForm` (which lives SDK-free in
 /// `cl_club_forms`).
@@ -17,6 +20,20 @@ abstract final class SignupFormSubmit {
   /// Shown on the email when another account has it.
   static const String emailRegisteredMessage =
       'That email is already registered.';
+
+  /// The fields of a registration, as the server names them, each with the
+  /// id of the form field that holds it.
+  static const Map<String, String> schemaFieldIds = {
+    SignupServerFields.username: UserFormFields.usernameId,
+    SignupServerFields.email: UserFormFields.emailId,
+    SignupServerFields.password: UserFormFields.passwordId,
+    SignupServerFields.phone: UserFormFields.phoneId,
+    SignupServerFields.dateOfBirthUtc: UserFormFields.dateOfBirthUtcId,
+    SignupServerFields.gender: UserFormFields.genderId,
+    SignupServerFields.firstName: UserFormFields.firstNameId,
+    SignupServerFields.middleName: UserFormFields.middleNameId,
+    SignupServerFields.lastName: UserFormFields.lastNameId,
+  };
 
   /// Registers the account the form's [values] describe (keyed by
   /// [UserFormFields] ids, as `SignupFormState.validate` returns them).
@@ -46,8 +63,9 @@ abstract final class SignupFormSubmit {
   }
 
   /// What the form shows for a refused registration: a message on the field
-  /// the server's answer names, keyed by field id. Empty when [error] names
-  /// no field; the host then shows [createFailedMessage].
+  /// the server's answer names, keyed by field id, a schema rejection
+  /// included (club_client#114). Empty when [error] names no field; the
+  /// host then shows [createFailedMessage].
   static Map<String, String> fieldErrorsFor(Object error) {
     final code = error is ServerException ? error.code : null;
     if (code == SdkErrorCode.duplicateUsername) {
@@ -56,7 +74,7 @@ abstract final class SignupFormSubmit {
     if (code == SdkErrorCode.duplicateEmail) {
       return const {UserFormFields.emailId: emailRegisteredMessage};
     }
-    return const {};
+    return schemaFieldErrors(error, schemaFieldIds);
   }
 
   /// The SDK gender for the form's [gender].

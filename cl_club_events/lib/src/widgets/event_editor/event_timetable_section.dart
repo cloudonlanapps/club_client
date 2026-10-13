@@ -5,13 +5,14 @@ import 'package:cl_club_forms/cl_club_forms.dart'
         EventTimetableFormState,
         EventTimetableFormValidators;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clEventSchedulesProvider, clEventsMasterProvider;
+    show clEventSchedulesProvider, clEventsMasterProvider, schemaFieldErrors;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show EditableSectionCard;
 
+import '../../models/event_schema_fields.dart';
 import '../../models/event_timetable_form_helpers.dart';
 import '../../models/stale_version_message.dart';
 import '../../utils/event_save_error.dart';
@@ -132,6 +133,12 @@ class EventTimetableSectionState extends ConsumerState<EventTimetableSection> {
           ),
         );
         return true;
+      }
+      // What the schema rejects shows on the field it names.
+      final fieldErrors = schemaFieldErrors(e, EventSchemaFields.timetable);
+      if (fieldErrors.isNotEmpty) {
+        formKey.currentState?.showErrors(fieldErrors: fieldErrors);
+        return false;
       }
       showToast(ShadToast.destructive(description: Text(failureOf(e))));
       return false;

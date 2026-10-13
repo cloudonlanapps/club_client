@@ -51,14 +51,17 @@ class EventCancellationFormSubmit {
   const EventCancellationFormSubmit._();
 
   /// Cancels the camp [eventId] from the session the form's [values] name,
-  /// with their reason.
+  /// with their reason. [eventVersion] is the version of the camp as the
+  /// admin sees it, which the server asks for (club_client#123).
   static Future<Event> cancelCamp({
     required int eventId,
+    required int eventVersion,
     required Map<String, dynamic> values,
     required ClEventsMasterNotifier notifier,
   }) {
     return notifier.cancelSeries(
       eventId,
+      version: eventVersion,
       reason: values[EventCancellationFormFields.reasonId] as String,
       effectiveDateTimeUtc:
           values[EventCancellationFormFields.fromSessionId] as DateTime,

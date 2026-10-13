@@ -10,9 +10,11 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/foundation.dart' show listEquals, setEquals;
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadTimeOfDay;
 
+import '../utils/event_refusal.dart';
 import '../utils/programme_end_date.dart';
 import '../utils/programme_schedule_sessions.dart';
 import '../utils/session_inputs.dart';
+import 'event_schema_fields.dart';
 
 /// SDK ↔ form adapter for the actions of a programme's Schedule block:
 /// **Adjust Schedule** ([buildProgrammeScheduleAdjustInitialValues],
@@ -196,6 +198,10 @@ class ProgrammeScheduleFormSubmit {
   /// blank [reason] is left out. A `null` [lastDay] removes the end with
   /// `extendIndefinitely`.
   ///
+  /// Each call sends [event]'s `version` (club_client#123); a stale one is
+  /// refused with `StaleVersionException` (the master reloads the event
+  /// first).
+  ///
   /// Returns [event] untouched, with no call, when the cutoff is the one it
   /// has. Throws [SdkError] before any call when the schedule has no
   /// session after [lastDay], and `ServerException` on the server's guards
@@ -212,6 +218,7 @@ class ProgrammeScheduleFormSubmit {
     if (lastDay == null) {
       return notifier.extendIndefinitely(
         event.id,
+        version: event.version,
         reason: why.isEmpty ? null : why,
       );
     }
@@ -224,13 +231,51 @@ class ProgrammeScheduleFormSubmit {
     }
     final current = event.untilTimeUtc;
     if (current == null) {
-      return notifier.terminate(event.id, reason: why, cutoffTimeUtc: cutoff);
+      return notifier.terminate(
+        event.id,
+        version: event.version,
+        reason: why,
+        cutoffTimeUtc: cutoff,
+      );
     }
     if (current.isAtSameMomentAs(cutoff)) return event;
     return notifier.extend(
       event.id,
+      version: event.version,
       cutoffTimeUtc: cutoff,
       reason: why.isEmpty ? null : why,
     );
   }
+
+  /// The id of the Adjust Schedule form's field the refusal [error] is
+  /// about, or `null` when it is about none of them (a clash, say), which
+  /// shows inline.
+  static String? adjustRefusedFieldId(Object error) {
+    if (error is! ServerException) return null;
+    return switch (error.code) {
+      SdkErrorCode.effectiveTimeNotSessionBoundary ||
+      SdkErrorCode.cutoffTooSoon => ProgrammeScheduleAdjustFormFields.fromId,
+      SdkErrorCode.invalidSessionsTotal ||
+      SdkErrorCode.beyondSchedulingHorizon =>
+        ProgrammeScheduleAdjustFormFields.scheduleId,
+      SdkErrorCode.venueNotFound => ProgrammeScheduleAdjustFormFields.venueId,
+      _ => null,
+    };
+  }
+
+  /// Where the Adjust Schedule form shows a change that failed with
+  /// [error], worded by [message], or `null` when the failure is a toast:
+  /// on the field the refusal is about ([adjustRefusedFieldId]), on the
+  /// field a schema rejection names, else inline.
+  static EventFormRefusal? adjustRefusal(
+    Object error, {
+    required String message,
+    required String fallback,
+  }) => eventFormRefusal(
+    error,
+    message: message,
+    fallback: fallback,
+    schemaFieldIds: EventSchemaFields.programmeAdjust,
+    fieldId: adjustRefusedFieldId(error),
+  );
 }

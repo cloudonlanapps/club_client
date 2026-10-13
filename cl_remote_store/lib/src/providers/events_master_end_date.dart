@@ -11,6 +11,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// reloads the occurrence feeds, since sessions at or after the end stop
 /// occurring. A failure that may have reached the server reloads the events
 /// and the feeds (club_core#138).
+///
+/// Each sends the event `version` the caller loaded (club_client#123). A
+/// stale one is refused with [StaleVersionException]; the event and its
+/// occurrences are then reloaded before it is rethrown.
 mixin ClEventsEndDateMutations on AsyncNotifier<Map<int, Event>> {
   /// Replace or add an event in the master map.
   void replaceLocally(Event event);
@@ -21,6 +25,14 @@ mixin ClEventsEndDateMutations on AsyncNotifier<Map<int, Event>> {
   /// Reload the events and occurrence feeds after an uncertain write.
   void refetchAfterUncertainWrite();
 
+  /// The event version an edit should send: [version] when the caller
+  /// supplies the one it loaded, else the one the master holds.
+  Future<int> currentVersionOf(int eventId, int? version);
+
+  /// Runs [change] to event [eventId]; a stale version reloads the event
+  /// and its occurrences before it is rethrown.
+  Future<Event> reloadOnStale(int eventId, Future<Event> Function() change);
+
   /// Give a programme that has no end one, at [cutoffTimeUtc]: sessions at
   /// or after it do not occur, and the programme runs until then.
   ///
@@ -30,13 +42,19 @@ mixin ClEventsEndDateMutations on AsyncNotifier<Map<int, Event>> {
     int eventId, {
     required String reason,
     required DateTime cutoffTimeUtc,
+    int? version,
   }) {
     return refetchIfWriteUncertain(() async {
       final client = await ref.read(secureClientProvider.future);
-      final updated = await client.events.terminate(
+      final sent = await currentVersionOf(eventId, version);
+      final updated = await reloadOnStale(
         eventId,
-        reason: reason,
-        cutoffTimeUtc: cutoffTimeUtc,
+        () => client.events.terminate(
+          eventId,
+          version: sent,
+          reason: reason,
+          cutoffTimeUtc: cutoffTimeUtc,
+        ),
       );
       replaceLocally(updated);
       bumpOccurrencesVersion();
@@ -50,13 +68,19 @@ mixin ClEventsEndDateMutations on AsyncNotifier<Map<int, Event>> {
     int eventId, {
     required DateTime cutoffTimeUtc,
     String? reason,
+    int? version,
   }) {
     return refetchIfWriteUncertain(() async {
       final client = await ref.read(secureClientProvider.future);
-      final updated = await client.events.extend(
+      final sent = await currentVersionOf(eventId, version);
+      final updated = await reloadOnStale(
         eventId,
-        cutoffTimeUtc: cutoffTimeUtc,
-        reason: reason,
+        () => client.events.extend(
+          eventId,
+          version: sent,
+          cutoffTimeUtc: cutoffTimeUtc,
+          reason: reason,
+        ),
       );
       replaceLocally(updated);
       bumpOccurrencesVersion();
@@ -66,12 +90,21 @@ mixin ClEventsEndDateMutations on AsyncNotifier<Map<int, Event>> {
 
   /// Remove a programme's end, while it is still ahead, so it runs
   /// open-ended again.
-  Future<Event> extendIndefinitely(int eventId, {String? reason}) {
+  Future<Event> extendIndefinitely(
+    int eventId, {
+    String? reason,
+    int? version,
+  }) {
     return refetchIfWriteUncertain(() async {
       final client = await ref.read(secureClientProvider.future);
-      final updated = await client.events.extendIndefinitely(
+      final sent = await currentVersionOf(eventId, version);
+      final updated = await reloadOnStale(
         eventId,
-        reason: reason,
+        () => client.events.extendIndefinitely(
+          eventId,
+          version: sent,
+          reason: reason,
+        ),
       );
       replaceLocally(updated);
       bumpOccurrencesVersion();

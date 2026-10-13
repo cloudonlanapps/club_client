@@ -9,6 +9,7 @@ import 'package:ui_lib/ui_lib.dart' show ConfirmDialog;
 import '../../models/camp_event_form_helpers.dart' show EventFormSubmit;
 import '../../models/event_management_action.dart';
 import '../../models/event_management_messages.dart';
+import '../../models/event_schema_fields.dart';
 import '../../utils/event_management_error.dart';
 import 'event_cancellation_actions.dart';
 import 'event_management_card.dart';
@@ -112,10 +113,13 @@ class EventManagementSectionState
       );
       return null;
     } on Object catch (e, st) {
-      return eventManagementErrorMessage(
+      return EventSchemaFields.renameRefusal(
         e,
-        stackTrace: st,
-        fallback: EventManagementMessages.renameFailed,
+        fallback: eventManagementErrorMessage(
+          e,
+          stackTrace: st,
+          fallback: EventManagementMessages.renameFailed,
+        ),
       );
     }
   }

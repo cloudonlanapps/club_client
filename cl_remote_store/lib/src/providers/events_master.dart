@@ -147,6 +147,7 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
   /// The event version an edit should send (#25): [version] when the caller
   /// supplies the one it loaded, else the version held in the master map,
   /// else the server's current one.
+  @override
   Future<int> currentVersionOf(int eventId, int? version) async {
     if (version != null) return version;
     final cached = state.value?[eventId];
@@ -216,6 +217,7 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
   /// Runs [change] to event [eventId]; when the server refuses it as stale
   /// ([StaleVersionException]), reloads the event and its occurrences before
   /// rethrowing, so the caller can say who changed it and when.
+  @override
   Future<Event> reloadOnStale(
     int eventId,
     Future<Event> Function() change,

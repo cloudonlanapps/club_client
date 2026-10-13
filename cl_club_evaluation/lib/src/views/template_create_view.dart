@@ -115,6 +115,9 @@ class TemplateCreateViewState extends ConsumerState<TemplateCreateView> {
                 EvaluationErrorMessage.of(e),
           },
         );
+      } else if (EvaluationTemplateFormSubmit.createFieldErrors(e)
+          case final fieldErrors when fieldErrors.isNotEmpty) {
+        formKey.currentState?.showErrors(fieldErrors: fieldErrors);
       } else {
         toaster.show(
           ShadToast.destructive(

@@ -118,6 +118,8 @@ class SessionGuardStore extends RemoteStore {
   }) => guard(() => super.head(path, queryParams: queryParams));
 
   @override
-  Future<Map<String, dynamic>?> delete(String path) =>
-      guard(() => super.delete(path));
+  Future<Map<String, dynamic>?> delete(
+    String path, {
+    Map<String, String>? queryParams,
+  }) => guard(() => super.delete(path, queryParams: queryParams));
 }

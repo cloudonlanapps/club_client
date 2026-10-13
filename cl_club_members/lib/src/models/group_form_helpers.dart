@@ -1,7 +1,12 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
     show AgeEligibilityFormValues, GroupFormFields, GroupGender, GroupMode;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show ClGroupsMasterNotifier, formAgeFromSdk, sdkAgeFromForm;
+    show
+        ClGroupsMasterNotifier,
+        ageSchemaFieldIds,
+        formAgeFromSdk,
+        schemaFieldErrors,
+        sdkAgeFromForm;
 import 'package:club_sdk_2/club_sdk_2.dart';
 
 /// SDK adapter for the group forms — the one place that bridges the forms'
@@ -111,6 +116,44 @@ class GroupFormSubmit {
   static const String membersExistMessage =
       'This group still has members. Remove them before switching to auto.';
 
+  /// The server's name for a group's name.
+  static const String serverName = 'name';
+
+  /// The server's name for a group's description.
+  static const String serverDescription = 'description';
+
+  /// The server's name for a group's gender criterion.
+  static const String serverGender = 'gender';
+
+  /// The server's name for the flag that tells semi-auto from auto.
+  static const String serverSemiAuto = 'semiAuto';
+
+  /// The fields of a group, as the server names them in a schema rejection
+  /// (club_client#114), each with the id of the form field that holds it.
+  static const Map<String, String> schemaFieldIds = {
+    serverName: GroupFormFields.nameId,
+    serverDescription: GroupFormFields.descriptionId,
+    serverGender: GroupFormFields.genderId,
+    serverSemiAuto: GroupFormFields.modeId,
+    ...ageSchemaFieldIds,
+  };
+
+  /// What a group form shows for a schema rejection: each refused field it
+  /// holds, or `null` when [error] names none.
+  static GroupFormRefusal? schemaRefusal(Object error) {
+    final fieldErrors = schemaFieldErrors(error, schemaFieldIds);
+    return fieldErrors.isEmpty
+        ? null
+        : (fieldErrors: fieldErrors, formError: null);
+  }
+
+  /// What the rename dialog shows on the name for a rename that failed with
+  /// [error]: the server's reason when its schema rejects the name, else
+  /// [fallback].
+  static String renameRefusal(Object error, {required String fallback}) =>
+      schemaFieldErrors(error, const {serverName: serverName})[serverName] ??
+      fallback;
+
   /// What the create form shows for [error], or `null` when the refusal
   /// names nothing the form holds (the host then reports a failed create).
   static GroupFormRefusal? createRefusal(Object error) {
@@ -120,7 +163,7 @@ class GroupFormSubmit {
         fieldErrors: const {},
         formError: invertedBandMessage,
       ),
-      _ => null,
+      _ => schemaRefusal(error),
     };
   }
 
@@ -142,7 +185,7 @@ class GroupFormSubmit {
         fieldErrors: const {},
         formError: invertedBandMessage,
       ),
-      _ => null,
+      _ => schemaRefusal(error),
     };
   }
 

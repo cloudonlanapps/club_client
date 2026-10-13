@@ -7,6 +7,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
     show SavingDialogCloseIcon, SavingDialogScope;
 
+import '../../../models/event_schema_fields.dart';
 import '../../../models/occurrence_reschedule_form_helpers.dart';
 import '../../../utils/event_write_error_message.dart';
 
@@ -71,6 +72,15 @@ class OccurrenceRescheduleDialogState
       final refusal = e is ServerException
           ? occurrenceRescheduleRefusal(e)
           : null;
+      final schemaErrors = schemaFieldErrors(
+        e,
+        EventSchemaFields.occurrenceReschedule,
+      );
+      if (refusal == null && schemaErrors.isNotEmpty) {
+        // What the schema rejects shows on the field it names.
+        _formKey.currentState?.showErrors(fieldErrors: schemaErrors);
+        return;
+      }
       if (refusal == null) {
         ShadToaster.of(context).show(
           ShadToast.destructive(description: Text(eventWriteErrorMessage(e))),

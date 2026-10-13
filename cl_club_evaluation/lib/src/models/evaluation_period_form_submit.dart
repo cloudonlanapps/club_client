@@ -1,10 +1,11 @@
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show ClEvaluationsMasterNotifier;
+    show ClEvaluationsMasterNotifier, schemaFieldErrors;
 import 'package:club_sdk_2/club_sdk_2.dart' as sdk;
 import 'package:ui_lib/ui_lib.dart'
     show EvaluationStartChoice, EvaluationStartFormFields;
 
 import 'evaluation_period_dates.dart';
+import 'evaluation_start_form_submit.dart';
 
 /// SDK → form for the Review Period section editor (form rule 18): builds
 /// the `EvaluationPeriodForm.initialValues` map from [evaluation]: its
@@ -27,6 +28,23 @@ Map<String, dynamic> buildEvaluationPeriodFormInitialValues(
 /// the event and the period through `updateEvaluation`, each only when it
 /// changed.
 abstract final class EvaluationPeriodFormSubmit {
+  /// The fields of the Review Period, as the server names them in a schema
+  /// rejection (club_client#114), each with the id of the form field that
+  /// holds it.
+  static const Map<String, String> schemaFieldIds = {
+    EvaluationStartFormSubmit.serverEventId: EvaluationStartFormFields.eventId,
+    EvaluationStartFormSubmit.serverPeriodStart:
+        EvaluationStartFormFields.periodStartId,
+    EvaluationStartFormSubmit.serverPeriodEnd:
+        EvaluationStartFormFields.periodEndId,
+  };
+
+  /// What the Review Period editor shows on its fields for a save the
+  /// server refused with [error] at its schema. Empty when [error] names no
+  /// field.
+  static Map<String, String> fieldErrorsFor(Object error) =>
+      schemaFieldErrors(error, schemaFieldIds);
+
   /// Writes draft [evaluation]'s Review Period from [values] — the period
   /// form's `validate()` result: its event (`null` makes it general) and its
   /// period (both dates empty clears it). A field equal to [evaluation]'s is

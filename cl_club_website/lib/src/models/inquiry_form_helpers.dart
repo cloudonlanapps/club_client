@@ -1,7 +1,7 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
     show InquiryFormCopy, InquiryFormFields;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show ClPublicInquiryNotifier;
+    show ClPublicInquiryNotifier, schemaFieldErrors;
 import 'package:club_sdk_2/club_sdk_2.dart' show InquiryKind, ServerException;
 import 'package:ui_lib/ui_lib.dart' show PhoneNumber;
 
@@ -73,6 +73,39 @@ abstract final class InquiryFormSubmit {
       website: honeypot.isEmpty ? null : honeypot,
     );
   }
+
+  /// The server's name for the visitor's name.
+  static const String serverName = 'name';
+
+  /// The server's name for the visitor's email.
+  static const String serverEmail = 'email';
+
+  /// The server's name for the visitor's phone.
+  static const String serverPhone = 'phone';
+
+  /// The server's name for the message, or the note of an interest.
+  static const String serverMessage = 'message';
+
+  /// The server's name for the answers of an interest.
+  static const String serverExtra = 'extra';
+
+  /// The fields of an inquiry, as the server names them in a schema
+  /// rejection (club_client#114), each with the id of the form field that
+  /// holds it. What the visitor does not see (the token, the kind, the
+  /// honeypot) is not here.
+  static const Map<String, String> schemaFieldIds = {
+    serverName: InquiryFormFields.nameId,
+    serverEmail: InquiryFormFields.emailId,
+    serverPhone: InquiryFormFields.phoneId,
+    serverMessage: InquiryFormFields.messageId,
+    serverExtra: InquiryFormFields.answersId,
+  };
+
+  /// What the form shows on its fields when the server's schema rejects the
+  /// inquiry with [error]: the server's reason on each field it names.
+  /// Empty when [error] names no field the visitor sees.
+  static Map<String, String> fieldErrorsFor(Object error) =>
+      schemaFieldErrors(error, schemaFieldIds);
 
   /// What the form shows inline when the server refuses the inquiry with
   /// [error]: too many from this visitor just now. Null for a failure that

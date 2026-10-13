@@ -418,6 +418,8 @@ void main() {
           eligibilityText: _kMarketingEligibility,
           fee: _kMarketingFee,
         ),
+        // The event has no marketing block yet.
+        version: EventMarketing.unwrittenVersion,
       );
     }
   });

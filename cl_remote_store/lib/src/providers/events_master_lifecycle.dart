@@ -22,21 +22,39 @@ mixin ClEventsLifecycleMutations on AsyncNotifier<Map<int, Event>> {
   /// Reload the events and occurrence feeds after an uncertain write.
   void refetchAfterUncertainWrite();
 
+  /// The event version an edit should send: [version] when the caller
+  /// supplies the one it loaded, else the one the master holds.
+  Future<int> currentVersionOf(int eventId, int? version);
+
+  /// Runs [change] to event [eventId]; a stale version reloads the event
+  /// and its occurrences before it is rethrown.
+  Future<Event> reloadOnStale(int eventId, Future<Event> Function() change);
+
   /// Cancel all future occurrences of an event from [effectiveDateTimeUtc].
   ///
   /// [effectiveDateTimeUtc] is required by the server. For camps it must be a
   /// real occurrence start, in the future, and at least 30 minutes away.
+  ///
+  /// [version] is the event version the caller loaded (club_client#123). A
+  /// stale one is refused with [StaleVersionException]; the event and its
+  /// occurrences are then reloaded before it is rethrown ([reloadOnStale]).
   Future<Event> cancelSeries(
     int eventId, {
     required String reason,
     required DateTime effectiveDateTimeUtc,
+    int? version,
   }) {
     return refetchIfWriteUncertain(() async {
       final client = await ref.read(secureClientProvider.future);
-      final updated = await client.events.cancelSeries(
+      final sent = await currentVersionOf(eventId, version);
+      final updated = await reloadOnStale(
         eventId,
-        reason: reason,
-        effectiveDateTimeUtc: effectiveDateTimeUtc,
+        () => client.events.cancelSeries(
+          eventId,
+          version: sent,
+          reason: reason,
+          effectiveDateTimeUtc: effectiveDateTimeUtc,
+        ),
       );
 
       replaceLocally(updated);
@@ -46,10 +64,15 @@ mixin ClEventsLifecycleMutations on AsyncNotifier<Map<int, Event>> {
   }
 
   /// Reverse a series cancellation, clearing the event's until-time.
-  Future<Event> undoCancelSeries(int eventId) {
+  /// [version] is the event's, as for [cancelSeries].
+  Future<Event> undoCancelSeries(int eventId, {int? version}) {
     return refetchIfWriteUncertain(() async {
       final client = await ref.read(secureClientProvider.future);
-      final updated = await client.events.undoCancelSeries(eventId);
+      final sent = await currentVersionOf(eventId, version);
+      final updated = await reloadOnStale(
+        eventId,
+        () => client.events.undoCancelSeries(eventId, version: sent),
+      );
 
       replaceLocally(updated);
       bumpOccurrencesVersion();

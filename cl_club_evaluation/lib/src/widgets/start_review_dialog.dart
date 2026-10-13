@@ -101,7 +101,13 @@ class StartReviewDialogState extends ConsumerState<StartReviewDialog> {
     } on Object catch (e) {
       if (!mounted) return;
       setState(() => creating = false);
-      formKey.currentState?.showErrors(formError: EvaluationErrorMessage.of(e));
+      // What the schema rejects shows on the field it names; any other
+      // failure inline.
+      final fieldErrors = EvaluationStartFormSubmit.fieldErrorsFor(e);
+      formKey.currentState?.showErrors(
+        fieldErrors: fieldErrors,
+        formError: fieldErrors.isEmpty ? EvaluationErrorMessage.of(e) : null,
+      );
     }
   }
 

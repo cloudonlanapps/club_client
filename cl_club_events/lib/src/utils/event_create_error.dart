@@ -1,6 +1,8 @@
 import 'package:cl_club_forms/cl_club_forms.dart' show EventCreateFormFields;
+import 'package:cl_remote_store/cl_remote_store.dart' show schemaFieldErrors;
 import 'package:club_sdk_2/club_sdk_2.dart' show SdkErrorCode, ServerException;
 
+import '../models/event_schema_fields.dart';
 import 'event_save_error.dart';
 import 'schedule_save_error.dart';
 
@@ -18,7 +20,8 @@ typedef EventCreateRefusal = ({
 /// A venue that no longer exists shows on the venue; a schedule too far
 /// ahead, or sessions that do not add up, on the schedule; a clash with
 /// another booking inline. The messages are fixed: the raw error is never
-/// shown.
+/// shown. A value the server's schema rejects shows on its field, with the
+/// server's reason (club_client#114).
 EventCreateRefusal? eventCreateRefusal(
   Object error, {
   required String fallback,
@@ -53,6 +56,10 @@ EventCreateRefusal? eventCreateRefusal(
         formError: eventSaveErrorMessage(error, fallback: fallback),
       );
     default:
-      return null;
+      // What the schema rejects shows on the field it names.
+      final fieldErrors = schemaFieldErrors(error, EventSchemaFields.create);
+      return fieldErrors.isEmpty
+          ? null
+          : (fieldErrors: fieldErrors, formError: null);
   }
 }

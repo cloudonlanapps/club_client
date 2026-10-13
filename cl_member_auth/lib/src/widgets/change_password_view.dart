@@ -1,12 +1,12 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
     show ChangePasswordForm, ChangePasswordFormFields, ChangePasswordFormState;
-import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../constants/auth_view_sizes.dart';
 import '../constants/auth_view_strings.dart';
+import '../models/change_password_form_helpers.dart';
 import '../providers/auth.dart';
 
 /// Connected self-service "change my password" view — no Scaffold.
@@ -70,15 +70,11 @@ class ChangePasswordViewState extends ConsumerState<ChangePasswordView> {
       }
       success = true;
     } on Object catch (e) {
-      // A current password the server refuses shows on its field; any
+      // What the server refuses about a field shows on that field; any
       // other failure, whatever it is, is a toast.
-      if (e is ServerException && e.code == SdkErrorCode.invalidCredentials) {
-        formKey.currentState?.showErrors(
-          fieldErrors: {
-            ChangePasswordFormFields.currentId:
-                AuthViewStrings.currentPasswordIncorrect,
-          },
-        );
+      final fieldErrors = ChangePasswordFormSubmit.fieldErrorsFor(e);
+      if (fieldErrors.isNotEmpty) {
+        formKey.currentState?.showErrors(fieldErrors: fieldErrors);
       } else {
         showError(AuthViewStrings.changePasswordFailed);
       }

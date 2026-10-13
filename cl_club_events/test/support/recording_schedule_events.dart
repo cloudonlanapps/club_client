@@ -131,6 +131,7 @@ class RecordingScheduleEvents extends ClEventsMasterNotifier {
     int eventId, {
     required String reason,
     required DateTime cutoffTimeUtc,
+    int? version,
   }) async {
     endDateCalls.add('terminate($cutoffTimeUtc, $reason)');
     if (error != null) throw error!;
@@ -142,6 +143,7 @@ class RecordingScheduleEvents extends ClEventsMasterNotifier {
     int eventId, {
     required DateTime cutoffTimeUtc,
     String? reason,
+    int? version,
   }) async {
     endDateCalls.add('extend($cutoffTimeUtc, $reason)');
     if (error != null) throw error!;
@@ -149,7 +151,11 @@ class RecordingScheduleEvents extends ClEventsMasterNotifier {
   }
 
   @override
-  Future<Event> extendIndefinitely(int eventId, {String? reason}) async {
+  Future<Event> extendIndefinitely(
+    int eventId, {
+    String? reason,
+    int? version,
+  }) async {
     endDateCalls.add('extendIndefinitely($reason)');
     if (error != null) throw error!;
     return event;

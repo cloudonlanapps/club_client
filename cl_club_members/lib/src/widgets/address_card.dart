@@ -27,6 +27,15 @@ class AddressCardState extends ConsumerState<AddressCard> {
   /// Drives the hosted form.
   final formKey = GlobalKey<UserAddressFormState>();
 
+  /// Shows what the server refuses about a field on that field. Returns
+  /// whether [error] named one.
+  bool showRefusedFields(ServerException error) {
+    final fieldErrors = UserFormSubmit.addressFieldErrors(error);
+    if (fieldErrors.isEmpty) return false;
+    formKey.currentState?.showErrors(fieldErrors: fieldErrors);
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = widget.user;
@@ -64,6 +73,7 @@ class AddressCardState extends ConsumerState<AddressCard> {
           notifier: notifier,
         ),
         successMessage: 'Address updated.',
+        onRefused: showRefusedFields,
       ),
     );
   }

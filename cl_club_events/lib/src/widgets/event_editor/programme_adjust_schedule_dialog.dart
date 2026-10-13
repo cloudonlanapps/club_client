@@ -2,7 +2,6 @@ import 'package:cl_club_forms/cl_club_forms.dart'
     show
         EventVenueOption,
         ProgrammeScheduleAdjustForm,
-        ProgrammeScheduleAdjustFormFields,
         ProgrammeScheduleAdjustFormState;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider, clVenuesProvider;
@@ -15,7 +14,6 @@ import 'package:ui_lib/ui_lib.dart'
 
 import '../../models/programme_schedule_form_helpers.dart';
 import '../../models/stale_version_message.dart';
-import '../../utils/event_refusal.dart';
 import '../../utils/programme_end_date.dart';
 import '../../utils/schedule_save_error.dart';
 
@@ -105,36 +103,22 @@ class ProgrammeAdjustScheduleDialogState
         e,
         fallback: programmeScheduleAdjustFailedMessage,
       );
-      final fieldId = refusedFieldId(e);
-      // A failure that is not about the schedule is a toast; the dialog
-      // stays, on again, for another try.
-      if (!isRefusalToShowInForm(
+      final refusal = ProgrammeScheduleFormSubmit.adjustRefusal(
         e,
         message: message,
         fallback: programmeScheduleAdjustFailedMessage,
-      )) {
+      );
+      // A failure that is not about the schedule is a toast; the dialog
+      // stays, on again, for another try.
+      if (refusal == null) {
         toaster.show(ShadToast.destructive(description: Text(message)));
-      } else if (fieldId == null) {
-        form.showErrors(formError: message);
       } else {
-        form.showErrors(fieldErrors: {fieldId: message});
+        form.showErrors(
+          fieldErrors: refusal.fieldErrors,
+          formError: refusal.formError,
+        );
       }
     }
-  }
-
-  /// The id of the form's field the refusal [error] is about, or `null`
-  /// when it is about none of them (a clash, say), which shows inline.
-  String? refusedFieldId(Object error) {
-    if (error is! ServerException) return null;
-    return switch (error.code) {
-      SdkErrorCode.effectiveTimeNotSessionBoundary ||
-      SdkErrorCode.cutoffTooSoon => ProgrammeScheduleAdjustFormFields.fromId,
-      SdkErrorCode.invalidSessionsTotal ||
-      SdkErrorCode.beyondSchedulingHorizon =>
-        ProgrammeScheduleAdjustFormFields.scheduleId,
-      SdkErrorCode.venueNotFound => ProgrammeScheduleAdjustFormFields.venueId,
-      _ => null,
-    };
   }
 
   @override

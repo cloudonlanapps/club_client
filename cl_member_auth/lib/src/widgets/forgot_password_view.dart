@@ -6,6 +6,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../constants/auth_view_sizes.dart';
 import '../constants/auth_view_strings.dart';
+import '../models/forgot_password_form_helpers.dart';
 import '../providers/auth.dart';
 import 'forgot_password_confirmation_panel.dart';
 import 'forgot_password_panel.dart';
@@ -64,8 +65,15 @@ class ForgotPasswordViewState extends ConsumerState<ForgotPasswordView> {
         await ref.read(authStateProvider.notifier).resetPassword(email);
       }
       success = true;
-    } on Object catch (_) {
-      showError(AuthViewStrings.resetFailed);
+    } on Object catch (e) {
+      // An email the server refuses shows on its field; any other failure
+      // is a toast.
+      final fieldErrors = ForgotPasswordFormSubmit.fieldErrorsFor(e);
+      if (fieldErrors.isNotEmpty) {
+        formKey.currentState?.showErrors(fieldErrors: fieldErrors);
+      } else {
+        showError(AuthViewStrings.resetFailed);
+      }
     } finally {
       if (mounted) setState(() => isSubmitting = false);
     }

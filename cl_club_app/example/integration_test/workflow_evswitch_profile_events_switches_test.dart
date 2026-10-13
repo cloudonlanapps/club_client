@@ -163,6 +163,7 @@ void main() {
     // reached, though three of its days are still ahead.
     final cancelled = await sudo.events.cancelSeries(
       _cancelledId,
+      version: (await sudo.events.getEvent(_cancelledId)).version,
       reason: 'workflow_evswitch: the rink is closed',
       effectiveDateTimeUtc: campStart,
     );

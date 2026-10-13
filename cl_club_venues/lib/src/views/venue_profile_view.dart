@@ -352,8 +352,15 @@ class VenueLocationCardState extends ConsumerState<VenueLocationCard> {
         const ShadToast(description: Text('Location updated.')),
       );
       return true;
-    } on Object catch (_) {
+    } on Object catch (e) {
       if (!mounted) return false;
+      // What the server refuses about a field shows on that field; anything
+      // else is a failed save.
+      final fieldErrors = VenueFormSubmit.locationFieldErrors(e);
+      if (fieldErrors.isNotEmpty) {
+        _formKey.currentState?.showErrors(fieldErrors: fieldErrors);
+        return false;
+      }
       ShadToaster.of(context).show(
         const ShadToast.destructive(
           description: Text('Could not update location. Please try again.'),
@@ -591,8 +598,8 @@ class VenueManagementSectionState
           .read(clVenuesMasterProvider.notifier)
           .updateVenue(widget.venue.id, name: name);
       return null;
-    } on Object catch (_) {
-      return renameFailedMessage;
+    } on Object catch (e) {
+      return VenueFormSubmit.renameRefusal(e, fallback: renameFailedMessage);
     }
   }
 

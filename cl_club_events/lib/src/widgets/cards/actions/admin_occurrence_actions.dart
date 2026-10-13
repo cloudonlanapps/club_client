@@ -189,13 +189,25 @@ class AdminOccurrenceActionsState
     // Pass null reference — master forwards a now() default to the SDK
     // (the SDK signature still requires non-null; follow-up will make it
     // nullable so null flows end-to-end).
-    await ref
-        .read(clEventsMasterProvider.notifier)
-        .cancelSeries(
-          widget.occurrence.eventId,
-          reason: reason,
-          effectiveDateTimeUtc: widget.occurrence.originalStartTimeUtc,
-        );
+    // No version is passed: the master sends the one it holds for the event
+    // this session belongs to (club_client#123).
+    try {
+      await ref
+          .read(clEventsMasterProvider.notifier)
+          .cancelSeries(
+            widget.occurrence.eventId,
+            reason: reason,
+            effectiveDateTimeUtc: widget.occurrence.originalStartTimeUtc,
+          );
+    } on StaleVersionException catch (e) {
+      // The master has already reloaded the event and its sessions.
+      if (!mounted) return;
+      ShadToaster.of(context).show(
+        ShadToast.destructive(
+          description: Text(staleVersionMessage(e, subject: 'This event')),
+        ),
+      );
+    }
   }
 
   Future<void> _undoCancel() async {

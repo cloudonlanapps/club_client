@@ -209,4 +209,34 @@ void main() {
       _expectDialogOn(tester);
     });
   });
+
+  testWidgets('Issue 114: a start the schema rejects shows on the schedule, '
+      'with its reason and no toast', (tester) async {
+    await _saveFailing(
+      tester,
+      const ServerException(
+        statusCode: 422,
+        code: SdkErrorCode.validationError,
+        message: 'schema reason',
+        details: {
+          ServerException.refusedFieldsKey: [
+            {
+              'loc': ['body', 'newStartTimeUtc'],
+              'msg': 'schema reason',
+            },
+          ],
+        },
+      ),
+    );
+
+    expect(
+      find.descendant(
+        of: _field(OccurrenceRescheduleFormFields.scheduleId),
+        matching: find.text('Schema reason'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byType(ShadToast), findsNothing);
+    _expectDialogOn(tester);
+  });
 }

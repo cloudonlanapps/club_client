@@ -6,7 +6,7 @@ import 'package:cl_club_forms/cl_club_forms.dart'
         CampScheduleFormState,
         EventTimetableFormValidators;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clEventsMasterProvider, clOccurrencesProvider;
+    show clEventsMasterProvider, clOccurrencesProvider, schemaFieldErrors;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +14,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show EditableSectionCard;
 
 import '../../models/camp_schedule_form_helpers.dart';
+import '../../models/event_schema_fields.dart';
 import '../../models/stale_version_message.dart';
 import '../../utils/time_formatter.dart' show formatTimeRange;
 import '../events_preview/cl_event_schedule.dart' show ClEventScheduleBody;
@@ -170,6 +171,15 @@ class CampScheduleSectionState extends ConsumerState<CampScheduleSection> {
         _formKey.currentState?.showErrors(
           fieldErrors: {CampScheduleFormFields.scheduleId: _messageFor(e)},
         );
+        return false;
+      }
+      // What the schema rejects shows on the field it names.
+      final fieldErrors = schemaFieldErrors(
+        e,
+        EventSchemaFields.campSchedule,
+      );
+      if (fieldErrors.isNotEmpty) {
+        _formKey.currentState?.showErrors(fieldErrors: fieldErrors);
         return false;
       }
       ShadToaster.of(context).show(

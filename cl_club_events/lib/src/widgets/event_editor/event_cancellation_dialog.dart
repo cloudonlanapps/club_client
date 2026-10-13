@@ -1,7 +1,6 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
     show
         EventCancellationForm,
-        EventCancellationFormFields,
         EventCancellationFormState,
         EventCancellationSession;
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -16,7 +15,6 @@ import 'package:ui_lib/ui_lib.dart'
 import '../../models/event_cancellation_form_helpers.dart';
 import '../../models/event_cancellation_messages.dart';
 import '../../utils/event_cancellation_error.dart';
-import '../../utils/event_refusal.dart';
 
 /// Dialog that cancels a camp from a chosen upcoming session, or calls a
 /// one-off off, with a reason (club_client#40).
@@ -80,6 +78,7 @@ class EventCancellationDialogState
       if (version == null) {
         await EventCancellationFormSubmit.cancelCamp(
           eventId: widget.event.id,
+          eventVersion: widget.event.version,
           values: values,
           notifier: notifier,
         );
@@ -111,30 +110,26 @@ class EventCancellationDialogState
         return;
       }
       setState(() => isSubmitting = false);
+      final refusal = eventCancellationRefusal(
+        e,
+        isCamp: isCamp,
+        message: message,
+        fallback: fallback,
+      );
       // A failure that is not about the cancellation is a toast; the
       // dialog stays, on again, for another try.
-      if (!isRefusalToShowInForm(e, message: message, fallback: fallback)) {
+      if (refusal == null) {
         ShadToaster.of(context).show(
           ShadToast.destructive(description: Text(message)),
         );
-      } else if (isCamp && isAboutSession(e)) {
-        formKey.currentState?.showErrors(
-          fieldErrors: {EventCancellationFormFields.fromSessionId: message},
-        );
       } else {
-        formKey.currentState?.showErrors(formError: message);
+        formKey.currentState?.showErrors(
+          fieldErrors: refusal.fieldErrors,
+          formError: refusal.formError,
+        );
       }
     }
   }
-
-  /// Whether the refusal [error] is about the session the cancellation
-  /// starts from: too close, already past, or no longer a session.
-  bool isAboutSession(Object error) =>
-      error is ServerException &&
-      error is! StaleVersionException &&
-      (error.code == SdkErrorCode.cancellationLeadTimeViolated ||
-          error.code == SdkErrorCode.effectiveTimeInPast ||
-          error.code == SdkErrorCode.effectiveTimeNotSessionBoundary);
 
   @override
   Widget build(BuildContext context) {

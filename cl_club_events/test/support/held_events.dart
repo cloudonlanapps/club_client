@@ -59,6 +59,7 @@ class HeldEvents extends ClEventsMasterNotifier {
     int eventId, {
     required String reason,
     required DateTime cutoffTimeUtc,
+    int? version,
   }) => answer('terminate');
 
   @override
@@ -80,6 +81,7 @@ class HeldEvents extends ClEventsMasterNotifier {
     int eventId, {
     required String reason,
     required DateTime effectiveDateTimeUtc,
+    int? version,
   }) => answer('cancel');
 
   @override

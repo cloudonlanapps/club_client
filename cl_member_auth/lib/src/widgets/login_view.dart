@@ -121,8 +121,12 @@ class LoginViewState extends ConsumerState<LoginView> {
       error: error,
     );
     final refused = LoginFormSubmit.formErrorFor(error);
-    if (refused != null) {
-      formKey.currentState?.showErrors(formError: refused);
+    final fieldErrors = LoginFormSubmit.fieldErrorsFor(error);
+    if (refused != null || fieldErrors.isNotEmpty) {
+      formKey.currentState?.showErrors(
+        fieldErrors: fieldErrors,
+        formError: refused,
+      );
       return;
     }
     ShadToaster.of(context).show(

@@ -3,9 +3,9 @@
 import 'package:cl_club_events/src/models/event_management_messages.dart';
 import 'package:cl_club_events/src/models/programme_schedule_form_helpers.dart'
     show programmeAdjustFromOptions;
-import 'package:cl_club_events/src/widgets/event_editor/editable_event_body.dart'
-    show OrganizerCoachesSection;
 import 'package:cl_club_events/src/widgets/event_editor/event_management_section.dart';
+import 'package:cl_club_events/src/widgets/event_editor/organizer_coaches_section.dart'
+    show OrganizerCoachesSection;
 import 'package:cl_club_forms/cl_club_forms.dart'
     show EventFormFields, RenameFormFields;
 import 'package:cl_remote_store/cl_remote_store.dart'

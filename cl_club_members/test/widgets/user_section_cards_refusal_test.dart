@@ -5,7 +5,8 @@ import 'dart:async';
 import 'package:cl_club_forms/cl_club_forms.dart' show UserFormFields;
 import 'package:cl_club_members/src/models/user_form_helpers.dart';
 import 'package:cl_club_members/src/utils/member_write_messages.dart';
-import 'package:cl_club_members/src/views/user_profile_view.dart';
+import 'package:cl_club_members/src/widgets/address_card.dart';
+import 'package:cl_club_members/src/widgets/personal_details_card.dart';
 import 'package:cl_member_auth/cl_member_auth.dart'
     show AuthNotifier, authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'

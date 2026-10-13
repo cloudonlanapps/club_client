@@ -8,6 +8,7 @@ import '../common/evaluation_form_contract.dart';
 import '../common/evaluation_form_focus.dart';
 import 'evaluation_period_fields.dart';
 import 'evaluation_period_validators.dart';
+import 'evaluation_start_event_field.dart';
 import 'evaluation_start_fixed_value.dart';
 import 'evaluation_start_form_fields.dart';
 import 'evaluation_start_select.dart';
@@ -182,28 +183,12 @@ class EvaluationStartFormState extends State<EvaluationStartForm>
               options: [for (final m in w.members) (m, m.label)],
               onChanged: (m) => setState(() => memberUsername = m?.username),
             ),
-          if (w.fixedEvent case final e?)
-            EvaluationStartFixedValue(
-              label: EvaluationStrings.event,
-              value: e.label,
-            )
-          else
-            EvaluationStartSelect<EvaluationStartEvent>(
-              // A new member rebuilds the field, back to General.
-              key: ValueKey<String?>(memberUsername),
-              id: EvaluationStartFormFields.eventId,
-              label: EvaluationStrings.event,
-              initialValue: EvaluationStartForm.general,
-              enabled: w.enabled,
-              options: [
-                const (
-                  EvaluationStartForm.general,
-                  EvaluationStrings.general,
-                ),
-                for (final e in eventOptions)
-                  ((id: e.id, label: e.label), e.label),
-              ],
-            ),
+          EvaluationStartEventField(
+            fixedEvent: w.fixedEvent,
+            memberUsername: memberUsername,
+            options: eventOptions,
+            enabled: w.enabled,
+          ),
           EvaluationPeriodFields(
             enabled: w.enabled,
           ),

@@ -1,7 +1,6 @@
 import 'package:flutter/widgets.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
-
 import 'evaluation_form_contract.dart';
+import 'evaluation_form_focus_controls.dart';
 
 /// Keeps the keyboard focus off the controls of an evaluation form that are
 /// turned off.
@@ -69,16 +68,6 @@ mixin EvaluationFormFocus<T extends StatefulWidget>
     super.dispose();
   }
 
-  /// Whether [element] is a control that is turned off: a text input, or a
-  /// form field of any kind.
-  bool isControlOff(Element element) {
-    final widget = element.widget;
-    if (widget is ShadInput) return !widget.enabled;
-    if (element is! StatefulElement) return false;
-    final state = element.state;
-    return state is ShadFormBuilderFieldState && !state.enabled;
-  }
-
   /// Drops the keyboard focus when it is on, or inside, a control of this
   /// form that is turned off. Runs whenever the focus moves, and after the
   /// host rebuilds the form, which covers a form turned off while a field
@@ -95,7 +84,7 @@ mixin EvaluationFormFocus<T extends StatefulWidget>
         inThisForm = true;
         return false;
       }
-      off = off || isControlOff(element);
+      off = off || isEvaluationControlOff(element);
       return true;
     });
     if (inThisForm && off) {
@@ -118,27 +107,17 @@ mixin EvaluationFormFocus<T extends StatefulWidget>
   bool canTakeFocus(FocusNode node) {
     final at = node.context;
     if (at == null || !at.mounted || !node.canRequestFocus) return false;
-    var off = at is Element && isControlOff(at);
+    var off = at is Element && isEvaluationControlOff(at);
     var inThisForm = false;
     at.visitAncestorElements((element) {
       if (element == context) {
         inThisForm = true;
         return false;
       }
-      off = off || isControlOff(element);
+      off = off || isEvaluationControlOff(element);
       return true;
     });
     return inThisForm && !off;
-  }
-
-  /// Scrolls just far enough for what [target] builds to be on screen.
-  void scrollIntoView(BuildContext target) {
-    for (final policy in const [
-      ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
-      ScrollPositionAlignmentPolicy.keepVisibleAtStart,
-    ]) {
-      Scrollable.ensureVisible(target, alignmentPolicy: policy);
-    }
   }
 
   /// Scrolls the inline form-level message into view, when one shows.
@@ -157,7 +136,7 @@ mixin EvaluationFormFocus<T extends StatefulWidget>
     }
 
     context.visitChildElements(visit);
-    if (found != null) scrollIntoView(found!);
+    if (found != null) scrollEvaluationTargetIntoView(found!);
   }
 
   /// Puts the focus where the member has to act, once the form is on
@@ -188,7 +167,7 @@ mixin EvaluationFormFocus<T extends StatefulWidget>
       if (canTakeFocus(field.focusNode)) {
         field.focusNode.requestFocus();
       } else {
-        scrollIntoView(field.context);
+        scrollEvaluationTargetIntoView(field.context);
       }
     } else if (before != null && canTakeFocus(before)) {
       before.requestFocus();

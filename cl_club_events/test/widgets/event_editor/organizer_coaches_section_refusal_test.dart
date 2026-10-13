@@ -5,7 +5,7 @@ import 'dart:async';
 
 import 'package:cl_club_events/src/models/camp_event_form_helpers.dart'
     show EventFormSubmit;
-import 'package:cl_club_events/src/widgets/event_editor/editable_event_body.dart'
+import 'package:cl_club_events/src/widgets/event_editor/organizer_coaches_section.dart'
     show OrganizerCoachesSection;
 import 'package:cl_club_forms/cl_club_forms.dart'
     show EventFormFields, EventStaffForm;

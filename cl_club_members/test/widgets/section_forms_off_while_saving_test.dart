@@ -9,9 +9,9 @@ import 'package:cl_club_forms/cl_club_forms.dart'
         UserPersonalDetailsForm;
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
     show AgeEligibilityFormFields;
-import 'package:cl_club_members/src/views/user_profile_view.dart'
-    show AddressCard, PersonalDetailsCard;
+import 'package:cl_club_members/src/widgets/address_card.dart';
 import 'package:cl_club_members/src/widgets/group_eligibility_section.dart';
+import 'package:cl_club_members/src/widgets/personal_details_card.dart';
 import 'package:cl_club_members/src/widgets/user_contact_info_card.dart';
 import 'package:cl_member_auth/cl_member_auth.dart'
     show AuthNotifier, authStateProvider;

@@ -1,6 +1,7 @@
 import 'package:cl_remote_store/src/providers/client.dart';
 import 'package:cl_remote_store/src/providers/media_download_url.dart';
 import 'package:cl_remote_store/src/providers/mutation_guard.dart';
+import 'package:cl_remote_store/src/utils/media_by_uuid.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -111,7 +112,7 @@ class EventMediaMutationNotifier extends FamilyAsyncNotifier<void, int>
         mediaUuid: media.uuid,
       );
       for (final prior in priorLinks) {
-        await _detachAndDelete(
+        await detachAndDelete(
           client,
           eventId,
           kEventCoverTag,
@@ -129,7 +130,7 @@ class EventMediaMutationNotifier extends FamilyAsyncNotifier<void, int>
       final client = await ref.read(secureClientProvider.future);
       final links = await client.eventMedia.listByTag(eventId, kEventCoverTag);
       for (final link in links) {
-        await _detachAndDelete(client, eventId, kEventCoverTag, link.mediaUuid);
+        await detachAndDelete(client, eventId, kEventCoverTag, link.mediaUuid);
       }
       ref.invalidate(eventCoverImageProvider(eventId));
     }, refetch: () => ref.invalidate(eventCoverImageProvider(eventId)));
@@ -182,15 +183,16 @@ class EventMediaMutationNotifier extends FamilyAsyncNotifier<void, int>
     final eventId = arg;
     await runGuarded('EventMedia.removeGalleryImage', () async {
       final client = await ref.read(secureClientProvider.future);
-      await _detachAndDelete(client, eventId, kEventGalleryTag, mediaUuid);
+      await detachAndDelete(client, eventId, kEventGalleryTag, mediaUuid);
       ref.invalidate(eventGalleryProvider(eventId));
     }, refetch: () => ref.invalidate(eventGalleryProvider(eventId)));
   }
 
-  /// Detach the link then soft-delete the media. Order matters — the server
-  /// returns 409 `MEDIA_IN_USE` if soft-delete sees a live link. Failures are
-  /// logged, not swallowed, so a real fault surfaces without aborting a loop.
-  Future<void> _detachAndDelete(
+  /// Detach the link then soft-delete the media, whoever uploaded it
+  /// (club_client#105). Order matters — the server returns 409
+  /// `MEDIA_IN_USE` if soft-delete sees a live link. Failures are logged,
+  /// not swallowed, so a real fault surfaces without aborting a loop.
+  Future<void> detachAndDelete(
     SecureClient client,
     int eventId,
     String tag,
@@ -198,9 +200,7 @@ class EventMediaMutationNotifier extends FamilyAsyncNotifier<void, int>
   ) async {
     try {
       await client.eventMedia.detach(eventId, tag, mediaUuid);
-      final myFiles = await client.media.listMyFiles(limit: 100);
-      final found = myFiles.items.where((m) => m.uuid == mediaUuid).toList();
-      if (found.isNotEmpty) await client.media.softDelete(found.first.id);
+      await softDeleteMediaByUuid(client, mediaUuid);
     } on Object catch (e, st) {
       debugPrint('eventMediaMutation: cleanup failed for $mediaUuid: $e\n$st');
     }

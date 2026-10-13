@@ -1,6 +1,7 @@
 import 'package:cl_remote_store/src/providers/client.dart';
 import 'package:cl_remote_store/src/providers/current_user.dart';
 import 'package:cl_remote_store/src/providers/manual_refresh.dart';
+import 'package:cl_remote_store/src/utils/media_by_uuid.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
@@ -92,15 +93,16 @@ class ClIdentityDocsMasterNotifier
   /// Detach the link for [mediaUuid] and soft-delete the underlying media.
   ///
   /// Detach happens first — the server returns `409 MEDIA_IN_USE` if soft
-  /// delete sees a live link. Soft-delete failures are logged (best-effort
-  /// cleanup) so the orphaned media row doesn't block the user-visible
-  /// detach succeeding.
+  /// delete sees a live link. The file is read by its uuid, so it is deleted
+  /// whoever uploaded it and however many files the caller has
+  /// (club_client#105). A file the caller may not read is left, and a
+  /// refused delete is logged: neither undoes the detach.
   Future<void> discard(String mediaUuid) {
     return refetchIfWriteUncertain(() async {
       final client = await ref.read(secureClientProvider.future);
       await client.userMedia.detach(username, kIdentityDocumentTag, mediaUuid);
       try {
-        await _softDeleteByUuid(client, mediaUuid);
+        await softDeleteMediaByUuid(client, mediaUuid);
       } on Object catch (e, st) {
         debugPrint(
           'clIdentityDocsMasterProvider.discard: softDelete failed for '
@@ -119,18 +121,5 @@ class ClIdentityDocsMasterNotifier
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => build(arg));
-  }
-
-  Future<void> _softDeleteByUuid(SecureClient client, String mediaUuid) async {
-    // The link table only carries the uuid. MediaSource.softDelete operates
-    // on the numeric id, so resolve uuid → id via listMyFiles. Admin-side
-    // discard cannot resolve another user's media this way and will simply
-    // skip soft-delete (the detach already succeeded). Server caps `limit`
-    // at 100; a doc buried deeper than that page silently remains an orphan
-    // media row (best-effort cleanup).
-    final myFiles = await client.media.listMyFiles(limit: 100);
-    final found = myFiles.items.where((m) => m.uuid == mediaUuid).toList();
-    if (found.isEmpty) return;
-    await client.media.softDelete(found.first.id);
   }
 }

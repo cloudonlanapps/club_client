@@ -1,6 +1,7 @@
 import 'package:cl_remote_store/src/providers/client.dart';
 import 'package:cl_remote_store/src/providers/media_download_url.dart';
 import 'package:cl_remote_store/src/providers/mutation_guard.dart';
+import 'package:cl_remote_store/src/utils/media_by_uuid.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -71,7 +72,7 @@ class GroupMediaMutationNotifier extends FamilyAsyncNotifier<void, int>
         mediaUuid: media.uuid,
       );
       for (final prior in priorLinks) {
-        await _detachAndDelete(client, groupId, prior.mediaUuid);
+        await detachAndDelete(client, groupId, prior.mediaUuid);
       }
       ref.invalidate(groupImageProvider(groupId));
     }, refetch: () => ref.invalidate(groupImageProvider(groupId)));
@@ -84,25 +85,24 @@ class GroupMediaMutationNotifier extends FamilyAsyncNotifier<void, int>
       final client = await ref.read(secureClientProvider.future);
       final links = await client.groupMedia.listByTag(groupId, kGroupImageTag);
       for (final link in links) {
-        await _detachAndDelete(client, groupId, link.mediaUuid);
+        await detachAndDelete(client, groupId, link.mediaUuid);
       }
       ref.invalidate(groupImageProvider(groupId));
     }, refetch: () => ref.invalidate(groupImageProvider(groupId)));
   }
 
-  /// Detach the link then soft-delete the media. Order matters — the server
-  /// returns 409 `MEDIA_IN_USE` if soft-delete sees a live link. Failures are
-  /// logged, not swallowed, so a real fault surfaces without aborting a loop.
-  Future<void> _detachAndDelete(
+  /// Detach the link then soft-delete the media, whoever uploaded it
+  /// (club_client#105). Order matters — the server returns 409
+  /// `MEDIA_IN_USE` if soft-delete sees a live link. Failures are logged,
+  /// not swallowed, so a real fault surfaces without aborting a loop.
+  Future<void> detachAndDelete(
     SecureClient client,
     int groupId,
     String mediaUuid,
   ) async {
     try {
       await client.groupMedia.detach(groupId, kGroupImageTag, mediaUuid);
-      final myFiles = await client.media.listMyFiles(limit: 100);
-      final found = myFiles.items.where((m) => m.uuid == mediaUuid).toList();
-      if (found.isNotEmpty) await client.media.softDelete(found.first.id);
+      await softDeleteMediaByUuid(client, mediaUuid);
     } on Object catch (e, st) {
       debugPrint('groupMediaMutation: cleanup failed for $mediaUuid: $e\n$st');
     }

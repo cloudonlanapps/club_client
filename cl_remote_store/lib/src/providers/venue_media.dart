@@ -1,6 +1,7 @@
 import 'package:cl_remote_store/src/providers/client.dart';
 import 'package:cl_remote_store/src/providers/media_download_url.dart';
 import 'package:cl_remote_store/src/providers/mutation_guard.dart';
+import 'package:cl_remote_store/src/utils/media_by_uuid.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -71,7 +72,7 @@ class VenueMediaMutationNotifier extends FamilyAsyncNotifier<void, int>
         mediaUuid: media.uuid,
       );
       for (final prior in priorLinks) {
-        await _detachAndDelete(client, venueId, prior.mediaUuid);
+        await detachAndDelete(client, venueId, prior.mediaUuid);
       }
       ref.invalidate(venueImageProvider(venueId));
     }, refetch: () => ref.invalidate(venueImageProvider(venueId)));
@@ -84,25 +85,24 @@ class VenueMediaMutationNotifier extends FamilyAsyncNotifier<void, int>
       final client = await ref.read(secureClientProvider.future);
       final links = await client.venueMedia.listByTag(venueId, kVenueImageTag);
       for (final link in links) {
-        await _detachAndDelete(client, venueId, link.mediaUuid);
+        await detachAndDelete(client, venueId, link.mediaUuid);
       }
       ref.invalidate(venueImageProvider(venueId));
     }, refetch: () => ref.invalidate(venueImageProvider(venueId)));
   }
 
-  /// Detach the link then soft-delete the media. Order matters — the server
-  /// returns 409 `MEDIA_IN_USE` if soft-delete sees a live link. Failures are
-  /// logged, not swallowed, so a real fault surfaces without aborting a loop.
-  Future<void> _detachAndDelete(
+  /// Detach the link then soft-delete the media, whoever uploaded it
+  /// (club_client#105). Order matters — the server returns 409
+  /// `MEDIA_IN_USE` if soft-delete sees a live link. Failures are logged,
+  /// not swallowed, so a real fault surfaces without aborting a loop.
+  Future<void> detachAndDelete(
     SecureClient client,
     int venueId,
     String mediaUuid,
   ) async {
     try {
       await client.venueMedia.detach(venueId, kVenueImageTag, mediaUuid);
-      final myFiles = await client.media.listMyFiles(limit: 100);
-      final found = myFiles.items.where((m) => m.uuid == mediaUuid).toList();
-      if (found.isNotEmpty) await client.media.softDelete(found.first.id);
+      await softDeleteMediaByUuid(client, mediaUuid);
     } on Object catch (e, st) {
       debugPrint('venueMediaMutation: cleanup failed for $mediaUuid: $e\n$st');
     }

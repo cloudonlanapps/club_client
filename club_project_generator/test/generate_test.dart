@@ -80,6 +80,21 @@ void main() {
     }
   });
 
+  test('Issue 82: the website project carries neither the integration suite '
+      'nor its Linux runner', () async {
+    final template = p.join(clubCore, 'cl_club_website/example');
+    final out = await run(Target.website);
+    for (final skipped in ['integration_test', 'linux']) {
+      expect(
+        Directory(p.join(template, skipped)).existsSync(),
+        isTrue,
+        reason: 'the template has $skipped',
+      );
+      expect(Directory(p.join(out, skipped)).existsSync(), isFalse);
+    }
+    expect(File(p.join(out, 'lib/main.dart')).existsSync(), isTrue);
+  });
+
   test('Issue 186: the website takes its text, theme and media', () async {
     final out = await run(Target.website, appUrl: 'https://app.example.org');
     expect(

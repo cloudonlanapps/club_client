@@ -392,6 +392,8 @@ just unit-test-all                 # every package's and both examples' unit + w
 just unit-test <pkg>               # one package's tests, e.g. just unit-test cl_club_members
 just app-test                      # UI integration suite (cl_club_app/example), once per server conf
 just app-test-one <conf> <file>    # one UI integration file against one conf
+just website-test                  # the website's integration suite (cl_club_website/example), once per server conf
+just website-test-one <conf> <file> # one website integration file against one conf
 ```
 
 ### Isolated test server
@@ -407,12 +409,14 @@ default stack to collide on**, so these recipes are safe to run concurrently
 debugging (then `just stop-app-test-server <server_port> <db_port> <conf>`).
 
 **Testing rule:** Before committing, run the relevant suites — `just unit-test-all`
-for package tests and `just app-test` for UI integration (both confs). SDK changes are made and tested in `cloudonlanapps/club_sdk`
+for package tests, `just app-test` for the member app's UI integration and
+`just website-test` for the website's (both confs each). SDK changes are made and tested in `cloudonlanapps/club_sdk`
 (`just test` there). Each runs serially against its
 own isolated server.
 
 **Module-specific test guides:**
 - SDK (`club_sdk_2`) integration tests: `CLAUDE.md` in `cloudonlanapps/club_sdk` (the workspace's `packages/club_sdk`) — `just test` / `just test-one <file>`, self-contained-fixture rules, delete-lifecycle testing.
+- Website integration tests: [`cl_club_website/CLAUDE.md`](cl_club_website/CLAUDE.md#integration-suite) — the suite lives in `cl_club_website/example/integration_test/` and runs the site as a visitor sees it, with no session, on the Linux desktop once per server conf; the rules are the member app's suite's.
 - UI integration tests: [`cl_club_app/example/CLAUDE.md`](cl_club_app/example/CLAUDE.md) — the suite lives in `cl_club_app/example/integration_test/` and runs on the Linux desktop once per server conf (`app_test_server1.conf` with the optional modules off and a default country code, `app_test_server2.conf` with the modules on and no default country code); expectations come from `/v1/capabilities`, never from the club; naming/cleanup rules, off-screen-widget pitfalls, provider-read patterns.
 
 ## Form Design Guidelines

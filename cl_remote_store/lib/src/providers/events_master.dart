@@ -9,6 +9,7 @@ import 'package:cl_remote_store/src/providers/resource_version.dart';
 import 'package:cl_remote_store/src/utils/fetch_all_pages.dart';
 import 'package:cl_remote_store/src/utils/fetch_for_event_types.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
+import 'package:cl_remote_store/src/utils/writes_during_load.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -33,32 +34,10 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
         ClEventsOccurrenceMutations,
         ClEventsLifecycleMutations,
         ClEventsEndDateMutations {
-  /// The load in flight, if any, and the local writes made since it began
-  /// (club_client#74). The listing a load brings back may have been read
-  /// before those writes reached the server, so they are applied again over
-  /// it: an event created while the master loads is not lost.
-  Object? _load;
-  final _writesDuringLoad = <void Function(Map<int, Event>)>[];
+  final _writes = WritesDuringLoad<int, Event>();
 
   @override
-  Future<Map<int, Event>> build() async {
-    final load = _load = Object();
-    _writesDuringLoad.clear();
-    try {
-      final events = await _fetch();
-      // A newer load has taken over: this result is dropped, and the writes
-      // are that load's to apply.
-      if (!identical(_load, load)) return events;
-      for (final write in _writesDuringLoad) {
-        write(events);
-      }
-      return events;
-    } finally {
-      if (identical(_load, load)) _load = null;
-    }
-  }
-
-  Future<Map<int, Event>> _fetch() async {
+  Future<Map<int, Event>> build() => _writes.load(() async {
     ref.watch(clManualRefreshProvider);
     final types = ref.watch(clubEventTypesProvider);
     final client = await ref.watch(secureClientProvider.future);
@@ -85,7 +64,7 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
       for (final e in archived)
         if (types.contains(e.type)) e.id: e,
     };
-  }
+  });
 
   // -- Event Reads ------------------------------------------------------------
 
@@ -391,19 +370,15 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
   /// Replace or add an event in the master map.
   @override
   void replaceLocally(Event event) {
-    if (_load != null) _writesDuringLoad.add((map) => map[event.id] = event);
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData({...current, event.id: event});
+    final next = _writes.put(state.valueOrNull, event.id, event);
+    if (next != null) state = AsyncData(next);
   }
 
   /// Remove an event from the master map.
   @override
   void removeLocally(int eventId) {
-    if (_load != null) _writesDuringLoad.add((map) => map.remove(eventId));
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData(Map.of(current)..remove(eventId));
+    final next = _writes.remove(state.valueOrNull, eventId);
+    if (next != null) state = AsyncData(next);
   }
 
   /// After a write that may have landed ([refetchIfWriteUncertain]): reload

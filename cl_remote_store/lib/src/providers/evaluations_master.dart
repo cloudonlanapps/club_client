@@ -4,6 +4,7 @@ import 'package:cl_remote_store/src/providers/manual_refresh.dart';
 import 'package:cl_remote_store/src/utils/bump_evaluations_version.dart';
 import 'package:cl_remote_store/src/utils/fetch_all_pages.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
+import 'package:cl_remote_store/src/utils/writes_during_load.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meta/meta.dart';
@@ -34,14 +35,16 @@ clEvaluationsMasterProvider =
 /// Notifier over the caller's evaluations and every write to them.
 class ClEvaluationsMasterNotifier
     extends AsyncNotifier<Map<int, EvaluationStaffView>> {
+  final _writes = WritesDuringLoad<int, EvaluationStaffView>();
+
   @override
-  Future<Map<int, EvaluationStaffView>> build() async {
+  Future<Map<int, EvaluationStaffView>> build() => _writes.load(() async {
     ref.watch(clManualRefreshProvider);
     if (ref.watch(evaluationsProvider) != true) return const {};
     final client = await ref.watch(secureClientProvider.future);
     final views = await fetchAllPages(client.evaluations.listEvaluations);
     return {for (final v in views) v.id: v};
-  }
+  });
 
   /// Creates a draft with no answers for member [createdFor] from template
   /// [templateId]: about event [eventId], or general when null, over an
@@ -191,16 +194,14 @@ class ClEvaluationsMasterNotifier
 
   /// Replaces or adds [view] in the local map.
   void replaceLocally(EvaluationStaffView view) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData({...current, view.id: view});
+    final next = _writes.put(state.valueOrNull, view.id, view);
+    if (next != null) state = AsyncData(next);
   }
 
   /// Removes evaluation [id] from the local map.
   void removeLocally(int id) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData(Map.of(current)..remove(id));
+    final next = _writes.remove(state.valueOrNull, id);
+    if (next != null) state = AsyncData(next);
   }
 
   /// After an evaluation write that may have landed: reload this map and

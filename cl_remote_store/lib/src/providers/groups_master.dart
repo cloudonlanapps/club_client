@@ -5,6 +5,7 @@ import 'package:cl_remote_store/src/providers/manual_refresh.dart';
 import 'package:cl_remote_store/src/providers/user_groups.dart';
 import 'package:cl_remote_store/src/utils/fetch_all_pages.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
+import 'package:cl_remote_store/src/utils/writes_during_load.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,8 +22,10 @@ clGroupsMasterProvider =
 
 /// Notifier managing all group state and mutations.
 class ClGroupsMasterNotifier extends AsyncNotifier<Map<int, Group>> {
+  final _writes = WritesDuringLoad<int, Group>();
+
   @override
-  Future<Map<int, Group>> build() async {
+  Future<Map<int, Group>> build() => _writes.load(() async {
     ref.watch(clManualRefreshProvider);
     final client = await ref.watch(secureClientProvider.future);
     // Watched (not read) so the build re-runs when the role lands: during a
@@ -46,7 +49,7 @@ class ClGroupsMasterNotifier extends AsyncNotifier<Map<int, Group>> {
       for (final g in active) g.id: g,
       for (final g in deleted) g.id: g,
     };
-  }
+  });
 
   // -- Create / Update / Delete -----------------------------------------------
 
@@ -201,15 +204,13 @@ class ClGroupsMasterNotifier extends AsyncNotifier<Map<int, Group>> {
 
   /// Replace or add a group in the master map.
   void replaceLocally(Group group) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData({...current, group.id: group});
+    final next = _writes.put(state.valueOrNull, group.id, group);
+    if (next != null) state = AsyncData(next);
   }
 
   /// Remove a group from the master map.
   void removeLocally(int id) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData(Map.of(current)..remove(id));
+    final next = _writes.remove(state.valueOrNull, id);
+    if (next != null) state = AsyncData(next);
   }
 }

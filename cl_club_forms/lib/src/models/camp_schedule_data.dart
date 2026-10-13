@@ -7,8 +7,8 @@ import 'session_input.dart';
 ///
 /// Holds everything the host needs to drive a camp create / edit flow:
 /// - start date and number of training days (rest days are tracked
-///   separately so `trainingDays + excludedDates.length` equals the
-///   recurrence COUNT)
+///   separately: the recurrence COUNT is `trainingDays`, and the camp spans
+///   `trainingDays + excludedDates.length` calendar days)
 /// - the daily session start time and duration
 /// - an optional named-session split of that daily duration (same editor as
 ///   the programme schedule); empty when the day is a single session

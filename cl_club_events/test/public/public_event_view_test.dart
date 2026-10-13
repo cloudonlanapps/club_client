@@ -15,6 +15,21 @@ void main() {
       expect(view.displayDateRange, '4 - 9 May 2026');
     });
 
+    test('Issue 122: a camp with a rest day ends a day later than its days '
+        'held', () {
+      // Six days held from 4 May 10:00, resting on the 6th.
+      final rest = DateTime(2026, 5, 6, 10).toUtc();
+      final exdate = RruleUtil()
+          .buildRruleWithExdates('', [rest])
+          .split('EXDATE:')
+          .last;
+      final view = testEventView(
+        testPublicEvent(rrule: 'FREQ=DAILY;COUNT=6\nEXDATE:$exdate'),
+      );
+
+      expect(view.dateRange, '4 - 10 May 2026');
+    });
+
     test('Issue 53: the marketing schedule text wins over the derived '
         'range', () {
       final view = testEventView(

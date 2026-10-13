@@ -1,4 +1,5 @@
 import '../models/public/public_event_view.dart';
+import '../utils/camp_rest_days.dart';
 import '../utils/public_event_format.dart';
 
 /// The call-to-action state of a public event page.
@@ -40,7 +41,7 @@ extension PublicEventViewDates on PublicEventView {
   }
 
   /// Formatted date range (e.g. "15 - 20 April 2026"); a daily rrule's
-  /// `COUNT` sets the end date.
+  /// days held and rest days set the end date ([campSpanDays]).
   ///
   /// SDK emits UTC instants; day/month/year must be read in local time,
   /// otherwise events starting at local midnight (e.g. 4 May 00:00 IST =
@@ -49,9 +50,9 @@ extension PublicEventViewDates on PublicEventView {
     final startLocal = startTimeUtc.toLocal();
 
     var endLocal = endTimeUtc.toLocal();
-    final count = rruleCount(rrule);
-    if (count != null && rrule!.contains('FREQ=DAILY')) {
-      endLocal = startLocal.add(Duration(days: count - 1));
+    final span = campSpanDays(rrule, startTimeUtc);
+    if (span != null && rrule!.contains('FREQ=DAILY')) {
+      endLocal = startLocal.add(Duration(days: span - 1));
     }
 
     final startDay = startLocal.day;

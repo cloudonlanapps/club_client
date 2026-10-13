@@ -106,7 +106,7 @@ class EventManagementSectionState
   Future<String?> writeTitle(String title) async {
     try {
       await EventFormSubmit.updateTitle(
-        eventId: widget.event.id,
+        event: widget.event,
         title: title,
         notifier: ref.read(clEventsMasterProvider.notifier),
       );

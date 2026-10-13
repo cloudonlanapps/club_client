@@ -8,10 +8,12 @@ EventStaffMember eventStaffMemberOf(PickerUser user) =>
 
 /// Builds the `EventStaffForm.initialValues` map from an event's
 /// [organizer] (none when null) and [coaches], each as the form's
-/// [EventStaffMember].
+/// [EventStaffMember]. A programme's also holds [from], the session its
+/// change takes effect from when the form opens.
 Map<String, dynamic> buildEventStaffFormInitialValues({
   PickerUser? organizer,
   List<PickerUser> coaches = const [],
+  DateTime? from,
 }) => {
   EventFormFields.organizerNameId: organizer == null
       ? null
@@ -19,4 +21,5 @@ Map<String, dynamic> buildEventStaffFormInitialValues({
   EventFormFields.coachNamesId: [
     for (final coach in coaches) eventStaffMemberOf(coach),
   ],
+  EventFormFields.effectiveFromId: ?from,
 };

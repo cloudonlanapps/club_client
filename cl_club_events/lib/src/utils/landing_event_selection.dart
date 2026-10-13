@@ -23,9 +23,9 @@ List<PublicEventView> selectLandingEvents(
 
   if (events.length <= kMaxLandingEvents) return events;
   final selected = <PublicEventView>[];
-  final usedDays = <String>{};
+  final usedDays = <int>{};
   for (final program in events) {
-    final day = firstRruleDay(program.rrule);
+    final day = firstRruleLocalWeekday(program.rrule, program.startTimeUtc);
     if (day != null && usedDays.add(day)) {
       selected.add(program);
       if (selected.length >= kMaxLandingEvents) break;

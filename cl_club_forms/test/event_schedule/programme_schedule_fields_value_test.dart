@@ -18,8 +18,6 @@ void main() {
       tester,
     ) async {
       final seeded = validProgramme.copyWith(
-        endDate: () => DateTime(2030, 9),
-        hasNoEndDate: false,
         sessions: const [
           SessionInput(name: 'A', startTime: '09:00', endTime: '09:30'),
           SessionInput(name: 'B', startTime: '09:30', endTime: '11:00'),
@@ -39,8 +37,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byType(WeekdayChip).at(3));
       await tester.pumpAndSettle();
-      await pickProgrammeDate(tester, 0, DateTime(2030, 5, 7));
-      await pickProgrammeDate(tester, 1, DateTime(2030, 8, 29));
+      await pickProgrammeStartDate(tester, DateTime(2030, 5, 7));
       await enterStartTime(tester, 16, 45);
       await pickDuration(tester, 1, 30);
 
@@ -50,8 +47,6 @@ void main() {
         ProgrammeScheduleData(
           weekdays: const {DateTime.tuesday, DateTime.thursday},
           startDate: DateTime(2030, 5, 7),
-          endDate: DateTime(2030, 8, 29),
-          hasNoEndDate: false,
           sessionStartTime: const ShadTimeOfDay(
             hour: 16,
             minute: 45,
@@ -120,19 +115,15 @@ void main() {
 
   group('Issue 61: ProgrammeScheduleFormField disabled', () {
     testWidgets('Issue 61: disabled, no day toggles, no date or length can '
-        'be picked, nothing can be typed and Clear does nothing', (
-      tester,
-    ) async {
+        'be picked and nothing can be typed', (tester) async {
       final seeded = validProgramme.copyWith(
-        endDate: () => DateTime(2030, 9),
-        hasNoEndDate: false,
         sessions: const [
           SessionInput(name: 'A', startTime: '09:00', endTime: '09:30'),
           SessionInput(name: 'B', startTime: '09:30', endTime: '11:00'),
         ],
       );
       await pumpProgrammeField(tester, initialValue: seeded);
-      expect(find.byType(CLDatePicker), findsNWidgets(2));
+      expect(find.byType(CLDatePicker), findsOneWidget);
 
       final form = await pumpProgrammeField(
         tester,
@@ -142,7 +133,6 @@ void main() {
 
       expect(find.byType(CLDatePicker), findsNothing);
       await tester.tap(find.byType(WeekdayChip).at(4), warnIfMissed: false);
-      await tester.tap(find.text('Clear'), warnIfMissed: false);
       await tester.tap(find.text('1:30'), warnIfMissed: false);
       await tester.tap(find.byType(IconButton).first, warnIfMissed: false);
       await tester.pumpAndSettle();
@@ -153,7 +143,7 @@ void main() {
         isFalse,
       );
       expect(shownDurations(tester), ['0:30', '1:30']);
-      expect(find.text('1 Sep 2030'), findsOneWidget);
+      expect(find.text('6 May 2030'), findsOneWidget);
       expect(programmeValue(form), seeded);
     });
   });

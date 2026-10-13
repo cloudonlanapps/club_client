@@ -8,19 +8,17 @@ import 'package:shadcn_ui/shadcn_ui.dart' show ShadTimeOfDay;
 import '../support/recording_create_events.dart';
 
 void main() {
-  test('Issue 121: a programme created with an End date sends a rule '
-      'without UNTIL', () async {
+  test('Issue 121: a programme is created with a weekly rule and no '
+      'UNTIL', () async {
     final sent = await createWith(
       EventFormType.programme,
       ProgrammeScheduleData(
         weekdays: const {DateTime.monday},
         startDate: DateTime(2026, 10, 19),
-        endDate: DateTime(2026, 12, 31),
-        hasNoEndDate: false,
         sessionStartTime: const ShadTimeOfDay(hour: 12, minute: 0, second: 0),
       ),
     );
 
-    expect(sent.rrule, isNot(contains('UNTIL')));
+    expect(sent.rrule, 'FREQ=WEEKLY;BYDAY=MO');
   });
 }

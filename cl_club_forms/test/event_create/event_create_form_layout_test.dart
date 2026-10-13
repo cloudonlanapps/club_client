@@ -158,24 +158,5 @@ void main() {
         }
       });
     }
-
-    testWidgets('Issue 61: a programme with an end date shows Clear, an '
-        'action of its schedule, and no other button', (tester) async {
-      await pumpCreateForm(
-        tester,
-        EventFormType.programme,
-        initial: completeCreateValues(EventFormType.programme)
-          ..[scheduleId] = ProgrammeScheduleData(
-            weekdays: const {1},
-            startDate: DateTime(2030, 7),
-            endDate: DateTime(2030, 9),
-            hasNoEndDate: false,
-            sessionStartTime: nineOClock,
-          ),
-      );
-
-      expect(find.widgetWithText(ShadButton, 'Clear'), findsOneWidget);
-      expectNoHostChrome(tester, allowedButtonTexts: {'Clear'});
-    });
   });
 }

@@ -9,7 +9,8 @@ import 'session_input.dart';
 /// Holds everything the host needs to drive a programme create / edit
 /// flow:
 /// - the recurrence weekdays
-/// - the date range (with `hasNoEndDate` describing the "Ongoing" choice)
+/// - the date the recurrence starts; a programme is created with no end,
+///   which is written later by terminate, extend and split
 /// - the session start time and total duration
 /// - an optional list of named session segments inside that duration
 ///
@@ -21,8 +22,6 @@ class ProgrammeScheduleData {
   const ProgrammeScheduleData({
     this.weekdays = const <int>{},
     this.startDate,
-    this.endDate,
-    this.hasNoEndDate = true,
     this.sessionStartTime,
     this.totalDurationMinutes = 60,
     this.sessions = const <SessionInput>[],
@@ -33,15 +32,6 @@ class ProgrammeScheduleData {
 
   /// Local-date when the recurrence starts.
   final DateTime? startDate;
-
-  /// Local-date when the recurrence ends. `null` means ongoing.
-  final DateTime? endDate;
-
-  /// `true` when the form's End Date input is blank (ongoing series).
-  /// Mirrors `endDate == null` in normal usage but is kept explicit so
-  /// a host can distinguish "user hasn't picked yet" from "user opted
-  /// for ongoing".
-  final bool hasNoEndDate;
 
   /// Local time-of-day when each session starts.
   final ShadTimeOfDay? sessionStartTime;
@@ -56,8 +46,6 @@ class ProgrammeScheduleData {
   ProgrammeScheduleData copyWith({
     Set<int>? weekdays,
     DateTime? Function()? startDate,
-    DateTime? Function()? endDate,
-    bool? hasNoEndDate,
     ShadTimeOfDay? Function()? sessionStartTime,
     int? totalDurationMinutes,
     List<SessionInput>? sessions,
@@ -65,8 +53,6 @@ class ProgrammeScheduleData {
     return ProgrammeScheduleData(
       weekdays: weekdays ?? this.weekdays,
       startDate: startDate != null ? startDate() : this.startDate,
-      endDate: endDate != null ? endDate() : this.endDate,
-      hasNoEndDate: hasNoEndDate ?? this.hasNoEndDate,
       sessionStartTime: sessionStartTime != null
           ? sessionStartTime()
           : this.sessionStartTime,
@@ -88,8 +74,6 @@ class ProgrammeScheduleData {
       if (other.sessions[i] != sessions[i]) return false;
     }
     return other.startDate == startDate &&
-        other.endDate == endDate &&
-        other.hasNoEndDate == hasNoEndDate &&
         other.sessionStartTime == sessionStartTime &&
         other.totalDurationMinutes == totalDurationMinutes;
   }
@@ -98,8 +82,6 @@ class ProgrammeScheduleData {
   int get hashCode => Object.hash(
     Object.hashAllUnordered(weekdays),
     startDate,
-    endDate,
-    hasNoEndDate,
     sessionStartTime,
     totalDurationMinutes,
     Object.hashAll(sessions),
@@ -108,7 +90,6 @@ class ProgrammeScheduleData {
   @override
   String toString() =>
       'ProgrammeScheduleData(weekdays: $weekdays, startDate: $startDate, '
-      'endDate: $endDate, hasNoEndDate: $hasNoEndDate, '
       'sessionStartTime: $sessionStartTime, totalDurationMinutes: '
       '$totalDurationMinutes, sessions: $sessions)';
 }

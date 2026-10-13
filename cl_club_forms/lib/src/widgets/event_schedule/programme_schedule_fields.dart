@@ -20,7 +20,7 @@ const int maxProgrammeDurationMinutes = 4 * 60;
 
 /// `ShadForm`-compatible field for programme event schedule.
 ///
-/// Bundles weekday selection, date range, session start time, total
+/// Bundles weekday selection, start date, session start time, total
 /// duration, and an optional named-session split into a single
 /// [ProgrammeScheduleData] value.
 ///
@@ -45,11 +45,11 @@ class ProgrammeScheduleFormField
     super.onSaved,
     super.autovalidateMode,
     super.forceErrorText,
-    bool showDateRange = true,
+    bool showStartDate = true,
   }) : super(
          builder: (state) => ProgrammeScheduleFormFieldBody(
            state: state,
-           showDateRange: showDateRange,
+           showStartDate: showStartDate,
          ),
        );
 
@@ -64,12 +64,6 @@ class ProgrammeScheduleFormField
     }
     if (value.totalDurationMinutes > maxProgrammeDurationMinutes) {
       return 'Programme session cannot exceed 4h';
-    }
-    if (!value.hasNoEndDate &&
-        value.endDate != null &&
-        value.startDate != null &&
-        value.endDate!.isBefore(value.startDate!)) {
-      return 'End date must be after start date';
     }
     return null;
   }
@@ -88,15 +82,15 @@ class ProgrammeScheduleFormField
 class ProgrammeScheduleFormFieldBody extends StatefulWidget {
   const ProgrammeScheduleFormFieldBody({
     required this.state,
-    this.showDateRange = true,
+    this.showStartDate = true,
     super.key,
   });
 
   final FormFieldState<ProgrammeScheduleData> state;
 
-  /// Whether the Start Date and End Date inputs are shown. Hidden when the
-  /// host decides when the schedule begins (an adjustment from a session).
-  final bool showDateRange;
+  /// Whether the Start Date input is shown. Hidden when the host decides
+  /// when the schedule begins (an adjustment from a session).
+  final bool showStartDate;
 
   @override
   State<ProgrammeScheduleFormFieldBody> createState() =>
@@ -107,15 +101,12 @@ class ProgrammeScheduleFormFieldBodyState
     extends State<ProgrammeScheduleFormFieldBody> {
   late Set<int> selectedWeekdays;
   late DateTime? selectedStartDate;
-  late DateTime? selectedEndDate;
-  late bool hasNoEndDate;
   late ShadTimeOfDay? selectedSessionStartTime;
   late int totalDurationMinutes;
   late List<SessionInput> sessions;
   final GlobalKey<SessionSplitFieldState> _splitKey = GlobalKey();
   final GlobalKey<FormFieldState<ShadTimeOfDay>> _startTimeKey = GlobalKey();
   late ShadTimePickerController sessionStartTimeController;
-  int endDateResetCounter = 0;
 
   @override
   void initState() {
@@ -123,8 +114,6 @@ class ProgrammeScheduleFormFieldBodyState
     final data = widget.state.value ?? const ProgrammeScheduleData();
     selectedWeekdays = Set<int>.from(data.weekdays);
     selectedStartDate = data.startDate;
-    selectedEndDate = data.endDate;
-    hasNoEndDate = data.hasNoEndDate;
     selectedSessionStartTime = data.sessionStartTime;
     totalDurationMinutes = data.totalDurationMinutes;
     sessions = List<SessionInput>.from(data.sessions);
@@ -152,8 +141,6 @@ class ProgrammeScheduleFormFieldBodyState
   ProgrammeScheduleData currentData() => ProgrammeScheduleData(
     weekdays: Set<int>.from(selectedWeekdays),
     startDate: selectedStartDate,
-    endDate: selectedEndDate,
-    hasNoEndDate: hasNoEndDate,
     sessionStartTime: selectedSessionStartTime,
     totalDurationMinutes: totalDurationMinutes,
     sessions: List<SessionInput>.from(sessions),
@@ -167,23 +154,6 @@ class ProgrammeScheduleFormFieldBodyState
     setState(() {
       totalDurationMinutes = minutes;
       sessions = const [];
-    });
-    emit();
-  }
-
-  String? validateEndDate(DateTime? date) {
-    if (date == null) return null;
-    if (selectedStartDate != null && date.isBefore(selectedStartDate!)) {
-      return 'End date must be after start date';
-    }
-    return null;
-  }
-
-  void clearEndDate() {
-    setState(() {
-      selectedEndDate = null;
-      hasNoEndDate = true;
-      endDateResetCounter++;
     });
     emit();
   }
@@ -262,62 +232,19 @@ class ProgrammeScheduleFormFieldBodyState
             ),
           ),
         ),
-        if (widget.showDateRange)
-          TwoColumnGrid(
-            runSpacing: FormSpacing.rowGap,
-            children: [
-              LabeledFormRow(
-                label: 'Start Date',
-                required: true,
-                field: CLDatePickerFormField(
-                  initialValue: selectedStartDate,
-                  enabled: enabled,
-                  validator: ProgrammeScheduleFormValidators.startDate,
-                  onChanged: (date) {
-                    setState(() => selectedStartDate = date);
-                    emit();
-                  },
-                ),
-              ),
-              LabeledFormRow(
-                labelChild: Row(
-                  children: [
-                    Text(
-                      'End Date',
-                      style: theme.textTheme.small.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Spacer(),
-                    if (selectedEndDate != null)
-                      ShadButton.ghost(
-                        size: ShadButtonSize.sm,
-                        onPressed: enabled ? clearEndDate : null,
-                        child: Text(
-                          'Clear',
-                          style: theme.textTheme.small.copyWith(
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                field: CLDatePickerFormField(
-                  key: ValueKey('endDate_$endDateResetCounter'),
-                  initialValue: selectedEndDate,
-                  enabled: enabled,
-                  placeholder: const Text('Ongoing'),
-                  validator: validateEndDate,
-                  onChanged: (date) {
-                    setState(() {
-                      selectedEndDate = date;
-                      hasNoEndDate = date == null;
-                    });
-                    emit();
-                  },
-                ),
-              ),
-            ],
+        if (widget.showStartDate)
+          LabeledFormRow(
+            label: 'Start Date',
+            required: true,
+            field: CLDatePickerFormField(
+              initialValue: selectedStartDate,
+              enabled: enabled,
+              validator: ProgrammeScheduleFormValidators.startDate,
+              onChanged: (date) {
+                setState(() => selectedStartDate = date);
+                emit();
+              },
+            ),
           ),
         TwoColumnGrid(
           runSpacing: FormSpacing.rowGap,

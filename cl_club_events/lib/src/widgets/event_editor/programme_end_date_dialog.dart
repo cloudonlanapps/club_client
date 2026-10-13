@@ -13,6 +13,7 @@ import 'package:ui_lib/ui_lib.dart'
     show SavingDialogCloseIcon, SavingDialogScope;
 
 import '../../models/programme_schedule_form_helpers.dart';
+import '../../models/stale_version_message.dart';
 import '../../utils/event_refusal.dart';
 import '../../utils/programme_end_date.dart';
 import '../../utils/programme_end_date_messages.dart';
@@ -128,6 +129,15 @@ class ProgrammeEndDateDialogState
       );
       navigator.pop();
       toaster.show(ShadToast(description: Text(done)));
+    } on StaleVersionException catch (e) {
+      // The master has reloaded the programme: close on it rather than keep
+      // an end date chosen against the old one.
+      navigator.pop();
+      toaster.show(
+        ShadToast.destructive(
+          description: Text(staleVersionMessage(e, subject: 'This programme')),
+        ),
+      );
     } on Object catch (e) {
       if (!mounted) return;
       setState(() => saving = false);

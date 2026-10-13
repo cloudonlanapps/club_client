@@ -196,6 +196,10 @@ class ProgrammeScheduleFormSubmit {
   /// blank [reason] is left out. A `null` [lastDay] removes the end with
   /// `extendIndefinitely`.
   ///
+  /// Each call sends [event]'s `version` (club_client#123); a stale one is
+  /// refused with `StaleVersionException` (the master reloads the event
+  /// first).
+  ///
   /// Returns [event] untouched, with no call, when the cutoff is the one it
   /// has. Throws [SdkError] before any call when the schedule has no
   /// session after [lastDay], and `ServerException` on the server's guards
@@ -212,6 +216,7 @@ class ProgrammeScheduleFormSubmit {
     if (lastDay == null) {
       return notifier.extendIndefinitely(
         event.id,
+        version: event.version,
         reason: why.isEmpty ? null : why,
       );
     }
@@ -224,11 +229,17 @@ class ProgrammeScheduleFormSubmit {
     }
     final current = event.untilTimeUtc;
     if (current == null) {
-      return notifier.terminate(event.id, reason: why, cutoffTimeUtc: cutoff);
+      return notifier.terminate(
+        event.id,
+        version: event.version,
+        reason: why,
+        cutoffTimeUtc: cutoff,
+      );
     }
     if (current.isAtSameMomentAs(cutoff)) return event;
     return notifier.extend(
       event.id,
+      version: event.version,
       cutoffTimeUtc: cutoff,
       reason: why.isEmpty ? null : why,
     );

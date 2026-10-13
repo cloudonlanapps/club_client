@@ -54,6 +54,7 @@ class _FakeEvents extends Fake implements EventSource {
   @override
   Future<Event> terminate(
     int eventId, {
+    required int version,
     required String reason,
     required DateTime cutoffTimeUtc,
   }) async {
@@ -64,6 +65,7 @@ class _FakeEvents extends Fake implements EventSource {
   @override
   Future<Event> extend(
     int eventId, {
+    required int version,
     required DateTime cutoffTimeUtc,
     String? reason,
   }) async {
@@ -72,7 +74,11 @@ class _FakeEvents extends Fake implements EventSource {
   }
 
   @override
-  Future<Event> extendIndefinitely(int eventId, {String? reason}) async {
+  Future<Event> extendIndefinitely(
+    int eventId, {
+    required int version,
+    String? reason,
+  }) async {
     calls.add('extendIndefinitely($reason)');
     return _apply(eventId, null);
   }

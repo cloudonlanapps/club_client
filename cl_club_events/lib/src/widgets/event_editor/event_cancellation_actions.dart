@@ -125,7 +125,8 @@ class EventCancellationActionsState
           title: EventCancellationMessages.undoCancelTitle,
           question: EventCancellationMessages.undoCancelConfirm(event.title),
           confirmLabel: EventCancellationMessages.undoCancel,
-          change: (notifier) => notifier.undoCancelSeries(event.id),
+          change: (notifier) =>
+              notifier.undoCancelSeries(event.id, version: event.version),
           done: EventCancellationMessages.cancelUndone,
           failed: EventCancellationMessages.undoCancelFailed,
         ),

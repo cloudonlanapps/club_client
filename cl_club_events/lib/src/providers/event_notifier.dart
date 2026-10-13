@@ -78,7 +78,8 @@ class EventNotifier extends AutoDisposeFamilyAsyncNotifier<Event, int> {
   /// Cancel the event series from [effectiveDateTimeUtc] onward.
   ///
   /// The server requires the effective time; for camps it must be a real
-  /// occurrence start.
+  /// occurrence start. Sends the version of the event this notifier holds
+  /// (club_client#123).
   Future<Event> cancelEvent({
     required String reason,
     required DateTime effectiveDateTimeUtc,
@@ -87,6 +88,7 @@ class EventNotifier extends AutoDisposeFamilyAsyncNotifier<Event, int> {
         .read(clEventsMasterProvider.notifier)
         .cancelSeries(
           eventId,
+          version: state.valueOrNull?.version,
           reason: reason,
           effectiveDateTimeUtc: effectiveDateTimeUtc,
         );

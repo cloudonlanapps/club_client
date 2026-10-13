@@ -101,12 +101,13 @@ class _RecordingEvents extends ClEventsMasterNotifier {
     int eventId, {
     required String reason,
     required DateTime effectiveDateTimeUtc,
+    int? version,
   }) async => record(
     'cancel($eventId, $reason, ${effectiveDateTimeUtc.toIso8601String()})',
   );
 
   @override
-  Future<Event> undoCancelSeries(int eventId) async =>
+  Future<Event> undoCancelSeries(int eventId, {int? version}) async =>
       record('undoCancel($eventId)');
 
   @override

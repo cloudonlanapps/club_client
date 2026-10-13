@@ -80,6 +80,7 @@ class EventCancellationDialogState
       if (version == null) {
         await EventCancellationFormSubmit.cancelCamp(
           eventId: widget.event.id,
+          eventVersion: widget.event.version,
           values: values,
           notifier: notifier,
         );

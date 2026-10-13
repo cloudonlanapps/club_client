@@ -3,7 +3,7 @@
 // `showErrors` belong to those forms and are tested there. This file adds to
 // programme_schedule_fields_test.dart what issue 61 asks of a cluster: its
 // rows, each rule's message where the user sees it, the value it builds from
-// what is typed, `showDateRange`, `enabled: false` and phone width.
+// what is typed, `showStartDate`, `enabled: false` and phone width.
 import 'package:cl_calendar/cl_calendar.dart' show CLDatePickerFormField;
 import 'package:cl_club_forms/src/models/programme_schedule_data.dart';
 import 'package:cl_club_forms/src/models/session_input.dart';
@@ -24,12 +24,10 @@ Finder _inRow(String label, String message) => find.descendant(
 
 void main() {
   group('Issue 61: ProgrammeScheduleFormField rows', () {
-    testWidgets('Issue 61: with the date range its rows are the days, the '
-        'two dates, the time, the duration and the sessions', (tester) async {
+    testWidgets('Issue 61: with the start date its rows are the days, the '
+        'date, the time, the duration and the sessions', (tester) async {
       await pumpProgrammeField(tester);
 
-      // End Date is labelled by a row too, with its Clear button beside the
-      // label; it is the one optional date.
       expect(rowLabels(tester), [
         'Days of Week *',
         'Start Date *',
@@ -37,27 +35,16 @@ void main() {
         'Duration *',
         'Sessions',
       ]);
-      expect(
-        find.descendant(
-          of: find.byType(LabeledFormRow),
-          matching: find.text('End Date'),
-        ),
-        findsOneWidget,
-      );
-      expect(find.text('Ongoing'), findsOneWidget);
       expectLabelsAreRows(tester);
     });
 
-    testWidgets('Issue 61: without the date range neither date shows, and '
-        'the value keeps the seeded dates', (tester) async {
-      final seeded = validProgramme.copyWith(
-        endDate: () => DateTime(2030, 9),
-        hasNoEndDate: false,
-      );
+    testWidgets('Issue 61: without the start date no date shows, and the '
+        'value keeps the seeded date', (tester) async {
+      final seeded = validProgramme;
       final form = await pumpProgrammeField(
         tester,
         initialValue: seeded,
-        showDateRange: false,
+        showStartDate: false,
       );
 
       expect(rowLabels(tester), [
@@ -67,8 +54,6 @@ void main() {
         'Sessions',
       ]);
       expect(find.byType(CLDatePickerFormField), findsNothing);
-      expect(find.text('End Date'), findsNothing);
-      expect(find.text('Clear'), findsNothing);
 
       await tester.tap(find.byType(WeekdayChip).at(2));
       await tester.pumpAndSettle();
@@ -78,11 +63,10 @@ void main() {
       );
     });
 
-    testWidgets('Issue 61: wide, the dates share a row and so do the time '
-        'and duration; on a phone each has its own', (tester) async {
+    testWidgets('Issue 61: wide, the time and duration share a row; on a '
+        'phone each has its own', (tester) async {
       await pumpProgrammeField(tester, initialValue: validProgramme);
       Offset at(String text) => tester.getTopLeft(find.text(text));
-      expect(at('Start Date *').dy, at('End Date').dy);
       expect(at('Start Time *').dy, at('Duration *').dy);
 
       await pumpProgrammeField(
@@ -91,19 +75,14 @@ void main() {
         size: kPhoneSurface,
       );
       expect(tester.takeException(), isNull);
-      expect(at('End Date').dy, greaterThan(at('Start Date *').dy));
       expect(at('Duration *').dy, greaterThan(at('Start Time *').dy));
-      expect(at('End Date').dx, at('Start Date *').dx);
+      expect(at('Duration *').dx, at('Start Time *').dx);
     });
 
-    testWidgets('Issue 61: a split and an end date fit a phone', (
-      tester,
-    ) async {
+    testWidgets('Issue 61: a split fits a phone', (tester) async {
       await pumpProgrammeField(
         tester,
         initialValue: validProgramme.copyWith(
-          endDate: () => DateTime(2030, 9),
-          hasNoEndDate: false,
           sessions: const [
             SessionInput(
               name: 'Off-ice warm-up and stretching',
@@ -117,7 +96,6 @@ void main() {
       );
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Clear'), findsOneWidget);
       expect(shownDurations(tester), ['0:30', '1:30']);
     });
   });
@@ -162,24 +140,6 @@ void main() {
       expect(_inRow('Start Time', 'Start time is required'), findsOneWidget);
     });
 
-    testWidgets('Issue 61: an end date before the start is refused, the '
-        'start day itself is accepted', (tester) async {
-      final form = await pumpProgrammeField(
-        tester,
-        initialValue: validProgramme,
-      );
-
-      await pickProgrammeDate(tester, 1, DateTime(2030, 5, 5));
-      expect(await validateProgramme(tester, form), isFalse);
-      expect(find.text('End date must be after start date'), findsWidgets);
-
-      await pickProgrammeDate(tester, 1, DateTime(2030, 5, 6));
-      expect(await validateProgramme(tester, form), isTrue);
-      expect(find.text('End date must be after start date'), findsNothing);
-      expect(programmeValue(form).endDate, DateTime(2030, 5, 6));
-      expect(programmeValue(form).hasNoEndDate, isFalse);
-    });
-
     testWidgets('Issue 61: a duration of exactly four hours is accepted', (
       tester,
     ) async {
@@ -212,17 +172,6 @@ void main() {
       expect(
         check(validProgramme.copyWith(totalDurationMinutes: 0)),
         'Duration must be greater than 0',
-      );
-    });
-
-    test('Issue 61: an end on the start day passes, the day before does '
-        'not', () {
-      ProgrammeScheduleData ending(DateTime day) =>
-          validProgramme.copyWith(endDate: () => day, hasNoEndDate: false);
-      expect(check(ending(DateTime(2030, 5, 6))), isNull);
-      expect(
-        check(ending(DateTime(2030, 5, 5))),
-        'End date must be after start date',
       );
     });
 

@@ -145,21 +145,14 @@ class EventCreateFormSubmit {
 
   /// The weekly rule of a programme whose first session starts at the local
   /// [start]. The form speaks local weekdays; the rule names its days in
-  /// UTC, as the server expands it from the UTC start (club_client#119).
+  /// UTC, as the server expands it from the UTC start (club_client#119). It
+  /// carries no end: the server writes a programme's end only by terminate,
+  /// extend and split (club_client#121).
   static String? _programmeRrule(ProgrammeScheduleData data, DateTime start) {
     if (data.weekdays.isEmpty) return null;
-    final weekly = programmeRruleFor(
+    return programmeRruleFor(
       shiftWeekdays(data.weekdays, -localDayShiftOf(start)),
     );
-    if (data.hasNoEndDate || data.endDate == null) return weekly;
-    return '$weekly;UNTIL=${_formatUntil(data.endDate!)}';
-  }
-
-  static String _formatUntil(DateTime date) {
-    final utc = date.toUtc();
-    final m = utc.month.toString().padLeft(2, '0');
-    final d = utc.day.toString().padLeft(2, '0');
-    return '${utc.year}$m${d}T235959Z';
   }
 
   static EventType _toEventType(EventFormType type) => switch (type) {

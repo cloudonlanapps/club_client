@@ -120,8 +120,6 @@ void main() {
         schedule.sessionStartTime,
         const ShadTimeOfDay(hour: 11, minute: 0, second: 0),
       );
-      expect(schedule.endDate, isNull);
-      expect(schedule.hasNoEndDate, isTrue);
       expect(schedule.totalDurationMinutes, 60);
       expect(schedule.sessions, isEmpty);
     });

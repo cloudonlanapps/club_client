@@ -137,7 +137,7 @@ class ProgrammeScheduleAdjustFormState
             id: ProgrammeScheduleAdjustFormFields.scheduleId,
             initialValue: initial.schedule,
             enabled: widget.enabled,
-            showDateRange: false,
+            showStartDate: false,
             validator: ProgrammeScheduleFormField.aggregateValidator,
           ),
           EventVenueSelectField(

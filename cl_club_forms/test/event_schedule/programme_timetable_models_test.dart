@@ -20,8 +20,6 @@ const SessionInput _warmUp = SessionInput(
 ProgrammeScheduleData _schedule() => ProgrammeScheduleData(
   weekdays: const {DateTime.monday, DateTime.thursday},
   startDate: DateTime(2030, 5),
-  endDate: DateTime(2030, 9),
-  hasNoEndDate: false,
   sessionStartTime: _six,
   totalDurationMinutes: 30,
   sessions: [_warmUp.copyWith()],
@@ -50,12 +48,10 @@ void main() {
   });
 
   group('Issue 61: ProgrammeScheduleData', () {
-    test('Issue 61: defaults to an ongoing hour with nothing chosen', () {
+    test('Issue 61: defaults to an hour with nothing chosen', () {
       const empty = ProgrammeScheduleData();
       expect(empty.weekdays, isEmpty);
       expect(empty.startDate, isNull);
-      expect(empty.endDate, isNull);
-      expect(empty.hasNoEndDate, isTrue);
       expect(empty.sessionStartTime, isNull);
       expect(empty.totalDurationMinutes, 60);
       expect(empty.sessions, isEmpty);
@@ -74,8 +70,6 @@ void main() {
       for (final changed in [
         base.copyWith(weekdays: {DateTime.monday}),
         base.copyWith(startDate: () => DateTime(2030, 5, 2)),
-        base.copyWith(endDate: () => DateTime(2030, 10)),
-        base.copyWith(hasNoEndDate: true),
         base.copyWith(
           sessionStartTime: () =>
               const ShadTimeOfDay(hour: 7, minute: 0, second: 0),
@@ -88,14 +82,12 @@ void main() {
       }
     });
 
-    test('Issue 61: copyWith can clear the dates and the start time', () {
+    test('Issue 61: copyWith can clear the start date and the start time', () {
       final cleared = _schedule().copyWith(
         startDate: () => null,
-        endDate: () => null,
         sessionStartTime: () => null,
       );
       expect(cleared.startDate, isNull);
-      expect(cleared.endDate, isNull);
       expect(cleared.sessionStartTime, isNull);
       expect(cleared.weekdays, _schedule().weekdays);
       expect(cleared.sessions, _schedule().sessions);

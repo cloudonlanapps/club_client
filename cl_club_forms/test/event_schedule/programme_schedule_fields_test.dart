@@ -180,21 +180,6 @@ void main() {
       );
     });
 
-    test('rejects end date before start date when not ongoing', () {
-      final value = ProgrammeScheduleData(
-        weekdays: const {1},
-        startDate: DateTime(2026, 5, 10),
-        endDate: DateTime(2026, 5, 1),
-        hasNoEndDate: false,
-        sessionStartTime: const ShadTimeOfDay(hour: 9, minute: 0, second: 0),
-        totalDurationMinutes: 60,
-      );
-      expect(
-        ProgrammeScheduleFormField.aggregateValidator(value),
-        'End date must be after start date',
-      );
-    });
-
     test('accepts a fully populated value', () {
       final value = ProgrammeScheduleData(
         weekdays: const {1, 3, 5},
@@ -217,7 +202,6 @@ void main() {
       expect(find.byType(WeekdayChip), findsNWidgets(7));
       expect(find.text('Days of Week *'), findsOneWidget);
       expect(find.text('Start Date *'), findsOneWidget);
-      expect(find.text('End Date'), findsOneWidget);
       expect(find.text('Start Time *'), findsOneWidget);
       expect(find.text('Duration *'), findsOneWidget);
       expect(find.text('Sessions'), findsOneWidget);
@@ -229,8 +213,6 @@ void main() {
       final initial = ProgrammeScheduleData(
         weekdays: const {1, 3, 5},
         startDate: DateTime(2026),
-        endDate: DateTime(2026, 6, 1),
-        hasNoEndDate: false,
         sessionStartTime: const ShadTimeOfDay(hour: 9, minute: 0, second: 0),
         totalDurationMinutes: 90,
       );
@@ -239,8 +221,6 @@ void main() {
       final body = _body(tester);
       expect(body.selectedWeekdays, {1, 3, 5});
       expect(body.selectedStartDate, DateTime(2026));
-      expect(body.selectedEndDate, DateTime(2026, 6, 1));
-      expect(body.hasNoEndDate, isFalse);
       expect(
         body.selectedSessionStartTime,
         const ShadTimeOfDay(hour: 9, minute: 0, second: 0),
@@ -413,62 +393,6 @@ void main() {
         );
         final body = _body(tester)..removeSession(0);
         expect(body.sessionDurations, [60]);
-      },
-    );
-
-    testWidgets(
-      'clearEndDate sets endDate to null, hasNoEndDate to true, and emits',
-      (tester) async {
-        final initial = ProgrammeScheduleData(
-          weekdays: const {1},
-          startDate: DateTime(2026),
-          endDate: DateTime(2026, 6, 1),
-          hasNoEndDate: false,
-          sessionStartTime: const ShadTimeOfDay(hour: 9, minute: 0, second: 0),
-          totalDurationMinutes: 60,
-        );
-        final formKey = await _pumpField(tester, initialValue: initial);
-
-        // Clear button is rendered only when an end date is set.
-        expect(find.text('Clear'), findsOneWidget);
-        await tester.tap(find.text('Clear'));
-        await tester.pumpAndSettle();
-
-        final body = _body(tester);
-        expect(body.selectedEndDate, isNull);
-        expect(body.hasNoEndDate, isTrue);
-
-        final value = _read(formKey)!;
-        expect(value.endDate, isNull);
-        expect(value.hasNoEndDate, isTrue);
-        // The clear button hides once the end date is gone.
-        expect(find.text('Clear'), findsNothing);
-      },
-    );
-
-    testWidgets(
-      'validateEndDate rejects an end date earlier than the start date',
-      (tester) async {
-        await _pumpField(
-          tester,
-          initialValue: ProgrammeScheduleData(
-            weekdays: const {1},
-            startDate: DateTime(2026, 5, 10),
-            sessionStartTime: const ShadTimeOfDay(
-              hour: 9,
-              minute: 0,
-              second: 0,
-            ),
-            totalDurationMinutes: 60,
-          ),
-        );
-        final body = _body(tester);
-        expect(
-          body.validateEndDate(DateTime(2026, 5, 1)),
-          'End date must be after start date',
-        );
-        expect(body.validateEndDate(DateTime(2026, 5, 11)), isNull);
-        expect(body.validateEndDate(null), isNull);
       },
     );
 

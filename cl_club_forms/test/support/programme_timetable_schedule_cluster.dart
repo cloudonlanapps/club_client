@@ -26,7 +26,7 @@ final ProgrammeScheduleData validProgramme = ProgrammeScheduleData(
 Future<GlobalKey<ShadFormState>> pumpProgrammeField(
   WidgetTester tester, {
   ProgrammeScheduleData? initialValue,
-  bool showDateRange = true,
+  bool showStartDate = true,
   bool enabled = true,
   Size size = kFormSurface,
 }) => pumpFieldInForm(
@@ -34,7 +34,7 @@ Future<GlobalKey<ShadFormState>> pumpProgrammeField(
   ProgrammeScheduleFormField(
     id: programmeFieldId,
     initialValue: initialValue,
-    showDateRange: showDateRange,
+    showStartDate: showStartDate,
     enabled: enabled,
     validator: ProgrammeScheduleFormField.aggregateValidator,
   ),
@@ -45,17 +45,10 @@ Future<GlobalKey<ShadFormState>> pumpProgrammeField(
 ProgrammeScheduleData programmeValue(GlobalKey<ShadFormState> form) =>
     form.currentState!.value[programmeFieldId] as ProgrammeScheduleData;
 
-/// Picks [day] in the date field at [index] (0 start, 1 end), as its
-/// calendar does.
-Future<void> pickProgrammeDate(
-  WidgetTester tester,
-  int index,
-  DateTime? day,
-) async {
+/// Picks [day] as the start date, as its calendar does.
+Future<void> pickProgrammeStartDate(WidgetTester tester, DateTime? day) async {
   tester
-      .state<FormFieldState<DateTime?>>(
-        find.byType(CLDatePickerFormField).at(index),
-      )
+      .state<FormFieldState<DateTime?>>(find.byType(CLDatePickerFormField))
       .didChange(day);
   await tester.pumpAndSettle();
 }

@@ -5,6 +5,8 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart'
+    show SavingDialogCloseIcon, SavingDialogScope;
 
 import '../utils/member_write_messages.dart';
 
@@ -252,49 +254,53 @@ class AddToGroupDialogState extends ConsumerState<AddToGroupDialog> {
     final theme = ShadTheme.of(context);
     final group = selectedGroup!;
 
-    return ShadDialog(
-      title: const Text('Add to Group'),
-      description: Text(
-        'Add ${widget.username} to "${group.name}"?',
-      ),
-      actions: [
-        ShadButton.outline(
-          onPressed: isSubmitting
-              ? null
-              : () => setState(() {
-                  selectedGroup = null;
-                  errorMessage = null;
-                }),
-          child: const Text('Back'),
+    return SavingDialogScope(
+      saving: isSubmitting,
+      child: ShadDialog(
+        closeIcon: SavingDialogCloseIcon(saving: isSubmitting),
+        title: const Text('Add to Group'),
+        description: Text(
+          'Add ${widget.username} to "${group.name}"?',
         ),
-        ShadButton(
-          onPressed: isSubmitting ? null : handleAdd,
-          child: Text(isSubmitting ? 'Adding…' : 'Add'),
-        ),
-      ],
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 12),
-          Text(
-            group.name,
-            style: theme.textTheme.p.copyWith(fontWeight: FontWeight.w600),
+        actions: [
+          ShadButton.outline(
+            onPressed: isSubmitting
+                ? null
+                : () => setState(() {
+                    selectedGroup = null;
+                    errorMessage = null;
+                  }),
+            child: const Text('Back'),
           ),
-          if (group.description != null && group.description!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(group.description!, style: theme.textTheme.muted),
-          ],
-          if (errorMessage != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              errorMessage!,
-              style: theme.textTheme.muted.copyWith(
-                color: theme.colorScheme.destructive,
-              ),
-            ),
-          ],
+          ShadButton(
+            onPressed: isSubmitting ? null : handleAdd,
+            child: Text(isSubmitting ? 'Adding…' : 'Add'),
+          ),
         ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 12),
+            Text(
+              group.name,
+              style: theme.textTheme.p.copyWith(fontWeight: FontWeight.w600),
+            ),
+            if (group.description != null && group.description!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(group.description!, style: theme.textTheme.muted),
+            ],
+            if (errorMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                errorMessage!,
+                style: theme.textTheme.muted.copyWith(
+                  color: theme.colorScheme.destructive,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

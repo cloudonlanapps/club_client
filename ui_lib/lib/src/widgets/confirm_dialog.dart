@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import 'saving_dialog_close_icon.dart';
+import 'saving_dialog_scope.dart';
+
 class ConfirmDialog extends StatefulWidget {
   const ConfirmDialog({
     required this.title,
@@ -102,71 +105,77 @@ class ConfirmDialogState extends State<ConfirmDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return ShadDialog(
-      title: Text(widget.title),
-      description: Text(widget.message),
-      actions: [
-        ShadButton.secondary(
-          onPressed: isLoading ? null : () => Navigator.of(context).pop(),
-          child: Text(widget.cancelLabel),
-        ),
-        if (widget.destructive)
-          ShadButton.destructive(
-            onPressed: isLoading ? null : _handleConfirm,
-            child: isLoading
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : Text(widget.confirmLabel),
-          )
-        else
-          ShadButton(
-            onPressed: isLoading ? null : _handleConfirm,
-            child: isLoading
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(widget.confirmLabel),
+    return SavingDialogScope(
+      saving: isLoading,
+      child: ShadDialog(
+        closeIcon: SavingDialogCloseIcon(saving: isLoading),
+        title: Text(widget.title),
+        description: Text(widget.message),
+        actions: [
+          ShadButton.secondary(
+            onPressed: isLoading ? null : () => Navigator.of(context).pop(),
+            child: Text(widget.cancelLabel),
           ),
-      ],
-      child: widget.requiresPassword
-          ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ShadInput(
-                    controller: passwordController,
-                    placeholder: const Text('Enter password to confirm'),
-                    obscureText: true,
-                    autofocus: true,
-                    keyboardType: TextInputType.visiblePassword,
-                    autocorrect: false,
-                    enableSuggestions: false,
-                  ),
-                  if (errorMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        errorMessage!,
-                        style: TextStyle(
-                          color: ShadTheme.of(context).colorScheme.destructive,
-                          fontSize: 12,
+          if (widget.destructive)
+            ShadButton.destructive(
+              onPressed: isLoading ? null : _handleConfirm,
+              child: isLoading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(widget.confirmLabel),
+            )
+          else
+            ShadButton(
+              onPressed: isLoading ? null : _handleConfirm,
+              child: isLoading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(widget.confirmLabel),
+            ),
+        ],
+        child: widget.requiresPassword
+            ? Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ShadInput(
+                      controller: passwordController,
+                      placeholder: const Text('Enter password to confirm'),
+                      obscureText: true,
+                      autofocus: true,
+                      keyboardType: TextInputType.visiblePassword,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                    ),
+                    if (errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          errorMessage!,
+                          style: TextStyle(
+                            color: ShadTheme.of(
+                              context,
+                            ).colorScheme.destructive,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            )
-          : null,
+                  ],
+                ),
+              )
+            : null,
+      ),
     );
   }
 }

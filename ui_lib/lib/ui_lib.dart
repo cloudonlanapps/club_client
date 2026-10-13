@@ -119,6 +119,8 @@ export 'src/widgets/markdown/themed_markdown.dart' show ThemedMarkdown;
 export 'src/widgets/mobile_menu_drawer.dart' show MobileMenuDrawer;
 export 'src/widgets/pagination_bar.dart' show PaginationBar;
 export 'src/widgets/read_only_field.dart' show ReadOnlyField;
+export 'src/widgets/saving_dialog_close_icon.dart' show SavingDialogCloseIcon;
+export 'src/widgets/saving_dialog_scope.dart' show SavingDialogScope;
 // Section-wise editor chrome (pure UI, no SDK / no Riverpod)
 export 'src/widgets/section_editor/editable_section_card.dart'
     show EditableSectionCard;

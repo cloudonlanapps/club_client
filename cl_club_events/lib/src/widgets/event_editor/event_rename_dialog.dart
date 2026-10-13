@@ -2,6 +2,8 @@ import 'package:cl_club_forms/cl_club_forms.dart'
     show EventFormValidators, RenameForm, RenameFormFields, RenameFormState;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart'
+    show SavingDialogCloseIcon, SavingDialogScope;
 
 /// Asks for an event's new title in an [EventRenameDialog], seeded with
 /// [initialTitle], and writes it with [onSave], which resolves to `null` once
@@ -77,28 +79,32 @@ class EventRenameDialogState extends State<EventRenameDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return ShadDialog(
-      title: const Text('Rename event'),
-      actions: [
-        ShadButton.outline(
-          onPressed: isSaving ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ShadButton(
-          onPressed: isSaving ? null : save,
-          child: const Text('Save'),
-        ),
-      ],
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: RenameForm(
-          key: formKey,
-          initialValue: widget.initialTitle,
-          label: 'Event name',
-          placeholder: 'e.g., Summer Skating Camp',
-          validator: EventFormValidators.title,
-          enabled: !isSaving,
-          onSubmitted: save,
+    return SavingDialogScope(
+      saving: isSaving,
+      child: ShadDialog(
+        closeIcon: SavingDialogCloseIcon(saving: isSaving),
+        title: const Text('Rename event'),
+        actions: [
+          ShadButton.outline(
+            onPressed: isSaving ? null : () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ShadButton(
+            onPressed: isSaving ? null : save,
+            child: const Text('Save'),
+          ),
+        ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: RenameForm(
+            key: formKey,
+            initialValue: widget.initialTitle,
+            label: 'Event name',
+            placeholder: 'e.g., Summer Skating Camp',
+            validator: EventFormValidators.title,
+            enabled: !isSaving,
+            onSubmitted: save,
+          ),
         ),
       ),
     );

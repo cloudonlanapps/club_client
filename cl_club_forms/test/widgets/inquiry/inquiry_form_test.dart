@@ -178,6 +178,37 @@ void main() {
     expect(values[InquiryFormFields.answersId], {'ageGroup': 'adult'});
   });
 
+  testWidgets('Issue 112: with the form turned off after it is mounted, the '
+      'honeypot field is off, and on again with the form', (tester) async {
+    final enabled = ValueNotifier<bool>(true);
+    addTearDown(enabled.dispose);
+    await pumpForm(
+      tester,
+      ValueListenableBuilder<bool>(
+        valueListenable: enabled,
+        builder: (context, on, _) => _form(null, enabled: on),
+      ),
+    );
+    bool honeypotOn() => tester
+        .widget<ShadInput>(
+          find.descendant(
+            of: _honeypot(),
+            matching: find.byType(ShadInput, skipOffstage: false),
+            skipOffstage: false,
+          ),
+        )
+        .enabled;
+    expect(honeypotOn(), isTrue);
+
+    enabled.value = false;
+    await tester.pumpAndSettle();
+    expect(honeypotOn(), isFalse);
+
+    enabled.value = true;
+    await tester.pumpAndSettle();
+    expect(honeypotOn(), isTrue);
+  });
+
   testWidgets('Issue 84: the honeypot takes no room and is out of the tab '
       'order and the semantics tree', (tester) async {
     final semantics = tester.ensureSemantics();

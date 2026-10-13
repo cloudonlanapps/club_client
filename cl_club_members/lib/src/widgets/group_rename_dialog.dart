@@ -2,6 +2,8 @@ import 'package:cl_club_forms/cl_club_forms.dart'
     show GroupFormValidators, RenameForm, RenameFormFields, RenameFormState;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart'
+    show SavingDialogCloseIcon, SavingDialogScope;
 
 /// Asks for a group's new name in a [GroupRenameDialog], seeded with
 /// [initialName], and writes it with [onSave], which resolves to `null` once
@@ -76,28 +78,32 @@ class GroupRenameDialogState extends State<GroupRenameDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return ShadDialog(
-      title: const Text('Rename group'),
-      actions: [
-        ShadButton.outline(
-          onPressed: isSaving ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ShadButton(
-          onPressed: isSaving ? null : save,
-          child: const Text('Save'),
-        ),
-      ],
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: RenameForm(
-          key: formKey,
-          initialValue: widget.initialName,
-          label: 'Group Name',
-          placeholder: 'e.g., U12 Boys',
-          validator: GroupFormValidators.name,
-          enabled: !isSaving,
-          onSubmitted: save,
+    return SavingDialogScope(
+      saving: isSaving,
+      child: ShadDialog(
+        closeIcon: SavingDialogCloseIcon(saving: isSaving),
+        title: const Text('Rename group'),
+        actions: [
+          ShadButton.outline(
+            onPressed: isSaving ? null : () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ShadButton(
+            onPressed: isSaving ? null : save,
+            child: const Text('Save'),
+          ),
+        ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: RenameForm(
+            key: formKey,
+            initialValue: widget.initialName,
+            label: 'Group Name',
+            placeholder: 'e.g., U12 Boys',
+            validator: GroupFormValidators.name,
+            enabled: !isSaving,
+            onSubmitted: save,
+          ),
         ),
       ),
     );

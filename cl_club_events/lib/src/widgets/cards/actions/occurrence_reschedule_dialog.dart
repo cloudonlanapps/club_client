@@ -4,6 +4,8 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart'
+    show SavingDialogCloseIcon, SavingDialogScope;
 
 import '../../../models/occurrence_reschedule_form_helpers.dart';
 import '../../../utils/event_write_error_message.dart';
@@ -100,31 +102,35 @@ class OccurrenceRescheduleDialogState
             .map((v) => EventVenueOption(id: v.id, name: v.name))
             .toList();
 
-    return ShadDialog(
-      title: const Text('Reschedule Session'),
-      description: const Text(
-        'Move this session to a new date, time, or venue. Enrolled members are '
-        'notified of the change.',
-      ),
-      actions: [
-        ShadButton.outline(
-          onPressed: _submitting
-              ? null
-              : () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
+    return SavingDialogScope(
+      saving: _submitting,
+      child: ShadDialog(
+        closeIcon: SavingDialogCloseIcon(saving: _submitting),
+        title: const Text('Reschedule Session'),
+        description: const Text(
+          'Move this session to a new date, time, or venue. Enrolled members '
+          'are notified of the change.',
         ),
-        ShadButton(
-          onPressed: _submitting ? null : _save,
-          child: Text(_submitting ? 'Saving…' : 'Save'),
+        actions: [
+          ShadButton.outline(
+            onPressed: _submitting
+                ? null
+                : () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ShadButton(
+            onPressed: _submitting ? null : _save,
+            child: Text(_submitting ? 'Saving…' : 'Save'),
+          ),
+        ],
+        child: OccurrenceRescheduleForm(
+          key: _formKey,
+          initialValues: buildOccurrenceRescheduleInitialValues(
+            widget.occurrence,
+          ),
+          venues: venues,
+          enabled: !_submitting,
         ),
-      ],
-      child: OccurrenceRescheduleForm(
-        key: _formKey,
-        initialValues: buildOccurrenceRescheduleInitialValues(
-          widget.occurrence,
-        ),
-        venues: venues,
-        enabled: !_submitting,
       ),
     );
   }

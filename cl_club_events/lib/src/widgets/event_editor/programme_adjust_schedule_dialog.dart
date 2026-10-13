@@ -10,6 +10,8 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart'
+    show SavingDialogCloseIcon, SavingDialogScope;
 
 import '../../models/programme_schedule_form_helpers.dart';
 import '../../models/stale_version_message.dart';
@@ -142,45 +144,52 @@ class ProgrammeAdjustScheduleDialogState
     final venues = ref
         .watch(clVenuesProvider((includeDeleted: false, searchTerm: null)))
         .valueOrNull;
-    return ShadDialog(
-      title: const Text(ProgrammeAdjustScheduleDialog.title),
-      actions: [
-        ShadButton.outline(
-          onPressed: saving ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ShadButton(
-          onPressed: saving ? null : save,
-          child: Text(saving ? 'Saving…' : 'Save'),
-        ),
-      ],
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: ProgrammeAdjustScheduleDialog.maxFormWidth,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: ProgrammeAdjustScheduleDialog.warningGap,
-            children: [
-              if (endWarning != null)
-                Text(endWarning, style: ShadTheme.of(context).textTheme.small),
-              ProgrammeScheduleAdjustForm(
-                key: formKey,
-                initialValue: buildProgrammeScheduleAdjustInitialValues(
-                  event,
+    return SavingDialogScope(
+      saving: saving,
+      child: ShadDialog(
+        closeIcon: SavingDialogCloseIcon(saving: saving),
+        title: const Text(ProgrammeAdjustScheduleDialog.title),
+        actions: [
+          ShadButton.outline(
+            onPressed: saving ? null : () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ShadButton(
+            onPressed: saving ? null : save,
+            child: Text(saving ? 'Saving…' : 'Save'),
+          ),
+        ],
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: ProgrammeAdjustScheduleDialog.maxFormWidth,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: ProgrammeAdjustScheduleDialog.warningGap,
+              children: [
+                if (endWarning != null)
+                  Text(
+                    endWarning,
+                    style: ShadTheme.of(context).textTheme.small,
+                  ),
+                ProgrammeScheduleAdjustForm(
+                  key: formKey,
+                  initialValue: buildProgrammeScheduleAdjustInitialValues(
+                    event,
+                    fromOptions: widget.fromOptions,
+                  ),
                   fromOptions: widget.fromOptions,
+                  venues: [
+                    for (final venue in venues ?? const <Venue>[])
+                      EventVenueOption(id: venue.id, name: venue.name),
+                  ],
+                  enabled: !saving,
                 ),
-                fromOptions: widget.fromOptions,
-                venues: [
-                  for (final venue in venues ?? const <Venue>[])
-                    EventVenueOption(id: venue.id, name: venue.name),
-                ],
-                enabled: !saving,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

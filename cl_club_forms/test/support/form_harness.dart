@@ -96,12 +96,12 @@ Future<int> expectKeyboardIgnoredWhenOff(
   return tried;
 }
 
-/// The controls on screen that have an on and an off look, each with
-/// whether it is drawn on. A control kept offstage has no look and is left
-/// out.
+/// The controls the form has built that have an on and an off look, each
+/// with whether it is drawn on. A control kept offstage is one of them: a
+/// form passes `enabled` to every field (club_client#112).
 List<bool> drawnControls(WidgetTester tester) => [
   for (final widget in tester.widgetList(
-    find.byWidgetPredicate((w) => _drawnOn(w) != null),
+    find.byWidgetPredicate((w) => _drawnOn(w) != null, skipOffstage: false),
   ))
     _drawnOn(widget)!,
 ];

@@ -2,13 +2,14 @@
 // does nothing while the draft is created.
 import 'dart:async';
 
-import 'package:cl_club_evaluation/cl_club_evaluation.dart';
+import 'package:cl_club_evaluation/src/widgets/start_review_dialog.dart';
 import 'package:club_sdk_2/club_sdk_2.dart' as sdk;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show EvaluationStartForm;
 
+import '../support/dialog_dismissal.dart';
 import '../support/evaluation_scope.dart';
 
 const sdk.ServerException _notEligible = sdk.ServerException(
@@ -131,6 +132,25 @@ void main() {
 
       wait.complete();
       await tester.pumpAndSettle();
+      expect(results, [42]);
+    });
+    testWidgets('Issue 113: while the draft is created, the X, a tap '
+        'outside, Escape and system back do not close Start review', (
+      tester,
+    ) async {
+      final wait = Completer<void>();
+      final stub = _ScriptedEvaluations([wait]);
+      final results = await _open(tester, stub);
+
+      await tester.tap(find.text('Start'));
+      await tester.pump();
+
+      await expectNoDismissal(tester, find.byType(StartReviewDialog));
+      expect(results, isEmpty);
+
+      wait.complete();
+      await tester.pumpAndSettle();
+      expect(find.byType(StartReviewDialog), findsNothing);
       expect(results, [42]);
     });
   });

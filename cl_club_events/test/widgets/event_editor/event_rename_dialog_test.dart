@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:cl_club_events/src/widgets/event_editor/event_rename_dialog.dart';
 import 'package:cl_club_forms/cl_club_forms.dart' show RenameFormFields;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+
+import '../../support/dialog_dismissal.dart';
 
 const _refused = 'That name cannot be used.';
 const _initial = 'Summer Camp';
@@ -66,6 +69,32 @@ Future<void> _save(WidgetTester tester) async {
 }
 
 void main() {
+  group('Issue 113: the event rename dialog stays open while it saves', () {
+    testWidgets('Issue 113: while the event rename dialog saves, its X, a tap '
+        'outside, Escape and system back do not close it; once the name is '
+        'refused the message shows and Escape closes it', (tester) async {
+      final answer = Completer<String?>();
+      final host = await _open(tester, onSave: (_) => answer.future);
+
+      await tester.enterText(_field(), 'Winter Camp');
+      await tester.tap(find.text('Save'));
+      await tester.pump();
+
+      await expectNoDismissal(tester, _field());
+      expect(host.saved, ['Winter Camp']);
+      expect(host.results, isEmpty);
+
+      answer.complete(_refused);
+      await tester.pumpAndSettle();
+      expect(find.text(_refused), findsOneWidget);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(_field(), findsNothing);
+      expect(host.results, [null]);
+    });
+  });
+
   group('Issue 95: the event rename dialog saves while it is open', () {
     testWidgets('Issue 95: a refused name leaves the event rename dialog open '
         'with the typed name and the message on the field', (tester) async {

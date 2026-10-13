@@ -10,6 +10,8 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart'
+    show SavingDialogCloseIcon, SavingDialogScope;
 
 import '../../models/event_cancellation_form_helpers.dart';
 import '../../models/event_cancellation_messages.dart';
@@ -158,34 +160,38 @@ class EventCancellationDialogState
     );
     final canSubmit = !isSubmitting && offered != null && notice == null;
 
-    return ShadDialog(
-      title: Text(actionLabel),
-      description: Text(
-        isCamp
-            ? EventCancellationMessages.cancelCampDescription
-            : EventCancellationMessages.callOffDescription,
-      ),
-      actions: [
-        ShadButton.outline(
-          onPressed: isSubmitting
-              ? null
-              : () => Navigator.of(context).pop(false),
-          child: const Text(EventCancellationMessages.back),
+    return SavingDialogScope(
+      saving: isSubmitting,
+      child: ShadDialog(
+        closeIcon: SavingDialogCloseIcon(saving: isSubmitting),
+        title: Text(actionLabel),
+        description: Text(
+          isCamp
+              ? EventCancellationMessages.cancelCampDescription
+              : EventCancellationMessages.callOffDescription,
         ),
-        ShadButton.destructive(
-          onPressed: canSubmit ? submit : null,
-          child: Text(isSubmitting ? inFlightLabel : actionLabel),
+        actions: [
+          ShadButton.outline(
+            onPressed: isSubmitting
+                ? null
+                : () => Navigator.of(context).pop(false),
+            child: const Text(EventCancellationMessages.back),
+          ),
+          ShadButton.destructive(
+            onPressed: canSubmit ? submit : null,
+            child: Text(isSubmitting ? inFlightLabel : actionLabel),
+          ),
+        ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: notice != null
+              ? Text(notice, style: theme.textTheme.muted)
+              : EventCancellationForm(
+                  key: formKey,
+                  sessions: offered ?? const [],
+                  enabled: !isSubmitting,
+                ),
         ),
-      ],
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: notice != null
-            ? Text(notice, style: theme.textTheme.muted)
-            : EventCancellationForm(
-                key: formKey,
-                sessions: offered ?? const [],
-                enabled: !isSubmitting,
-              ),
       ),
     );
   }

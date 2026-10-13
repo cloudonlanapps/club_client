@@ -169,7 +169,7 @@ class InquiryFormState extends State<InquiryForm>
               ),
             ],
           ),
-          const InquiryHoneypotField(),
+          InquiryHoneypotField(enabled: widget.enabled),
         ],
       ),
     );

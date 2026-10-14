@@ -32,7 +32,6 @@ class ClubFormsAppState extends State<ClubFormsApp> {
   Widget build(BuildContext context) {
     return ShadApp(
       title: DemoStrings.appName,
-      debugShowCheckedModeBanner: false,
       themeMode: themeMode,
       theme: ShadThemeData(
         brightness: Brightness.light,

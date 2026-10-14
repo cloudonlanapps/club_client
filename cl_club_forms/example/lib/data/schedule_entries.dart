@@ -12,7 +12,6 @@ abstract final class ScheduleEntries {
   static OneOffScheduleData get oneOff => OneOffScheduleData(
     date: DemoSamples.inDays(DemoSamples.soonDays),
     startTime: DemoSamples.startTime,
-    durationMinutes: DemoSamples.durationMinutes,
   );
 
   /// The entries, in the order shown.
@@ -29,7 +28,6 @@ abstract final class ScheduleEntries {
           startDate: DemoSamples.inDays(DemoSamples.soonDays),
           trainingDays: DemoSamples.campTrainingDays,
           sessionStartTime: DemoSamples.startTime,
-          durationMinutes: DemoSamples.durationMinutes,
           excludedDates: {DemoSamples.inDays(DemoSamples.soonDays + 2)},
           sessions: DemoSamples.sessions,
         ),

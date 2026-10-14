@@ -39,7 +39,7 @@ abstract final class EventEntries {
       formType: EventStaffForm,
       builder: (key) => EventStaffForm(
         key: key,
-        initialValues: {
+        initialValues: const {
           EventFormFields.organizerNameId: DemoSamples.organizer,
           EventFormFields.coachNamesId: DemoSamples.coaches,
         },

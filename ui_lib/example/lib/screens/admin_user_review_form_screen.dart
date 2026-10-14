@@ -21,15 +21,15 @@ class _AdminUserReviewFormScreenState extends State<AdminUserReviewFormScreen> {
     userName: 'asha.verma',
     dateOfBirth: DateTime(1998, 3, 14),
     gender: 'Female',
-    documents: [
-      const IdentityDocumentSlot(
+    documents: const [
+      IdentityDocumentSlot(
         id: 'demo-asha-1',
         uri: 'https://picsum.photos/seed/asha-1/640/400',
         mimeType: 'image/jpeg',
         sizeBytes: 124000,
         fileName: 'aadhaar-front.jpg',
       ),
-      const IdentityDocumentSlot(
+      IdentityDocumentSlot(
         id: 'demo-asha-2',
         uri: 'https://picsum.photos/seed/asha-2/640/400',
         mimeType: 'image/jpeg',

@@ -65,7 +65,7 @@ void main() {
       );
 
       testWidgets('Issue 76: the card of "${entry.title}" holds no button '
-          'other than the form\'s own, ${surface.key}', (tester) async {
+          "other than the form's own, ${surface.key}", (tester) async {
         await pumpEntry(tester, entry, surface.value);
 
         expect(

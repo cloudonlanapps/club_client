@@ -18,6 +18,9 @@ dependencies:
   flutter_riverpod: 2.6.1
   shadcn_ui: 0.56.1
 
+dev_dependencies:
+  very_good_analysis: 10.3.0
+
 #dependency_overrides:
 #  club_sdk_2:
 #    path: ../../../packages/club_sdk

@@ -70,8 +70,8 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
     show ActionButton, PickedImage, SectionEditButton;
 
+import '_helpers/auth.dart' show attemptLoginExpectFailure, loginViaUi;
 import '_helpers/capabilities.dart';
-import '_helpers/forms.dart' show ensureTextById;
 import '_helpers/pump.dart' show pumpApp;
 
 const _kApiBaseUrl = String.fromEnvironment(
@@ -181,7 +181,7 @@ void main() {
       final verification = caps.identityVerification;
 
       // ─── Phase 1: sudo creates workflow3_admin and grants Admin role ───
-      await _loginViaUi(tester, _kSudoUsername, _kSudoPassword);
+      await loginViaUi(tester, _kSudoUsername, _kSudoPassword);
       expect(
         _currentUser(tester),
         isNotNull,
@@ -220,7 +220,7 @@ void main() {
       // for review, which flips their status to `pending` and shows the
       // "submitted" confirmation. With it off, sign-up already made them
       // `pending`, so the confirmation shows at once.
-      await _loginViaUi(tester, _kMemberUsername, _kMemberPassword);
+      await loginViaUi(tester, _kMemberUsername, _kMemberPassword);
       expect(
         _currentUser(tester),
         isNotNull,
@@ -247,11 +247,11 @@ void main() {
       // sends the pending registration back with a note, the member sees the
       // ReapplyVariant banner, edits a field, and resubmits — returning the
       // flow to a fresh `pending` state for Phase 4 to approve.
-      await _loginViaUi(tester, _kAdminUsername, _kAdminPassword);
+      await loginViaUi(tester, _kAdminUsername, _kAdminPassword);
       await _reconsiderViaActNowViaUi(tester, note: _kReviewNote);
       await _logout(tester);
 
-      await _loginViaUi(tester, _kMemberUsername, _kMemberPassword);
+      await loginViaUi(tester, _kMemberUsername, _kMemberPassword);
       await _assertReapplyVariant(tester, note: _kReviewNote);
       await _reapplyViaUi(
         tester,
@@ -293,12 +293,12 @@ void main() {
       // Pending users are surfaced via the "Act Now" banner on the admin
       // user list (they're filtered out of the main card list), which opens
       // the dedicated review surface where Approve flips them to `active`.
-      await _loginViaUi(tester, _kAdminUsername, _kAdminPassword);
+      await loginViaUi(tester, _kAdminUsername, _kAdminPassword);
       await _approveViaActNowViaUi(tester);
       await _logout(tester);
 
       // ─── Phase 5: member edits Bio + Achievements ──────────────────────
-      await _loginViaUi(tester, _kMemberUsername, _kMemberPassword);
+      await loginViaUi(tester, _kMemberUsername, _kMemberPassword);
 
       await _editMarkdownFieldViaUi(
         tester,
@@ -327,7 +327,7 @@ void main() {
 
       // ─── Phase 7: logout / login round-trip — values still there ──────
       await _logout(tester);
-      await _loginViaUi(tester, _kMemberUsername, _kMemberPassword);
+      await loginViaUi(tester, _kMemberUsername, _kMemberPassword);
       fresh = await _refreshSelf(tester);
       expect(fresh.bio, _kBioMarkdown);
       expect(fresh.achievements, _kAchievementsMarkdown);
@@ -335,7 +335,7 @@ void main() {
       await _logout(tester);
 
       // ─── Phase 8: admin verifies + edits non-DOB fields ────────────────
-      await _loginViaUi(tester, _kAdminUsername, _kAdminPassword);
+      await loginViaUi(tester, _kAdminUsername, _kAdminPassword);
 
       await _openAdminProfileViaUi(tester, _kMemberUsername);
       // Admin sees the member's bio and achievements live on the profile.
@@ -378,7 +378,7 @@ void main() {
       await _logout(tester);
 
       // ─── Phase 9: super-admin edits DOB ────────────────────────────────
-      await _loginViaUi(tester, _kSudoUsername, _kSudoPassword);
+      await loginViaUi(tester, _kSudoUsername, _kSudoPassword);
       await _openAdminProfileViaUi(tester, _kMemberUsername);
       await _openSectionEditor(tester, PersonalDetailsCard, 'firstName');
 
@@ -405,7 +405,7 @@ void main() {
       await _logout(tester);
 
       // ─── Phase 10: member confirms admin/sudo-applied updates ──────────
-      await _loginViaUi(tester, _kMemberUsername, _kMemberPassword);
+      await loginViaUi(tester, _kMemberUsername, _kMemberPassword);
       final asMember = await _refreshSelf(tester);
       expect(asMember.dateOfBirthUtc, _kSudoEditedDob);
       expect(asMember.medicalInfo, _kAdminEditedMedicalInfo);
@@ -413,25 +413,25 @@ void main() {
       await _logout(tester);
 
       // ─── Phase 11: admin blocks the member ─────────────────────────────
-      await _loginViaUi(tester, _kAdminUsername, _kAdminPassword);
+      await loginViaUi(tester, _kAdminUsername, _kAdminPassword);
       await _openAdminProfileViaUi(tester, _kMemberUsername);
       await _invokeProfileActionViaUi(tester, 'Block');
       await _logout(tester);
 
       // ─── Phase 12: blocked member cannot log in ────────────────────────
-      await _attemptLoginExpectFailure(
+      await attemptLoginExpectFailure(
         tester,
         _kMemberUsername,
         _kMemberPassword,
       );
 
       // ─── Phase 13: admin unblocks the member ───────────────────────────
-      await _loginViaUi(tester, _kAdminUsername, _kAdminPassword);
+      await loginViaUi(tester, _kAdminUsername, _kAdminPassword);
       await _unblockUserFromListViaUi(tester, _kMemberUsername);
       await _logout(tester);
 
       // ─── Phase 14: member logs in successfully again ───────────────────
-      await _loginViaUi(tester, _kMemberUsername, _kMemberPassword);
+      await loginViaUi(tester, _kMemberUsername, _kMemberPassword);
       expect(
         _currentUser(tester),
         isNotNull,
@@ -440,11 +440,11 @@ void main() {
       await _logout(tester);
 
       // ─── Phase 15: cleanup ─────────────────────────────────────────────
-      await _loginViaUi(tester, _kAdminUsername, _kAdminPassword);
+      await loginViaUi(tester, _kAdminUsername, _kAdminPassword);
       await _softDeleteUserViaUi(tester, _kMemberUsername);
       await _logout(tester);
 
-      await _loginViaUi(tester, _kSudoUsername, _kSudoPassword);
+      await loginViaUi(tester, _kSudoUsername, _kSudoPassword);
       await _softDeleteUserViaUi(tester, _kAdminUsername);
       await _logout(tester);
     },
@@ -649,116 +649,6 @@ Future<UserPrivate> _refreshOther(
 // ---------------------------------------------------------------------------
 // UI flows
 // ---------------------------------------------------------------------------
-
-Future<void> _loginViaUi(
-  WidgetTester tester,
-  String username,
-  String password,
-) async {
-  await _go(tester, '/auth/login');
-
-  // If a previous _attemptLoginExpectFailure left the screen on a status
-  // card (AccountPendingView / AccountBlockedView / AccountLeftView — all
-  // shown by LoginView for status-coded rejections), dismiss it so the
-  // login form is mounted before we try to fill it.
-  final back = find.widgetWithText(ShadButton, 'Back to sign in');
-  if (back.evaluate().isNotEmpty) {
-    _invokeShadButton(tester, back, reason: 'dismiss status card');
-    await _settle(tester);
-  }
-
-  // Wait for the login form to mount.
-  await _waitFor(
-    tester,
-    () => find
-        .byWidgetPredicate(
-          (w) => w is ShadInputFormField && w.id == 'username',
-        )
-        .evaluate()
-        .isNotEmpty,
-    description: 'login form to mount',
-  );
-
-  await _enterTextById(tester, 'username', username);
-  await _enterTextById(tester, 'password', password);
-  // No Enter here: in the password field it signs in (#103), and the
-  // button pressed below would then read "Signing in…".
-  await tester.pump();
-
-  // As in the shared loginViaUi: a field emptied after it was typed is
-  // typed again, or Sign in validates an empty form and starts nothing.
-  await ensureTextById(tester, 'username', username);
-  await ensureTextById(tester, 'password', password);
-  await _submitFormContaining(tester, fieldId: 'username', label: 'Sign in');
-
-  try {
-    await _waitFor(
-      tester,
-      () => _currentUser(tester) != null,
-      description: 'login completion for $username',
-    );
-  } catch (e) {
-    final auth = _container(tester).read(authStateProvider);
-    // Integration test diagnostic output; `print` is the intended channel
-    // because the logger framework isn't wired in tests.
-    // ignore: avoid_print
-    print(
-      '[test] login failed for "$username": '
-      'isLoading=${auth.isLoading} '
-      'value=${auth.valueOrNull} '
-      'error=${auth.error} '
-      'passwordLength=${password.length}',
-    );
-    rethrow;
-  }
-}
-
-Future<void> _attemptLoginExpectFailure(
-  WidgetTester tester,
-  String username,
-  String password,
-) async {
-  await _go(tester, '/auth/login');
-  await _waitFor(
-    tester,
-    () => find
-        .byWidgetPredicate(
-          (w) => w is ShadInputFormField && w.id == 'username',
-        )
-        .evaluate()
-        .isNotEmpty,
-    description: 'login form to mount',
-  );
-
-  await _enterTextById(tester, 'username', username);
-  await _enterTextById(tester, 'password', password);
-  // No Enter here: in the password field it signs in (#103), and the
-  // button pressed below would then read "Signing in…".
-  await tester.pump();
-
-  // As in the shared loginViaUi: a field emptied after it was typed is
-  // typed again, or Sign in validates an empty form and starts nothing.
-  await ensureTextById(tester, 'username', username);
-  await ensureTextById(tester, 'password', password);
-  await _submitFormContaining(tester, fieldId: 'username', label: 'Sign in');
-
-  // Settle into a non-loading null state — auth notifier sets state.error on
-  // failure (account blocked, invalid credentials, …) and state.value stays
-  // null, so this asserts the rejection without binding to a specific code.
-  await _waitFor(
-    tester,
-    () {
-      final auth = _container(tester).read(authStateProvider);
-      return !auth.isLoading && auth.valueOrNull == null;
-    },
-    description: 'login attempt for $username to be rejected',
-  );
-  expect(
-    _currentUser(tester),
-    isNull,
-    reason: 'rejected login must leave authStateProvider null',
-  );
-}
 
 /// Asserts the onboarding-routing model: a freshly `registered` user who has
 /// just logged in is routed to /onboarding/welcome, where the IntroCard
@@ -1774,62 +1664,6 @@ Future<void> _enterTextById(
     );
   }
   await tester.enterText(editable, value);
-}
-
-Future<void> _submitFormContaining(
-  WidgetTester tester, {
-  required String fieldId,
-  required String label,
-}) async {
-  final formFinder = find.ancestor(
-    of: find.byWidgetPredicate(
-      (w) => w is ShadInputFormField && w.id == fieldId,
-    ),
-    matching: find.byType(ShadForm),
-  );
-  expect(
-    formFinder,
-    findsOneWidget,
-    reason: 'expected one ShadForm enclosing field "$fieldId"',
-  );
-  final btn = _submitButtonBeside(formFinder.evaluate().single, label);
-  expect(btn.onPressed, isNotNull, reason: '"$label" button should be enabled');
-  btn.onPressed!.call();
-  await _settle(tester);
-}
-
-/// The ShadButton labelled [label] that belongs to the form at [form]: the
-/// one closest to it in the widget tree. A form owns no buttons; its host
-/// draws them beside it, so the button and the form share a near ancestor,
-/// which a same-labelled button elsewhere on the page (the public navbar's
-/// "Sign in") does not.
-ShadButton _submitButtonBeside(Element form, String label) {
-  final around = <Element>[form];
-  form.visitAncestorElements((ancestor) {
-    around.add(ancestor);
-    return true;
-  });
-  ShadButton? nearest;
-  var nearestDistance = around.length;
-  for (final candidate in find.widgetWithText(ShadButton, label).evaluate()) {
-    var distance = around.length;
-    candidate.visitAncestorElements((ancestor) {
-      final index = around.indexOf(ancestor);
-      if (index < 0) return true;
-      distance = index;
-      return false;
-    });
-    if (distance < nearestDistance) {
-      nearest = candidate.widget as ShadButton;
-      nearestDistance = distance;
-    }
-  }
-  expect(
-    nearest,
-    isNotNull,
-    reason: 'expected a "$label" ShadButton beside the form',
-  );
-  return nearest!;
 }
 
 void _setShadFormValues(WidgetTester tester, Map<String, dynamic> values) {

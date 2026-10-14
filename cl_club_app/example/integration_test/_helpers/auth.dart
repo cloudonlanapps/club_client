@@ -54,6 +54,15 @@ Future<void> loginViaUi(
 ) async {
   await go(tester, '/auth/login');
 
+  // A sign-in refused for the account's status (pending, blocked, left)
+  // leaves LoginView on a status card in place of the form, and going to
+  // /auth/login again keeps it there: dismiss it so the form mounts.
+  final back = find.widgetWithText(ShadButton, 'Back to sign in');
+  if (back.evaluate().isNotEmpty) {
+    invokeShadButton(tester, back, reason: 'dismiss status card');
+    await settle(tester);
+  }
+
   // Theme/asset config loads async on first pump, so the form may not
   // exist immediately after navigation.
   await waitFor(

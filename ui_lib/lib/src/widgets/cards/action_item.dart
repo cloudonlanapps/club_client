@@ -26,10 +26,16 @@ class ActionItem {
   final WidgetBuilder? popover;
 
   /// Why the action is unavailable, shown beside it while it is disabled
-  /// ([onPressed] null, not [loading]) — e.g. a credit count. Generic: the
-  /// widget says what it likes; nothing here knows what it is about.
+  /// (neither [onPressed] nor [popover], not [loading]) — e.g. a credit
+  /// count. Generic: the widget says what it likes; nothing here knows what
+  /// it is about.
   final WidgetBuilder? reason;
 
+  /// Whether the action can be used: it is not [loading] and has either
+  /// [onPressed] or [popover].
+  bool get isActionable => !loading && (onPressed != null || popover != null);
+
   /// Whether [reason] is shown: the action is disabled and has one.
-  bool get showsReason => reason != null && onPressed == null && !loading;
+  bool get showsReason =>
+      reason != null && !loading && onPressed == null && popover == null;
 }

@@ -51,4 +51,32 @@ void main() {
       expect(find.text('New Camp'), findsNothing);
     });
   });
+
+  testWidgets('Issue 143: the choice of types is as wide as its entries', (
+    tester,
+  ) async {
+    const tablet = Size(1024, 768);
+    await tester.binding.setSurfaceSize(tablet);
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      _wrap({EventType.camp, EventType.programme, EventType.oneOff}, []),
+    );
+
+    await tester.tap(find.text('Create Event'));
+    await tester.pumpAndSettle();
+
+    final entries = [
+      for (final label in ['New Camp', 'New Programme', 'New One-off'])
+        tester.getRect(
+          find.ancestor(
+            of: find.text(label),
+            matching: find.byType(ShadButton),
+          ),
+        ),
+    ];
+    for (final entry in entries) {
+      expect(entry.width, lessThan(tablet.width / 2));
+      expect(entry.width, entries.first.width);
+    }
+  });
 }

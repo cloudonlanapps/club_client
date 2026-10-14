@@ -24,6 +24,10 @@ class GroupFilterPopover extends StatefulWidget {
 class GroupFilterPopoverState extends State<GroupFilterPopover> {
   final popoverController = ShadPopoverController();
 
+  /// Shared by the popover and the selects inside it, so picking an option
+  /// counts as a tap inside the popover and leaves it open (#143).
+  final Object popoverGroupId = Object();
+
   @override
   void dispose() {
     popoverController.dispose();
@@ -44,6 +48,7 @@ class GroupFilterPopoverState extends State<GroupFilterPopover> {
 
     return ShadPopover(
       controller: popoverController,
+      groupId: popoverGroupId,
       popover: (context) => Padding(
         padding: const EdgeInsets.all(16),
         child: SizedBox(
@@ -75,6 +80,7 @@ class GroupFilterPopoverState extends State<GroupFilterPopover> {
               Text('Type', style: theme.textTheme.small),
               const SizedBox(height: 6),
               ShadSelect<GroupTypeFilter>(
+                groupId: popoverGroupId,
                 placeholder: const Text('All types'),
                 initialValue: widget.filter.typeFilter,
                 onChanged: (value) {

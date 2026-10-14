@@ -41,6 +41,10 @@ class EventFilterPopover extends StatefulWidget {
 
 class EventFilterPopoverState extends State<EventFilterPopover> {
   final popoverController = ShadPopoverController();
+
+  /// Shared by the popover and the selects inside it, so picking an option
+  /// counts as a tap inside the popover and leaves it open (#143).
+  final Object popoverGroupId = Object();
   late EventFilter filter = widget.initial;
 
   @override
@@ -77,6 +81,7 @@ class EventFilterPopoverState extends State<EventFilterPopover> {
 
     return ShadPopover(
       controller: popoverController,
+      groupId: popoverGroupId,
       popover: (context) => Padding(
         padding: const EdgeInsets.all(16),
         child: SizedBox(
@@ -105,6 +110,7 @@ class EventFilterPopoverState extends State<EventFilterPopover> {
                 Text('Visibility', style: theme.textTheme.small),
                 const SizedBox(height: 6),
                 ShadSelect<String>(
+                  groupId: popoverGroupId,
                   placeholder: const Text('All'),
                   initialValue: filter.visibility?.name,
                   onChanged: (value) {

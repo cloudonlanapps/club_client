@@ -52,31 +52,33 @@ class CreditAccountMenuState extends State<CreditAccountMenu> {
         account.kind == CreditAccountKind.event;
     return ShadPopover(
       controller: controller,
-      popover: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ShadButton.ghost(
-            size: ShadButtonSize.sm,
-            leading: const Icon(LucideIcons.calendarPlus, size: 14),
-            onPressed: () => run(widget.onExtend),
-            child: const Text('Extend'),
-          ),
-          if (canReverse)
+      popover: (context) => IntrinsicWidth(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
             ShadButton.ghost(
               size: ShadButtonSize.sm,
-              leading: const Icon(LucideIcons.undo2, size: 14),
-              onPressed: () => run(widget.onReverse),
-              child: const Text('Reverse'),
+              leading: const Icon(LucideIcons.calendarPlus, size: 14),
+              onPressed: () => run(widget.onExtend),
+              child: const Text('Extend'),
             ),
-          if (canTransfer)
-            ShadButton.ghost(
-              size: ShadButtonSize.sm,
-              leading: const Icon(LucideIcons.arrowLeftRight, size: 14),
-              onPressed: () => run(widget.onTransfer),
-              child: const Text('Transfer'),
-            ),
-        ],
+            if (canReverse)
+              ShadButton.ghost(
+                size: ShadButtonSize.sm,
+                leading: const Icon(LucideIcons.undo2, size: 14),
+                onPressed: () => run(widget.onReverse),
+                child: const Text('Reverse'),
+              ),
+            if (canTransfer)
+              ShadButton.ghost(
+                size: ShadButtonSize.sm,
+                leading: const Icon(LucideIcons.arrowLeftRight, size: 14),
+                onPressed: () => run(widget.onTransfer),
+                child: const Text('Transfer'),
+              ),
+          ],
+        ),
       ),
       child: ShadIconButton.ghost(
         icon: const Icon(LucideIcons.ellipsisVertical, size: 16),

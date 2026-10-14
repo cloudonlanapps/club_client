@@ -31,6 +31,10 @@ class UserFilterPopover extends ConsumerStatefulWidget {
 class UserFilterPopoverState extends ConsumerState<UserFilterPopover> {
   final popoverController = ShadPopoverController();
 
+  /// Shared by the popover and the selects inside it, so picking an option
+  /// counts as a tap inside the popover and leaves it open (#143).
+  final Object popoverGroupId = Object();
+
   @override
   void dispose() {
     popoverController.dispose();
@@ -54,6 +58,7 @@ class UserFilterPopoverState extends ConsumerState<UserFilterPopover> {
 
     return ShadPopover(
       controller: popoverController,
+      groupId: popoverGroupId,
       popover: (context) => Padding(
         padding: const EdgeInsets.all(16),
         child: SizedBox(
@@ -91,6 +96,7 @@ class UserFilterPopoverState extends ConsumerState<UserFilterPopover> {
                 Text('Status', style: theme.textTheme.small),
                 const SizedBox(height: 6),
                 ShadSelect<String>(
+                  groupId: popoverGroupId,
                   placeholder: const Text('All statuses'),
                   initialValue: widget.filter.status?.name,
                   onChanged: (value) {
@@ -149,6 +155,7 @@ class UserFilterPopoverState extends ConsumerState<UserFilterPopover> {
               Text('Role', style: theme.textTheme.small),
               const SizedBox(height: 6),
               ShadSelect<String>(
+                groupId: popoverGroupId,
                 placeholder: const Text('All roles'),
                 initialValue: widget.filter.role,
                 onChanged: (value) {

@@ -57,17 +57,19 @@ class CreateEventQuickActionState extends State<CreateEventQuickAction> {
     }
     return ShadPopover(
       controller: popoverController,
-      popover: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final type in types)
-            ShadButton.ghost(
-              size: ShadButtonSize.sm,
-              onPressed: () => choose(type),
-              child: Text(createEventLabel(type)),
-            ),
-        ],
+      popover: (context) => IntrinsicWidth(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final type in types)
+              ShadButton.ghost(
+                size: ShadButtonSize.sm,
+                onPressed: () => choose(type),
+                child: Text(createEventLabel(type)),
+              ),
+          ],
+        ),
       ),
       child: QuickActionTile(
         icon: LucideIcons.calendarPlus,

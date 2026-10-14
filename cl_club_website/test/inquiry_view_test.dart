@@ -18,7 +18,7 @@ typedef _Submission = ({
   InquiryKind kind,
   String name,
   String email,
-  String message,
+  String? message,
   String token,
   String? phone,
   Map<String, dynamic>? extra,
@@ -50,8 +50,8 @@ class _RecordingNotifier extends ClPublicInquiryNotifier {
     required InquiryKind kind,
     required String name,
     required String email,
-    required String message,
     required String token,
+    String? message,
     String? phone,
     Map<String, dynamic>? extra,
     String? website,
@@ -357,7 +357,7 @@ void main() {
       expect(notifier.submissions, hasLength(1));
       final sent = notifier.submissions.single;
       expect(sent.kind, InquiryKind.interest);
-      expect(sent.message, '');
+      expect(sent.message, isNull);
       expect(sent.phone, '+919876543210');
       expect(sent.extra, {'ageGroup': 'adult'});
       expect(sent.website, 'https://spam.example.test');

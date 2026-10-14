@@ -47,8 +47,9 @@ abstract final class InquiryFormSubmit {
   /// Submits [values], the map `InquiryForm.validate()` returned, through
   /// [notifier].
   ///
-  /// The phone, the answers and the honeypot are each sent as absent when
-  /// empty. The phone is stored in international format, completed with
+  /// The message, the phone, the answers and the honeypot are each sent as
+  /// absent when empty: an interest's note may be left out (#128). The
+  /// phone is stored in international format, completed with
   /// [defaultCountryCode] when typed without a country code (#31).
   static Future<void> create({
     required ClPublicInquiryNotifier notifier,
@@ -59,11 +60,12 @@ abstract final class InquiryFormSubmit {
   }) {
     final answers = values[InquiryFormFields.answersId] as Map<String, String>;
     final honeypot = values[InquiryFormFields.honeypotId] as String;
+    final message = values[InquiryFormFields.messageId] as String;
     return notifier.submit(
       kind: kind,
       name: values[InquiryFormFields.nameId] as String,
       email: values[InquiryFormFields.emailId] as String,
-      message: values[InquiryFormFields.messageId] as String,
+      message: message.isEmpty ? null : message,
       token: token,
       phone: PhoneNumber.toInternationalOrNull(
         values[InquiryFormFields.phoneId] as String,

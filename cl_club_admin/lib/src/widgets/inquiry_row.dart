@@ -7,7 +7,8 @@ import 'package:ui_lib/ui_lib.dart' show EntityCard, EntityImage;
 import '../models/inquiry_filter_options.dart';
 
 /// One inquiry in the inbox list: kind, sender, how to reach them, the
-/// first line of the message, when it arrived and who handled it. Handled
+/// first line of the message when there is one, when it arrived and who
+/// handled it. Handled
 /// rows render muted. Tapping opens the detail.
 class InquiryRow extends StatelessWidget {
   const InquiryRow({required this.inquiry, required this.onTap, super.key});
@@ -20,7 +21,7 @@ class InquiryRow extends StatelessWidget {
     final theme = ShadTheme.of(context);
     final kind = inquiryKindLabel(inquiry.kind);
     final phone = inquiry.phone;
-    final firstLine = inquiry.message.split('\n').first;
+    final firstLine = inquiry.message?.split('\n').first;
     final handledAt = inquiry.handledAtUtc;
     return EntityCard(
       key: ValueKey('inquiryRow.${inquiry.id}'),
@@ -37,7 +38,8 @@ class InquiryRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: 2,
         children: [
-          Text(firstLine, maxLines: 1, overflow: TextOverflow.ellipsis),
+          if (firstLine != null)
+            Text(firstLine, maxLines: 1, overflow: TextOverflow.ellipsis),
           Text(
             'Received ${inquiry.createdAtUtc.toLocalDateTimeMedium()}',
             style: theme.textTheme.muted,

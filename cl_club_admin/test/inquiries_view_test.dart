@@ -132,4 +132,42 @@ void main() {
       expect(find.byType(InquiryDetail), findsNothing);
     });
   });
+
+  group('Issue 128: an inquiry without a message', () {
+    testWidgets('Issue 128: the row and the detail show no message', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        inboxOf([
+          inquiry(
+            4,
+            kind: InquiryKind.interest,
+            message: null,
+            extra: const {'programme': 'Juniors'},
+          ),
+        ]),
+      );
+
+      final row = find.byKey(const ValueKey('inquiryRow.4'));
+      expect(
+        find.descendant(of: row, matching: find.textContaining('Sender 4')),
+        findsOneWidget,
+      );
+
+      await tester.tap(row);
+      await tester.pumpAndSettle();
+
+      final detail = find.byType(InquiryDetail);
+      expect(detail, findsOneWidget);
+      expect(
+        find.descendant(of: detail, matching: find.text('Message')),
+        findsNothing,
+      );
+      expect(
+        find.descendant(of: detail, matching: find.textContaining('Juniors')),
+        findsOneWidget,
+      );
+    });
+  });
 }

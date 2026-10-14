@@ -255,35 +255,7 @@ void main() {
       thanksTitle: (strings) => strings.interestFormThanksTitle,
     );
 
-    if (failure != null) {
-      // The form lets the note be left out, and the site then sends an empty
-      // message, which the server refuses: it requires one of every inquiry.
-      // The server's reason shows on the note, with no toast
-      // (club_client#114), and nothing is stored. Shown here on the same
-      // request, so the skip names its cause.
-      expect(fieldErrorById(tester, InquiryFormFields.messageId), failure);
-      expect(firstErrorToastMessage(tester), isNull);
-      expect(await stored(), hasLength(before));
-      await expectLater(
-        admin.public.submitInquiry(
-          kind: InquiryKind.interest,
-          name: _kBareInterestName,
-          email: _kBareInterestEmail,
-          message: '',
-          token: await admin.public.getInquiryFormToken(),
-        ),
-        throwsA(
-          isA<ServerException>().having((e) => e.statusCode, 'status', 422),
-        ),
-      );
-      skipKnownFailure(
-        issue: 128,
-        what:
-            'an interest sent without a note is refused: the server '
-            'requires a message',
-      );
-      return;
-    }
+    expect(failure, isNull, reason: 'the interest shows the thank-you');
 
     final inquiries = await stored();
     expect(inquiries, hasLength(before + 1));
@@ -291,7 +263,7 @@ void main() {
     expect(inquiry.kind, InquiryKind.interest);
     expect(inquiry.name, _kBareInterestName);
     expect(inquiry.email, _kBareInterestEmail);
-    expect(inquiry.message, isEmpty);
+    expect(inquiry.message, isNull);
     expect(inquiry.extra, {
       'ageGroup': _kInterestAgeGroup,
       'programme': _kInterestProgramme,

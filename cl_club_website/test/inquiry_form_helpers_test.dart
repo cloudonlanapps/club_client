@@ -23,8 +23,8 @@ class _RecordingNotifier extends ClPublicInquiryNotifier {
     required InquiryKind kind,
     required String name,
     required String email,
-    required String message,
     required String token,
+    String? message,
     String? phone,
     Map<String, dynamic>? extra,
     String? website,
@@ -46,6 +46,7 @@ Future<_RecordingNotifier> _submit(
   String code, {
   Map<String, String> answers = const {},
   String honeypot = '',
+  String message = 'Hello',
 }) async {
   final notifier = _RecordingNotifier();
   await InquiryFormSubmit.create(
@@ -57,7 +58,7 @@ Future<_RecordingNotifier> _submit(
       InquiryFormFields.nameId: 'Robin Example',
       InquiryFormFields.emailId: 'robin@example.test',
       InquiryFormFields.phoneId: typed,
-      InquiryFormFields.messageId: 'Hello',
+      InquiryFormFields.messageId: message,
       InquiryFormFields.answersId: answers,
       InquiryFormFields.honeypotId: honeypot,
     },
@@ -102,6 +103,16 @@ void main() {
     });
   });
 
+  group('Issue 128: an inquiry may be sent without a message', () {
+    test('Issue 128: an empty message is sent as none', () async {
+      expect((await _submit('', '91', message: '')).message, isNull);
+    });
+
+    test('Issue 128: a message is sent as typed', () async {
+      expect((await _submit('', '91')).message, 'Hello');
+    });
+  });
+
   group('Issue 84: InquiryFormSubmit takes the map of the form', () {
     test('Issue 84: create sends the map of InquiryForm.validate', () async {
       final notifier = _RecordingNotifier();
@@ -124,7 +135,7 @@ void main() {
       expect(notifier.kind, InquiryKind.interest);
       expect(notifier.name, 'Robin Example');
       expect(notifier.email, 'robin@example.test');
-      expect(notifier.message, '');
+      expect(notifier.message, isNull);
       expect(notifier.token, 'fill-time');
       expect(notifier.phone, isNull);
       expect(notifier.extra, isNull);

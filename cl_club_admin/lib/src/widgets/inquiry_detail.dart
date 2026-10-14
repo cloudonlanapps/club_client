@@ -98,6 +98,7 @@ class InquiryDetailState extends ConsumerState<InquiryDetail> {
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
     final phone = inquiry.phone;
+    final message = inquiry.message;
     final handledAt = inquiry.handledAtUtc;
     final extra = inquiry.extra ?? const <String, dynamic>{};
     return SingleChildScrollView(
@@ -135,7 +136,7 @@ class InquiryDetailState extends ConsumerState<InquiryDetail> {
                 : 'Handled by ${inquiry.handledBy ?? 'an admin'} · '
                       '${handledAt.toLocalDateTimeMedium()}',
           ),
-          LabeledValue(label: 'Message', value: inquiry.message),
+          if (message != null) LabeledValue(label: 'Message', value: message),
           for (final entry in extra.entries)
             LabeledValue(label: entry.key, value: '${entry.value}'),
           const Divider(height: 1),

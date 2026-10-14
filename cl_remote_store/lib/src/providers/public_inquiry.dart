@@ -22,16 +22,17 @@ class ClPublicInquiryNotifier extends Notifier<void> {
 
   /// Submit an inquiry with the [token] from [formToken].
   ///
-  /// [website] is the honeypot a person cannot fill. The server answers 202
-  /// whether it kept the submission or dropped it, so this returns normally
-  /// in both cases; a refusal (`ServerException`, e.g. 429) or a transport
-  /// failure is rethrown for the form to report.
+  /// [message] may be left out (club_server#41). [website] is the honeypot
+  /// a person cannot fill. The server answers 202 whether it kept the
+  /// submission or dropped it, so this returns normally in both cases; a
+  /// refusal (`ServerException`, e.g. 429) or a transport failure is
+  /// rethrown for the form to report.
   Future<void> submit({
     required InquiryKind kind,
     required String name,
     required String email,
-    required String message,
     required String token,
+    String? message,
     String? phone,
     Map<String, dynamic>? extra,
     String? website,

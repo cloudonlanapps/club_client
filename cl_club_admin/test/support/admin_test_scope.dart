@@ -172,7 +172,7 @@ UserPrivate adminViewer({bool superAdmin = false}) => UserPrivate(
 Inquiry inquiry(
   int id, {
   InquiryKind kind = InquiryKind.contact,
-  String message = 'Hello there',
+  String? message = 'Hello there',
   String? phone,
   Map<String, dynamic>? extra,
   bool handled = false,

@@ -22,7 +22,7 @@ abstract final class VenueEntries {
       formType: LocationEditForm,
       builder: (key) => LocationEditForm(
         key: key,
-        initialValues: {
+        initialValues: const {
           LocationEditFormFields.addressId: '12 Example Street, Pune',
           LocationEditFormFields.mapUriId:
               'https://maps.example.test/main-hall',

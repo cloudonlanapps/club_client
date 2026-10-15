@@ -8,7 +8,7 @@ import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show EntityImage;
+import 'package:ui_lib/ui_lib.dart' show EntityCard, EntityImage;
 
 const _username = 'demo_user';
 const _eventId = 501;
@@ -33,10 +33,20 @@ Event _event({
 }
 
 class _StaticCampNotifier extends ClEventsMasterNotifier {
-  _StaticCampNotifier(this._events);
+  _StaticCampNotifier(this._events, [this._restored]);
   final Map<int, Event> _events;
+
+  /// Records the ids of the events unarchived through this notifier.
+  final List<int>? _restored;
+
   @override
   Future<Map<int, Event>> build() async => _events;
+
+  @override
+  Future<Event> restoreEvent(int eventId) async {
+    _restored?.add(eventId);
+    return _events[eventId]!;
+  }
 }
 
 class _StaticMyEventsNotifier extends ClMyEventsMasterNotifier {
@@ -67,6 +77,19 @@ UserPrivate _adminUser() => UserPrivate(
   createdAtUtc: DateTime.now().toUtc(),
 );
 
+UserPrivate _memberUser() => UserPrivate(
+  username: 'member_user',
+  displayName: 'Member User',
+  status: UserStatus.active,
+  isSuperAdmin: false,
+  roles: const UserRoles(),
+  createdAtUtc: DateTime.now().toUtc(),
+);
+
+Event _archived() => _event(
+  type: EventType.programme,
+).copyWith(deletedAtUtc: () => DateTime.utc(2026, 3));
+
 Future<void> _pumpCard(
   WidgetTester tester, {
   required Event event,
@@ -77,12 +100,13 @@ Future<void> _pumpCard(
   VoidCallback? onEnrollments,
   String? coverUrl,
   double width = 800,
+  List<int>? restored,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         clEventsMasterProvider.overrideWith(
-          () => _StaticCampNotifier({event.id: event}),
+          () => _StaticCampNotifier({event.id: event}, restored),
         ),
         eventCoverImageProvider(event.id).overrideWith((ref) async => coverUrl),
         imageAuthHeadersProvider.overrideWith((ref) async => const {}),
@@ -327,5 +351,84 @@ void main() {
         expect(image.imageUrl, isNull);
       },
     );
+  });
+
+  group('Issue 148: an archived event in a staff list', () {
+    for (final width in [360.0, 800.0]) {
+      testWidgets(
+        'Issue 148: an admin is offered Unarchive where Enrollments would be '
+        '(${width.toInt()} px)',
+        (tester) async {
+          await _pumpCard(
+            tester,
+            event: _archived(),
+            actingUser: _adminUser(),
+            onEnrollments: () {},
+            width: width,
+          );
+          expect(find.text('Unarchive'), findsOneWidget);
+          expect(find.text('Enrollments'), findsNothing);
+        },
+      );
+    }
+
+    testWidgets('Issue 148: Unarchive unarchives the event and says so', (
+      tester,
+    ) async {
+      final restored = <int>[];
+      await _pumpCard(
+        tester,
+        event: _archived(),
+        actingUser: _adminUser(),
+        onEnrollments: () {},
+        restored: restored,
+      );
+
+      await tester.tap(find.text('Unarchive'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(restored, [_eventId]);
+      expect(find.text('Event unarchived.'), findsOneWidget);
+    });
+
+    testWidgets('Issue 148: a member who is not an admin is offered nothing', (
+      tester,
+    ) async {
+      await _pumpCard(
+        tester,
+        event: _archived(),
+        actingUser: _memberUser(),
+        onEnrollments: () {},
+      );
+      expect(find.text('Unarchive'), findsNothing);
+      expect(find.text('Enrollments'), findsNothing);
+    });
+
+    testWidgets('Issue 148: a member list offers no Unarchive', (
+      tester,
+    ) async {
+      await _pumpCard(
+        tester,
+        event: _archived(),
+        username: _username,
+        actingUser: _adminUser(),
+      );
+      expect(find.text('Unarchive'), findsNothing);
+    });
+
+    testWidgets('Issue 148: an archived row is muted', (tester) async {
+      await _pumpCard(tester, event: _archived(), actingUser: _adminUser());
+      expect(tester.widget<EntityCard>(find.byType(EntityCard)).muted, isTrue);
+    });
+
+    testWidgets('Issue 148: a live row is not muted', (tester) async {
+      await _pumpCard(
+        tester,
+        event: _event(type: EventType.programme),
+        actingUser: _adminUser(),
+      );
+      expect(tester.widget<EntityCard>(find.byType(EntityCard)).muted, isFalse);
+    });
   });
 }

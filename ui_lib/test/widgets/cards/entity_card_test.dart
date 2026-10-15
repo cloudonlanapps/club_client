@@ -267,28 +267,60 @@ void main() {
     },
   );
 
-  testWidgets('muted uses mutedForeground on title', (tester) async {
-    late ShadThemeData captured;
-    await tester.pumpWidget(
-      ShadApp(
-        home: Builder(
-          builder: (context) {
-            captured = ShadTheme.of(context);
-            return Center(
+  /// The opacity applied above [finder], or 1 when nothing fades it.
+  double opacityAbove(WidgetTester tester, Finder finder) {
+    final faded = find.ancestor(of: finder, matching: find.byType(Opacity));
+    if (faded.evaluate().isEmpty) return 1;
+    return tester.widget<Opacity>(faded.first).opacity;
+  }
+
+  for (final (width, viewport) in [(400.0, 'mobile'), (900.0, 'desktop')]) {
+    testWidgets(
+      'Issue 148: a muted card fades its image and text, not its actions '
+      '($viewport)',
+      (tester) async {
+        final image = EntityImage.placeholder();
+        await tester.pumpWidget(
+          ShadApp(
+            home: Center(
               child: SizedBox(
-                width: 400,
+                width: width,
                 child: EntityCard(
-                  image: EntityImage.placeholder(),
+                  image: image,
                   title: 'Muted',
+                  caption: 'Archived',
+                  body: const Text('Weekly on Saturday'),
+                  trailingActions: [
+                    ActionItem(label: 'Unarchive', onPressed: () {}),
+                  ],
                   muted: true,
                 ),
               ),
-            );
-          },
-        ),
+            ),
+          ),
+        );
+
+        const faded = EntityCard.mutedOpacity;
+        expect(opacityAbove(tester, find.byWidget(image)), faded);
+        expect(opacityAbove(tester, find.text('Muted')), faded);
+        expect(opacityAbove(tester, find.text('Archived')), faded);
+        expect(opacityAbove(tester, find.text('Weekly on Saturday')), faded);
+        expect(opacityAbove(tester, find.text('Unarchive')), 1);
+      },
+    );
+  }
+
+  testWidgets('Issue 148: a card that is not muted fades nothing', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      EntityCard(
+        image: EntityImage.placeholder(),
+        title: 'Live',
+        caption: 'Ongoing',
       ),
     );
-    final text = tester.widget<Text>(find.text('Muted'));
-    expect(text.style?.color, captured.colorScheme.mutedForeground);
+    expect(find.byType(Opacity), findsNothing);
   });
 }

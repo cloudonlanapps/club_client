@@ -92,8 +92,13 @@ class EntityCard extends StatelessWidget {
   /// Smaller padding + 13px title — used by calendar contexts.
   final bool dense;
 
-  /// Foreground text uses `mutedForeground` — used for terminal / past rows.
+  /// Fades the image and the text, not the actions — for a row that is
+  /// done or set aside (a past occurrence, a handled inquiry, an archived
+  /// event) but may still be acted on.
   final bool muted;
+
+  /// Opacity of a [muted] card's image and text.
+  static const double mutedOpacity = 0.45;
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +119,6 @@ class EntityCard extends StatelessWidget {
     final titleStyle = theme.textTheme.p.copyWith(
       fontSize: dense ? 13 : null,
       fontWeight: FontWeight.w600,
-      color: muted ? theme.colorScheme.mutedForeground : null,
     );
     final captionStyle = theme.textTheme.muted;
 
@@ -139,12 +143,7 @@ class EntityCard extends StatelessWidget {
         ],
         if (body != null) ...[
           const SizedBox(height: 4),
-          DefaultTextStyle.merge(
-            style: muted
-                ? TextStyle(color: theme.colorScheme.mutedForeground)
-                : const TextStyle(),
-            child: body!,
-          ),
+          body!,
         ],
       ],
     );
@@ -153,7 +152,11 @@ class EntityCard extends StatelessWidget {
     final mobileTrailing = isMobile ? _mobileTrailing() : null;
 
     final topRowChildren = <Widget>[
-      Expanded(child: infoColumn),
+      Expanded(
+        child: muted
+            ? Opacity(opacity: mutedOpacity, child: infoColumn)
+            : infoColumn,
+      ),
       if (!isMobile && desktopTrailing != null) ...[
         const SizedBox(width: 12),
         desktopTrailing,
@@ -187,7 +190,9 @@ class EntityCard extends StatelessWidget {
               borderRadius: const BorderRadius.horizontal(
                 left: Radius.circular(kCardRadius),
               ),
-              child: image,
+              child: muted
+                  ? Opacity(opacity: mutedOpacity, child: image)
+                  : image,
             ),
           ),
           Expanded(child: rightColumn),

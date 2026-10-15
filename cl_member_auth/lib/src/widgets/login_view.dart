@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../constants/auth_view_strings.dart';
 import '../models/login_form_helpers.dart';
 import '../providers/auth.dart';
 import '../utils/login_error_messages.dart';
@@ -105,7 +106,16 @@ class LoginViewState extends ConsumerState<LoginView> {
         .read(authStateProvider)
         .when(
           data: (user) {
-            if (user != null) widget.onLoginSuccess();
+            if (user == null) return;
+            if (!ref.read(authStateProvider.notifier).credentialsSaved) {
+              ShadToaster.of(context).show(
+                const ShadToast(
+                  description: Text(AuthViewStrings.signInNotKept),
+                  duration: Duration(seconds: 8),
+                ),
+              );
+            }
+            widget.onLoginSuccess();
           },
           loading: () {},
           error: (e, _) => reportFailure(e),

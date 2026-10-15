@@ -1,17 +1,25 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show AgeEligibilityFormValues, GroupFormFields, GroupGender, GroupMode;
+    show
+        AgeEligibilityFormValues,
+        GenderEligibilityFormFields,
+        GenderEligibilityFormValues,
+        GroupFormFields,
+        GroupMode;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         ClGroupsMasterNotifier,
         ageSchemaFieldIds,
         formAgeFromSdk,
+        formGendersFromSdk,
         schemaFieldErrors,
-        sdkAgeFromForm;
+        sdkAgeFromForm,
+        sdkGendersFromForm;
 import 'package:club_sdk_2/club_sdk_2.dart';
+import 'package:flutter/foundation.dart' show setEquals;
 
 /// SDK adapter for the group forms — the one place that bridges the forms'
-/// flat `Map<String, dynamic>` (keyed by `GroupFormFields`, with form-local
-/// `GroupMode` / `GroupGender` values) to the `cl_remote_store` create/update
+/// flat `Map<String, dynamic>` (keyed by `GroupFormFields` and the shared
+/// eligibility clusters' ids) to the `cl_remote_store` create/update
 /// calls. The form widgets in `cl_club_forms` are SDK-free; this helper owns
 /// the translation. Mirrors `user_form_helpers.dart` / `venue_form_helpers.dart`.
 
@@ -28,10 +36,16 @@ String? _nullIfEmpty(Object? v) {
 }
 
 /// Resolved eligibility values for a submit, derived from the form's mode.
-/// In manual mode all criteria are cleared (and the age check is relaxed
-/// again) and `semiAuto` is left unset. No dates are sent: the server works
-/// the window out from the ages.
-({Age? minAge, Age? maxAge, bool strictAge, Gender? gender, bool? semiAuto})
+/// In manual mode all criteria are cleared (no genders, the age check
+/// relaxed again) and `semiAuto` is left unset. No dates are sent: the
+/// server works the window out from the ages.
+({
+  Age? minAge,
+  Age? maxAge,
+  bool strictAge,
+  List<Gender> genders,
+  bool? semiAuto,
+})
 _resolveCriteria(Map<String, dynamic> values) {
   final mode = values[GroupFormFields.modeId] as GroupMode? ?? GroupMode.manual;
   if (mode == GroupMode.manual) {
@@ -39,7 +53,7 @@ _resolveCriteria(Map<String, dynamic> values) {
       minAge: null,
       maxAge: null,
       strictAge: false,
-      gender: null,
+      genders: const [],
       semiAuto: null,
     );
   }
@@ -47,20 +61,22 @@ _resolveCriteria(Map<String, dynamic> values) {
     minAge: sdkAgeFromForm(AgeEligibilityFormValues.minAge(values)),
     maxAge: sdkAgeFromForm(AgeEligibilityFormValues.maxAge(values)),
     strictAge: AgeEligibilityFormValues.strictAge(values),
-    gender: GroupFormSubmit.genderToSdk(GroupGender.of(values)),
+    genders: sdkGendersFromForm(
+      GenderEligibilityFormValues.genders(values),
+    ),
     semiAuto: mode == GroupMode.semiAuto,
   );
 }
 
 /// Builds initial form values from an existing [Group] (null = create mode).
-/// Gender is never null: no gender criterion is [GroupGender.any].
+/// A group with no gender criterion holds no ticked gender.
 Map<String, dynamic> buildGroupFormInitialValues(Group? group) {
   if (group == null) {
     return {
       GroupFormFields.nameId: '',
       GroupFormFields.descriptionId: '',
       GroupFormFields.modeId: GroupMode.manual,
-      GroupFormFields.genderId: GroupGender.any,
+      ...GenderEligibilityFormValues.initial(),
       GroupFormFields.addMeId: false,
       ...AgeEligibilityFormValues.initial(),
     };
@@ -74,7 +90,7 @@ Map<String, dynamic> buildGroupFormInitialValues(Group? group) {
       maxAge: formAgeFromSdk(group.maxAge),
       strictAge: group.strictAge,
     ),
-    GroupFormFields.genderId: GroupFormSubmit.genderToForm(group.gender),
+    ...GenderEligibilityFormValues.initial(formGendersFromSdk(group.genders)),
   };
 }
 
@@ -89,23 +105,6 @@ typedef GroupFormRefusal = ({
 /// server's refusals back to the forms.
 class GroupFormSubmit {
   const GroupFormSubmit._();
-
-  /// The Gender entry a group's stored [gender] shows as: Boys for male,
-  /// Girls for female, Any for none. A criterion the field does not offer
-  /// (`other`, `preferNotToSay`, set through the API) shows as Any too.
-  static GroupGender genderToForm(Gender? gender) => switch (gender) {
-    Gender.male => GroupGender.boys,
-    Gender.female => GroupGender.girls,
-    Gender.other || Gender.preferNotToSay || null => GroupGender.any,
-  };
-
-  /// What the picked [gender] stores: male for Boys, female for Girls, and
-  /// `null` (no gender criterion) for Any.
-  static Gender? genderToSdk(GroupGender gender) => switch (gender) {
-    GroupGender.boys => Gender.male,
-    GroupGender.girls => Gender.female,
-    GroupGender.any => null,
-  };
 
   /// Shown inline when the server refuses a minimum age above the maximum.
   static const String invertedBandMessage =
@@ -122,8 +121,8 @@ class GroupFormSubmit {
   /// The server's name for a group's description.
   static const String serverDescription = 'description';
 
-  /// The server's name for a group's gender criterion.
-  static const String serverGender = 'gender';
+  /// The server's name for a group's gender criterion, a list of genders.
+  static const String serverGenders = 'genders';
 
   /// The server's name for the flag that tells semi-auto from auto.
   static const String serverSemiAuto = 'semiAuto';
@@ -133,7 +132,7 @@ class GroupFormSubmit {
   static const Map<String, String> schemaFieldIds = {
     serverName: GroupFormFields.nameId,
     serverDescription: GroupFormFields.descriptionId,
-    serverGender: GroupFormFields.genderId,
+    serverGenders: GenderEligibilityFormFields.gendersId,
     serverSemiAuto: GroupFormFields.modeId,
     ...ageSchemaFieldIds,
   };
@@ -214,7 +213,7 @@ class GroupFormSubmit {
       minAge: c.minAge,
       maxAge: c.maxAge,
       strictAge: c.strictAge,
-      gender: c.gender,
+      genders: c.genders.isEmpty ? null : c.genders,
       semiAuto: c.semiAuto,
     );
   }
@@ -222,22 +221,16 @@ class GroupFormSubmit {
   /// Update [group]'s mode + criteria from the eligibility editor's values.
   /// Name / description are only sent when present in [values].
   ///
-  /// In a criteria-driven mode the gender is sent only when the form's
-  /// differs from the entry [group]'s stored gender shows as
-  /// ([genderToForm]): a stored criterion the field does not offer, which
-  /// shows as Any, is then kept by a save that leaves Gender alone. A changed
-  /// gender is sent, Any as `null`. A Manual group always clears it.
+  /// The genders are sent only when they differ from [group]'s: a save that
+  /// leaves the boxes alone does not send them. None ticked, or a Manual
+  /// group, is sent as an empty list, which clears the criterion.
   static Future<Group> updateEligibility({
     required Map<String, dynamic> values,
     required Group group,
     required ClGroupsMasterNotifier notifier,
   }) {
     final c = _resolveCriteria(values);
-    final mode =
-        values[GroupFormFields.modeId] as GroupMode? ?? GroupMode.manual;
-    final keepsGender =
-        mode.usesCriteria &&
-        GroupGender.of(values) == genderToForm(group.gender);
+    final keepsGenders = setEquals(c.genders.toSet(), group.genders.toSet());
     final hasName = values.containsKey(GroupFormFields.nameId);
     final hasDescription = values.containsKey(GroupFormFields.descriptionId);
     return notifier.updateGroup(
@@ -249,7 +242,7 @@ class GroupFormSubmit {
       minAge: () => c.minAge,
       maxAge: () => c.maxAge,
       strictAge: c.strictAge,
-      gender: keepsGender ? null : () => c.gender,
+      genders: keepsGenders ? null : () => c.genders,
       semiAuto: c.semiAuto,
     );
   }

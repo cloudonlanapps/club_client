@@ -55,7 +55,7 @@ class _FailingEvents extends ClEventsMasterNotifier {
     Visibility? visibility,
     String? organizerName,
     List<String>? Function()? coachNames,
-    Gender? Function()? gender,
+    List<Gender> Function()? genders,
     Age? Function()? minAge,
     Age? Function()? maxAge,
     bool? strictAge,

@@ -23,8 +23,7 @@ import 'package:cl_club_events/src/widgets/event_editor/camp_schedule_section.da
     show CampScheduleSection;
 import 'package:cl_club_events/src/widgets/events_preview/cl_event_gallery.dart'
     show ClEventGallery;
-import 'package:cl_club_forms/cl_club_forms.dart'
-    show EventFormFields, EventGender;
+import 'package:cl_club_forms/cl_club_forms.dart' show EligibilityGender;
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
     show AgeEligibilityFormFields;
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -163,7 +162,7 @@ void main() {
       );
 
       await tapSectionPencil(tester, _sectionCard(_kEligibilityTitle));
-      setShadFormValues(tester, {EventFormFields.genderId: EventGender.girls});
+      await tickEligibilityGenders(tester, {EligibilityGender.girls});
       await enterTextById(
         tester,
         AgeEligibilityFormFields.minAgeYearsId,
@@ -179,7 +178,8 @@ void main() {
         tester,
         () {
           final e = _event(tester, eventId);
-          return e.gender == Gender.female &&
+          return e.genders.length == 1 &&
+              e.genders.single == Gender.female &&
               e.minAge == const Age(years: _kMinAgeYears) &&
               e.maxAge == const Age(years: _kMaxAgeYears);
         },

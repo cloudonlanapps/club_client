@@ -36,7 +36,7 @@ bool userEligibleForGroup({
 }) {
   if (group.kind == GroupKind.manual) return true;
   if (roles.isAdmin || roles.isCoach) return true;
-  if (group.gender != null && gender != group.gender) {
+  if (group.genders.isNotEmpty && !group.genders.contains(gender)) {
     return false;
   }
   if (group.dobOnOrAfterUtc != null) {

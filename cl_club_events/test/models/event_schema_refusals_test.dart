@@ -13,6 +13,7 @@ import 'package:cl_club_forms/cl_club_forms.dart'
         EventCreateFormFields,
         EventFormFields,
         EventTimetableFormFields,
+        GenderEligibilityFormFields,
         OccurrenceRescheduleFormFields,
         OneOffScheduleFormFields,
         ProgrammeEndDateFormFields,
@@ -74,7 +75,7 @@ void main() {
     test('Issue 114: eligibility puts it on the gender and the ages', () {
       final refusal = EventFormSubmit.eligibilityRefusal(
         _rejection([
-          ['body', 'gender'],
+          ['body', 'genders'],
           ['body', 'minAge', 'years'],
           ['body', 'maxAge', 'days'],
           ['body', 'strictAge'],
@@ -82,7 +83,7 @@ void main() {
       );
 
       expect(refusal?.fieldErrors.keys, {
-        EventFormFields.genderId,
+        GenderEligibilityFormFields.gendersId,
         AgeEligibilityFormFields.minAgeYearsId,
         AgeEligibilityFormFields.maxAgeDaysId,
         AgeEligibilityFormFields.strictAgeId,

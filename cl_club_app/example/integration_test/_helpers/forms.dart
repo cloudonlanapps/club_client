@@ -12,12 +12,15 @@
 //                              off-screen submits.
 //   * setShadFormValues      — write non-text fields (selects, date pickers)
 //                              straight into the ShadForm's value map.
+//   * tickEligibilityGenders — tick exactly the given boxes of an
+//                              eligibility editor's Gender row.
 //   * firstErrorToastMessage — pull the description text from the topmost
 //                              destructive ShadToast for fast-fail
 //                              diagnostics.
 //
 // Extracted from workflow1.
 
+import 'package:cl_club_forms/cl_club_forms.dart' show EligibilityGender;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -194,6 +197,30 @@ void invokeShadButton(WidgetTester tester, Finder finder, {String? reason}) {
 /// (selects, date pickers) in tests.
 void setShadFormValues(WidgetTester tester, Map<String, dynamic> values) {
   tester.state<ShadFormState>(find.byType(ShadForm)).setValue(values);
+}
+
+/// Ticks exactly [genders] in the Gender row of the open eligibility editor
+/// and unticks the others. Each box is a `ShadCheckbox` keyed by its
+/// [EligibilityGender]; its `onChanged` is invoked directly, as a
+/// synthesized tap misses a box below the fold.
+Future<void> tickEligibilityGenders(
+  WidgetTester tester,
+  Set<EligibilityGender> genders,
+) async {
+  for (final gender in EligibilityGender.values) {
+    final finder = find.byKey(ValueKey(gender));
+    expect(finder, findsOneWidget, reason: 'the ${gender.label} box');
+    final box = tester.widget<ShadCheckbox>(finder);
+    final on = genders.contains(gender);
+    if (box.value == on) continue;
+    expect(
+      box.onChanged,
+      isNotNull,
+      reason: 'the ${gender.label} box should be enabled',
+    );
+    box.onChanged!.call(on);
+    await tester.pump();
+  }
 }
 
 /// Returns the description text of the topmost destructive ShadToast, or

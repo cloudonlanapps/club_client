@@ -1,31 +1,33 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show AgeEligibilityFormValues, EventFormFields, EventGender;
+    show AgeEligibilityFormValues, EventFormFields, GenderEligibilityFormValues;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         ClEventsMasterNotifier,
         formAgeFromSdk,
+        formGendersFromSdk,
         schemaFieldErrors,
-        sdkAgeFromForm;
+        sdkAgeFromForm,
+        sdkGendersFromForm;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show
         Age,
         Event,
         EventType,
-        Gender,
         SdkErrorCode,
         ServerException,
         StaleVersionException,
         Visibility;
 
-import 'package:flutter/foundation.dart' show listEquals;
+import 'package:flutter/foundation.dart' show listEquals, setEquals;
 
 import '../utils/event_refusal.dart';
 import '../utils/schedule_save_error.dart';
 import 'event_schema_fields.dart';
 
 /// SDK ↔ form adapter for the event section editors — the one place that
-/// bridges the forms' flat `Map<String, dynamic>` (keyed by [EventFormFields],
-/// with the form-local [EventGender]) to the `cl_remote_store` update calls.
+/// bridges the forms' flat `Map<String, dynamic>` (keyed by [EventFormFields]
+/// and the shared eligibility clusters' ids) to the `cl_remote_store` update
+/// calls.
 ///
 /// The form widgets (`EventEligibilityForm`, `EventOrganizerForm`,
 /// `EventMediaForm`) are SDK-free in `ui_lib`; this helper owns the
@@ -34,14 +36,14 @@ import 'event_schema_fields.dart';
 
 /// Builds initial form values from an existing [Event] (null = create
 /// defaults). Text fields normalize `null` → `''` and list fields → `const []`
-/// so each form's `isDirty` comparison works cleanly. Gender is never null:
-/// an event with no gender criterion holds [EventGender.any].
+/// so each form's `isDirty` comparison works cleanly. An event with no
+/// gender criterion holds no ticked gender.
 Map<String, dynamic> buildEventFormInitialValues(Event? event) {
   if (event == null) {
     return {
       EventFormFields.titleId: '',
       EventFormFields.descriptionId: '',
-      EventFormFields.genderId: EventGender.any,
+      ...GenderEligibilityFormValues.initial(),
       ...AgeEligibilityFormValues.initial(),
       EventFormFields.organizerNameId: '',
       EventFormFields.coachNamesId: const <String>[],
@@ -50,7 +52,7 @@ Map<String, dynamic> buildEventFormInitialValues(Event? event) {
   return {
     EventFormFields.titleId: event.title,
     EventFormFields.descriptionId: event.description,
-    EventFormFields.genderId: EventFormSubmit.genderToForm(event.gender),
+    ...GenderEligibilityFormValues.initial(formGendersFromSdk(event.genders)),
     ...AgeEligibilityFormValues.initial(
       minAge: formAgeFromSdk(event.minAge),
       maxAge: formAgeFromSdk(event.maxAge),
@@ -76,23 +78,6 @@ Map<String, dynamic> buildEventFormInitialValues(Event? event) {
 /// from the event's type (club_client#118).
 class EventFormSubmit {
   const EventFormSubmit._();
-
-  /// The Gender entry an event's stored [gender] shows as: Boys for male,
-  /// Girls for female, Any for none. A criterion the field does not offer
-  /// (`other`, `preferNotToSay`, set through the API) shows as Any too.
-  static EventGender genderToForm(Gender? gender) => switch (gender) {
-    Gender.male => EventGender.boys,
-    Gender.female => EventGender.girls,
-    Gender.other || Gender.preferNotToSay || null => EventGender.any,
-  };
-
-  /// What the picked [gender] stores: male for Boys, female for Girls, and
-  /// `null` (no gender criterion) for Any.
-  static Gender? genderToSdk(EventGender gender) => switch (gender) {
-    EventGender.boys => Gender.male,
-    EventGender.girls => Gender.female,
-    EventGender.any => null,
-  };
 
   /// Rename (management section): a correction of a programme's title, an
   /// update of a camp's or a one-off's.
@@ -122,14 +107,13 @@ class EventFormSubmit {
     return notifier.updateEvent(event.id, description: trimmed);
   }
 
-  /// Eligibility section — gender and the age band (`minAge`, `maxAge`,
-  /// `strictAge`); no dates are sent, the server works the window out. An
-  /// emptied age clears that bound.
+  /// Eligibility section — the genders and the age band (`minAge`,
+  /// `maxAge`, `strictAge`); no dates are sent, the server works the window
+  /// out. An emptied age clears that bound.
   ///
-  /// The gender is sent only when the form's differs from the entry
-  /// [event]'s stored gender shows as ([genderToForm]): a stored criterion
-  /// the field does not offer, which shows as Any, is then kept by a save
-  /// that leaves Gender alone. A changed gender is sent, Any as `null`.
+  /// The genders are sent only when the ticked ones differ from [event]'s:
+  /// a save that leaves the boxes alone does not send them. None ticked is
+  /// sent as an empty list, which clears the criterion.
   ///
   /// A programme's eligibility is a correction (`correctionOnEvent`); a
   /// camp's or one-off's goes through `updateEvent`. The server refuses the
@@ -139,17 +123,19 @@ class EventFormSubmit {
     required Map<String, dynamic> values,
     required ClEventsMasterNotifier notifier,
   }) {
-    final picked = EventGender.of(values);
-    final gender = picked == genderToForm(event.gender)
+    final picked = sdkGendersFromForm(
+      GenderEligibilityFormValues.genders(values),
+    );
+    final genders = setEquals(picked.toSet(), event.genders.toSet())
         ? null
-        : () => genderToSdk(picked);
+        : () => picked;
     Age? minAge() => sdkAgeFromForm(AgeEligibilityFormValues.minAge(values));
     Age? maxAge() => sdkAgeFromForm(AgeEligibilityFormValues.maxAge(values));
     final strictAge = AgeEligibilityFormValues.strictAge(values);
     if (event.type == EventType.programme) {
       return notifier.correctionOnEvent(
         event.id,
-        gender: gender,
+        genders: genders,
         minAge: minAge,
         maxAge: maxAge,
         strictAge: strictAge,
@@ -157,7 +143,7 @@ class EventFormSubmit {
     }
     return notifier.updateEvent(
       event.id,
-      gender: gender,
+      genders: genders,
       minAge: minAge,
       maxAge: maxAge,
       strictAge: strictAge,

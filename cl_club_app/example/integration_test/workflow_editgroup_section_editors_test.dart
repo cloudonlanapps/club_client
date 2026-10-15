@@ -18,7 +18,8 @@
 //   5. Coach (read-only viewer) re-opens the group and sees the updated prose.
 //   6. Cleanup: admin deletes the group; sudo soft-deletes the actors.
 
-import 'package:cl_club_forms/cl_club_forms.dart' show GroupGender, GroupMode;
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show EligibilityGender, GroupMode;
 import 'package:cl_club_members/src/models/group_list_filter.dart'
     show GroupListFilter;
 import 'package:cl_club_members/src/providers/group_list_filter.dart'
@@ -147,19 +148,20 @@ void main() {
       await loginViaUi(tester, _kAdmin, _kPwd);
       await _openGroupDetail(tester, groupId);
 
-      // Eligibility — inline edit: switch to a semi-auto, girls-only group.
+      // Eligibility — inline edit: switch to a semi-auto group and tick the
+      // Girls box, which shows once the mode uses criteria.
       await tapSectionPencil(tester, _eligibilityCard);
-      setShadFormValues(tester, {
-        'mode': GroupMode.semiAuto,
-        'gender': GroupGender.girls,
-      });
+      setShadFormValues(tester, {'mode': GroupMode.semiAuto});
       await tester.pump();
+      await tickEligibilityGenders(tester, {EligibilityGender.girls});
       await saveInlineEditor(tester);
       await waitFor(
         tester,
         () {
           final g = _group(tester, groupId);
-          return g.kind == GroupKind.semiAuto && g.gender == Gender.female;
+          return g.kind == GroupKind.semiAuto &&
+              g.genders.length == 1 &&
+              g.genders.single == Gender.female;
         },
         description: 'eligibility to round-trip to the server',
       );

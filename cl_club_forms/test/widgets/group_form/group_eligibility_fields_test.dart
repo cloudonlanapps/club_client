@@ -15,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../support/admin_forms_checks.dart';
+import '../../support/eligibility_checks.dart';
 import '../../support/form_harness.dart';
 
 typedef _A = AgeEligibilityFormFields;
@@ -30,13 +31,13 @@ const List<String> _criteriaRows = [
 
 Map<String, dynamic> _values({
   GroupMode mode = GroupMode.manual,
-  GroupGender gender = GroupGender.any,
+  List<EligibilityGender> genders = const [],
   FormAge? minAge,
   FormAge? maxAge,
   bool strictAge = false,
 }) => {
   GroupFormFields.modeId: mode,
-  GroupFormFields.genderId: gender,
+  GenderEligibilityFormFields.gendersId: genders,
   ...AgeEligibilityFormValues.initial(
     minAge: minAge,
     maxAge: maxAge,
@@ -107,7 +108,7 @@ void main() {
           ..._A.minAgeIds,
           ..._A.maxAgeIds,
           _A.strictAgeId,
-          GroupFormFields.genderId,
+          GenderEligibilityFormFields.gendersId,
         });
       });
     }
@@ -144,71 +145,86 @@ void main() {
       expect(rowLabels(tester), ['Mode']);
     });
 
-    testWidgets('Issue 61: the gender select starts on Any gender, offers '
-        'the four genders and holds the one picked', (tester) async {
-      // Since #78 it starts on the entry Any and offers Any, Boys and Girls.
+    testWidgets('Issue 80: the gender row starts with no box ticked, offers '
+        'the four genders and holds those ticked', (tester) async {
       final form = await _pump(tester, _values(mode: GroupMode.auto));
 
-      await tester.tap(find.text(GroupGender.any.label));
-      await tester.pumpAndSettle();
-      expect(find.text(GroupGender.boys.label), findsOneWidget);
-      expect(find.text(GroupGender.girls.label), findsOneWidget);
-      await tester.tap(find.text(GroupGender.girls.label));
-      await tester.pumpAndSettle();
-
-      expect(form.value[GroupFormFields.genderId], GroupGender.girls);
-      expect(find.text(GroupGender.any.label), findsNothing);
-    });
-
-    testWidgets('Issue 78: the group Gender offers exactly Any, Boys and '
-        'Girls, with Any chosen by default', (tester) async {
-      final form = await _pump(tester, _values(mode: GroupMode.auto));
-
-      expect(form.value[GroupFormFields.genderId], GroupGender.any);
-      expect(find.text('Any'), findsOneWidget);
-      expect(find.text('Any gender'), findsNothing);
-
-      await tester.tap(find.text('Any'));
-      await tester.pumpAndSettle();
-
-      final options = tester
-          .widgetList<ShadOption<GroupGender>>(
-            find.byType(ShadOption<GroupGender>),
-          )
-          .map((o) => o.value)
-          .toList();
-      expect(options, [GroupGender.any, GroupGender.boys, GroupGender.girls]);
-      expect([for (final g in options) g.label], ['Any', 'Boys', 'Girls']);
-      for (final label in ['Male', 'Female', 'Other', 'Prefer not to say']) {
-        expect(find.text(label), findsNothing, reason: label);
+      expect(
+        GenderEligibilityFormValues.genders(form.value),
+        isEmpty,
+      );
+      for (final gender in EligibilityGender.values) {
+        expect(genderBox(gender), findsOneWidget, reason: gender.label);
       }
+      expect(find.text(GenderEligibilityField.noneTickedHint), findsOneWidget);
+      expect(find.text('Any'), findsNothing);
+
+      await tapGenders(tester, const [
+        EligibilityGender.preferNotToSay,
+        EligibilityGender.girls,
+      ]);
+
+      expect(GenderEligibilityFormValues.genders(form.value), const [
+        EligibilityGender.girls,
+        EligibilityGender.preferNotToSay,
+      ]);
+      expect(find.text(GenderEligibilityField.noneTickedHint), findsNothing);
     });
 
-    testWidgets('Issue 78: Boys or Girls, then Any again, leaves the group '
+    testWidgets('Issue 80: each box ticked then unticked leaves the group '
         'with no gender criterion', (tester) async {
-      for (final picked in [GroupGender.boys, GroupGender.girls]) {
+      for (final gender in EligibilityGender.values) {
         final form = await _pump(tester, _values(mode: GroupMode.semiAuto));
 
-        await pickOption(tester, from: 'Any', to: picked.label);
-        expect(form.value[GroupFormFields.genderId], picked);
+        await tapGenders(tester, [gender]);
+        expect(GenderEligibilityFormValues.genders(form.value), [gender]);
         expect(GroupEligibilityFields.holdsValue(form.value), isTrue);
 
-        await pickOption(tester, from: picked.label, to: 'Any');
-        expect(form.value[GroupFormFields.genderId], GroupGender.any);
-        expect(GroupGender.of(form.value).isCriterion, isFalse);
+        await tapGenders(tester, [gender]);
+        expect(GenderEligibilityFormValues.genders(form.value), isEmpty);
         expect(GroupEligibilityFields.holdsValue(form.value), isFalse);
 
         await tester.pumpWidget(const SizedBox.shrink());
       }
     });
 
-    testWidgets('Issue 61: a seeded gender shows by its label', (tester) async {
-      await _pump(
+    testWidgets('Issue 80: ticked genders survive a visit to Manual and '
+        'back, which takes the boxes down and puts them back', (tester) async {
+      final form = await _pump(tester, _values(mode: GroupMode.auto));
+      await tapGenders(tester, const [
+        EligibilityGender.boys,
+        EligibilityGender.other,
+      ]);
+
+      await pickOption(
         tester,
-        _values(mode: GroupMode.auto, gender: GroupGender.girls),
+        from: GroupMode.auto.label,
+        to: GroupMode.manual.label,
+      );
+      expect(genderBox(EligibilityGender.boys), findsNothing);
+      await pickOption(
+        tester,
+        from: GroupMode.manual.label,
+        to: GroupMode.auto.label,
       );
 
-      expect(find.text(GroupGender.girls.label), findsOneWidget);
+      expect(tickedGenders(tester), const [
+        EligibilityGender.boys,
+        EligibilityGender.other,
+      ]);
+      expect(GenderEligibilityFormValues.genders(form.value), const [
+        EligibilityGender.boys,
+        EligibilityGender.other,
+      ]);
+    });
+
+    testWidgets('Issue 61: a seeded gender shows ticked', (tester) async {
+      await _pump(
+        tester,
+        _values(mode: GroupMode.auto, genders: const [EligibilityGender.girls]),
+      );
+
+      expect(tickedGenders(tester), const [EligibilityGender.girls]);
     });
   });
 
@@ -218,7 +234,7 @@ void main() {
       expect(
         GroupEligibilityFields.holdsValue(
           _values(
-            gender: GroupGender.boys,
+            genders: const [EligibilityGender.boys],
             minAge: const FormAge(years: 5),
             strictAge: true,
           ),
@@ -230,7 +246,7 @@ void main() {
     test('Issue 61: values without a mode read as Manual', () {
       expect(
         GroupEligibilityFields.holdsValue(const {
-          GroupFormFields.genderId: GroupGender.boys,
+          GenderEligibilityFormFields.gendersId: [EligibilityGender.boys],
         }),
         isFalse,
       );
@@ -242,33 +258,34 @@ void main() {
       }
     });
 
-    test('Issue 78: Gender on Any, or no gender at all, is not a held '
-        'criterion', () {
+    test('Issue 80: no gender ticked, or no genders entry at all, is not a '
+        'held criterion', () {
       expect(
         GroupEligibilityFields.holdsValue(
-          _values(mode: GroupMode.auto, gender: GroupGender.any),
+          _values(mode: GroupMode.auto, genders: const []),
         ),
         isFalse,
       );
       expect(
-        GroupEligibilityFields.holdsValue({
-          ..._values(mode: GroupMode.auto),
-          GroupFormFields.genderId: null,
-        }),
+        GroupEligibilityFields.holdsValue(
+          {
+            ..._values(mode: GroupMode.auto),
+          }..remove(GenderEligibilityFormFields.gendersId),
+        ),
         isFalse,
       );
       expect(
         GroupEligibilityFields.seeded(const {
           GroupFormFields.modeId: GroupMode.auto,
-        })[GroupFormFields.genderId],
-        GroupGender.any,
+        })[GenderEligibilityFormFields.gendersId],
+        isEmpty,
       );
     });
 
     test('Issue 61: in a criteria mode a gender, an age on either side, a '
         'part of an age or the Strict age check each count', () {
       for (final values in [
-        _values(mode: GroupMode.auto, gender: GroupGender.girls),
+        _values(mode: GroupMode.auto, genders: const [EligibilityGender.girls]),
         _values(mode: GroupMode.auto, minAge: const FormAge(years: 5)),
         _values(mode: GroupMode.semiAuto, maxAge: const FormAge(years: 18)),
         _values(mode: GroupMode.semiAuto, strictAge: true),
@@ -286,7 +303,7 @@ void main() {
   group('Issue 61: GroupEligibilityFields Clear', () {
     final filled = _values(
       mode: GroupMode.auto,
-      gender: GroupGender.boys,
+      genders: const [EligibilityGender.boys],
       minAge: const FormAge(years: 5, months: 6),
       maxAge: const FormAge(years: 18),
       strictAge: true,
@@ -322,21 +339,17 @@ void main() {
       );
       expect(find.text(FormStrings.clear), findsNothing);
 
-      await tester.tap(find.byType(ShadCheckbox));
+      await tester.tap(strictAgeBox());
       await tester.pumpAndSettle();
       expect(find.text(FormStrings.clear), findsOneWidget);
       expectNoHostChrome(tester, allowedButtonTexts: {FormStrings.clear});
 
-      await tester.tap(find.byType(ShadCheckbox));
+      await tester.tap(strictAgeBox());
       await tester.pumpAndSettle();
       expect(find.text(FormStrings.clear), findsNothing);
 
       await enterField(tester, _A.maxAgeMonthsId, '6');
-      await pickOption(
-        tester,
-        from: GroupGender.any.label,
-        to: GroupGender.girls.label,
-      );
+      await tapGenders(tester, const [EligibilityGender.girls]);
       await tester.tap(find.text(FormStrings.clear));
       await tester.pumpAndSettle();
 
@@ -362,7 +375,7 @@ void main() {
   group('Issue 61: GroupEligibilityFields disabled and narrow', () {
     final seeded = _values(
       mode: GroupMode.semiAuto,
-      gender: GroupGender.girls,
+      genders: const [EligibilityGender.girls],
       minAge: const FormAge(years: 5),
     );
 

@@ -39,7 +39,7 @@ void main() {
       kind: GroupKind.semiAuto,
       dobOnOrAfterUtc: dobOnOrAfterUtc,
       dobOnOrBeforeUtc: dobOnOrBeforeUtc,
-      gender: gender,
+      genders: [?gender],
       createdAtUtc: DateTime.utc(2024),
     );
 
@@ -200,7 +200,7 @@ void main() {
       kind: GroupKind.manual,
       dobOnOrAfterUtc: dobOnOrAfterUtc,
       dobOnOrBeforeUtc: dobOnOrBeforeUtc,
-      gender: gender,
+      genders: [?gender],
       createdAtUtc: DateTime.utc(2024),
     );
 
@@ -242,7 +242,7 @@ void main() {
       name: 'Senior Women',
       kind: GroupKind.semiAuto,
       dobOnOrBeforeUtc: DateTime.utc(2007),
-      gender: Gender.female,
+      genders: const [Gender.female],
       createdAtUtc: DateTime.utc(2024),
     );
 
@@ -284,6 +284,47 @@ void main() {
         ),
         isFalse,
       );
+    });
+  });
+
+  group('Issue 80: a group open to several genders', () {
+    final mixed = Group(
+      id: 4,
+      name: 'Boys and Other',
+      kind: GroupKind.semiAuto,
+      genders: const [Gender.male, Gender.other, Gender.preferNotToSay],
+      createdAtUtc: DateTime.utc(2024),
+    );
+
+    test('Issue 80: admits a member whose gender is in the list', () {
+      for (final gender in mixed.genders) {
+        expect(
+          userEligibleForGroup(
+            group: mixed,
+            dateOfBirthUtc: null,
+            gender: gender,
+            roles: memberRoles,
+          ),
+          isTrue,
+          reason: '$gender',
+        );
+      }
+    });
+
+    test('Issue 80: refuses a member whose gender is not in the list, or '
+        'who has none', () {
+      for (final gender in [Gender.female, null]) {
+        expect(
+          userEligibleForGroup(
+            group: mixed,
+            dateOfBirthUtc: null,
+            gender: gender,
+            roles: memberRoles,
+          ),
+          isFalse,
+          reason: '$gender',
+        );
+      }
     });
   });
 }

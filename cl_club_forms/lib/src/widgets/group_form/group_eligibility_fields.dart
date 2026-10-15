@@ -6,6 +6,8 @@ import '../../constants/form_strings.dart';
 import '../age_eligibility/age_eligibility_fields.dart';
 import '../age_eligibility/age_eligibility_form_values.dart';
 import '../form/labeled_form_row.dart';
+import '../gender_eligibility/gender_eligibility_field.dart';
+import '../gender_eligibility/gender_eligibility_form_values.dart';
 import 'group_form_fields.dart';
 import 'group_membership_heading.dart';
 
@@ -41,31 +43,33 @@ class GroupEligibilityFields extends StatefulWidget {
   /// Heading of the criteria group.
   static const String criteriaTitle = 'Eligibility criteria';
 
-  /// Whether [values] hold any criterion of a criteria-driven mode: Boys or
-  /// Girls, an age or a ticked Strict age check. Gender on Any is none, and
-  /// a Manual group holds none.
+  /// Whether [values] hold any criterion of a criteria-driven mode: a
+  /// ticked gender, an age or a ticked Strict age check. A Manual group
+  /// holds none.
   static bool holdsValue(Map<String, dynamic> values) {
     final mode =
         values[GroupFormFields.modeId] as GroupMode? ?? GroupMode.manual;
     return mode.usesCriteria &&
-        (GroupGender.of(values).isCriterion ||
+        (GenderEligibilityFormValues.holdsValue(values) ||
             AgeEligibilityFormValues.holdsValue(values));
   }
 
-  /// [values] with Gender on Any when they hold no gender, so the field
-  /// always shows an entry and a form nobody touched is not dirty. The
-  /// embedding form seeds its `ShadForm` with this.
+  /// [values] with the genders entry always present (none ticked when they
+  /// hold none), so a form nobody touched is not dirty. The embedding form
+  /// seeds its `ShadForm` with this.
   static Map<String, dynamic> seeded(Map<String, dynamic> values) => {
     ...values,
-    GroupFormFields.genderId: GroupGender.of(values),
+    ...GenderEligibilityFormValues.initial(
+      GenderEligibilityFormValues.genders(values),
+    ),
   };
 
-  /// Puts Gender back to Any, empties both ages and the Strict age check of
+  /// Unticks every gender, empties both ages and the Strict age check of
   /// [form] and sets its mode to Manual: a group with no criteria is a
   /// Manual group.
   static void clear(ShadFormState form) {
     form.setValue({
-      GroupFormFields.genderId: GroupGender.any,
+      ...GenderEligibilityFormValues.initial(),
       ...AgeEligibilityFormValues.initial(),
       GroupFormFields.modeId: GroupMode.manual,
     });
@@ -132,15 +136,7 @@ class GroupEligibilityFieldsState extends State<GroupEligibilityFields> {
               AgeEligibilityFields(enabled: widget.enabled),
               LabeledFormRow(
                 label: 'Gender',
-                field: ShadSelectFormField<GroupGender>(
-                  id: GroupFormFields.genderId,
-                  enabled: widget.enabled,
-                  options: [
-                    for (final g in GroupGender.values)
-                      ShadOption(value: g, child: Text(g.label)),
-                  ],
-                  selectedOptionBuilder: (context, value) => Text(value.label),
-                ),
+                field: GenderEligibilityField(enabled: widget.enabled),
               ),
             ],
           ),

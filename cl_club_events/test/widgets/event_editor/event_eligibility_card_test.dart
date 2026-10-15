@@ -78,7 +78,7 @@ class _RecordingEvents extends ClEventsMasterNotifier {
     Visibility? visibility,
     String? organizerName,
     List<String>? Function()? coachNames,
-    Gender? Function()? gender,
+    List<Gender> Function()? genders,
     Age? Function()? minAge,
     Age? Function()? maxAge,
     bool? strictAge,
@@ -99,7 +99,7 @@ class _RecordingEvents extends ClEventsMasterNotifier {
     String? title,
     String? description,
     Visibility? visibility,
-    Gender? Function()? gender,
+    List<Gender> Function()? genders,
     Age? Function()? minAge,
     Age? Function()? maxAge,
     bool? strictAge,
@@ -193,7 +193,16 @@ void main() {
       _input(AgeEligibilityFormFields.maxAgeYearsId),
       '18',
     );
-    await tester.tap(find.byType(ShadCheckbox));
+    await tester.tap(
+      find.descendant(
+        of: find.byWidgetPredicate(
+          (w) =>
+              w is ShadCheckboxFormField &&
+              w.id == AgeEligibilityFormFields.strictAgeId,
+        ),
+        matching: find.byType(ShadCheckbox),
+      ),
+    );
     await tester.pumpAndSettle();
     await _save(tester);
 

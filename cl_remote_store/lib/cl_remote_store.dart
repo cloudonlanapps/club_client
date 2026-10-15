@@ -198,6 +198,8 @@ export 'src/utils/enrollment_error_messages.dart'
 export 'src/utils/evaluation_incomplete.dart' show evaluationIncompleteItemIds;
 export 'src/utils/event_eligibility.dart'
     show EligibilityFailure, EligibilityFailureReason, checkEventEligibility;
+export 'src/utils/gender_form_adapter.dart'
+    show formGendersFromSdk, sdkGendersFromForm;
 export 'src/utils/schema_refusal.dart' show schemaFieldErrors;
 export 'src/utils/uncertain_write.dart' show writeMayHaveLanded;
 export 'src/utils/write_failure_message.dart'

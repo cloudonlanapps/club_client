@@ -15,6 +15,7 @@ import 'package:ui_lib/ui_lib.dart' show NoLongerEligibleLabel;
 
 Group _group({
   GroupKind kind = GroupKind.semiAuto,
+  List<Gender> genders = const [],
   Age? minAge,
   Age? maxAge,
   DateTime? dobOnOrAfterUtc,
@@ -24,6 +25,7 @@ Group _group({
   id: 7,
   name: 'Juniors',
   kind: kind,
+  genders: genders,
   minAge: minAge,
   maxAge: maxAge,
   dobOnOrAfterUtc: dobOnOrAfterUtc,
@@ -127,6 +129,45 @@ void main() {
 
       expect(find.textContaining('Open to members'), findsNothing);
       expect(find.byIcon(LucideIcons.cake), findsNothing);
+    });
+
+    testWidgets('Issue 80: the card names who the group is for by gender', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          GroupMetaLine(
+            group: _group(
+              genders: const [
+                Gender.male,
+                Gender.other,
+                Gender.preferNotToSay,
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('For Boys, Other and Prefer not to say'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Issue 80: one gender reads "Only for"; none says nothing', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(GroupMetaLine(group: _group(genders: const [Gender.female]))),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Only for Girls'), findsOneWidget);
+
+      await tester.pumpWidget(_wrap(GroupMetaLine(group: _group())));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('for Girls'), findsNothing);
+      expect(find.textContaining('Only for'), findsNothing);
     });
   });
 

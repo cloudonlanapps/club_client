@@ -3,6 +3,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../form/form_body.dart';
 import '../form/form_contract.dart';
+import '../gender_eligibility/gender_eligibility_form_values.dart';
 import 'group_eligibility_fields.dart';
 import 'group_form_fields.dart';
 import 'group_form_validators.dart';
@@ -23,8 +24,8 @@ class GroupEligibilityForm extends StatefulWidget {
   });
 
   /// Form values keyed by [GroupFormFields]; must carry the
-  /// [GroupFormFields.modeId] entry. Gender is [GroupGender.any] when left
-  /// out.
+  /// [GroupFormFields.modeId] entry. No gender is ticked when the genders
+  /// entry is left out.
   final Map<String, dynamic> initialValues;
 
   /// Called whenever a field's value changes, a clear included, so the host
@@ -42,9 +43,9 @@ class GroupEligibilityForm extends StatefulWidget {
   State<GroupEligibilityForm> createState() => GroupEligibilityFormState();
 }
 
-/// State of [GroupEligibilityForm]. Its values are the mode, the gender
-/// (never null: [GroupGender.any] is no gender criterion) and the age
-/// cluster's entries, as the fields hold them.
+/// State of [GroupEligibilityForm]. Its values are the mode, the ticked
+/// genders (none is no gender criterion) and the age cluster's entries, as
+/// the fields hold them.
 class GroupEligibilityFormState extends State<GroupEligibilityForm>
     with FormContract<GroupEligibilityForm> {
   @override
@@ -64,6 +65,16 @@ class GroupEligibilityFormState extends State<GroupEligibilityForm>
     if (form == null) return;
     GroupEligibilityFields.clear(form);
     setFormError(null);
+  }
+
+  /// Whether the mode, the genders, an age or the Strict age check changed.
+  /// The genders are a list, compared as a set
+  /// ([GenderEligibilityFormValues.differ]).
+  @override
+  bool get isDirty {
+    final form = formKey.currentState;
+    return form != null &&
+        GenderEligibilityFormValues.differ(form.initialValue, form.value);
   }
 
   @override

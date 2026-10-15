@@ -35,7 +35,7 @@ class _Groups extends ClGroupsMasterNotifier {
     Age? Function()? minAge,
     Age? Function()? maxAge,
     bool? strictAge,
-    Gender? Function()? gender,
+    List<Gender> Function()? genders,
     bool? semiAuto,
   }) async {
     renamed.add(name);

@@ -159,7 +159,8 @@ class GroupCard extends ConsumerWidget {
 }
 
 /// The card's meta line: the group's age sentence (when it has an age band),
-/// its kind and, for a member who no longer matches it, the shared mark.
+/// who it is for by gender (when it has a gender criterion), its kind and,
+/// for a member who no longer matches it, the shared mark.
 class GroupMetaLine extends StatelessWidget {
   const GroupMetaLine({
     required this.group,
@@ -182,6 +183,9 @@ class GroupMetaLine extends StatelessWidget {
       minAge: formAgeFromSdk(group.minAge),
       maxAge: formAgeFromSdk(group.maxAge),
     );
+    final gendersLine = GenderEligibilityText.line(
+      formGendersFromSdk(group.genders),
+    );
 
     return Wrap(
       crossAxisAlignment: WrapCrossAlignment.center,
@@ -192,6 +196,13 @@ class GroupMetaLine extends StatelessWidget {
           IconText(
             icon: LucideIcons.cake,
             text: ageSentence,
+            color: fg,
+            style: style,
+          ),
+        if (gendersLine != null)
+          IconText(
+            icon: LucideIcons.users,
+            text: gendersLine,
             color: fg,
             style: style,
           ),

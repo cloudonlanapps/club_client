@@ -14,7 +14,8 @@
 //      management section; content is still visible.
 //   3. Admin edits via the section editors — transfer the organizer + add a
 //      coach (one Save), then remove the coach (Save); eligibility (inline:
-//      gender and the age band, club_client#33), description (markdown), the
+//      three ticked genders and the age band, club_client#33, #80), then
+//      every gender unticked; description (markdown), the
 //      featured flag, and the title (rename dialog); each change round-trips
 //      to the server.
 //   4. Coach re-opens and sees the updated title.
@@ -25,7 +26,7 @@ import 'package:cl_club_events/cl_club_events.dart' show EventDetailsView;
 import 'package:cl_club_events/src/widgets/events_preview/cl_event_gallery.dart'
     show ClEventGallery;
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show AgeEligibilityText, EventFormFields, EventGender;
+    show AgeEligibilityText, EligibilityGender;
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
     show AgeEligibilityFormFields;
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_validators.dart'
@@ -80,6 +81,22 @@ const _kEditedTitle = 'workflow_editevent_camp_renamed';
 // The age band the admin sets on the camp (club_client#33).
 const _kMinAgeYears = 5;
 const _kMaxAgeYears = 18;
+
+// The genders the admin ticks on the camp (club_client#80), as the form
+// holds them and as the server stores them.
+const Set<EligibilityGender> _kTickedGenders = {
+  EligibilityGender.boys,
+  EligibilityGender.other,
+  EligibilityGender.preferNotToSay,
+};
+const Set<Gender> _kStoredGenders = {
+  Gender.male,
+  Gender.other,
+  Gender.preferNotToSay,
+};
+const _kThreeGendersSentence =
+    'This event is for Boys, Other and Prefer not to say.';
+const _kNoGenderHint = 'No box ticked: open to members of every gender.';
 
 /// A day a month ahead, at midnight UTC: well inside the server's 52-week
 /// scheduling horizon, which a fixed future date would one day leave.
@@ -231,14 +248,15 @@ void main() {
         description: 'coach removal to round-trip',
       );
 
-      // Eligibility — inline edit: the gender select, the minimum and
-      // maximum age and the Strict age check (club_client#33).
+      // Eligibility — inline edit: the Gender boxes (Boys, Other and Prefer
+      // not to say ticked, club_client#80), the minimum and maximum age and
+      // the Strict age check (club_client#33).
       await tapSectionPencil(tester, _sectionCard('Eligibility'));
       expect(find.textContaining('DOB'), findsNothing);
-      setShadFormValues(tester, {
-        EventFormFields.genderId: EventGender.girls,
-        AgeEligibilityFormFields.strictAgeId: true,
-      });
+      expect(find.text(_kNoGenderHint), findsOneWidget);
+      await tickEligibilityGenders(tester, _kTickedGenders);
+      expect(find.text(_kNoGenderHint), findsNothing);
+      setShadFormValues(tester, {AgeEligibilityFormFields.strictAgeId: true});
       await enterTextById(
         tester,
         AgeEligibilityFormFields.minAgeYearsId,
@@ -254,13 +272,16 @@ void main() {
         tester,
         () {
           final e = _event(tester, eventId);
-          return e.gender == Gender.female &&
+          return _sameGenders(e.genders, _kStoredGenders) &&
               e.minAge == const Age(years: _kMinAgeYears) &&
               e.maxAge == const Age(years: _kMaxAgeYears) &&
               e.strictAge;
         },
-        description: 'eligibility gender and age band to round-trip',
+        description:
+            'Issue 80: Boys, Other and Prefer not to say and the age band '
+            'to round-trip',
       );
+      expect(find.text(_kThreeGendersSentence), findsOneWidget);
       // The read view: the age sentence, with the dates the server worked
       // out and the day it counted them on beneath.
       final banded = _event(tester, eventId);
@@ -322,6 +343,24 @@ void main() {
         find.text('Open to members aged up to $_kMaxAgeYears.'),
         findsOneWidget,
       );
+      // A save that left the Gender boxes alone keeps the three genders.
+      expect(
+        _sameGenders(_event(tester, eventId).genders, _kStoredGenders),
+        isTrue,
+        reason: 'Issue 80: a save without touching Gender keeps the genders',
+      );
+
+      // Unticking every box saves no gender criterion (club_client#80).
+      await tapSectionPencil(tester, _sectionCard('Eligibility'));
+      await tickEligibilityGenders(tester, const {});
+      expect(find.text(_kNoGenderHint), findsOneWidget);
+      await saveInlineEditor(tester);
+      await waitFor(
+        tester,
+        () => _event(tester, eventId).genders.isEmpty,
+        description: 'Issue 80: unticked genders to clear on the server',
+      );
+      expect(find.text(_kThreeGendersSentence), findsNothing);
 
       // Description — markdown editor.
       await editMarkdownField(
@@ -385,6 +424,10 @@ void main() {
 // ---------------------------------------------------------------------------
 // Local helpers.
 // ---------------------------------------------------------------------------
+
+/// Whether [genders] hold exactly [expected], in any order.
+bool _sameGenders(List<Gender> genders, Set<Gender> expected) =>
+    genders.length == expected.length && expected.containsAll(genders);
 
 Event _event(WidgetTester tester, int eventId) {
   final map = container(tester).read(clEventsMasterProvider).valueOrNull;

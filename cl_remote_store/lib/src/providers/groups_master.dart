@@ -55,14 +55,15 @@ class ClGroupsMasterNotifier extends AsyncNotifier<Map<int, Group>> {
 
   /// Create a new group. [minAge], [maxAge] and [strictAge] are its age
   /// band; the server works out the window of birth dates and reports it on
-  /// the group.
+  /// the group. [genders] are the genders it admits; empty or omitted is no
+  /// gender criterion.
   Future<Group> createGroup({
     required String name,
     String? description,
     Age? minAge,
     Age? maxAge,
     bool? strictAge,
-    Gender? gender,
+    List<Gender>? genders,
     bool? semiAuto,
   }) {
     return refetchIfWriteUncertain(() async {
@@ -73,7 +74,7 @@ class ClGroupsMasterNotifier extends AsyncNotifier<Map<int, Group>> {
         minAge: minAge,
         maxAge: maxAge,
         strictAge: strictAge,
-        gender: gender,
+        genders: genders,
         semiAuto: semiAuto,
       );
 
@@ -84,7 +85,9 @@ class ClGroupsMasterNotifier extends AsyncNotifier<Map<int, Group>> {
 
   /// Update a group. Uses ValueGetter pattern for nullable fields: a
   /// [minAge] or [maxAge] getter returning `null` clears that bound, an
-  /// omitted one leaves it alone. [strictAge] left `null` is unchanged.
+  /// omitted one leaves it alone. [strictAge] left `null` is unchanged. A
+  /// [genders] getter returning an empty list clears the gender criterion;
+  /// an omitted one leaves it alone.
   Future<Group> updateGroup(
     int id, {
     String? name,
@@ -92,7 +95,7 @@ class ClGroupsMasterNotifier extends AsyncNotifier<Map<int, Group>> {
     Age? Function()? minAge,
     Age? Function()? maxAge,
     bool? strictAge,
-    Gender? Function()? gender,
+    List<Gender> Function()? genders,
     bool? semiAuto,
   }) {
     return refetchIfWriteUncertain(() async {
@@ -104,7 +107,7 @@ class ClGroupsMasterNotifier extends AsyncNotifier<Map<int, Group>> {
         minAge: minAge,
         maxAge: maxAge,
         strictAge: strictAge,
-        gender: gender,
+        genders: genders,
         semiAuto: semiAuto,
       );
 

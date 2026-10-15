@@ -60,6 +60,7 @@ class PublicEventCardContent extends StatelessWidget {
     final isPast = event.isPast;
     final description = event.description;
     final ageRange = event.ageRange;
+    final genders = event.genders;
     final tagline = event.tagline;
     final features = event.highlights ?? const <String>[];
     final photoCount = event.galleryUris.length;
@@ -98,6 +99,15 @@ class PublicEventCardContent extends StatelessWidget {
             SizedBox(height: description.isNotEmpty ? 8 : 18),
             Text(
               '${label(PublicEventCardLabels.ageRangePrefix)}$ageRange',
+              style: theme.textTheme.muted.copyWith(fontSize: 13),
+            ),
+          ],
+          if (genders != null) ...[
+            SizedBox(
+              height: description.isNotEmpty || ageRange != null ? 8 : 18,
+            ),
+            Text(
+              genders,
               style: theme.textTheme.muted.copyWith(fontSize: 13),
             ),
           ],

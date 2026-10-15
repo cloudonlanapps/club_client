@@ -64,6 +64,7 @@ class _FakeEvents extends Fake implements EventSource {
     List<String>? coachNames,
     String? rrule,
     Gender? gender,
+    List<Gender>? genders,
     Age? minAge,
     Age? maxAge,
     bool? strictAge,
@@ -94,6 +95,7 @@ class _FakeEvents extends Fake implements EventSource {
     String? organizerName,
     List<String>? Function()? coachNames,
     Gender? Function()? gender,
+    List<Gender> Function()? genders,
     Age? Function()? minAge,
     Age? Function()? maxAge,
     bool? strictAge,
@@ -122,6 +124,7 @@ class _FakeEvents extends Fake implements EventSource {
     String? description,
     Visibility? visibility,
     Gender? Function()? gender,
+    List<Gender> Function()? genders,
     Age? Function()? minAge,
     Age? Function()? maxAge,
     bool? strictAge,
@@ -169,6 +172,7 @@ class _FakeGroups extends Fake implements GroupSource {
     Age? maxAge,
     bool? strictAge,
     Gender? gender,
+    List<Gender>? genders,
     bool? semiAuto,
   }) async {
     created = (minAge: minAge, maxAge: maxAge, strictAge: strictAge);
@@ -189,6 +193,7 @@ class _FakeGroups extends Fake implements GroupSource {
     Age? Function()? maxAge,
     bool? strictAge,
     Gender? Function()? gender,
+    List<Gender> Function()? genders,
     bool? semiAuto,
   }) async {
     updates.add(_Band(minAge, maxAge, strictAge: strictAge));

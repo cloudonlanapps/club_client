@@ -24,7 +24,11 @@ abstract final class EventEntries {
       builder: (key) => EventEligibilityForm(
         key: key,
         initialValues: {
-          EventFormFields.genderId: EventGender.girls,
+          ...GenderEligibilityFormValues.initial(const [
+            EligibilityGender.boys,
+            EligibilityGender.other,
+            EligibilityGender.preferNotToSay,
+          ]),
           ...AgeEligibilityFormValues.initial(
             minAge: const FormAge(years: 8),
             maxAge: const FormAge(years: 12, months: 6),

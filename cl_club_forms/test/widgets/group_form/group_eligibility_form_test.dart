@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../support/eligibility_checks.dart';
+
 Widget _wrap(Widget child) => ShadApp(
   home: Scaffold(body: SingleChildScrollView(child: child)),
 );
@@ -65,7 +67,7 @@ void main() {
           key: key,
           initialValues: const {
             GroupFormFields.modeId: GroupMode.auto,
-            GroupFormFields.genderId: GroupGender.girls,
+            GenderEligibilityFormFields.gendersId: [EligibilityGender.girls],
           },
         ),
       ),
@@ -74,7 +76,9 @@ void main() {
 
     final values = key.currentState!.validate();
     expect(values, isNotNull);
-    expect(values![GroupFormFields.genderId], GroupGender.girls);
+    expect(GenderEligibilityFormValues.genders(values!), [
+      EligibilityGender.girls,
+    ]);
   });
 
   Finder input(String id) => find.byWidgetPredicate(
@@ -88,7 +92,6 @@ void main() {
     bool strictAge = false,
   }) => {
     GroupFormFields.modeId: mode,
-    GroupFormFields.genderId: null,
     ...AgeEligibilityFormValues.initial(
       minAge: minAge,
       maxAge: maxAge,
@@ -131,7 +134,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(key.currentState!.isDirty, isFalse);
-    expect(tester.widget<ShadCheckbox>(find.byType(ShadCheckbox)).value, true);
+    expect(tester.widget<ShadCheckbox>(strictAgeBox()).value, true);
     final values = key.currentState!.validate();
     expect(values, isNotNull);
     expect(AgeEligibilityFormValues.minAge(values!), const FormAge(years: 5));

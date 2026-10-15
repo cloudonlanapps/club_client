@@ -1,4 +1,5 @@
-import 'package:cl_club_forms/cl_club_forms.dart' show GroupFormFields;
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show EligibilityGender, GroupFormFields;
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_fields.dart'
     show AgeEligibilityFields;
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
@@ -18,7 +19,7 @@ import 'package:ui_lib/ui_lib.dart' show SectionEditButton;
 
 Group _group({
   GroupKind kind = GroupKind.semiAuto,
-  Gender? gender,
+  List<Gender> genders = const [],
   Age? minAge,
   Age? maxAge,
   bool strictAge = false,
@@ -26,7 +27,7 @@ Group _group({
   id: 7,
   name: 'Juniors',
   kind: kind,
-  gender: gender,
+  genders: genders,
   minAge: minAge,
   maxAge: maxAge,
   strictAge: strictAge,
@@ -40,7 +41,7 @@ class _Sent {
     required this.minAge,
     required this.maxAge,
     required this.strictAge,
-    required this.gender,
+    required this.genders,
     required this.semiAuto,
     required this.sentEveryGetter,
   });
@@ -48,10 +49,10 @@ class _Sent {
   final Age? minAge;
   final Age? maxAge;
   final bool? strictAge;
-  final Gender? gender;
+  final List<Gender>? genders;
   final bool? semiAuto;
 
-  /// Whether gender and both ages came with a getter (so they are cleared,
+  /// Whether the genders and both ages came with a getter (so they are cleared,
   /// not left as they were).
   final bool sentEveryGetter;
 }
@@ -76,7 +77,7 @@ class _RecordingGroups extends ClGroupsMasterNotifier {
     Age? minAge,
     Age? maxAge,
     bool? strictAge,
-    Gender? gender,
+    List<Gender>? genders,
     bool? semiAuto,
   }) async {
     created.add(
@@ -85,7 +86,7 @@ class _RecordingGroups extends ClGroupsMasterNotifier {
         minAge: minAge,
         maxAge: maxAge,
         strictAge: strictAge,
-        gender: gender,
+        genders: genders,
         semiAuto: semiAuto,
         sentEveryGetter: true,
       ),
@@ -103,7 +104,7 @@ class _RecordingGroups extends ClGroupsMasterNotifier {
     Age? Function()? minAge,
     Age? Function()? maxAge,
     bool? strictAge,
-    Gender? Function()? gender,
+    List<Gender> Function()? genders,
     bool? semiAuto,
   }) async {
     updated.add(
@@ -112,9 +113,9 @@ class _RecordingGroups extends ClGroupsMasterNotifier {
         minAge: minAge?.call(),
         maxAge: maxAge?.call(),
         strictAge: strictAge,
-        gender: gender?.call(),
+        genders: genders?.call(),
         semiAuto: semiAuto,
-        sentEveryGetter: minAge != null && maxAge != null && gender != null,
+        sentEveryGetter: minAge != null && maxAge != null && genders != null,
       ),
     );
     final refused = refusal;
@@ -182,6 +183,34 @@ Future<void> _tap(WidgetTester tester, String label) async {
   await tester.pumpAndSettle();
 }
 
+/// The Strict age check's box.
+Finder get _strictBox => find.descendant(
+  of: find.byWidgetPredicate(
+    (w) =>
+        w is ShadCheckboxFormField &&
+        w.id == AgeEligibilityFormFields.strictAgeId,
+  ),
+  matching: find.byType(ShadCheckbox),
+);
+
+/// Ticks the box of each of [genders].
+Future<void> _tick(
+  WidgetTester tester,
+  List<EligibilityGender> genders,
+) async {
+  for (final gender in genders) {
+    await tester.ensureVisible(find.byKey(ValueKey(gender)));
+    await tester.tap(find.byKey(ValueKey(gender)));
+    await tester.pumpAndSettle();
+  }
+}
+
+const List<EligibilityGender> _three = [
+  EligibilityGender.boys,
+  EligibilityGender.other,
+  EligibilityGender.preferNotToSay,
+];
+
 /// Picks [mode] in the Mode select, which currently shows [from].
 Future<void> _pickMode(
   WidgetTester tester, {
@@ -210,7 +239,7 @@ void main() {
     testWidgets('Issue 34: Clear shows as soon as the editor opens on a '
         'group with a gender, an age or the Strict age check', (tester) async {
       for (final group in [
-        _group(gender: Gender.female),
+        _group(genders: const [Gender.female]),
         _group(minAge: const Age(years: 5)),
         _group(maxAge: const Age(years: 18)),
         _group(minAge: const Age(years: 5), strictAge: true),
@@ -246,7 +275,7 @@ void main() {
       final groups = await _pumpSection(
         tester,
         _group(
-          gender: Gender.female,
+          genders: const [Gender.female],
           minAge: const Age(years: 5),
           maxAge: const Age(years: 18),
           strictAge: true,
@@ -268,7 +297,7 @@ void main() {
       final groups = await _pumpSection(
         tester,
         _group(
-          gender: Gender.female,
+          genders: const [Gender.female],
           minAge: const Age(years: 5),
           maxAge: const Age(years: 18),
           strictAge: true,
@@ -281,7 +310,7 @@ void main() {
 
       final sent = groups.updated.single;
       expect(sent.sentEveryGetter, isTrue);
-      expect(sent.gender, isNull);
+      expect(sent.genders, isEmpty);
       expect(sent.minAge, isNull);
       expect(sent.maxAge, isNull);
       expect(sent.strictAge, isFalse);
@@ -351,7 +380,7 @@ void main() {
         _input(AgeEligibilityFormFields.maxAgeYearsId),
         '12',
       );
-      await tester.tap(find.byType(ShadCheckbox));
+      await tester.tap(_strictBox);
       await tester.pumpAndSettle();
 
       await _tap(tester, 'Clear');
@@ -365,7 +394,7 @@ void main() {
 
       final sent = groups.created.single;
       expect(sent.name, 'Juniors');
-      expect(sent.gender, isNull);
+      expect(sent.genders, isNull);
       expect(sent.minAge, isNull);
       expect(sent.maxAge, isNull);
       expect(sent.strictAge, isFalse);
@@ -443,7 +472,7 @@ void main() {
         'open', (tester) async {
       final groups = await _pumpSection(
         tester,
-        _group(gender: Gender.female),
+        _group(genders: const [Gender.female]),
         refusal: membersExist,
       );
       await _openEditor(tester);
@@ -454,6 +483,127 @@ void main() {
       expect(groups.updated, hasLength(1));
       expect(find.text(GroupFormSubmit.membersExistMessage), findsOneWidget);
       expect(find.text('Save'), findsOneWidget);
+    });
+  });
+
+  group('Issue 80: the group editors pick several genders', () {
+    testWidgets('Issue 80: the Eligibility editor offers the four boxes; '
+        'ticking Boys, Other and Prefer not to say saves exactly those three, '
+        'and the read view names them', (tester) async {
+      final groups = await _pumpSection(
+        tester,
+        _group(maxAge: const Age(years: 12)),
+      );
+      await _openEditor(tester);
+      for (final label in ['Boys', 'Girls', 'Other', 'Prefer not to say']) {
+        expect(find.text(label), findsOneWidget, reason: label);
+      }
+
+      await _tick(tester, _three);
+      await _tap(tester, 'Save');
+
+      expect(groups.updated.single.genders, [
+        Gender.male,
+        Gender.other,
+        Gender.preferNotToSay,
+      ]);
+    });
+
+    testWidgets('Issue 80: the read view names every gender of the group', (
+      tester,
+    ) async {
+      await _pumpSection(
+        tester,
+        _group(
+          genders: const [Gender.male, Gender.other, Gender.preferNotToSay],
+        ),
+      );
+
+      expect(
+        find.text('This group is for Boys, Other and Prefer not to say.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Issue 80: unticking every box saves no gender criterion', (
+      tester,
+    ) async {
+      final groups = await _pumpSection(
+        tester,
+        _group(
+          genders: const [Gender.female, Gender.other],
+          maxAge: const Age(years: 12),
+        ),
+      );
+      await _openEditor(tester);
+
+      await _tick(tester, const [
+        EligibilityGender.girls,
+        EligibilityGender.other,
+      ]);
+      await _tap(tester, 'Save');
+
+      expect(groups.updated.single.genders, isEmpty);
+    });
+
+    testWidgets('Issue 80: a semi-auto group with no box ticked and no age '
+        'limit is refused, as before', (tester) async {
+      final groups = await _pumpSection(
+        tester,
+        _group(genders: const [Gender.female]),
+      );
+      await _openEditor(tester);
+
+      await _tick(tester, const [EligibilityGender.girls]);
+      await _tap(tester, 'Save');
+
+      expect(groups.updated, isEmpty);
+      expect(
+        find.text(
+          'Set at least one criterion (age or gender) for a semi-auto group.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Issue 80: one ticked box alone is a criterion of an auto '
+        'group', (tester) async {
+      final groups = await _pumpSection(
+        tester,
+        _group(kind: GroupKind.auto, maxAge: const Age(years: 12)),
+      );
+      await _openEditor(tester);
+
+      await tester.enterText(
+        _input(AgeEligibilityFormFields.maxAgeYearsId),
+        '',
+      );
+      await tester.pumpAndSettle();
+      await _tick(tester, const [EligibilityGender.girls]);
+      await _tap(tester, 'Save');
+
+      final sent = groups.updated.single;
+      expect(sent.genders, [Gender.female]);
+      expect(sent.maxAge, isNull);
+    });
+
+    testWidgets('Issue 80: group create sends the ticked genders, and none '
+        'when no box is ticked', (tester) async {
+      final groups = await _pump(
+        tester,
+        GroupCreateView(onCreated: () {}, onCancel: () {}),
+      );
+      await tester.enterText(_input(GroupFormFields.nameId), 'Mixed');
+      await _pickMode(tester, from: 'Manual', mode: 'Auto');
+      await _tick(tester, _three);
+
+      await _tap(tester, 'Create group');
+
+      expect(groups.created.single.genders, [
+        Gender.male,
+        Gender.other,
+        Gender.preferNotToSay,
+      ]);
     });
   });
 }

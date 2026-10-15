@@ -23,7 +23,7 @@ dev_dependencies:
   club_sdk_2:
     git:
       url: https://github.com/cloudonlanapps/club_sdk.git
-      ref: d654e0bde8d7e77dfd646a1b8eec4063382c6094
+      ref: 3a4ed8690626f53fcf5d9d43981b1b54fddd24ec
   flutter_test:
     sdk: flutter
   url_launcher_platform_interface: 2.3.2

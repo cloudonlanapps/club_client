@@ -30,7 +30,12 @@ Group _group({GroupKind kind = GroupKind.semiAuto, bool criteria = true}) =>
     );
 
 /// What one eligibility write carried.
-typedef _Sent = ({Age? minAge, Age? maxAge, Gender? gender, bool? semiAuto});
+typedef _Sent = ({
+  Age? minAge,
+  Age? maxAge,
+  List<Gender>? genders,
+  bool? semiAuto,
+});
 
 /// Records the eligibility writes the section sends, and refuses them with
 /// [refusal] when one is set.
@@ -52,13 +57,13 @@ class _Groups extends ClGroupsMasterNotifier {
     Age? Function()? minAge,
     Age? Function()? maxAge,
     bool? strictAge,
-    Gender? Function()? gender,
+    List<Gender> Function()? genders,
     bool? semiAuto,
   }) async {
     updated.add((
       minAge: minAge?.call(),
       maxAge: maxAge?.call(),
-      gender: gender?.call(),
+      genders: genders?.call(),
       semiAuto: semiAuto,
     ));
     final refused = refusal;
@@ -206,7 +211,7 @@ void main() {
       final sent = host.groups.updated.single;
       expect(sent.minAge, isNull);
       expect(sent.maxAge, isNull);
-      expect(sent.gender, isNull);
+      expect(sent.genders, isNull, reason: 'the group had none');
       expect(sent.semiAuto, isNull, reason: 'Manual');
       expect(find.text('Eligibility updated.'), findsOneWidget);
       expect(find.text('Save'), findsNothing, reason: 'the editor closed');

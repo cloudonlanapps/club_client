@@ -21,8 +21,9 @@ import 'event_schedule_lines.dart';
 /// otherwise the temporal status — Ongoing / Coming Soon / Ended /
 /// Cancelled / Rescheduled), and mounts the right action resolver.
 /// Status wording matches the event-details audit card via
-/// [eventDisplayStatusLabel]. An archived event reads [archivedCaption]
-/// and offers no actions (club_client#36).
+/// [eventDisplayStatusLabel]. An archived event reads [archivedCaption];
+/// in the admin lens it offers Unarchive to an admin, and otherwise no
+/// action (club_client#36).
 ///
 /// Data sourcing:
 ///   * `username == null` → admin lens. Event from `clEventsMasterProvider`.
@@ -83,17 +84,18 @@ class EventCard extends ConsumerWidget {
       body: EventBody(event: event, memberEligible: memberEligible),
       trailingActions: actions.isEmpty ? null : actions,
       onTap: onTap,
+      muted: !event.isActive,
     );
 
-    if (!event.isActive) return card(const []);
     if (username == null) {
-      if (onEnrollments == null) return card(const []);
+      if (event.isActive && onEnrollments == null) return card(const []);
       return AdminEventActions(
         event: event,
         onEnrollments: onEnrollments,
         builder: (context, actions) => card(actions),
       );
     }
+    if (!event.isActive) return card(const []);
     return UserEventActions(
       username: username!,
       event: event,

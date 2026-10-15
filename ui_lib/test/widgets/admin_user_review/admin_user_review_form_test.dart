@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/src/constants/admin_user_review.dart'
-    show kAdminReviewReasonMaxLength;
+    show kAdminReviewArmDelay, kAdminReviewReasonMaxLength;
 import 'package:ui_lib/src/widgets/admin_user_review/admin_user_review_form_data.dart'
     show AdminUserReviewAction;
 import 'package:ui_lib/src/widgets/admin_user_review/admin_user_review_validators.dart'
@@ -521,5 +521,111 @@ void main() {
       expect(find.textContaining('DOB:'), findsOneWidget);
       expect(find.text('Approve'), findsOneWidget);
     });
+  });
+
+  group('Issue 149: actions come on only after the page has armed', () {
+    testWidgets(
+      'Issue 149: a tap before the arm delay ends approves nobody; '
+      'a tap after it approves the user once',
+      (tester) async {
+        await _setSurface(tester);
+        final rec = _Recorder();
+        await tester.pumpWidget(_form(user: _user(), rec: rec));
+        await tester.pump();
+
+        await tester.tap(find.text('Approve'));
+        await tester.pump(kAdminReviewArmDelay ~/ 2);
+        await tester.tap(find.text('Approve'));
+        await tester.pump();
+        expect(rec.calls, isEmpty);
+
+        await tester.pump(kAdminReviewArmDelay);
+        await tester.tap(find.text('Approve'));
+        await tester.pump();
+        expect(rec.calls.map((c) => c.label), ['approve']);
+        expect(rec.calls.single.data.userKey, 'u1');
+      },
+    );
+
+    testWidgets(
+      'Issue 149: the next user in the same place starts unarmed, so a '
+      'repeated tap does not decide them',
+      (tester) async {
+        await _setSurface(tester);
+        final rec = _Recorder();
+        await tester.pumpWidget(_form(user: _user(), rec: rec));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Approve'));
+        await tester.pump();
+        expect(rec.calls, hasLength(1));
+
+        // The decided user leaves; the next one takes the slot.
+        await tester.pumpWidget(
+          _form(
+            user: _user(key: 'u2', name: 'Ravi Kumar', userName: 'ravi'),
+            rec: rec,
+          ),
+        );
+        await tester.pump();
+        await tester.tap(find.text('Approve'));
+        await tester.pump();
+        expect(rec.calls, hasLength(1));
+
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Approve'));
+        await tester.pump();
+        expect(rec.calls.map((c) => c.data.userKey), ['u1', 'u2']);
+      },
+    );
+
+    testWidgets(
+      'Issue 149: Reject and Block wait for the arm delay too',
+      (tester) async {
+        await _setSurface(tester);
+        final rec = _Recorder();
+        await tester.pumpWidget(_form(user: _user(), rec: rec));
+        await tester.pump();
+
+        await tester.tap(find.text('Reject'));
+        await tester.tap(find.text('Block'));
+        await tester.pump();
+        expect(find.byType(ShadDialog), findsNothing);
+
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Reject'));
+        await tester.pumpAndSettle();
+        expect(find.byType(ShadDialog), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Issue 149: a bar fills while the page arms and is hidden once armed',
+      (tester) async {
+        await _setSurface(tester);
+        final rec = _Recorder();
+        await tester.pumpWidget(_form(user: _user(), rec: rec));
+        await tester.pump(kAdminReviewArmDelay ~/ 2);
+
+        double barValue() =>
+            tester.widget<ShadProgress>(find.byType(ShadProgress)).value!;
+        double barOpacity() => tester
+            .widget<Opacity>(
+              find
+                  .ancestor(
+                    of: find.byType(ShadProgress),
+                    matching: find.byType(Opacity),
+                  )
+                  .first,
+            )
+            .opacity;
+
+        expect(barValue(), inExclusiveRange(0.0, 1.0));
+        expect(barOpacity(), 1);
+
+        await tester.pumpAndSettle();
+        expect(barValue(), 1);
+        expect(barOpacity(), 0);
+      },
+    );
   });
 }

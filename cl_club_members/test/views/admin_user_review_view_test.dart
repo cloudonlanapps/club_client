@@ -51,6 +51,28 @@ class _StubUsersMasterNotifier extends ClUsersMasterNotifier {
   }
 }
 
+/// Approves for real: the approved user leaves the pending list, so the
+/// next one slides into the pager slot (#149).
+class _ListedUsersMasterNotifier extends _StubUsersMasterNotifier {
+  _ListedUsersMasterNotifier(super._users);
+
+  final List<String> approved = [];
+
+  @override
+  Future<UserInfo> approveUser(
+    String username, {
+    String? resolutionReason,
+  }) async {
+    approved.add(username);
+    final updated = await super.approveUser(
+      username,
+      resolutionReason: resolutionReason,
+    );
+    replaceLocally(updated);
+    return updated;
+  }
+}
+
 class _StubIdentityDocsNotifier extends ClIdentityDocsMasterNotifier {
   _StubIdentityDocsNotifier(this._byUsername, [this._buildCounts]);
   final Map<String, List<MediaLink>> _byUsername;
@@ -696,6 +718,48 @@ void main() {
         find.byType(AdminUserReviewForm),
       );
       expect(form.data.documents.single.fileName, 'doc1-doc.jpg');
+    },
+  );
+
+  testWidgets(
+    'Issue 149: approving one of three pending users approves only that '
+    'one; repeated taps on the next user do nothing until it arms',
+    (tester) async {
+      final users = {
+        for (final name in ['akira', 'bela', 'chen']) name: _pending(name),
+      };
+      final stub = _ListedUsersMasterNotifier(users);
+
+      await tester.pumpWidget(
+        _wrap(
+          usersStub: stub,
+          username: 'akira',
+          privates: {
+            for (final name in users.keys) name: _pendingPrivate(name),
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Approve, then keep tapping the same spot as the next users slide in.
+      final spot = tester.getCenter(find.text('Approve'));
+      await tester.tapAt(spot);
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.tapAt(spot);
+      }
+      await tester.pump();
+
+      expect(stub.approved, ['akira']);
+      expect(find.text('Approved akira.'), findsOneWidget);
+      expect(find.text('bela'), findsWidgets);
+
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Approve'));
+      await tester.pump();
+      expect(stub.approved, ['akira', 'bela']);
+      expect(find.text('Approved bela.'), findsOneWidget);
+      await tester.pumpAndSettle();
     },
   );
 }

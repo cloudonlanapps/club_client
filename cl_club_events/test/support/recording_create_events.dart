@@ -22,7 +22,7 @@ class RecordingCreateEvents extends ClEventsMasterNotifier {
     String? organizerName,
     List<String>? coachNames,
     String? rrule,
-    Gender? gender,
+    List<Gender>? genders,
     Age? minAge,
     Age? maxAge,
     bool? strictAge,

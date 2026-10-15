@@ -7,7 +7,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 DateTime _ts(int day) => DateTime.utc(2026, 5, day);
 
 Event eventFixture({
-  Gender? gender,
+  List<Gender> genders = const [],
   Age? minAge,
   Age? maxAge,
   DateTime? dobOnOrAfterUtc,
@@ -25,7 +25,7 @@ Event eventFixture({
     endTimeUtc: _ts(20).add(const Duration(hours: 2)),
     createdAtUtc: _ts(1),
     updatedAtUtc: _ts(5),
-    gender: gender,
+    genders: genders,
     minAge: minAge,
     maxAge: maxAge,
     dobOnOrAfterUtc: dobOnOrAfterUtc,
@@ -54,7 +54,7 @@ void main() {
   testWidgets(
     'Issue 258: gender only renders gender sentence and no DOB line',
     (tester) async {
-      final event = eventFixture(gender: Gender.female);
+      final event = eventFixture(genders: const [Gender.female]);
       await tester.pumpWidget(wrap(ClEligibilityPreview(event: event)));
       await tester.pump();
 
@@ -134,7 +134,7 @@ void main() {
     'Issue 258: gender + DOB window renders both sentences',
     (tester) async {
       final event = eventFixture(
-        gender: Gender.male,
+        genders: const [Gender.male],
         minAge: const Age(years: 5),
         maxAge: const Age(years: 18),
         dobOnOrAfterUtc: DateTime.utc(2007, 6, 16),
@@ -181,13 +181,53 @@ void main() {
   );
 
   testWidgets(
-    'Issue 258: preferNotToSay gender is treated as no constraint',
+    'Issue 80: three genders are named in one sentence',
     (tester) async {
-      final event = eventFixture(gender: Gender.preferNotToSay);
+      final event = eventFixture(
+        genders: const [Gender.male, Gender.other, Gender.preferNotToSay],
+      );
       await tester.pumpWidget(wrap(ClEligibilityPreview(event: event)));
       await tester.pump();
 
-      expect(find.text('This event is open to all.'), findsOneWidget);
+      expect(
+        find.text('This event is for Boys, Other and Prefer not to say.'),
+        findsOneWidget,
+      );
+      expect(find.text('This event is open to all.'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'Issue 80: one gender reads "only for", Prefer not to say included',
+    (tester) async {
+      for (final (gender, sentence) in [
+        (Gender.female, 'This event is only for Girls.'),
+        (Gender.preferNotToSay, 'This event is only for Prefer not to say.'),
+      ]) {
+        await tester.pumpWidget(
+          wrap(ClEligibilityPreview(event: eventFixture(genders: [gender]))),
+        );
+        await tester.pump();
+
+        expect(find.text(sentence), findsOneWidget, reason: '$gender');
+      }
+    },
+  );
+
+  testWidgets(
+    'Issue 80: no gender criterion says nothing about gender',
+    (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          ClEligibilityPreview(
+            event: eventFixture(minAge: const Age(years: 5)),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.textContaining('This event is'), findsNothing);
+      expect(find.textContaining('Open to members aged'), findsOneWidget);
     },
   );
 }

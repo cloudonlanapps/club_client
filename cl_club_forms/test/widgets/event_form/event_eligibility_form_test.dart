@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../support/eligibility_checks.dart';
+
 Widget _wrap(Widget child) => ShadApp(
   home: Scaffold(body: SingleChildScrollView(child: child)),
 );
@@ -34,7 +36,7 @@ void main() {
         EventEligibilityForm(
           key: key,
           initialValues: {
-            EventFormFields.genderId: EventGender.any,
+            GenderEligibilityFormFields.gendersId: const <EligibilityGender>[],
             ...AgeEligibilityFormValues.initial(),
           },
         ),
@@ -44,7 +46,7 @@ void main() {
 
     final values = key.currentState!.validate();
     expect(values, isNotNull);
-    expect(values![EventFormFields.genderId], EventGender.any);
+    expect(GenderEligibilityFormValues.genders(values!), isEmpty);
     expect(AgeEligibilityFormValues.minAge(values), isNull);
     expect(key.currentState!.isDirty, isFalse);
   });
@@ -59,7 +61,9 @@ void main() {
         EventEligibilityForm(
           key: key,
           initialValues: {
-            EventFormFields.genderId: EventGender.boys,
+            GenderEligibilityFormFields.gendersId: const [
+              EligibilityGender.boys,
+            ],
             ...AgeEligibilityFormValues.initial(
               minAge: const FormAge(years: 5),
               maxAge: const FormAge(years: 18),
@@ -72,7 +76,9 @@ void main() {
 
     final values = key.currentState!.validate();
     expect(values, isNotNull);
-    expect(values![EventFormFields.genderId], EventGender.boys);
+    expect(GenderEligibilityFormValues.genders(values!), [
+      EligibilityGender.boys,
+    ]);
     expect(key.currentState!.isDirty, isFalse);
   });
 
@@ -110,7 +116,8 @@ void main() {
         _wrap(
           EventEligibilityForm(
             initialValues: {
-              EventFormFields.genderId: EventGender.any,
+              GenderEligibilityFormFields.gendersId:
+                  const <EligibilityGender>[],
               ...AgeEligibilityFormValues.initial(),
             },
           ),
@@ -128,7 +135,7 @@ void main() {
       ]) {
         expect(input(id), findsOneWidget);
       }
-      expect(find.byType(ShadCheckbox), findsOneWidget);
+      expect(strictAgeBox(), findsOneWidget);
       expect(find.text('Gender'), findsOneWidget);
       expect(find.textContaining('DOB'), findsNothing);
       expect(find.byType(CLDatePickerFormField), findsNothing);
@@ -144,7 +151,7 @@ void main() {
         EventEligibilityForm(
           key: key,
           initialValues: {
-            EventFormFields.genderId: EventGender.any,
+            GenderEligibilityFormFields.gendersId: const <EligibilityGender>[],
             ...AgeEligibilityFormValues.initial(),
           },
         ),
@@ -155,7 +162,7 @@ void main() {
 
     await tester.enterText(input(AgeEligibilityFormFields.minAgeYearsId), '5');
     await tester.enterText(input(AgeEligibilityFormFields.maxAgeYearsId), '18');
-    await tester.tap(find.byType(ShadCheckbox));
+    await tester.tap(strictAgeBox());
     await tester.pumpAndSettle();
 
     final values = key.currentState!.validate();
@@ -289,7 +296,8 @@ void main() {
           EventEligibilityForm(
             key: key,
             initialValues: {
-              EventFormFields.genderId: EventGender.any,
+              GenderEligibilityFormFields.gendersId:
+                  const <EligibilityGender>[],
               ...AgeEligibilityFormValues.initial(),
             },
             enabled: enabled,
@@ -352,14 +360,9 @@ void main() {
         find.byType(ShadInputFormField),
       );
       expect(inputs.every((input) => !input.enabled), isTrue);
-      expect(
-        tester
-            .widget<ShadSelectFormField<EventGender>>(
-              find.byType(ShadSelectFormField<EventGender>),
-            )
-            .enabled,
-        isFalse,
-      );
+      final boxes = tester.widgetList<ShadCheckbox>(find.byType(ShadCheckbox));
+      expect(boxes, hasLength(EligibilityGender.values.length + 1));
+      expect(boxes.every((box) => !box.enabled), isTrue);
     });
 
     testWidgets('Issue 54: a refusal of the server shows on the field, and '

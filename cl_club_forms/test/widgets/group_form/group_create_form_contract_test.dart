@@ -16,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../support/admin_forms_checks.dart';
+import '../../support/eligibility_checks.dart';
 import '../../support/form_harness.dart';
 
 typedef _F = GroupFormFields;
@@ -27,12 +28,12 @@ const _ageRows = ['Years', 'Months', 'Days'];
 Map<String, dynamic> _initial({
   String name = '',
   GroupMode mode = GroupMode.manual,
-  GroupGender gender = GroupGender.any,
+  List<EligibilityGender> genders = const [],
 }) => {
   ...GroupCreateForm.emptyValues,
   _F.nameId: name,
   _F.modeId: mode,
-  _F.genderId: gender,
+  GenderEligibilityFormFields.gendersId: genders,
 };
 
 Future<GroupCreateFormState> _pump(
@@ -104,7 +105,7 @@ void main() {
             ..._A.minAgeIds,
             ..._A.maxAgeIds,
             _A.strictAgeId,
-            _F.genderId,
+            GenderEligibilityFormFields.gendersId,
           ]),
         );
       });
@@ -115,7 +116,7 @@ void main() {
       await _pump(tester, initialValues: _initial(mode: GroupMode.auto));
       expectNoHostChrome(tester);
 
-      await pickOption(tester, from: 'Any', to: GroupGender.boys.label);
+      await tapGenders(tester, const [EligibilityGender.boys]);
       expect(find.byType(ShadButton), findsOneWidget);
       expectNoHostChrome(tester, allowedButtonTexts: {FormStrings.clear});
     });
@@ -174,7 +175,7 @@ void main() {
       });
     }
 
-    testWidgets('Issue 61: a gender picked alone satisfies a criteria mode', (
+    testWidgets('Issue 61: a gender ticked alone satisfies a criteria mode', (
       tester,
     ) async {
       final state = await _pump(
@@ -183,14 +184,12 @@ void main() {
       );
       expect(await _validate(tester, state), isNull);
 
-      await pickOption(
-        tester,
-        from: GroupGender.any.label,
-        to: GroupGender.girls.label,
-      );
+      await tapGenders(tester, const [EligibilityGender.girls]);
 
       final values = await _validate(tester, state);
-      expect(values![_F.genderId], GroupGender.girls);
+      expect(GenderEligibilityFormValues.genders(values!), const [
+        EligibilityGender.girls,
+      ]);
       expect(find.textContaining('at least one criterion'), findsNothing);
     });
 
@@ -201,7 +200,7 @@ void main() {
         tester,
         initialValues: _initial(name: 'Juniors', mode: GroupMode.auto),
       );
-      await tester.tap(find.byType(ShadCheckbox));
+      await tester.tap(strictAgeBox());
       await tester.pumpAndSettle();
 
       expect(await _validate(tester, state), isNull);
@@ -285,7 +284,7 @@ void main() {
         _F.nameId: ' U12 Boys ',
         _F.descriptionId: 'Tuesday ice',
         _F.modeId: GroupMode.manual,
-        _F.genderId: GroupGender.any,
+        GenderEligibilityFormFields.gendersId: <EligibilityGender>[],
         _F.addMeId: false,
         ...AgeEligibilityFormValues.initial(),
       });
@@ -308,7 +307,7 @@ void main() {
         _F.nameId: 'U12 Girls',
         _F.descriptionId: 'Tuesday ice',
         _F.modeId: GroupMode.semiAuto,
-        _F.genderId: GroupGender.girls,
+        GenderEligibilityFormFields.gendersId: [EligibilityGender.girls],
         _F.addMeId: true,
         ...AgeEligibilityFormValues.initial(
           minAge: const FormAge(years: 9, months: 6),

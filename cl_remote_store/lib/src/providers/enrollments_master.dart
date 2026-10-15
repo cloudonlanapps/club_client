@@ -117,7 +117,7 @@ class ClEnrollmentsMasterNotifier
   Future<void> _assertEligible(String username) async {
     final event = ref.read(clEventsMasterProvider).valueOrNull?[eventId];
     if (event == null) return;
-    if (event.gender == null &&
+    if (event.genders.isEmpty &&
         event.dobOnOrAfterUtc == null &&
         event.dobOnOrBeforeUtc == null) {
       return;

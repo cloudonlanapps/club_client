@@ -1,6 +1,7 @@
 import '../age_eligibility/age_eligibility_form_validators.dart';
 import '../age_eligibility/age_eligibility_form_values.dart';
 import '../common_form_validators.dart';
+import '../gender_eligibility/gender_eligibility_form_values.dart';
 import 'group_form_fields.dart';
 
 /// Static, SDK-free validators for the group forms.
@@ -12,8 +13,8 @@ class GroupFormValidators {
       CommonFormValidators.name(value, label: 'Group name');
 
   /// Cross-field: an auto / semi-auto group needs at least one criterion —
-  /// an age limit, or Gender on Boys or Girls (Any is none) — otherwise it
-  /// is indistinguishable from a manual group.
+  /// an age limit, or at least one ticked gender (none ticked is no
+  /// criterion) — otherwise it is indistinguishable from a manual group.
   static String? criteriaForMode(
     GroupMode mode, {
     required bool hasAnyCriterion,
@@ -43,7 +44,7 @@ class GroupFormValidators {
           mode,
           hasAnyCriterion:
               AgeEligibilityFormValues.hasAgeBound(values) ||
-              GroupGender.of(values).isCriterion,
+              GenderEligibilityFormValues.holdsValue(values),
         );
   }
 }

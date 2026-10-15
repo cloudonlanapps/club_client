@@ -4,9 +4,9 @@
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../support/admin_forms_checks.dart';
+import '../../support/eligibility_checks.dart';
 import '../../support/form_harness.dart';
 
 typedef _F = GroupFormFields;
@@ -14,13 +14,13 @@ typedef _A = AgeEligibilityFormFields;
 
 Map<String, dynamic> _seeded({
   GroupMode mode = GroupMode.semiAuto,
-  GroupGender gender = GroupGender.any,
+  List<EligibilityGender> genders = const [],
   FormAge? minAge,
   FormAge? maxAge,
   bool strictAge = false,
 }) => {
   _F.modeId: mode,
-  _F.genderId: gender,
+  GenderEligibilityFormFields.gendersId: genders,
   ...AgeEligibilityFormValues.initial(
     minAge: minAge,
     maxAge: maxAge,
@@ -87,31 +87,32 @@ void main() {
         'cleans it', (tester) async {
       final state = await _pump(tester, _seeded());
 
-      await tester.tap(find.byType(ShadCheckbox));
+      await tester.tap(strictAgeBox());
       await tester.pumpAndSettle();
       expect(state.isDirty, isTrue);
 
-      await tester.tap(find.byType(ShadCheckbox));
+      await tester.tap(strictAgeBox());
       await tester.pumpAndSettle();
       expect(state.isDirty, isFalse);
     });
 
     testWidgets('Issue 61: another gender dirties it, and the old one back '
         'cleans it', (tester) async {
-      final state = await _pump(tester, _seeded(gender: GroupGender.boys));
-
-      await pickOption(
+      final state = await _pump(
         tester,
-        from: GroupGender.boys.label,
-        to: GroupGender.girls.label,
+        _seeded(genders: const [EligibilityGender.boys]),
       );
+
+      await tapGenders(tester, const [
+        EligibilityGender.boys,
+        EligibilityGender.girls,
+      ]);
       expect(state.isDirty, isTrue);
 
-      await pickOption(
-        tester,
-        from: GroupGender.girls.label,
-        to: GroupGender.boys.label,
-      );
+      await tapGenders(tester, const [
+        EligibilityGender.girls,
+        EligibilityGender.boys,
+      ]);
       expect(state.isDirty, isFalse);
     });
 
@@ -125,7 +126,7 @@ void main() {
       await enterField(tester, _A.minAgeYearsId, '5');
       expect(changes, 1);
 
-      await tester.tap(find.byType(ShadCheckbox));
+      await tester.tap(strictAgeBox());
       await tester.pumpAndSettle();
       expect(changes, 2);
     });
@@ -136,7 +137,11 @@ void main() {
         'inline', (tester) async {
       final state = await _pump(tester, _seeded());
 
-      await expectShowsServerErrors(tester, state, _F.genderId);
+      await expectShowsServerErrors(
+        tester,
+        state,
+        GenderEligibilityFormFields.gendersId,
+      );
     });
 
     testWidgets('Issue 61: after a refused age it validates and returns its '
@@ -155,7 +160,7 @@ void main() {
     ) async {
       await _pump(
         tester,
-        _seeded(gender: GroupGender.boys, strictAge: true),
+        _seeded(genders: const [EligibilityGender.boys], strictAge: true),
         enabled: false,
       );
 
@@ -174,7 +179,7 @@ void main() {
         tester,
         GroupEligibilityForm(
           initialValues: _seeded(
-            gender: GroupGender.girls,
+            genders: const [EligibilityGender.girls],
             minAge: const FormAge(years: 100, months: 11, days: 30),
             maxAge: const FormAge(years: 150, months: 11, days: 30),
           ),

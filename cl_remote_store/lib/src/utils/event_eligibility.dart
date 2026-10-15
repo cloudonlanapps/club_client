@@ -41,18 +41,19 @@ EligibilityFailure? checkEventEligibility({
   required Event event,
   required UserPrivate user,
 }) {
-  if (event.gender != null) {
-    if (user.gender == null) {
+  if (event.genders.isNotEmpty) {
+    final gender = user.gender;
+    if (gender == null) {
       return const EligibilityFailure(
         EligibilityFailureReason.genderMissing,
         'This event is restricted by gender. Update the user profile '
         'before enrolling.',
       );
     }
-    if (user.gender != event.gender) {
-      return EligibilityFailure(
+    if (!event.genders.contains(gender)) {
+      return const EligibilityFailure(
         EligibilityFailureReason.genderMismatch,
-        'This event is restricted to ${event.gender!.label} members.',
+        "This event is not open to the user's gender.",
       );
     }
   }

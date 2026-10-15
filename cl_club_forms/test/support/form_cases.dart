@@ -195,7 +195,7 @@ final List<FormCase> formCases = [
     build: ({required enabled}) => EventEligibilityForm(
       enabled: enabled,
       initialValues: {
-        EventFormFields.genderId: EventGender.any,
+        GenderEligibilityFormFields.gendersId: const <EligibilityGender>[],
         ...AgeEligibilityFormValues.initial(),
       },
     ),

@@ -1,9 +1,11 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
     show
         AgeEligibilityFormValues,
+        EligibilityGender,
         FormAge,
+        GenderEligibilityFormFields,
+        GenderEligibilityFormValues,
         GroupFormFields,
-        GroupGender,
         GroupMode;
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
     show AgeEligibilityFormFields;
@@ -19,13 +21,13 @@ class _Sent {
     required this.minAge,
     required this.maxAge,
     required this.strictAge,
-    required this.gender,
+    required this.genders,
     required this.semiAuto,
   });
   final Age? minAge;
   final Age? maxAge;
   final bool? strictAge;
-  final Gender? gender;
+  final List<Gender>? genders;
   final bool? semiAuto;
 }
 
@@ -43,9 +45,9 @@ class _RecordingNotifier extends ClGroupsMasterNotifier {
   /// Whether the last update passed a getter for each bound (so it clears).
   bool updateSentBothAgeGetters = false;
 
-  /// Whether the last update passed a gender at all (a getter returning
-  /// null clears it; no getter leaves the stored one alone).
-  bool updateSentGender = false;
+  /// Whether the last update passed genders at all (a getter returning an
+  /// empty list clears them; no getter leaves the stored ones alone).
+  bool updateSentGenders = false;
 
   @override
   Future<Group> createGroup({
@@ -54,7 +56,7 @@ class _RecordingNotifier extends ClGroupsMasterNotifier {
     Age? minAge,
     Age? maxAge,
     bool? strictAge,
-    Gender? gender,
+    List<Gender>? genders,
     bool? semiAuto,
   }) async {
     created.add(
@@ -62,7 +64,7 @@ class _RecordingNotifier extends ClGroupsMasterNotifier {
         minAge: minAge,
         maxAge: maxAge,
         strictAge: strictAge,
-        gender: gender,
+        genders: genders,
         semiAuto: semiAuto,
       ),
     );
@@ -77,17 +79,17 @@ class _RecordingNotifier extends ClGroupsMasterNotifier {
     Age? Function()? minAge,
     Age? Function()? maxAge,
     bool? strictAge,
-    Gender? Function()? gender,
+    List<Gender> Function()? genders,
     bool? semiAuto,
   }) async {
     updateSentBothAgeGetters = minAge != null && maxAge != null;
-    updateSentGender = gender != null;
+    updateSentGenders = genders != null;
     updated.add(
       _Sent(
         minAge: minAge?.call(),
         maxAge: maxAge?.call(),
         strictAge: strictAge,
-        gender: gender?.call(),
+        genders: genders?.call(),
         semiAuto: semiAuto,
       ),
     );
@@ -95,12 +97,15 @@ class _RecordingNotifier extends ClGroupsMasterNotifier {
   }
 }
 
-/// A stored group for `updateEligibility`: semi-auto, with [gender].
-Group _group({Gender? gender, GroupKind kind = GroupKind.semiAuto}) => Group(
+/// A stored group for `updateEligibility`: semi-auto, with [genders].
+Group _group({
+  List<Gender> genders = const [],
+  GroupKind kind = GroupKind.semiAuto,
+}) => Group(
   id: 1,
   name: 'Juniors',
   kind: kind,
-  gender: gender,
+  genders: genders,
   createdAtUtc: DateTime.utc(2025),
 );
 
@@ -109,12 +114,12 @@ Map<String, dynamic> _form({
   String minYears = '',
   String maxYears = '',
   bool strict = false,
-  GroupGender gender = GroupGender.any,
+  List<EligibilityGender> genders = const [],
 }) => {
   GroupFormFields.nameId: 'Juniors',
   GroupFormFields.descriptionId: '',
   GroupFormFields.modeId: mode,
-  GroupFormFields.genderId: gender,
+  ...GenderEligibilityFormValues.initial(genders),
   ...AgeEligibilityFormValues.initial(strictAge: strict),
   AgeEligibilityFormFields.minAgeYearsId: minYears,
   AgeEligibilityFormFields.maxAgeYearsId: maxYears,
@@ -144,7 +149,7 @@ void main() {
         strictAge: true,
         dobOnOrAfterUtc: after,
         dobOnOrBeforeUtc: before,
-        gender: Gender.male,
+        genders: const [Gender.male],
         createdAtUtc: DateTime.utc(2025),
       );
 
@@ -160,7 +165,9 @@ void main() {
       );
       expect(AgeEligibilityFormValues.strictAge(values), isTrue);
       expect(values.values.whereType<DateTime>(), isEmpty);
-      expect(values[GroupFormFields.genderId], GroupGender.boys);
+      expect(GenderEligibilityFormValues.genders(values), [
+        EligibilityGender.boys,
+      ]);
     });
 
     test('semi-auto group maps to GroupMode.semiAuto', () {
@@ -191,12 +198,12 @@ void main() {
       expect(AgeEligibilityFormValues.minAge(values), isNull);
       expect(AgeEligibilityFormValues.maxAge(values), isNull);
       expect(AgeEligibilityFormValues.strictAge(values), isFalse);
-      // Since #78 no gender criterion is the entry Any, never null.
-      expect(values[GroupFormFields.genderId], GroupGender.any);
+      // No gender criterion is no ticked gender.
+      expect(GenderEligibilityFormValues.genders(values), isEmpty);
     });
   });
 
-  group('Issue 78: the group adapter maps Any, Boys and Girls', () {
+  group('Issue 80: the group adapter sends the ticked genders', () {
     Future<_RecordingNotifier> save(
       Group group,
       Map<String, dynamic> values,
@@ -210,124 +217,109 @@ void main() {
       return notifier;
     }
 
-    test('Issue 78: a stored gender shows as Boys, Girls or Any', () {
+    const three = [
+      EligibilityGender.boys,
+      EligibilityGender.other,
+      EligibilityGender.preferNotToSay,
+    ];
+
+    test('Issue 80: stored genders show as their ticked boxes', () {
       expect(
-        {
-          for (final g in <Gender?>[null, ...Gender.values])
-            g: GroupFormSubmit.genderToForm(g),
-        },
-        {
-          null: GroupGender.any,
-          Gender.male: GroupGender.boys,
-          Gender.female: GroupGender.girls,
-          Gender.other: GroupGender.any,
-          Gender.preferNotToSay: GroupGender.any,
-        },
-      );
-      for (final g in <Gender?>[null, ...Gender.values]) {
-        expect(
+        GenderEligibilityFormValues.genders(
           buildGroupFormInitialValues(
-            _group(gender: g),
-          )[GroupFormFields.genderId],
-          GroupFormSubmit.genderToForm(g),
-          reason: '$g',
-        );
-      }
-      expect(
-        buildGroupFormInitialValues(null)[GroupFormFields.genderId],
-        GroupGender.any,
+            _group(
+              genders: const [Gender.preferNotToSay, Gender.male, Gender.other],
+            ),
+          ),
+        ),
+        three,
       );
     });
 
-    test('Issue 78: Any stores no gender, Boys male and Girls female', () {
-      expect(
-        {for (final g in GroupGender.values) g: GroupFormSubmit.genderToSdk(g)},
-        {
-          GroupGender.any: null,
-          GroupGender.boys: Gender.male,
-          GroupGender.girls: Gender.female,
-        },
-      );
-    });
-
-    test('Issue 78: create sends male for Boys, female for Girls and no '
-        'gender for Any', () async {
+    test('Issue 80: create sends exactly the ticked genders', () async {
       final notifier = _RecordingNotifier();
-      for (final gender in GroupGender.values) {
-        await GroupFormSubmit.create(
-          values: _form(maxYears: '12', gender: gender),
-          notifier: notifier,
-        );
-      }
-
-      expect(
-        [for (final sent in notifier.created) sent.gender],
-        [null, Gender.male, Gender.female],
+      await GroupFormSubmit.create(
+        values: _form(genders: three),
+        notifier: notifier,
       );
+
+      expect(notifier.created.single.genders, [
+        Gender.male,
+        Gender.other,
+        Gender.preferNotToSay,
+      ]);
     });
 
-    test('Issue 78: Any picked on a boys or girls group sends no gender '
-        'criterion', () async {
-      for (final stored in [Gender.male, Gender.female]) {
-        final notifier = await save(
-          _group(gender: stored),
-          _form(maxYears: '12'),
-        );
+    test('Issue 80: create with no box ticked sends no genders', () async {
+      final notifier = _RecordingNotifier();
+      await GroupFormSubmit.create(
+        values: _form(maxYears: '12'),
+        notifier: notifier,
+      );
 
-        expect(notifier.updateSentGender, isTrue, reason: 'so it clears');
-        expect(notifier.updated.single.gender, isNull);
-      }
+      expect(notifier.created.single.genders, isNull);
     });
 
-    test('Issue 78: a stored other criterion is not sent when Gender is '
-        'untouched', () async {
-      for (final stored in [Gender.other, Gender.preferNotToSay]) {
-        final group = _group(gender: stored);
-        final values = {
-          ...buildGroupFormInitialValues(group),
-          AgeEligibilityFormFields.maxAgeYearsId: '12',
-        };
-        expect(values[GroupFormFields.genderId], GroupGender.any);
-
-        final notifier = await save(group, values);
-
-        expect(notifier.updateSentGender, isFalse, reason: '$stored stays');
-        expect(notifier.updated.single.maxAge, const Age(years: 12));
-      }
-    });
-
-    test('Issue 78: a stored other criterion is replaced when an entry is '
-        'picked', () async {
-      final group = _group(gender: Gender.other);
-
-      final girls = await save(group, _form(gender: GroupGender.girls));
-      expect(girls.updateSentGender, isTrue);
-      expect(girls.updated.single.gender, Gender.female);
-
-      final boys = await save(group, _form(gender: GroupGender.boys));
-      expect(boys.updated.single.gender, Gender.male);
-    });
-
-    test('Issue 78: an unchanged Boys or Girls is not sent either', () async {
+    test('Issue 80: changed genders are sent, exactly those ticked', () async {
       final notifier = await save(
-        _group(gender: Gender.male),
-        _form(maxYears: '12', gender: GroupGender.boys),
+        _group(genders: const [Gender.female]),
+        _form(genders: three),
       );
 
-      expect(notifier.updateSentGender, isFalse);
+      expect(notifier.updateSentGenders, isTrue);
+      expect(notifier.updated.single.genders, [
+        Gender.male,
+        Gender.other,
+        Gender.preferNotToSay,
+      ]);
     });
 
-    test('Issue 78: a Manual group always clears the gender, a stored other '
-        'included', () async {
-      for (final stored in [Gender.other, Gender.male, null]) {
-        final notifier = await save(
-          _group(gender: stored),
-          _form(mode: GroupMode.manual),
-        );
+    test('Issue 80: unticking every box sends an empty list, which clears '
+        'the criterion', () async {
+      final notifier = await save(
+        _group(genders: const [Gender.male, Gender.female]),
+        _form(maxYears: '12'),
+      );
 
-        expect(notifier.updateSentGender, isTrue, reason: '$stored');
-        expect(notifier.updated.single.gender, isNull);
-      }
+      expect(notifier.updateSentGenders, isTrue);
+      expect(notifier.updated.single.genders, isEmpty);
+    });
+
+    test('Issue 80: genders equal to the stored ones, in any order, are not '
+        'sent', () async {
+      final notifier = await save(
+        _group(
+          genders: const [Gender.preferNotToSay, Gender.male, Gender.other],
+        ),
+        _form(maxYears: '12', genders: three),
+      );
+
+      expect(notifier.updateSentGenders, isFalse);
+      expect(notifier.updated.single.maxAge, const Age(years: 12));
+    });
+
+    test('Issue 80: a section saved without touching the boxes does not '
+        'send genders', () async {
+      final group = _group(genders: const [Gender.female, Gender.other]);
+      final notifier = await save(group, {
+        ...buildGroupFormInitialValues(group),
+        AgeEligibilityFormFields.maxAgeYearsId: '12',
+      });
+
+      expect(notifier.updateSentGenders, isFalse);
+    });
+
+    test('Issue 80: a Manual group clears stored genders and sends none when '
+        'it has none', () async {
+      final withGenders = await save(
+        _group(genders: const [Gender.other, Gender.male]),
+        _form(mode: GroupMode.manual, genders: three),
+      );
+      expect(withGenders.updateSentGenders, isTrue);
+      expect(withGenders.updated.single.genders, isEmpty);
+
+      final without = await save(_group(), _form(mode: GroupMode.manual));
+      expect(without.updateSentGenders, isFalse);
     });
   });
 
@@ -371,7 +363,7 @@ void main() {
           minYears: '5',
           maxYears: '18',
           strict: true,
-          gender: GroupGender.girls,
+          genders: const [EligibilityGender.girls],
         ),
         group: _group(),
         notifier: notifier,
@@ -381,7 +373,7 @@ void main() {
       expect(sent.minAge, const Age(years: 5));
       expect(sent.maxAge, const Age(years: 18));
       expect(sent.strictAge, isTrue);
-      expect(sent.gender, Gender.female);
+      expect(sent.genders, [Gender.female]);
     });
 
     test('Issue 33: an emptied age clears that bound', () async {
@@ -485,8 +477,11 @@ void main() {
         'a fresh form is not dirty', () {
       final values = buildGroupFormInitialValues(null);
 
-      expect(values.containsKey(GroupFormFields.genderId), isTrue);
-      expect(values[GroupFormFields.genderId], GroupGender.any);
+      expect(
+        values.containsKey(GenderEligibilityFormFields.gendersId),
+        isTrue,
+      );
+      expect(GenderEligibilityFormValues.genders(values), isEmpty);
     });
   });
 }

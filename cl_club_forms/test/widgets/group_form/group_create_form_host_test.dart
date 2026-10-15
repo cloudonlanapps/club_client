@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../support/admin_forms_checks.dart';
+import '../../support/eligibility_checks.dart';
 import '../../support/form_harness.dart';
 
 typedef _F = GroupFormFields;
@@ -16,12 +17,12 @@ typedef _A = AgeEligibilityFormFields;
 Map<String, dynamic> _initial({
   String name = '',
   GroupMode mode = GroupMode.manual,
-  GroupGender gender = GroupGender.any,
+  List<EligibilityGender> genders = const [],
 }) => {
   ...GroupCreateForm.emptyValues,
   _F.nameId: name,
   _F.modeId: mode,
-  _F.genderId: gender,
+  GenderEligibilityFormFields.gendersId: genders,
 };
 
 Future<GroupCreateFormState> _pump(
@@ -91,25 +92,69 @@ void main() {
         'cleans it', (tester) async {
       final state = await pumpAuto(tester);
 
-      await tester.tap(find.byType(ShadCheckbox));
+      await tester.tap(strictAgeBox());
       await tester.pumpAndSettle();
       expect(state.isDirty, isTrue);
 
-      await tester.tap(find.byType(ShadCheckbox));
+      await tester.tap(strictAgeBox());
       await tester.pumpAndSettle();
       expect(state.isDirty, isFalse);
     });
 
-    testWidgets('Issue 61: a gender picked dirties it, and taking it away '
+    testWidgets('Issue 61: a gender ticked dirties it, and unticking it '
         'cleans it', (tester) async {
       final state = await pumpAuto(tester);
 
-      await pickOption(tester, from: 'Any', to: GroupGender.boys.label);
+      await tapGenders(tester, const [EligibilityGender.boys]);
       expect(state.isDirty, isTrue);
 
-      // Since #78 Any is an entry of the select, so it is picked again.
-      await pickOption(tester, from: GroupGender.boys.label, to: 'Any');
+      await tapGenders(tester, const [EligibilityGender.boys]);
       expect(state.isDirty, isFalse);
+    });
+
+    testWidgets('Issue 80: the create form offers the four boxes; Boys, Other '
+        'and Prefer not to say ticked validate to exactly those three', (
+      tester,
+    ) async {
+      final state = await pumpAuto(tester);
+      for (final gender in EligibilityGender.values) {
+        expect(genderBox(gender), findsOneWidget, reason: gender.label);
+      }
+
+      await tapGenders(tester, const [
+        EligibilityGender.other,
+        EligibilityGender.boys,
+        EligibilityGender.preferNotToSay,
+      ]);
+      final values = state.validate();
+
+      expect(values, isNotNull);
+      expect(GenderEligibilityFormValues.genders(values!), const [
+        EligibilityGender.boys,
+        EligibilityGender.other,
+        EligibilityGender.preferNotToSay,
+      ]);
+    });
+
+    testWidgets('Issue 80: Clear unticks every gender of the create form', (
+      tester,
+    ) async {
+      final state = await pumpAuto(tester);
+      await tapGenders(tester, const [
+        EligibilityGender.girls,
+        EligibilityGender.other,
+      ]);
+
+      await tester.tap(find.text(FormStrings.clear));
+      await tester.pumpAndSettle();
+
+      expect(
+        GenderEligibilityFormValues.genders(formOf(tester).value),
+        isEmpty,
+      );
+      expect(formOf(tester).value[_F.modeId], GroupMode.manual);
+      // Clear puts the mode to Manual, a change from the seeded Auto.
+      expect(state.isDirty, isTrue);
     });
 
     testWidgets('Issue 61: Clear on a group that started with criteria '
@@ -119,7 +164,7 @@ void main() {
         initialValues: _initial(
           name: 'Juniors',
           mode: GroupMode.auto,
-          gender: GroupGender.boys,
+          genders: const [EligibilityGender.boys],
         ),
       );
       expect(state.isDirty, isFalse);
@@ -153,7 +198,9 @@ void main() {
         'shows inline', (tester) async {
       final state = await _pump(tester);
 
-      state.showErrors(fieldErrors: {_F.genderId: 'Gender refused.'});
+      state.showErrors(
+        fieldErrors: {GenderEligibilityFormFields.gendersId: 'Gender refused.'},
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Gender refused.'), findsOneWidget);
@@ -178,7 +225,7 @@ void main() {
       final initial = _initial(
         name: 'Juniors',
         mode: GroupMode.auto,
-        gender: GroupGender.boys,
+        genders: const [EligibilityGender.boys],
       );
       await _pump(tester, initialValues: initial, enabled: false);
 
@@ -201,7 +248,7 @@ void main() {
           initialValues: _initial(
             name: 'Juniors',
             mode: GroupMode.semiAuto,
-            gender: GroupGender.girls,
+            genders: const [EligibilityGender.girls],
           ),
         ),
       );
@@ -216,7 +263,7 @@ void main() {
       initialValues: _initial(
         name: 'Juniors',
         mode: GroupMode.auto,
-        gender: GroupGender.boys,
+        genders: const [EligibilityGender.boys],
       ),
     );
 

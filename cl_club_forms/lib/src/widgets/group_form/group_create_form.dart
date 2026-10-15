@@ -6,6 +6,7 @@ import '../age_eligibility/age_eligibility_form_values.dart';
 import '../form/form_body.dart';
 import '../form/form_contract.dart';
 import '../form/labeled_form_row.dart';
+import '../gender_eligibility/gender_eligibility_form_values.dart';
 import 'group_eligibility_fields.dart';
 import 'group_form_fields.dart';
 import 'group_form_validators.dart';
@@ -34,13 +35,13 @@ class GroupCreateForm extends StatefulWidget {
   /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
 
-  /// Default values for a fresh group: manual mode, Gender on Any, nothing
-  /// else set.
+  /// Default values for a fresh group: manual mode, no gender ticked,
+  /// nothing else set.
   static Map<String, dynamic> get emptyValues => {
     GroupFormFields.nameId: '',
     GroupFormFields.descriptionId: '',
     GroupFormFields.modeId: GroupMode.manual,
-    GroupFormFields.genderId: GroupGender.any,
+    ...GenderEligibilityFormValues.initial(),
     GroupFormFields.addMeId: false,
     ...AgeEligibilityFormValues.initial(),
   };
@@ -53,7 +54,8 @@ class GroupCreateForm extends StatefulWidget {
 /// and the age cluster's, as the fields hold them.
 class GroupCreateFormState extends State<GroupCreateForm>
     with FormContract<GroupCreateForm> {
-  /// What the form starts with; Gender is on Any when the host gave none.
+  /// What the form starts with; no gender is ticked when the host gave
+  /// none.
   Map<String, dynamic> get initialValues => GroupEligibilityFields.seeded(
     widget.initialValues ?? GroupCreateForm.emptyValues,
   );
@@ -61,6 +63,15 @@ class GroupCreateFormState extends State<GroupCreateForm>
   @override
   String? crossFieldError(Map<String, dynamic> values) =>
       GroupFormValidators.eligibility(values);
+
+  /// Whether anything changed. The genders are a list, compared as a set
+  /// ([GenderEligibilityFormValues.differ]).
+  @override
+  bool get isDirty {
+    final form = formKey.currentState;
+    return form != null &&
+        GenderEligibilityFormValues.differ(form.initialValue, form.value);
+  }
 
   @override
   Widget build(BuildContext context) {

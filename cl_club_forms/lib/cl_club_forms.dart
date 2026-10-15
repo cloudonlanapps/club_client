@@ -91,8 +91,7 @@ export 'src/widgets/event_create/event_create_form_fields.dart'
 // assembled forms are public.
 export 'src/widgets/event_form/event_eligibility_form.dart'
     show EventEligibilityForm, EventEligibilityFormState;
-export 'src/widgets/event_form/event_form_fields.dart'
-    show EventFormFields, EventGender;
+export 'src/widgets/event_form/event_form_fields.dart' show EventFormFields;
 export 'src/widgets/event_form/event_form_validators.dart'
     show EventFormValidators;
 export 'src/widgets/event_form/event_staff_form.dart'
@@ -129,6 +128,16 @@ export 'src/widgets/event_schedule/session_split_field.dart'
     show SessionSplitField;
 // A two-column layout that stacks on narrow surfaces
 export 'src/widgets/event_schedule/two_column_grid.dart' show TwoColumnGrid;
+// Genders of the eligibility editors (pure UI, no SDK / no Riverpod): its
+// values and the read text.
+export 'src/widgets/gender_eligibility/eligibility_gender.dart'
+    show EligibilityGender;
+export 'src/widgets/gender_eligibility/gender_eligibility_form_fields.dart'
+    show GenderEligibilityFormFields;
+export 'src/widgets/gender_eligibility/gender_eligibility_form_values.dart'
+    show GenderEligibilityFormValues;
+export 'src/widgets/gender_eligibility/gender_eligibility_text.dart'
+    show GenderEligibilityText;
 // Group forms (pure UI, no SDK / no Riverpod). The shared eligibility field
 // cluster is intentionally not exported — only the assembled forms are public.
 export 'src/widgets/group_form/group_create_form.dart'
@@ -136,7 +145,7 @@ export 'src/widgets/group_form/group_create_form.dart'
 export 'src/widgets/group_form/group_eligibility_form.dart'
     show GroupEligibilityForm, GroupEligibilityFormState;
 export 'src/widgets/group_form/group_form_fields.dart'
-    show GroupFormFields, GroupGender, GroupMode;
+    show GroupFormFields, GroupMode;
 export 'src/widgets/group_form/group_form_validators.dart'
     show GroupFormValidators;
 // The privacy consent a member gives with their identity documents

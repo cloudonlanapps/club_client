@@ -1,9 +1,13 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show AgeEligibilitySummary, GroupEligibilityForm, GroupEligibilityFormState;
+    show
+        AgeEligibilitySummary,
+        GenderEligibilityText,
+        GroupEligibilityForm,
+        GroupEligibilityFormState;
 import 'package:cl_club_members/src/models/group_form_helpers.dart'
     show GroupFormSubmit, buildGroupFormInitialValues;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clGroupsMasterProvider, formAgeFromSdk;
+    show clGroupsMasterProvider, formAgeFromSdk, formGendersFromSdk;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -125,7 +129,10 @@ class _GroupEligibilitySectionState
 
   static List<String> _buildSentences(Group group) {
     final lines = <String>[_kindSentence(group.kind)];
-    final genderLine = _genderSentence(group.gender);
+    final genderLine = GenderEligibilityText.sentence(
+      'group',
+      formGendersFromSdk(group.genders),
+    );
     if (genderLine != null) lines.add(genderLine);
     return lines;
   }
@@ -140,20 +147,6 @@ class _GroupEligibilitySectionState
             'can be added or request to join.';
       case GroupKind.manual:
         return 'This group is open to all.';
-    }
-  }
-
-  static String? _genderSentence(Gender? gender) {
-    if (gender == null) return null;
-    switch (gender) {
-      case Gender.male:
-        return 'This group is only for Boys.';
-      case Gender.female:
-        return 'This group is only for Girls.';
-      case Gender.other:
-        return 'This group is only for members who identify as Other.';
-      case Gender.preferNotToSay:
-        return null;
     }
   }
 }

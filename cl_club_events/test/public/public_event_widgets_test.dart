@@ -90,6 +90,40 @@ void main() {
       expect(find.text('View Details'), findsOneWidget);
     });
 
+    testWidgets('Issue 80: the card names who the event is for by gender, '
+        'apart from the ages', (tester) async {
+      await _pump(
+        tester,
+        PublicEventCard(
+          event: testEventView(
+            testPublicEvent(
+              dobOnOrBeforeUtc: DateTime.utc(2018, 5, 4),
+              dobOnOrAfterUtc: DateTime.utc(2014, 5, 5),
+              genders: const [
+                Gender.male,
+                Gender.other,
+                Gender.preferNotToSay,
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('For ages 8-11'), findsOneWidget);
+      expect(
+        find.text('For Boys, Other and Prefer not to say'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Issue 80: a card open to every gender says nothing about '
+        'gender', (tester) async {
+      await _pump(tester, PublicEventCard(event: _camp));
+
+      expect(find.textContaining('Only for'), findsNothing);
+      expect(find.textContaining('Boys'), findsNothing);
+    });
+
     testWidgets('Issue 53: a past event offers its gallery', (tester) async {
       await _pump(tester, PublicEventCard(event: _pastCamp));
 

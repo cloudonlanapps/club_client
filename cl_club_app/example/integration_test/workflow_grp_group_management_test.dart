@@ -22,7 +22,7 @@
 //       workflow_grp_group_management_test.dart
 
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show AgeEligibilityText, GroupGender, GroupMode;
+    show AgeEligibilityText, EligibilityGender, GroupMode;
 import 'package:cl_club_forms/src/widgets/age_eligibility/age_eligibility_form_fields.dart'
     show AgeEligibilityFormFields;
 import 'package:cl_club_members/src/models/group_form_helpers.dart'
@@ -217,7 +217,7 @@ void main() {
         name: _kGroupAuto,
         minAgeYears: _kMinAgeYears,
         maxAgeYears: _kMaxAgeYears,
-        gender: Gender.male,
+        genders: const {EligibilityGender.boys},
         semiAuto: false,
       );
 
@@ -227,7 +227,7 @@ void main() {
         name: _kGroupSemi,
         minAgeYears: _kMinAgeYears,
         maxAgeYears: _kMaxAgeYears,
-        gender: Gender.male,
+        genders: const {EligibilityGender.boys},
         semiAuto: true,
       );
 
@@ -237,7 +237,7 @@ void main() {
         name: _kGroupManual,
         minAgeYears: null,
         maxAgeYears: null,
-        gender: null,
+        genders: const {},
         semiAuto: false,
       );
 
@@ -786,21 +786,12 @@ void main() {
 /// Walk Dashboard → sidebar "Groups" → "+ Add group" → fill GroupForm.
 /// Per CLAUDE.md the only legitimate `go` is to a sub-flow start —
 /// `/memberzone` is the dashboard, the user-facing entry point.
-/// Maps the SDK [Gender] used by the test fixtures to the form-local
-/// [GroupGender] the SDK-free group form speaks: Boys, Girls, or Any for no
-/// gender criterion (the form offers no other entry, club_client#78).
-GroupGender _toGroupGender(Gender? g) => switch (g) {
-  Gender.male => GroupGender.boys,
-  Gender.female => GroupGender.girls,
-  Gender.other || Gender.preferNotToSay || null => GroupGender.any,
-};
-
 Future<void> _createGroupViaUi(
   WidgetTester tester, {
   required String name,
   required int? minAgeYears,
   required int? maxAgeYears,
-  required Gender? gender,
+  required Set<EligibilityGender> genders,
   required bool semiAuto,
 }) async {
   await go(tester, '/memberzone/groups');
@@ -828,7 +819,7 @@ Future<void> _createGroupViaUi(
   // Pick the membership mode. The eligibility criteria fields only render for
   // auto / semi-auto, so set the mode first and pump to mount them.
   final hasCriteria =
-      minAgeYears != null || maxAgeYears != null || gender != null;
+      minAgeYears != null || maxAgeYears != null || genders.isNotEmpty;
   final mode = !hasCriteria
       ? GroupMode.manual
       : (semiAuto ? GroupMode.semiAuto : GroupMode.auto);
@@ -836,8 +827,8 @@ Future<void> _createGroupViaUi(
   await tester.pump();
 
   // The age band is typed, one input per part (club_client#33); there are
-  // no date pickers. Gender is a select, written straight into the form's
-  // value map as the form-local GroupGender (the form is SDK-free).
+  // no date pickers. Gender is a row of checkboxes, one per gender
+  // (club_client#80).
   if (hasCriteria) {
     expect(find.textContaining('DOB'), findsNothing);
     if (minAgeYears != null) {
@@ -854,8 +845,7 @@ Future<void> _createGroupViaUi(
         '$maxAgeYears',
       );
     }
-    setShadFormValues(tester, {'gender': _toGroupGender(gender)});
-    await tester.pump();
+    await tickEligibilityGenders(tester, genders);
   }
 
   // Submit.

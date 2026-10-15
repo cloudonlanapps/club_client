@@ -5,6 +5,7 @@ import 'package:cl_club_forms/cl_club_forms.dart'
         EventCreateFormFields,
         EventFormFields,
         EventTimetableFormFields,
+        GenderEligibilityFormFields,
         OccurrenceRescheduleFormFields,
         OneOffScheduleFormFields,
         ProgrammeEndDateFormFields,
@@ -44,8 +45,8 @@ abstract final class EventSchemaFields {
   /// The schedule a timetable correction is for.
   static const String scheduleId = 'scheduleId';
 
-  /// The gender criterion.
-  static const String gender = 'gender';
+  /// The gender criterion, a list of genders.
+  static const String genders = 'genders';
 
   /// The organizer.
   static const String organizerName = 'organizerName';
@@ -84,7 +85,7 @@ abstract final class EventSchemaFields {
 
   /// The eligibility editor.
   static const Map<String, String> eligibility = {
-    gender: EventFormFields.genderId,
+    genders: GenderEligibilityFormFields.gendersId,
     ...ageSchemaFieldIds,
   };
 

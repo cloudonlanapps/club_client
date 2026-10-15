@@ -192,7 +192,9 @@ void main() {
           initialValues: {
             ...GroupCreateForm.emptyValues,
             GroupFormFields.modeId: GroupMode.auto,
-            GroupFormFields.genderId: GroupGender.girls,
+            GenderEligibilityFormFields.gendersId: const [
+              EligibilityGender.girls,
+            ],
           },
         ),
       );

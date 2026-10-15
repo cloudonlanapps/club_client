@@ -111,6 +111,33 @@ void main() {
       expect(view.ageRange, '8-11');
     });
 
+    test('Issue 80: the genders read as a line of their own, apart from '
+        'the ages', () {
+      final view = testEventView(
+        testPublicEvent(
+          dobOnOrBeforeUtc: DateTime.utc(2018, 5, 4),
+          dobOnOrAfterUtc: DateTime.utc(2014, 5, 5),
+          genders: const [Gender.female, Gender.male],
+        ),
+      );
+
+      expect(view.ageRange, '8-11');
+      expect(view.genders, 'For Boys and Girls');
+      expect(
+        testEventView(
+          testPublicEvent(genders: const [Gender.other]),
+        ).genders,
+        'Only for Other',
+      );
+    });
+
+    test('Issue 80: an event open to every gender has no genders line', () {
+      final view = testEventView(testPublicEvent());
+
+      expect(view.genders, isNull);
+      expect(view.ageRange, isNull);
+    });
+
     test('Issue 53: an event is a highlight of its type', () {
       final view = testEventView(
         testPublicEvent(

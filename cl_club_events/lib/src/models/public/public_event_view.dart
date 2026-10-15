@@ -1,4 +1,6 @@
-import 'package:cl_remote_store/cl_remote_store.dart' show MediaUrlBuilder;
+import 'package:cl_club_forms/cl_club_forms.dart' show GenderEligibilityText;
+import 'package:cl_remote_store/cl_remote_store.dart'
+    show MediaUrlBuilder, formGendersFromSdk;
 import 'package:club_sdk_2/club_sdk_2.dart';
 
 import 'event_highlight.dart';
@@ -141,15 +143,14 @@ class PublicEventView {
   bool get isRegistrationClosed =>
       marketing?.isRegistrationClosed(DateTime.now().toUtc()) ?? false;
 
-  /// The eligibility window as a phrase.
+  /// The age window as a phrase.
   ///
-  /// The server modelled free text (`ageRange`) and now models the windows
-  /// themselves — a gender and two dates of birth — so the phrase is derived
+  /// The server modelled free text (`ageRange`) and now models the window
+  /// itself — two dates of birth — so the phrase is derived
   /// rather than sent. Ages are computed against the event's start, not
   /// today: "for ages 8-12" means at the camp, not at the moment someone
   /// reads the page.
   String? get ageRange {
-    final parts = <String>[];
     final after = event.dobOnOrAfterUtc;
     final before = event.dobOnOrBeforeUtc;
 
@@ -158,20 +159,17 @@ class PublicEventView {
     final youngest = before != null ? ageAtStart(before) : null;
     final oldest = after != null ? ageAtStart(after) : null;
 
-    if (youngest != null && oldest != null) {
-      parts.add('$youngest-$oldest');
-    } else if (youngest != null) {
-      parts.add('$youngest+');
-    } else if (oldest != null) {
-      parts.add('up to $oldest');
-    }
-
-    final gender = event.gender;
-    if (gender != null && gender != Gender.preferNotToSay) {
-      parts.add(gender.label.toLowerCase());
-    }
-    return parts.isEmpty ? null : parts.join(', ');
+    if (youngest != null && oldest != null) return '$youngest-$oldest';
+    if (youngest != null) return '$youngest+';
+    if (oldest != null) return 'up to $oldest';
+    return null;
   }
+
+  /// Who the event is for by gender, as a line of its own: "Only for Boys",
+  /// "For Boys, Other and Prefer not to say". `null` when it admits every
+  /// gender.
+  String? get genders =>
+      GenderEligibilityText.line(formGendersFromSdk(event.genders));
 
   /// The age, at the event's start, of someone born on [dob].
   int ageAtStart(DateTime dob) {

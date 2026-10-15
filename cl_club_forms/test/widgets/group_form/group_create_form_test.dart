@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../support/eligibility_checks.dart';
+
 Widget _wrap(Widget child) => ShadApp(
   home: Scaffold(
     body: SingleChildScrollView(child: child),
@@ -194,7 +196,6 @@ void main() {
             ...GroupCreateForm.emptyValues,
             GroupFormFields.nameId: 'Juniors',
             GroupFormFields.modeId: GroupMode.semiAuto,
-            GroupFormFields.genderId: null,
           },
         ),
       ),
@@ -204,7 +205,7 @@ void main() {
 
     await tester.enterText(input(AgeEligibilityFormFields.minAgeYearsId), '5');
     await tester.enterText(input(AgeEligibilityFormFields.maxAgeYearsId), '18');
-    await tester.tap(find.byType(ShadCheckbox));
+    await tester.tap(strictAgeBox());
     await tester.pumpAndSettle();
     final submitted = formKey.currentState!.validate();
     await tester.pumpAndSettle();

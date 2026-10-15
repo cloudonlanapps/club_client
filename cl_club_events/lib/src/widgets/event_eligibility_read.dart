@@ -1,5 +1,7 @@
-import 'package:cl_club_forms/cl_club_forms.dart' show AgeEligibilitySummary;
-import 'package:cl_remote_store/cl_remote_store.dart' show formAgeFromSdk;
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show AgeEligibilitySummary, GenderEligibilityText;
+import 'package:cl_remote_store/cl_remote_store.dart'
+    show formAgeFromSdk, formGendersFromSdk;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -18,18 +20,16 @@ class EventEligibilityRead extends StatelessWidget {
   /// Gap between the gender line and the age sentence.
   static const double lineGap = 8;
 
-  /// The gender line, or `null` when the event admits every gender.
-  static String? genderSentence(Gender? gender) => switch (gender) {
-    Gender.male => 'This event is only for Boys.',
-    Gender.female => 'This event is only for Girls.',
-    Gender.other => 'This event is only for members who identify as Other.',
-    Gender.preferNotToSay || null => null,
-  };
+  /// The gender line — "This event is only for Boys.", "This event is for
+  /// Boys, Other and Prefer not to say." — or `null` when the event admits
+  /// every gender.
+  static String? genderSentence(List<Gender> genders) =>
+      GenderEligibilityText.sentence('event', formGendersFromSdk(genders));
 
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    final gender = genderSentence(event.gender);
+    final gender = genderSentence(event.genders);
     final hasAgeBand = event.minAge != null || event.maxAge != null;
     if (gender == null && !hasAgeBand) {
       return Text(openToAll, style: theme.textTheme.p);

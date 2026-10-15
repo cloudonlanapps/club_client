@@ -29,7 +29,7 @@ class _Groups extends ClGroupsMasterNotifier {
     Age? minAge,
     Age? maxAge,
     bool? strictAge,
-    Gender? gender,
+    List<Gender>? genders,
     bool? semiAuto,
   }) async {
     host.sent++;

@@ -3,7 +3,7 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Event _event({
-  Gender? gender,
+  List<Gender> genders = const [],
   DateTime? dobOnOrAfterUtc,
   DateTime? dobOnOrBeforeUtc,
 }) {
@@ -19,7 +19,7 @@ Event _event({
     endTimeUtc: now.add(const Duration(hours: 2)),
     createdAtUtc: now,
     updatedAtUtc: now,
-    gender: gender,
+    genders: genders,
     dobOnOrAfterUtc: dobOnOrAfterUtc,
     dobOnOrBeforeUtc: dobOnOrBeforeUtc,
   );
@@ -51,7 +51,7 @@ void main() {
     test('gender constraint + matching gender → eligible', () {
       expect(
         checkEventEligibility(
-          event: _event(gender: Gender.female),
+          event: _event(genders: const [Gender.female]),
           user: _user(gender: Gender.female),
         ),
         isNull,
@@ -60,7 +60,7 @@ void main() {
 
     test('gender constraint + missing gender → genderMissing', () {
       final f = checkEventEligibility(
-        event: _event(gender: Gender.female),
+        event: _event(genders: const [Gender.female]),
         user: _user(),
       );
       expect(f, isNotNull);
@@ -69,7 +69,7 @@ void main() {
 
     test('gender constraint + wrong gender → genderMismatch', () {
       final f = checkEventEligibility(
-        event: _event(gender: Gender.female),
+        event: _event(genders: const [Gender.female]),
         user: _user(gender: Gender.male),
       );
       expect(f, isNotNull);
@@ -120,7 +120,7 @@ void main() {
       expect(
         checkEventEligibility(
           event: _event(
-            gender: Gender.female,
+            genders: const [Gender.female],
             dobOnOrAfterUtc: DateTime.utc(2010),
             dobOnOrBeforeUtc: DateTime.utc(2015),
           ),
@@ -131,6 +131,36 @@ void main() {
         ),
         isNull,
       );
+    });
+
+    test('Issue 80: a user whose gender is in the list is eligible', () {
+      expect(
+        checkEventEligibility(
+          event: _event(
+            genders: const [Gender.male, Gender.other, Gender.preferNotToSay],
+          ),
+          user: _user(gender: Gender.other),
+        ),
+        isNull,
+      );
+    });
+
+    test('Issue 80: a user whose gender is not in the list → '
+        'genderMismatch', () {
+      final f = checkEventEligibility(
+        event: _event(genders: const [Gender.male, Gender.other]),
+        user: _user(gender: Gender.female),
+      );
+      expect(f?.reason, EligibilityFailureReason.genderMismatch);
+      expect(f?.message, "This event is not open to the user's gender.");
+    });
+
+    test('Issue 80: a list of genders + missing gender → genderMissing', () {
+      final f = checkEventEligibility(
+        event: _event(genders: const [Gender.male, Gender.female]),
+        user: _user(),
+      );
+      expect(f?.reason, EligibilityFailureReason.genderMissing);
     });
   });
 }

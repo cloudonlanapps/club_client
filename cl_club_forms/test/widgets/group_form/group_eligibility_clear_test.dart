@@ -7,19 +7,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../support/eligibility_checks.dart';
+
 Finder _input(String id) => find.byWidgetPredicate(
   (w) => w is ShadInputFormField && w.id == id,
 );
 
 Map<String, dynamic> _seeded({
   GroupMode mode = GroupMode.semiAuto,
-  GroupGender gender = GroupGender.any,
+  List<EligibilityGender> genders = const [],
   FormAge? minAge,
   FormAge? maxAge,
   bool strictAge = false,
 }) => {
   GroupFormFields.modeId: mode,
-  GroupFormFields.genderId: gender,
+  GenderEligibilityFormFields.gendersId: genders,
   ...AgeEligibilityFormValues.initial(
     minAge: minAge,
     maxAge: maxAge,
@@ -85,7 +87,7 @@ void main() {
     testWidgets('Issue 34: gender, either age or the Strict age check each '
         'count as a value', (tester) async {
       for (final values in [
-        _seeded(gender: GroupGender.girls),
+        _seeded(genders: const [EligibilityGender.girls]),
         _seeded(minAge: const FormAge(years: 5)),
         _seeded(maxAge: const FormAge(years: 18)),
         _seeded(strictAge: true),
@@ -110,7 +112,7 @@ void main() {
         tester,
         _seeded(
           mode: GroupMode.auto,
-          gender: GroupGender.boys,
+          genders: const [EligibilityGender.boys],
           minAge: const FormAge(years: 5),
           maxAge: const FormAge(years: 18),
           strictAge: true,
@@ -132,7 +134,7 @@ void main() {
       final values = form.validate();
       expect(values, isNotNull);
       expect(values![GroupFormFields.modeId], GroupMode.manual);
-      expect(values[GroupFormFields.genderId], GroupGender.any);
+      expect(GenderEligibilityFormValues.genders(values), isEmpty);
       expect(AgeEligibilityFormValues.minAge(values), isNull);
       expect(AgeEligibilityFormValues.maxAge(values), isNull);
       expect(AgeEligibilityFormValues.strictAge(values), isFalse);
@@ -143,7 +145,7 @@ void main() {
       final form = await _pumpEditor(
         tester,
         _seeded(
-          gender: GroupGender.boys,
+          genders: const [EligibilityGender.boys],
           minAge: const FormAge(years: 5),
           strictAge: true,
         ),
@@ -171,10 +173,10 @@ void main() {
         isEmpty,
       );
       expect(
-        tester.widget<ShadCheckbox>(find.byType(ShadCheckbox)).value,
+        tester.widget<ShadCheckbox>(strictAgeBox()).value,
         false,
       );
-      expect(find.text(GroupGender.any.label), findsOneWidget);
+      expect(tickedGenders(tester), isEmpty);
       expect(form.hasValue, isFalse);
     });
   });
@@ -235,7 +237,7 @@ void main() {
         _input(AgeEligibilityFormFields.minAgeYearsId),
         '5',
       );
-      await tester.tap(find.byType(ShadCheckbox));
+      await tester.tap(strictAgeBox());
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Clear'));
@@ -251,7 +253,7 @@ void main() {
 
       expect(values[GroupFormFields.nameId], 'Juniors');
       expect(values[GroupFormFields.modeId], GroupMode.manual);
-      expect(values[GroupFormFields.genderId], GroupGender.any);
+      expect(GenderEligibilityFormValues.genders(values), isEmpty);
       expect(AgeEligibilityFormValues.minAge(values), isNull);
       expect(AgeEligibilityFormValues.strictAge(values), isFalse);
     });

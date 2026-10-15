@@ -1,5 +1,9 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show AgeEligibilityFormFields, GroupFormFields, UserFormFields;
+    show
+        AgeEligibilityFormFields,
+        GenderEligibilityFormFields,
+        GroupFormFields,
+        UserFormFields;
 import 'package:cl_club_members/src/models/group_form_helpers.dart';
 import 'package:cl_club_members/src/models/user_form_helpers.dart';
 import 'package:cl_club_members/src/utils/member_write_messages.dart';
@@ -164,7 +168,7 @@ void main() {
     final rejection = _rejection([
       ['body', 'name'],
       ['body', 'description'],
-      ['body', 'gender'],
+      ['body', 'genders'],
       ['body', 'semiAuto'],
       ['body', 'minAge', 'years'],
       ['body', 'maxAge'],
@@ -173,7 +177,7 @@ void main() {
     const fieldIds = {
       GroupFormFields.nameId,
       GroupFormFields.descriptionId,
-      GroupFormFields.genderId,
+      GenderEligibilityFormFields.gendersId,
       GroupFormFields.modeId,
       AgeEligibilityFormFields.minAgeYearsId,
       AgeEligibilityFormFields.maxAgeYearsId,

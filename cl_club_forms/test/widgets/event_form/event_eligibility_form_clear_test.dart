@@ -5,17 +5,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../support/eligibility_checks.dart';
+
 Finder _input(String id) => find.byWidgetPredicate(
   (w) => w is ShadInputFormField && w.id == id,
 );
 
 Map<String, dynamic> _seeded({
-  EventGender gender = EventGender.any,
+  List<EligibilityGender> genders = const [],
   FormAge? minAge,
   FormAge? maxAge,
   bool strictAge = false,
 }) => {
-  EventFormFields.genderId: gender,
+  GenderEligibilityFormFields.gendersId: genders,
   ...AgeEligibilityFormValues.initial(
     minAge: minAge,
     maxAge: maxAge,
@@ -60,7 +62,7 @@ void main() {
   testWidgets('Issue 34: gender, either age or the Strict age check each '
       'count as a value', (tester) async {
     for (final values in [
-      _seeded(gender: EventGender.girls),
+      _seeded(genders: const [EligibilityGender.girls]),
       _seeded(minAge: const FormAge(years: 5)),
       _seeded(maxAge: const FormAge(years: 18)),
       _seeded(strictAge: true),
@@ -95,7 +97,7 @@ void main() {
     final form = await _pump(
       tester,
       _seeded(
-        gender: EventGender.girls,
+        genders: const [EligibilityGender.girls],
         minAge: const FormAge(years: 5, months: 6),
         maxAge: const FormAge(years: 18, days: 3),
         strictAge: true,
@@ -129,37 +131,48 @@ void main() {
         reason: id,
       );
     }
-    expect(tester.widget<ShadCheckbox>(find.byType(ShadCheckbox)).value, false);
-    expect(find.text(EventGender.girls.label), findsNothing);
-    expect(find.text(EventGender.any.label), findsOneWidget);
+    expect(tester.widget<ShadCheckbox>(strictAgeBox()).value, false);
+    expect(tickedGenders(tester), isEmpty);
 
     final values = form.validate();
     expect(values, isNotNull);
-    expect(values![EventFormFields.genderId], EventGender.any);
+    expect(GenderEligibilityFormValues.genders(values!), isEmpty);
     expect(AgeEligibilityFormValues.minAge(values), isNull);
     expect(AgeEligibilityFormValues.maxAge(values), isNull);
     expect(AgeEligibilityFormValues.strictAge(values), isFalse);
   });
 
-  testWidgets('Issue 78: Gender on Any is no value, and Clear puts a picked '
-      'gender back to Any', (tester) async {
+  testWidgets('Issue 80: no gender ticked is no value, and Clear unticks '
+      'every ticked gender', (tester) async {
     expect(EventEligibilityForm.holdsValue(_seeded()), isFalse);
     expect(
-      EventEligibilityForm.holdsValue({EventFormFields.genderId: null}),
+      EventEligibilityForm.holdsValue({
+        GenderEligibilityFormFields.gendersId: null,
+      }),
       isFalse,
     );
 
-    final form = await _pump(tester, _seeded(gender: EventGender.boys));
+    final form = await _pump(
+      tester,
+      _seeded(
+        genders: const [
+          EligibilityGender.boys,
+          EligibilityGender.other,
+          EligibilityGender.preferNotToSay,
+        ],
+      ),
+    );
     expect(form.hasValue, isTrue);
+    expect(find.text(GenderEligibilityField.noneTickedHint), findsNothing);
 
     form.clear();
     await tester.pumpAndSettle();
 
     expect(form.hasValue, isFalse);
     expect(form.isDirty, isTrue);
-    expect(find.text('Any'), findsOneWidget);
-    expect(find.text('Boys'), findsNothing);
-    expect(form.validate()![EventFormFields.genderId], EventGender.any);
+    expect(tickedGenders(tester), isEmpty);
+    expect(find.text(GenderEligibilityField.noneTickedHint), findsOneWidget);
+    expect(GenderEligibilityFormValues.genders(form.validate()!), isEmpty);
   });
 
   testWidgets('Issue 34: clear removes the inline band message', (

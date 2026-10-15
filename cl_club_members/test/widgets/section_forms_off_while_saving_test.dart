@@ -93,7 +93,7 @@ class _HeldGroups extends ClGroupsMasterNotifier {
     Age? Function()? minAge,
     Age? Function()? maxAge,
     bool? strictAge,
-    Gender? Function()? gender,
+    List<Gender> Function()? genders,
     bool? semiAuto,
   }) async {
     await answer.future;

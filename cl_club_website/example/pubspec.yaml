@@ -1,6 +1,5 @@
 name: cl_club_website_example
 description: A neutral club website over club_core. The template a club's site is generated from; its test/ checks the brand files, and integration_test/ runs the site against a real server.
-version: 0.1.0+1
 publish_to: none
 
 environment:

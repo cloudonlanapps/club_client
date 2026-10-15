@@ -1,6 +1,5 @@
 name: cl_club_credits
 description: The member credit view (packages, statement, admin actions) and the reusable CreditChip that opens it.
-version: 0.1.0
 publish_to: none
 
 environment:

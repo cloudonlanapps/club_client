@@ -88,14 +88,14 @@ packages:
       path: "../../cl_club_branding"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_club_forms:
     dependency: transitive
     description:
       path: "../../cl_club_forms"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_gallery_viewer:
     dependency: transitive
     description:
@@ -111,28 +111,28 @@ packages:
       path: "../../cl_member_auth"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_member_onboarding:
     dependency: "direct main"
     description:
       path: ".."
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_remote_store:
     dependency: "direct main"
     description:
       path: "../../cl_remote_store"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_server_config:
     dependency: "direct main"
     description:
       path: "../../cl_server_config"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   clock:
     dependency: transitive
     description:
@@ -1101,7 +1101,7 @@ packages:
       path: "../../ui_lib"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   universal_image:
     dependency: transitive
     description:

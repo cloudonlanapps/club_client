@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:club_project_generator/club_project_generator.dart';
 import 'package:image/image.dart' as img;
+import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 Uint8List png(int w, int h) => img.encodePng(img.Image(width: w, height: h));
@@ -327,5 +329,53 @@ dependencies:
       contains('url: https://github.com/cloudonlanapps/club_sdk.git'),
     );
     expect(out, contains('      path: sub\n'));
+  });
+
+  group('Issue 153: the version', () {
+    const pubspec =
+        'name: example\ndescription: An example.\npublish_to: none\n';
+
+    test('Issue 153: the version goes in after the name', () {
+      expect(
+        withVersion(pubspec, '1.2.3'),
+        'name: example\nversion: 1.2.3\ndescription: An example.\n'
+        'publish_to: none\n',
+      );
+    });
+
+    test('Issue 153: a template carrying a version is refused', () {
+      expect(
+        () => withVersion('name: example\nversion: 0.1.0+1\n', '1.2.3'),
+        throwsA(isA<GeneratorException>()),
+      );
+    });
+
+    test('Issue 153: a nested version key is not the package version', () {
+      const nested =
+          'name: example\ndependencies:\n  foo:\n    version: 2.0.0\n';
+      expect(
+        withVersion(nested, '1.2.3'),
+        startsWith('name: example\nversion: 1.2.3\n'),
+      );
+    });
+
+    test('Issue 153: VERSION must hold major.minor.patch', () {
+      final dir = Directory.systemTemp.createTempSync('gen153_');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      expect(
+        () => readClubVersion(dir.path),
+        throwsA(isA<GeneratorException>()),
+      );
+      for (final bad in ['', '1.0', '1.0.0+1', 'v1.0.0']) {
+        File(p.join(dir.path, versionFile)).writeAsStringSync('$bad\n');
+        expect(
+          () => readClubVersion(dir.path),
+          throwsA(isA<GeneratorException>()),
+          reason: bad,
+        );
+      }
+      File(p.join(dir.path, versionFile)).writeAsStringSync('2.10.0\n');
+      expect(readClubVersion(dir.path), '2.10.0');
+    });
   });
 }

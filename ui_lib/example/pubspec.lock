@@ -88,7 +88,7 @@ packages:
       path: "../../cl_club_forms"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_gallery_viewer:
     dependency: transitive
     description:
@@ -929,7 +929,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   universal_image:
     dependency: transitive
     description:

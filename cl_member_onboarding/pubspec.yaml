@@ -1,6 +1,5 @@
 name: cl_member_onboarding
 description: Onboarding screens (welcome + identity-document submission) for the club app. Consumes cl_member_auth, cl_remote_store, ui_lib; does not depend on cl_member_zone or any feature module.
-version: 0.1.0
 publish_to: none
 
 environment:

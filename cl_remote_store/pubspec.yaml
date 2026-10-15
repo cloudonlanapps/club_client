@@ -1,6 +1,5 @@
 name: cl_remote_store
 description: Centralized data source providers with cross-invalidation for all domain resources.
-version: 0.1.0
 publish_to: none
 
 environment:

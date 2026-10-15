@@ -1,6 +1,5 @@
 name: club_project_generator
 description: Generates a club's Flutter web project (member app or website) from club_core's example templates and a brand folder.
-version: 0.1.0
 publish_to: none
 
 environment:

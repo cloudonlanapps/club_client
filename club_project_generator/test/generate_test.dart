@@ -66,6 +66,41 @@ void main() {
     );
   });
 
+  test("Issue 153: each target carries the checkout's VERSION", () async {
+    final version = File(p.join(clubCore, 'VERSION')).readAsStringSync().trim();
+    for (final target in Target.values) {
+      final out = await run(target);
+      final versions = RegExp(r'^version:\s*(\S+)', multiLine: true)
+          .allMatches(File(p.join(out, 'pubspec.yaml')).readAsStringSync())
+          .map((m) => m[1])
+          .toList();
+      expect(versions, [version], reason: target.name);
+    }
+  });
+
+  test('Issue 153: no pubspec.yaml in the checkout carries a version', () {
+    const skipped = {'.dart_tool', 'build', '.native_deploy', '.git'};
+    final carrying = <String>[];
+    void scan(Directory dir) {
+      for (final entity in dir.listSync()) {
+        final name = p.basename(entity.path);
+        if (entity is Directory && !skipped.contains(name)) {
+          scan(entity);
+        } else if (entity is File &&
+            name == 'pubspec.yaml' &&
+            RegExp(
+              '^version:',
+              multiLine: true,
+            ).hasMatch(entity.readAsStringSync())) {
+          carrying.add(p.relative(entity.path, from: clubCore));
+        }
+      }
+    }
+
+    scan(Directory(clubCore));
+    expect(carrying, isEmpty);
+  });
+
   test('Issue 186: every path dependency points into the checkout', () async {
     final out = await run(Target.app);
     final paths = RegExp(r'^\s+path:\s*(\S+)', multiLine: true)

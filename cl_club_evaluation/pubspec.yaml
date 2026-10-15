@@ -1,6 +1,5 @@
 name: cl_club_evaluation
 description: Member evaluations — the member's reviews, the coach's evaluations and editor, the admin's template library and designer, and the start-review dialog.
-version: 0.1.0
 publish_to: none
 
 environment:

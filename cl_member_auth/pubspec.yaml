@@ -1,6 +1,5 @@
 name: cl_member_auth
 description: Standalone authentication library for club apps. GoRouter-free, callback-driven.
-version: 0.1.0
 publish_to: none
 
 environment:

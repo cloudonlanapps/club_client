@@ -1,6 +1,5 @@
 name: cl_club_app
 description: The club application itself — routing, theme and startup. A club app supplies only its config and assets.
-version: 0.1.0
 publish_to: none
 
 environment:

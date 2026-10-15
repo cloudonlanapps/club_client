@@ -88,70 +88,70 @@ packages:
       path: "../../cl_club_admin"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_club_app:
     dependency: "direct main"
     description:
       path: ".."
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_club_branding:
     dependency: "direct main"
     description:
       path: "../../cl_club_branding"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_club_communication:
     dependency: "direct main"
     description:
       path: "../../cl_club_communication"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_club_credits:
     dependency: "direct main"
     description:
       path: "../../cl_club_credits"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_club_evaluation:
     dependency: transitive
     description:
       path: "../../cl_club_evaluation"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_club_events:
     dependency: "direct main"
     description:
       path: "../../cl_club_events"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_club_forms:
     dependency: "direct main"
     description:
       path: "../../cl_club_forms"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_club_members:
     dependency: "direct main"
     description:
       path: "../../cl_club_members"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_club_venues:
     dependency: "direct main"
     description:
       path: "../../cl_club_venues"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_gallery_viewer:
     dependency: transitive
     description:
@@ -167,35 +167,35 @@ packages:
       path: "../../cl_member_auth"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_member_onboarding:
     dependency: transitive
     description:
       path: "../../cl_member_onboarding"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_member_zone:
     dependency: "direct main"
     description:
       path: "../../cl_member_zone"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_remote_store:
     dependency: "direct main"
     description:
       path: "../../cl_remote_store"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   cl_server_config:
     dependency: "direct main"
     description:
       path: "../../cl_server_config"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   clock:
     dependency: transitive
     description:
@@ -1211,7 +1211,7 @@ packages:
       path: "../../ui_lib"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.0"
   universal_image:
     dependency: transitive
     description:

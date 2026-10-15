@@ -113,6 +113,11 @@ Rules:
   are promoted with it (`main → beta_release → release`): dev builds `main`,
   beta `beta_release`, prod `release`. A release is tagged
   `RELEASE_VERSION_<major>_<minor>_<patch>`.
+- **`VERSION` at the repo root is the only version number.** No
+  `pubspec.yaml` here carries a `version:` (the generator's tests fail if
+  one does); the generator writes `VERSION` into each project it creates, so
+  a built app and website report it. It moves with club_server's: the major
+  at each release, the patch for a quick fix (#153).
 
 ## Club event types (club.json)
 

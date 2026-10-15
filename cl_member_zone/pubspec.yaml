@@ -1,6 +1,5 @@
 name: cl_member_zone
 description: Authenticated member zone — screens, providers, and widgets for the club app.
-version: 0.1.0
 publish_to: none
 
 environment:

@@ -1,6 +1,5 @@
 name: cl_club_members
 description: User and member management widgets and providers for the club app.
-version: 0.1.0
 publish_to: none
 
 environment:

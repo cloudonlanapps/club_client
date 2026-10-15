@@ -11,6 +11,8 @@ export 'src/generator.dart'
         mediaSlots,
         websiteFiles;
 export 'src/pubspec_paths.dart' show absolutizePathDependencies;
+export 'src/pubspec_version.dart'
+    show readClubVersion, versionFile, withVersion;
 export 'src/search_files.dart'
     show renderRobotsTxt, renderSitemapXml, searchDescription, sitemapRoutes;
 export 'src/target.dart' show GeneratorException, Target;

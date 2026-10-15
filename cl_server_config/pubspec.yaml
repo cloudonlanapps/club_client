@@ -1,6 +1,5 @@
 name: cl_server_config
 description: Centralized server configuration, network status detection, and failure widgets.
-version: 0.1.0
 publish_to: none
 
 environment:

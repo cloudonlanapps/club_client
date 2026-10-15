@@ -1,6 +1,5 @@
 name: cl_club_communication
 description: Notifications and pending-actions widgets and providers for the club app.
-version: 0.1.0
 publish_to: none
 
 environment:

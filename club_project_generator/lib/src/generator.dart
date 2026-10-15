@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 
 import 'club_json.dart';
 import 'pubspec_paths.dart';
+import 'pubspec_version.dart';
 import 'search_files.dart';
 import 'target.dart';
 import 'urls.dart';
@@ -96,14 +97,15 @@ Future<void> generate(GenerateOptions o, {void Function(String)? log}) async {
   }
   _checkBrand(o);
   _checkOut(o.out);
+  final version = readClubVersion(o.clubCore);
 
   say('==> copying ${o.target.templatePath}');
   _copyTree(Directory(template), Directory(o.out));
 
   final pubspec = File(p.join(o.out, 'pubspec.yaml'));
-  final rewritten = absolutizePathDependencies(
-    pubspec.readAsStringSync(),
-    template,
+  final rewritten = withVersion(
+    absolutizePathDependencies(pubspec.readAsStringSync(), template),
+    version,
   );
   pubspec.writeAsStringSync(rewritten);
 

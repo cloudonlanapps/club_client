@@ -1,6 +1,5 @@
 name: cl_club_app_example
 description: A neutral club app over club_core. Hosts the UI integration suite, run once per server conf.
-version: 0.1.0+1
 publish_to: none
 
 environment:

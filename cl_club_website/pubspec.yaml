@@ -1,6 +1,5 @@
 name: cl_club_website
 description: A club's public website. A club site supplies only its config, copy and assets, and calls websiteMain.
-version: 0.1.0
 publish_to: none
 
 environment:

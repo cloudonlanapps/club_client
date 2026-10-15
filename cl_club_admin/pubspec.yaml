@@ -1,6 +1,5 @@
 name: cl_club_admin
 description: Admin-only club screens — the website inquiries inbox and, for super-admins, the website media slots and the club details.
-version: 0.1.0
 publish_to: none
 
 environment:

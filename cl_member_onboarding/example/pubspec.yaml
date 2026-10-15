@@ -1,7 +1,6 @@
 name: cl_member_onboarding_example
 description: Example app for cl_member_onboarding with mock providers.
 publish_to: none
-version: 0.1.0
 
 environment:
   sdk: ^3.11.0

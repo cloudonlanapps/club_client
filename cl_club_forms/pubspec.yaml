@@ -1,6 +1,5 @@
 name: cl_club_forms
 description: The club's forms — pure-UI ShadForm widgets with their field clusters, validators, field ids and form-local values. No SDK, no Riverpod; the feature packages host them and adapt to the SDK.
-version: 0.1.0
 publish_to: none
 
 environment:

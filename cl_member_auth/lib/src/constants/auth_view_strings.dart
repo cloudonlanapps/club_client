@@ -11,6 +11,11 @@ abstract final class AuthViewStrings {
   /// Label of the sign-in action while it runs.
   static const String signingIn = 'Signing in…';
 
+  /// Notice after a sign-in whose credentials this browser cannot keep.
+  static const String signInNotKept =
+      "This browser can't keep you signed in, so you'll need to sign in "
+      'again next time.';
+
   /// Link from sign in to the forgot-password view.
   static const String forgotPassword = 'Forgot password?';
 

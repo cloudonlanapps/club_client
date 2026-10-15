@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -20,6 +22,13 @@ final authStateProvider = AsyncNotifierProvider<AuthNotifier, UserPrivate?>(
 class AuthNotifier extends AsyncNotifier<UserPrivate?> {
   TokenStorage get storage => ref.read(tokenStorageProvider);
   CredentialStorage get credentials => ref.read(credentialStorageProvider);
+
+  /// Whether the last [login] saved the credentials for auto-login. False
+  /// when this device cannot store them, e.g. a browser on a plain-http
+  /// page, which has no WebCrypto (#146): the member is signed in, and
+  /// will sign in again next time.
+  bool get credentialsSaved => _credentialsSaved;
+  bool _credentialsSaved = true;
 
   @override
   Future<UserPrivate?> build() async {
@@ -56,7 +65,19 @@ class AuthNotifier extends AsyncNotifier<UserPrivate?> {
       ref.invalidate(clientProvider);
     }
 
-    final saved = await credentials.read();
+    final SavedCredential? saved;
+    try {
+      saved = await credentials.read();
+    } on Object catch (error) {
+      // Stored credentials this device cannot read (#146) are as good as
+      // none.
+      developer.log(
+        'Could not read the saved credentials',
+        name: 'cl_member_auth',
+        error: error,
+      );
+      return null;
+    }
     if (saved == null) return null;
 
     try {
@@ -72,10 +93,26 @@ class AuthNotifier extends AsyncNotifier<UserPrivate?> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final user = await _loginWithCredentials(username, password);
-      // Persist credentials for auto-login on next app start.
-      await credentials.write(username: username, password: password);
+      // Persist credentials for auto-login on next app start. The server's
+      // answer alone decides the sign-in: a save that fails is reported
+      // through [credentialsSaved], never as a failed sign-in (#146).
+      _credentialsSaved = await _saveCredentials(username, password);
       return user;
     });
+  }
+
+  Future<bool> _saveCredentials(String username, String password) async {
+    try {
+      await credentials.write(username: username, password: password);
+      return true;
+    } on Object catch (error) {
+      developer.log(
+        'Could not save the credentials for auto-login',
+        name: 'cl_member_auth',
+        error: error,
+      );
+      return false;
+    }
   }
 
   Future<void> logout() async {

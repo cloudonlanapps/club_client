@@ -158,8 +158,11 @@ class DurationPickerDropdownState extends State<DurationPickerDropdown> {
         width: 220,
         child: Padding(
           padding: const EdgeInsets.all(8),
+          // The columns keep their own height: the popover has no height
+          // bound, so stretching them would make it as tall as the screen
+          // and too tall to open above the trigger (#143).
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: DurationPickerColumn(

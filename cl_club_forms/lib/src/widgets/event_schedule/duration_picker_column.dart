@@ -27,6 +27,7 @@ class DurationPickerColumn extends StatelessWidget {
     final theme = ShadTheme.of(context);
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(

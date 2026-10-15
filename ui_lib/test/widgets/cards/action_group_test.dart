@@ -5,6 +5,8 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/src/widgets/action_button.dart';
 import 'package:ui_lib/src/widgets/cards/action_group.dart';
 import 'package:ui_lib/src/widgets/cards/action_item.dart';
+import 'package:ui_lib/src/widgets/cards/entity_card.dart'
+    show MobilePrimaryActionRow;
 
 Future<void> pump(WidgetTester tester, List<ActionItem> actions) {
   return tester.pumpWidget(
@@ -134,6 +136,63 @@ void main() {
         ActionItem(label: 'Accept', loading: true, reason: reason),
       ]);
       expect(find.text('why'), findsNothing);
+    });
+  });
+
+  group('Issue 143: an action with a popover is reachable from the menu', () {
+    final withPopover = ActionItem(
+      label: 'Share',
+      popover: (context) => const Text('Share content'),
+      reason: (context) => const Text('no reason'),
+    );
+
+    Future<void> openMenuAndPick(WidgetTester tester, Widget row) async {
+      await tester.pumpWidget(ShadApp(home: Center(child: row)));
+      await tester.tap(find.byType(PopupMenuButton<int>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Share'));
+      await tester.pumpAndSettle();
+    }
+
+    test('Issue 143: it is actionable and shows no reason', () {
+      expect(withPopover.isActionable, isTrue);
+      expect(withPopover.showsReason, isFalse);
+    });
+
+    testWidgets('Issue 143: the desktop overflow menu opens it in a dialog', (
+      tester,
+    ) async {
+      await openMenuAndPick(
+        tester,
+        ActionGroup(
+          actions: [
+            ActionItem(label: 'Edit', onPressed: () {}),
+            ActionItem(label: 'Delete', onPressed: () {}),
+            withPopover,
+          ],
+        ),
+      );
+
+      expect(find.byType(ShadDialog), findsOneWidget);
+      expect(find.text('Share content'), findsOneWidget);
+    });
+
+    testWidgets('Issue 143: the mobile overflow menu opens it in a dialog', (
+      tester,
+    ) async {
+      await openMenuAndPick(
+        tester,
+        SizedBox(
+          width: 360,
+          child: MobilePrimaryActionRow(
+            primary: ActionItem(label: 'Edit', onPressed: () {}),
+            overflow: [withPopover],
+          ),
+        ),
+      );
+
+      expect(find.byType(ShadDialog), findsOneWidget);
+      expect(find.text('Share content'), findsOneWidget);
     });
   });
 }

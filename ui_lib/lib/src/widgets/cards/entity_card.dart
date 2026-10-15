@@ -12,6 +12,7 @@ import 'package:ui_lib/ui_lib.dart' show EntityImage;
 
 import 'action_group.dart';
 import 'action_item.dart';
+import 'overflow_action.dart';
 
 const double kCardRadius = 8;
 const double kImageWidth = 64;
@@ -292,17 +293,13 @@ class OverflowMenuButton extends StatelessWidget {
         side: BorderSide(color: theme.colorScheme.border),
       ),
       color: theme.colorScheme.card,
-      onSelected: (i) {
-        final item = items[i];
-        if (item.loading) return;
-        item.onPressed?.call();
-      },
+      onSelected: (i) => runOverflowAction(context, items[i]),
       itemBuilder: (_) => [
         for (var i = 0; i < items.length; i++)
           PopupMenuItem<int>(
             value: i,
             height: 36,
-            enabled: !items[i].loading && items[i].onPressed != null,
+            enabled: items[i].isActionable,
             child: Row(
               children: [
                 if (items[i].icon != null) ...[

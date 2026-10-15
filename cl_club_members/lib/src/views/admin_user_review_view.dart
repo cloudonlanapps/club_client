@@ -493,17 +493,22 @@ class AdminReviewPage extends ConsumerStatefulWidget {
 }
 
 class AdminReviewPageState extends ConsumerState<AdminReviewPage> {
-  /// Runs an approve / send-back / block [decide]; on success calls
-  /// [onDone], on failure shows a fixed toast (club_core#138).
+  /// Runs an approve / send-back / block [decide]; on success toasts
+  /// [success], which names the user (#149), and calls [onDone]; on
+  /// failure shows a fixed toast (club_core#138).
   Future<void> runDecision(
     Future<void> Function() decide,
+    String success,
     VoidCallback onDone,
   ) async {
+    // Taken before the save: a decided user leaves the pager, and this
+    // page with them.
+    final toaster = ShadToaster.of(context);
     try {
       await decide();
     } on Object catch (e) {
       if (!mounted) return;
-      ShadToaster.of(context).show(
+      toaster.show(
         ShadToast.destructive(
           description: Text(
             writeFailureMessage(
@@ -515,6 +520,7 @@ class AdminReviewPageState extends ConsumerState<AdminReviewPage> {
       );
       return;
     }
+    toaster.show(ShadToast(description: Text(success)));
     onDone();
   }
 
@@ -606,6 +612,7 @@ class AdminReviewPageState extends ConsumerState<AdminReviewPage> {
           () => ref
               .read(clUsersMasterProvider.notifier)
               .approveUser(d.userKey, resolutionReason: reason),
+          'Approved ${d.fullName}.',
           onAfterAction,
         );
       },
@@ -618,6 +625,7 @@ class AdminReviewPageState extends ConsumerState<AdminReviewPage> {
           () => ref
               .read(clUsersMasterProvider.notifier)
               .reconsiderUser(d.userKey, effective),
+          'Sent ${d.fullName} back.',
           onAfterAction,
         );
       },
@@ -626,6 +634,7 @@ class AdminReviewPageState extends ConsumerState<AdminReviewPage> {
           () => ref
               .read(clUsersMasterProvider.notifier)
               .blockUser(d.userKey, resolutionReason: reason),
+          'Blocked ${d.fullName}.',
           onAfterAction,
         );
       },

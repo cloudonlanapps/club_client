@@ -44,13 +44,29 @@ class AdminUserReviewPage extends StatefulWidget {
   State<AdminUserReviewPage> createState() => AdminUserReviewPageState();
 }
 
-class AdminUserReviewPageState extends State<AdminUserReviewPage> {
+class AdminUserReviewPageState extends State<AdminUserReviewPage>
+    with SingleTickerProviderStateMixin {
   // Issue 507: Reject/Block now collect their reason in a modal dialog
   // instead of an inline reveal, so the page itself is always a single
   // fixed-height layout — no scroll, no keyboard reflow, no manual
   // scrolling to reach Confirm. Approve still fires immediately on tap.
   AdminUserReviewAction? selectedAction;
   bool isSubmitting = false;
+
+  /// Runs over [kAdminReviewArmDelay] each time a user's page appears;
+  /// the actions come on only once it completes (#149).
+  late final AnimationController arming = AnimationController(
+    vsync: this,
+    duration: kAdminReviewArmDelay,
+  )..forward();
+
+  bool get isArmed => arming.isCompleted;
+
+  @override
+  void dispose() {
+    arming.dispose();
+    super.dispose();
+  }
 
   @override
   void didUpdateWidget(covariant AdminUserReviewPage oldWidget) {
@@ -62,11 +78,12 @@ class AdminUserReviewPageState extends State<AdminUserReviewPage> {
     if (oldWidget.data.userKey != widget.data.userKey) {
       selectedAction = null;
       isSubmitting = false;
+      arming.forward(from: 0);
     }
   }
 
   Future<void> _selectAction(AdminUserReviewAction action) async {
-    if (isSubmitting) return;
+    if (isSubmitting || !isArmed) return;
     if (action == AdminUserReviewAction.approve) {
       await _runApproveImmediate();
       return;
@@ -172,11 +189,17 @@ class AdminUserReviewPageState extends State<AdminUserReviewPage> {
             ),
           ],
           const SizedBox(height: 12),
-          ActionRow(
-            blockLabel: 'Block',
-            selected: selectedAction,
-            enabled: !isSubmitting,
-            onSelect: _selectAction,
+          AnimatedBuilder(
+            animation: arming,
+            builder: (context, _) => ArmingActionRow(
+              progress: arming.value,
+              child: ActionRow(
+                blockLabel: 'Block',
+                selected: selectedAction,
+                enabled: !isSubmitting && isArmed,
+                onSelect: _selectAction,
+              ),
+            ),
           ),
         ],
       ),
@@ -381,6 +404,36 @@ class ThumbPlaceholder extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// The action row of a page that has just appeared: faded and topped by
+/// a bar that fills while [progress] runs to 1, so the admin sees the
+/// buttons coming on rather than a page that ignores taps (#149).
+class ArmingActionRow extends StatelessWidget {
+  const ArmingActionRow({
+    required this.progress,
+    required this.child,
+    super.key,
+  });
+
+  final double progress;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final armed = progress >= 1;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Opacity(
+          opacity: armed ? 0 : 1,
+          child: ShadProgress(value: progress, minHeight: 2),
+        ),
+        const SizedBox(height: 8),
+        Opacity(opacity: 0.4 + 0.6 * progress, child: child),
+      ],
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEvaluationTemplatesMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show EvaluationTemplate;
@@ -22,9 +24,11 @@ import 'evaluation_rename_dialog.dart';
 import 'evaluation_section_title_dialog.dart';
 import 'evaluation_summary.dart';
 import 'existing_question_dialog.dart';
+import 'template_export_button.dart';
 
 /// The editable sections of a saved [template]: its name with **Rename**,
-/// **Duplicate** and **Delete** (always shown, disabled while in use), and
+/// **Duplicate**, **Export** and **Delete** (always shown, disabled while
+/// in use), and
 /// its questions in the layout editor; see `TemplateDetailView`. While the
 /// layout is fixed (in use, or a write in flight), an item opens read-only
 /// and a section not at all.
@@ -34,6 +38,7 @@ class TemplateDetailBody extends ConsumerStatefulWidget {
     required this.template,
     required this.onDeleted,
     required this.onDuplicate,
+    required this.onSaveFile,
     super.key,
   });
 
@@ -45,6 +50,9 @@ class TemplateDetailBody extends ConsumerStatefulWidget {
 
   /// Opens the designer with a copy of the template.
   final VoidCallback onDuplicate;
+
+  /// Saves the exported template file; resolves to whether it was saved.
+  final Future<bool> Function(String fileName, Uint8List bytes) onSaveFile;
 
   @override
   ConsumerState<TemplateDetailBody> createState() => TemplateDetailBodyState();
@@ -160,6 +168,10 @@ class TemplateDetailBodyState extends ConsumerState<TemplateDetailBody> {
             ShadButton.outline(
               onPressed: widget.onDuplicate,
               child: const Text(EvaluationViewStrings.duplicate),
+            ),
+            TemplateExportButton(
+              template: template,
+              onSaveFile: widget.onSaveFile,
             ),
             ShadButton.outline(
               onPressed: template.inUse ? null : delete,

@@ -73,6 +73,8 @@ void main() {
       onOpenTemplate: (_) {},
       onCreateTemplate: () {},
       onDuplicateTemplate: (_) {},
+      onPickTemplateFile: () async => null,
+      onImportTemplate: (_) {},
       onOpenTemplates: () {},
       onHome: () {},
     );
@@ -108,6 +110,8 @@ void main() {
           onOpenTemplate: (_) {},
           onCreateTemplate: () {},
           onDuplicateTemplate: (_) {},
+          onPickTemplateFile: () async => null,
+          onImportTemplate: (_) {},
           onOpenTemplates: () => opened++,
           onHome: () {},
         ),
@@ -130,6 +134,8 @@ void main() {
           onOpenTemplate: (_) {},
           onCreateTemplate: () {},
           onDuplicateTemplate: duplicated.add,
+          onPickTemplateFile: () async => null,
+          onImportTemplate: (_) {},
           onOpenTemplates: () {},
           onHome: () {},
         ),
@@ -243,6 +249,7 @@ void main() {
       templateId: 3,
       onBack: () {},
       onDuplicate: (_) {},
+      onSaveTemplateFile: (_, _) async => true,
       onHome: () {},
     );
     Widget edit() => ReviewEditScreen(
@@ -286,6 +293,8 @@ void main() {
       onOpenTemplate: (_) {},
       onCreateTemplate: () {},
       onDuplicateTemplate: (_) {},
+      onPickTemplateFile: () async => null,
+      onImportTemplate: (_) {},
       onHome: () {},
     );
 

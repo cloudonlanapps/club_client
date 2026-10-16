@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEvaluationTemplatesMasterProvider, evaluationsProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
@@ -10,13 +12,15 @@ import '../constants/evaluation_view_strings.dart';
 import '../widgets/evaluation_heading.dart';
 import '../widgets/evaluation_message.dart';
 import '../widgets/evaluation_page.dart';
+import '../widgets/template_import_button.dart';
 import '../widgets/template_library_row.dart';
 
 /// The template library (design 4.2, `reviews/templates`; `reviews` for an
 /// admin who does not coach), for coaches and admins: the live templates
 /// by name, each opening on tap, with **Duplicate** and **Delete** (disabled
-/// while in use); and **Add template**. A deleted template leaves the
-/// library; Restore is not offered in the UI yet.
+/// while in use); **Import**, which opens the designer pre-filled from a
+/// template file (club_client#27); and **Add template**. A deleted
+/// template leaves the library; Restore is not offered in the UI yet.
 ///
 /// Renders nothing unless the server runs evaluations.
 class TemplateLibraryView extends ConsumerWidget {
@@ -26,6 +30,8 @@ class TemplateLibraryView extends ConsumerWidget {
     required this.onOpenTemplate,
     required this.onCreateTemplate,
     required this.onDuplicateTemplate,
+    required this.onPickTemplateFile,
+    required this.onImportTemplate,
     super.key,
   });
 
@@ -41,6 +47,14 @@ class TemplateLibraryView extends ConsumerWidget {
   /// Opens the designer pre-filled with a copy of the template with this
   /// id.
   final ValueChanged<int> onDuplicateTemplate;
+
+  /// Picks a template file for **Import** and resolves to its bytes;
+  /// `null` when none was chosen.
+  final Future<Uint8List?> Function() onPickTemplateFile;
+
+  /// Opens the designer pre-filled with these initial values, read from an
+  /// imported file.
+  final ValueChanged<Map<String, dynamic>> onImportTemplate;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -62,10 +76,20 @@ class TemplateLibraryView extends ConsumerWidget {
           children: [
             EvaluationHeading(
               text: EvaluationViewStrings.templates,
-              trailing: ShadButton(
-                onPressed: onCreateTemplate,
-                leading: const Icon(LucideIcons.plus),
-                child: const Text(EvaluationViewStrings.addTemplate),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: EvaluationViewSizes.smallGap,
+                children: [
+                  TemplateImportButton(
+                    onPickFile: onPickTemplateFile,
+                    onImported: onImportTemplate,
+                  ),
+                  ShadButton(
+                    onPressed: onCreateTemplate,
+                    leading: const Icon(LucideIcons.plus),
+                    child: const Text(EvaluationViewStrings.addTemplate),
+                  ),
+                ],
               ),
             ),
             if (live.isEmpty)

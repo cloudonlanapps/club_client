@@ -574,13 +574,45 @@ in the UI yet (the API and CLI can).
 | `reviews/mine` | `MyReviewsScreen` → `MyReviewsView` | the member's published reviews, newest first; empty state when none |
 | `reviews/mine/:id` | `MyReviewScreen` → `EvaluationReadView` | read-only member view: sections, answers, coach notes, evidence in the gallery viewer (requests carry the session's headers); the review's title as the page title, a Review Period section (event and period, when set), the answers with a trailing run of top-level Q & A shown last as one untitled card; the download icon at the top right downloads the stored member copy with the session and opens it locally — evidence and the copy are private, never opened by URL |
 | `reviews` | `ReviewsScreen` → `CoachReviewsView` or `TemplateLibraryView` by role | coach: their evaluations grouped Drafts, Finalized, Published, then the templates to start from, and **Manage Templates** at the bottom right; admin who does not coach: the templates, **Add template** |
-| `reviews/templates` | `TemplateLibraryScreen` → `TemplateLibraryView` | coaches and admins: the template library — create, open, **Duplicate** (a copy with new, unlinked questions), **Delete** (disabled while in use) |
-| `reviews/templates/new` (`?copy=<id>`) | `TemplateCreateScreen` → `TemplateCreateView` | the designer: name, then items and sections (one full create form, form rule 19); pre-filled from a template to duplicate it; a taken name is shown inline |
-| `reviews/templates/:id` | `TemplateDetailScreen` → `TemplateDetailView` | the template, edited section by section in place: rename dialog, per-item editor, layout (reorder with the **Sort** checkbox, sections); frozen once used (R27) |
+| `reviews/templates` | `TemplateLibraryScreen` → `TemplateLibraryView` | coaches and admins: the template library — create, open, **Duplicate** (a copy with new, unlinked questions), **Delete** (disabled while in use), **Import** (a template file, see below) |
+| `reviews/templates/new` (`?copy=<id>`) | `TemplateCreateScreen` → `TemplateCreateView` | the designer: name, then items and sections (one full create form, form rule 19); pre-filled from a template to duplicate it, or from an imported file; a taken name is shown inline |
+| `reviews/templates/:id` | `TemplateDetailScreen` → `TemplateDetailView` | the template, edited section by section in place: rename dialog, per-item editor, layout (reorder with the **Sort** checkbox, sections); frozen once used (R27); **Export** saves it as a template file, in use or not |
 | `reviews/:id` | `ReviewEditScreen` → `EvaluationEditView` | the owner's review: Back; a head with the member, the review's title and a stamp (Ready once finalized, Published once published); **Review Period** (event and period; the pencil changes both on a draft); the answers (editable on a draft, read-only with private items greyed once finalized); **Review Management** (draft: Finalize, Delete; finalized: Publish, Revert to draft, Transfer; published: Unpublish) and **Review Info**; a published review's member copy from the download icon |
 
 Each screen gates and forwards `currentUser` and callbacks (module view
 wrapping rule); views take callbacks, never routes.
+
+**Template files** (club_client#27). **Export** writes a template as JSON:
+the create payload (`{name, layout}`, items inline, §1.6) in an envelope
+naming the format and its version.
+
+```json
+{
+  "format": "club.evaluationTemplate",
+  "version": 1,
+  "name": "Ice Hockey Goalie Review",
+  "layout": [
+    { "type": "info", "isPrivate": false, "markdown": "..." },
+    { "section": "Stance and Movement", "items": [
+      { "type": "rating", "question": "Ready stance and balance",
+        "isRequired": true, "rateType": "stars", "rateMin": 1, "rateMax": 5,
+        "showCommentArea": true, "...": "..." }
+    ] },
+    { "type": "qa", "question": "Coach's message to the player", "...": "..." }
+  ]
+}
+```
+
+Items are the SDK's `toMap()` without `id`, `originItemId` and null
+values, and are read back with `fromMap()`; nothing else the server owns is
+written, and `isPrivate` is kept. The file is saved as `<template name>.json`
+(a download in the browser, a save dialog elsewhere). **Import** reads one
+into the designer, as Duplicate does, with the file's name unchanged and
+every item new; Create then runs the usual checks. A file that is not JSON,
+not a template file, of another `version`, or with an entry the app cannot
+read is refused with a message naming the problem, and nothing opens. Picking
+and saving the file are the app's (`onPickTemplateFile`,
+`onSaveTemplateFile`); the views stay platform-neutral.
 
 ### 4.3 Starting a review
 

@@ -86,8 +86,8 @@ void main() {
       await tester.pumpWidget(_designer(stub, imported.single));
       await tester.pumpAndSettle();
       expect(find.text('Skating'), findsOneWidget);
-      expect(find.text('Edges'), findsOneWidget);
-      expect(find.text('Inside edges'), findsOneWidget);
+      expect(inTemplateEditor(find.text('Edges')), findsOneWidget);
+      expect(inTemplateEditor(find.text('Inside edges')), findsOneWidget);
       await tester.tap(find.text('Create'));
       await tester.pumpAndSettle();
       expect(stub.calls, ['create Skating 2']);

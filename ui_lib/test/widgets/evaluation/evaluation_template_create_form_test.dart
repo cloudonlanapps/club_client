@@ -8,6 +8,7 @@ import 'evaluation_test_helpers.dart';
 Future<GlobalKey<EvaluationTemplateCreateFormState>> _pump(
   WidgetTester tester, {
   Map<String, dynamic>? initialValues,
+  ValueChanged<List<EvaluationLayoutEntry>>? onLayoutChanged,
 }) async {
   await tallSurface(tester);
   final key = GlobalKey<EvaluationTemplateCreateFormState>();
@@ -16,6 +17,7 @@ Future<GlobalKey<EvaluationTemplateCreateFormState>> _pump(
       EvaluationTemplateCreateForm(
         key: key,
         initialValues: initialValues,
+        onLayoutChanged: onLayoutChanged,
         onEditItem: (item) async =>
             EvaluationOutlineEdit.update(item.copyWith(text: 'Edges')),
         onEditSectionTitle: (_) async =>
@@ -100,6 +102,22 @@ void main() {
               as List<EvaluationLayoutEntry>?;
       expect(layout?.single.item?.kind, EvaluationItemKind.number);
       expect(layout?.single.item?.text, 'Edges');
+    });
+
+    testWidgets('Issue 28: onLayoutChanged reports the layout after each '
+        'change to it, and not for the name', (tester) async {
+      final reported = <List<EvaluationLayoutEntry>>[];
+      await _pump(tester, onLayoutChanged: reported.add);
+      await tester.enterText(find.byType(EditableText).first, 'Skating');
+      await tester.pumpAndSettle();
+      expect(reported, isEmpty);
+      await tester.tap(find.byIcon(LucideIcons.plus).last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Number'));
+      await tester.pumpAndSettle();
+      expect(reported, hasLength(1));
+      expect(reported.single.single.item?.kind, EvaluationItemKind.number);
+      expect(reported.single.single.item?.text, 'Edges');
     });
 
     testWidgets('Issue 173: isDirty follows the name and the layout', (

@@ -22,13 +22,15 @@ import 'evaluation_template_form_validators.dart';
 /// shows a server refusal — a name already taken — with
 /// [EvaluationTemplateCreateFormState.showErrors]. Item and section dialogs
 /// are the host's, through [onEditItem] and [onEditSectionTitle] (see
-/// `EvaluationLayoutEditor`).
+/// `EvaluationLayoutEditor`). [onLayoutChanged] reports the layout as it
+/// stands after each change, for a host previewing it (club_client#28).
 class EvaluationTemplateCreateForm extends StatefulWidget {
   /// A create form seeded with [initialValues] (default [emptyValues]).
   const EvaluationTemplateCreateForm({
     required this.onEditItem,
     required this.onEditSectionTitle,
     this.onPickExisting,
+    this.onLayoutChanged,
     this.initialValues,
     this.enabled = true,
     super.key,
@@ -43,6 +45,9 @@ class EvaluationTemplateCreateForm extends StatefulWidget {
   /// Picks an existing question to copy; `null` hides the option.
   final EvaluationPickExisting? onPickExisting;
 
+  /// Called with the layout after each change to it.
+  final ValueChanged<List<EvaluationLayoutEntry>>? onLayoutChanged;
+
   /// Initial values keyed by [EvaluationTemplateCreateFormFields].
   final Map<String, dynamic>? initialValues;
 
@@ -56,6 +61,15 @@ class EvaluationTemplateCreateForm extends StatefulWidget {
     EvaluationTemplateCreateFormFields.layoutId:
         const <EvaluationLayoutEntry>[],
   };
+
+  /// The layout held in form values [values] (such as [initialValues]),
+  /// typed: ShadForm holds lists untyped.
+  static List<EvaluationLayoutEntry> layoutIn(Map<String, dynamic>? values) => [
+    for (final e
+        in values?[EvaluationTemplateCreateFormFields.layoutId] as List? ??
+            const [])
+      e as EvaluationLayoutEntry,
+  ];
 
   @override
   State<EvaluationTemplateCreateForm> createState() =>
@@ -74,12 +88,8 @@ class EvaluationTemplateCreateFormState
   bool get focusFirstInvalid => false;
 
   /// The layout in [values], typed: ShadForm holds lists untyped.
-  List<EvaluationLayoutEntry> layoutOf(Map<String, dynamic> values) => [
-    for (final e
-        in values[EvaluationTemplateCreateFormFields.layoutId] as List? ??
-            const [])
-      e as EvaluationLayoutEntry,
-  ];
+  List<EvaluationLayoutEntry> layoutOf(Map<String, dynamic> values) =>
+      EvaluationTemplateCreateForm.layoutIn(values);
 
   /// The layout message: no question, or an untitled section.
   @override
@@ -126,6 +136,10 @@ class EvaluationTemplateCreateFormState
             field: EvaluationLayoutFormField(
               id: EvaluationTemplateCreateFormFields.layoutId,
               enabled: widget.enabled,
+              onChanged: switch (widget.onLayoutChanged) {
+                final report? => (layout) => report(layout ?? const []),
+                null => null,
+              },
               onEditItem: widget.onEditItem,
               onEditSectionTitle: widget.onEditSectionTitle,
               onPickExisting: widget.onPickExisting,

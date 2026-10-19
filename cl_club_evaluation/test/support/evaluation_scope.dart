@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart' show EvaluationLayoutEditor;
 
 /// A fixed instant for fixtures.
 final DateTime t0 = DateTime.utc(2026, 9);
@@ -367,3 +368,8 @@ Future<void> tallSurface(WidgetTester tester) async {
   await tester.binding.setSurfaceSize(const Size(1024, 2400));
   addTearDown(() => tester.binding.setSurfaceSize(null));
 }
+
+/// [finder] inside a template's layout editor, leaving out its live
+/// preview (club_client#28), which shows the same items.
+Finder inTemplateEditor(Finder finder) =>
+    find.descendant(of: find.byType(EvaluationLayoutEditor), matching: finder);

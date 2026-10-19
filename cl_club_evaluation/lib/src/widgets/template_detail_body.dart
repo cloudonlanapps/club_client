@@ -19,11 +19,11 @@ import '../utils/evaluation_error_message.dart';
 import '../utils/evaluation_layout_sync.dart';
 import '../utils/evaluation_template_actions.dart';
 import 'evaluation_item_dialog.dart';
-import 'evaluation_page.dart';
 import 'evaluation_rename_dialog.dart';
 import 'evaluation_section_title_dialog.dart';
 import 'evaluation_summary.dart';
 import 'existing_question_dialog.dart';
+import 'template_editor_page.dart';
 import 'template_export_button.dart';
 
 /// The editable sections of a saved [template]: its name with **Rename**,
@@ -31,7 +31,9 @@ import 'template_export_button.dart';
 /// in use), and
 /// its questions in the layout editor; see `TemplateDetailView`. While the
 /// layout is fixed (in use, or a write in flight), an item opens read-only
-/// and a section not at all.
+/// and a section not at all. Beside it, or switched with it on a narrow
+/// screen, the template's live preview as the review form (club_client#28),
+/// following each saved change.
 class TemplateDetailBody extends ConsumerStatefulWidget {
   /// Edits [template].
   const TemplateDetailBody({
@@ -156,29 +158,30 @@ class TemplateDetailBodyState extends ConsumerState<TemplateDetailBody> {
       template.layout,
       template.items,
     );
-    return EvaluationPage(
-      children: [
-        EvaluationSummary(
-          title: template.name,
-          actions: [
-            ShadButton.outline(
-              onPressed: rename,
-              child: const Text(EvaluationViewStrings.rename),
-            ),
-            ShadButton.outline(
-              onPressed: widget.onDuplicate,
-              child: const Text(EvaluationViewStrings.duplicate),
-            ),
-            TemplateExportButton(
-              template: template,
-              onSaveFile: widget.onSaveFile,
-            ),
-            ShadButton.outline(
-              onPressed: template.inUse ? null : delete,
-              child: const Text(EvaluationViewStrings.delete),
-            ),
-          ],
-        ),
+    return TemplateEditorPage(
+      layout: layout,
+      header: EvaluationSummary(
+        title: template.name,
+        actions: [
+          ShadButton.outline(
+            onPressed: rename,
+            child: const Text(EvaluationViewStrings.rename),
+          ),
+          ShadButton.outline(
+            onPressed: widget.onDuplicate,
+            child: const Text(EvaluationViewStrings.duplicate),
+          ),
+          TemplateExportButton(
+            template: template,
+            onSaveFile: widget.onSaveFile,
+          ),
+          ShadButton.outline(
+            onPressed: template.inUse ? null : delete,
+            child: const Text(EvaluationViewStrings.delete),
+          ),
+        ],
+      ),
+      editor: [
         ShadCard(
           title: const Text(EvaluationViewStrings.questions),
           description: frozen

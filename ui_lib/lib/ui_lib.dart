@@ -74,6 +74,8 @@ export 'src/widgets/credit/credit_count_chip.dart' show CreditCountChip;
 export 'src/widgets/date_day_label.dart' show DateDayLabel;
 export 'src/widgets/detail_row.dart' show DetailRow;
 export 'src/widgets/discard_changes_prompt.dart' show DiscardChangesPrompt;
+export 'src/widgets/editor_preview_layout.dart'
+    show EditorPreviewLayout, EditorPreviewLayoutState;
 export 'src/widgets/error_view.dart' show ErrorTone, ErrorView;
 export 'src/widgets/evaluation/fill/evaluation_fill_body.dart'
     show EvaluationFillBody, EvaluationFillBodyState;
@@ -101,6 +103,8 @@ export 'src/widgets/evaluation/template/evaluation_template_create_form_fields.d
     show EvaluationTemplateCreateFormFields;
 export 'src/widgets/evaluation/template/evaluation_template_form_validators.dart'
     show EvaluationTemplateFormValidators;
+export 'src/widgets/evaluation/template/evaluation_template_preview.dart'
+    show EvaluationTemplatePreview;
 // Read-only calendar of a camp's schedule
 export 'src/widgets/event_schedule/camp_schedule_calendar.dart'
     show CampScheduleCalendar;

@@ -10,12 +10,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'package:ui_lib/ui_lib.dart'
-    show ErrorTone, ErrorView, LoadingView, TitleRow;
+    show EditorPreviewLayout, ErrorTone, ErrorView, LoadingView, TitleRow;
 
 import '../models/event_marketing_sections.dart';
 import '../models/marketing_section.dart';
 import '../widgets/event_marketing/event_marketing_editor_column.dart';
-import '../widgets/event_marketing/event_marketing_layout.dart';
 import '../widgets/event_marketing/event_marketing_preview.dart';
 
 /// An event's Marketing page (club_client#1): what the website shows about
@@ -115,7 +114,7 @@ class EventMarketingViewState extends ConsumerState<EventMarketingView> {
             ),
             const Divider(height: 1),
             Expanded(
-              child: EventMarketingLayout(
+              child: EditorPreviewLayout(
                 editor: EventMarketingEditorColumn(
                   event: event,
                   extended: extended,

@@ -299,4 +299,14 @@ abstract final class EvaluationStrings {
 
   /// A period ending after today.
   static const String periodFuture = 'The period must end today or earlier.';
+
+  /// Above a template's preview: what it shows.
+  static const String previewIntro =
+      'The review form as a coach sees it. Nothing here can be answered.';
+
+  /// A template's preview with no items yet.
+  static const String previewEmpty = 'Add a question to see it here.';
+
+  /// Where an item that allows evidence takes it, in a template's preview.
+  static const String previewEvidence = 'Evidence: images, videos and PDFs';
 }

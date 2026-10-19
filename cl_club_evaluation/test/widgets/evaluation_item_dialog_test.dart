@@ -43,7 +43,7 @@ Finder _inDialog(Finder finder) =>
     find.descendant(of: find.byType(ShadDialog), matching: finder);
 
 Future<void> _open(WidgetTester tester, String row) async {
-  await tester.tap(find.text(row));
+  await tester.tap(inTemplateEditor(find.text(row)));
   await tester.pumpAndSettle();
 }
 

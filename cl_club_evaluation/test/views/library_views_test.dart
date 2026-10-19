@@ -212,7 +212,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Stride'), findsOneWidget);
+      expect(inTemplateEditor(find.text('Stride')), findsOneWidget);
       await tester.tap(find.text('Rename'));
       await tester.pumpAndSettle();
       await tester.enterText(
@@ -247,7 +247,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Stride'), findsOneWidget);
+      expect(inTemplateEditor(find.text('Stride')), findsOneWidget);
       expect(find.textContaining('in use by an evaluation'), findsOneWidget);
       expect(find.byIcon(LucideIcons.trash2), findsNothing);
       await tester.tap(find.text('Rename'));
@@ -308,7 +308,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Stride'));
+      await tester.tap(inTemplateEditor(find.text('Stride')));
       await tester.pumpAndSettle();
       await tester.tap(
         find.descendant(
@@ -322,7 +322,7 @@ void main() {
       expect(stub.calls, ['remove 1 11']);
       expect(find.textContaining('in use by an evaluation'), findsWidgets);
       expect(find.text('Sort'), findsNothing);
-      expect(find.text('Stride'), findsOneWidget);
+      expect(inTemplateEditor(find.text('Stride')), findsOneWidget);
     });
   });
 }

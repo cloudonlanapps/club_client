@@ -575,12 +575,24 @@ in the UI yet (the API and CLI can).
 | `reviews/mine/:id` | `MyReviewScreen` → `EvaluationReadView` | read-only member view: sections, answers, coach notes, evidence in the gallery viewer (requests carry the session's headers); the review's title as the page title, a Review Period section (event and period, when set), the answers with a trailing run of top-level Q & A shown last as one untitled card; the download icon at the top right downloads the stored member copy with the session and opens it locally — evidence and the copy are private, never opened by URL |
 | `reviews` | `ReviewsScreen` → `CoachReviewsView` or `TemplateLibraryView` by role | coach: their evaluations grouped Drafts, Finalized, Published, then the templates to start from, and **Manage Templates** at the bottom right; admin who does not coach: the templates, **Add template** |
 | `reviews/templates` | `TemplateLibraryScreen` → `TemplateLibraryView` | coaches and admins: the template library — create, open, **Duplicate** (a copy with new, unlinked questions), **Delete** (disabled while in use), **Import** (a template file, see below) |
-| `reviews/templates/new` (`?copy=<id>`) | `TemplateCreateScreen` → `TemplateCreateView` | the designer: name, then items and sections (one full create form, form rule 19); pre-filled from a template to duplicate it, or from an imported file; a taken name is shown inline |
-| `reviews/templates/:id` | `TemplateDetailScreen` → `TemplateDetailView` | the template, edited section by section in place: rename dialog, per-item editor, layout (reorder with the **Sort** checkbox, sections); frozen once used (R27); **Export** saves it as a template file, in use or not |
+| `reviews/templates/new` (`?copy=<id>`) | `TemplateCreateScreen` → `TemplateCreateView` | the designer: name, then items and sections (one full create form, form rule 19); pre-filled from a template to duplicate it, or from an imported file; a taken name is shown inline; the live preview (below) follows the unsaved layout |
+| `reviews/templates/:id` | `TemplateDetailScreen` → `TemplateDetailView` | the template, edited section by section in place: rename dialog, per-item editor, layout (reorder with the **Sort** checkbox, sections); frozen once used (R27); **Export** saves it as a template file, in use or not; the live preview (below) follows each saved change, in use or not |
 | `reviews/:id` | `ReviewEditScreen` → `EvaluationEditView` | the owner's review: Back; a head with the member, the review's title and a stamp (Ready once finalized, Published once published); **Review Period** (event and period; the pencil changes both on a draft); the answers (editable on a draft, read-only with private items greyed once finalized); **Review Management** (draft: Finalize, Delete; finalized: Publish, Revert to draft, Transfer; published: Unpublish) and **Review Info**; a published review's member copy from the download icon |
 
 Each screen gates and forwards `currentUser` and callbacks (module view
 wrapping rule); views take callbacks, never routes.
+
+**Template live preview** (club_client#28). Both template screens show,
+beside the editor, the template as the review form a coach writes on: the
+fill form (`EvaluationTemplatePreview`, ui_lib) read-only and with no
+answers, so each question shows its input empty and disabled, its comment
+area where it has one and an evidence placeholder where it allows evidence;
+private items greyed; the closing Q & As last. Items not yet created get
+preview-only ids. On a wide screen editor and preview sit side by side, each
+scrolling on its own; on a narrow one an **Edit** / **Preview** switch shows
+one at a time and keeps both built (`EditorPreviewLayout`, ui_lib, shared
+with the event Marketing page). An item is edited in a dialog, so the preview
+changes when the dialog is saved. Nothing in the preview is sent anywhere.
 
 **Template files** (club_client#27). **Export** writes a template as JSON:
 the create payload (`{name, layout}`, items inline, §1.6) in an envelope

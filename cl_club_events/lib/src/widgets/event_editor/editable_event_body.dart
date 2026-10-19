@@ -12,6 +12,7 @@ import '../events_preview/cl_event_venue_detail.dart';
 import 'event_eligibility_card.dart';
 import 'event_flags_card.dart';
 import 'event_management_section.dart';
+import 'event_marketing_link_card.dart';
 import 'event_overview_card.dart';
 import 'event_schedule_section.dart';
 import 'organizer_coaches_section.dart';
@@ -35,6 +36,7 @@ class EditableEventBody extends ConsumerWidget {
     this.onMemberTap,
     this.onPublicProfileTap,
     this.onDeleted,
+    this.onOpenMarketing,
     super.key,
   });
 
@@ -50,6 +52,9 @@ class EditableEventBody extends ConsumerWidget {
 
   /// Leaves the page once the event has been deleted (Event Management).
   final VoidCallback? onDeleted;
+
+  /// Opens the event's Marketing page (club_client#1).
+  final VoidCallback? onOpenMarketing;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -73,6 +78,10 @@ class EditableEventBody extends ConsumerWidget {
           const SizedBox(height: 16),
           EventFlagsCard(event: event),
           const SizedBox(height: 16),
+          if (onOpenMarketing case final open?) ...[
+            EventMarketingLinkCard(onOpen: open),
+            const SizedBox(height: 16),
+          ],
           ClEventVenueDetail(
             venueId: event.venueId,
             venue:

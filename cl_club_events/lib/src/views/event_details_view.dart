@@ -28,6 +28,7 @@ class EventDetailsView extends ConsumerWidget {
     this.onBack,
     this.onHistory,
     this.onDeleted,
+    this.onOpenMarketing,
     super.key,
   });
 
@@ -48,6 +49,10 @@ class EventDetailsView extends ConsumerWidget {
 
   /// Leaves the page once the event has been deleted from Event Management.
   final VoidCallback? onDeleted;
+
+  /// Opens the event's Marketing page, offered to whoever may manage the
+  /// event (club_client#1).
+  final VoidCallback? onOpenMarketing;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -94,6 +99,7 @@ class EventDetailsView extends ConsumerWidget {
                         onMemberTap: onMemberTap,
                         onPublicProfileTap: onPublicProfileTap,
                         onDeleted: onDeleted,
+                        onOpenMarketing: onOpenMarketing,
                       )
                     : ClEventPreview(
                         event: event,

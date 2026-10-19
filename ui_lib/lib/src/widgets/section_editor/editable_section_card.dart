@@ -43,6 +43,7 @@ class EditableSectionCard<T> extends StatefulWidget {
     this.editMaxWidth,
     this.onClear,
     this.canClear,
+    this.onEditingChanged,
     super.key,
   });
 
@@ -106,6 +107,11 @@ class EditableSectionCard<T> extends StatefulWidget {
   /// when the answer may have changed.
   final bool Function()? canClear;
 
+  /// Called with `true` when the card opens its editor and `false` when it
+  /// closes it, by Cancel or after a save. A host showing what is being
+  /// typed elsewhere (a live preview) drops it on `false`.
+  final ValueChanged<bool>? onEditingChanged;
+
   @override
   State<EditableSectionCard<T>> createState() => _EditableSectionCardState<T>();
 }
@@ -128,15 +134,20 @@ class _EditableSectionCardState<T> extends State<EditableSectionCard<T>> {
       }
       if (!proceed || !mounted) return;
     }
-    setState(() => _editing = true);
+    _setEditing(true);
   }
 
-  void _cancel() => setState(() => _editing = false);
+  void _cancel() => _setEditing(false);
+
+  void _setEditing(bool editing) {
+    setState(() => _editing = editing);
+    widget.onEditingChanged?.call(editing);
+  }
 
   Future<void> _save() async {
     // Nothing changed → an unmodified Save just closes the editor.
     if (widget.isDirty != null && !widget.isDirty!()) {
-      setState(() => _editing = false);
+      _setEditing(false);
       return;
     }
     final value = widget.onValidate();
@@ -149,10 +160,8 @@ class _EditableSectionCardState<T> extends State<EditableSectionCard<T>> {
       ok = await widget.onSave(value);
     } finally {
       if (mounted) {
-        setState(() {
-          _saving = false;
-          if (ok) _editing = false;
-        });
+        setState(() => _saving = false);
+        if (ok) _setEditing(false);
       }
     }
   }

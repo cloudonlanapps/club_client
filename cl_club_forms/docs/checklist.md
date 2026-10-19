@@ -76,6 +76,11 @@ messages, **Reset**, which mounts it afresh, and the light / dark toggle.
 - [ ] Occurrence reschedule form: shown in a dialog from "Reschedule" on a single occurrence (a camp day) in the occurrence list.
 - [ ] Event cancellation form: shown in a dialog from "Cancel camp" or "Call off" in Event Management on an event's page.
 - [ ] Rename form (event): shown in a dialog from Rename in Event Management on an event's page.
+- [ ] Event basic marketing form: shown on an event's Marketing page (`/memberzone/events/:eventId/marketing`) when the pencil on its Basic card is pressed.
+- [ ] Event marketing details form: shown on the Marketing page when the pencil on Details is pressed (module on).
+- [ ] Event marketing fees form: shown on the Marketing page when the pencil on Fees is pressed (module on).
+- [ ] Event marketing rows form: shown on the Marketing page when the pencil on Packages, Offers or Facilities is pressed (module on).
+- [ ] Event marketing membership form: shown on the Marketing page when the pencil on Club membership is pressed (module on).
 
 ## Credit (admin, credit system on)
 

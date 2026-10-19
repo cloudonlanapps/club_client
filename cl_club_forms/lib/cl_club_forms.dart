@@ -7,6 +7,7 @@ export 'src/models/camp_schedule_data.dart' show CampScheduleData;
 export 'src/models/event_staff_member.dart' show EventStaffMember;
 export 'src/models/event_timetable_value.dart' show EventTimetableValue;
 export 'src/models/form_translated_text.dart' show FormTranslatedText;
+export 'src/models/marketing_list_column.dart' show MarketingListColumn;
 export 'src/models/one_off_schedule_data.dart' show OneOffScheduleData;
 export 'src/models/one_off_schedule_value.dart' show OneOffScheduleValue;
 export 'src/models/programme_schedule_adjust_value.dart'
@@ -96,6 +97,37 @@ export 'src/widgets/event_form/event_form_validators.dart'
     show EventFormValidators;
 export 'src/widgets/event_form/event_staff_form.dart'
     show EventStaffForm, EventStaffFormState;
+// Event marketing forms (pure UI, no SDK / no Riverpod, club_client#1):
+// basic, details, fees, the list sections and the membership, each with a
+// live draft for the host's preview.
+export 'src/widgets/event_marketing/event_basic_marketing_form.dart'
+    show EventBasicMarketingForm;
+export 'src/widgets/event_marketing/event_basic_marketing_form_fields.dart'
+    show EventBasicMarketingFormFields;
+export 'src/widgets/event_marketing/event_marketing_columns.dart'
+    show EventMarketingColumns;
+export 'src/widgets/event_marketing/event_marketing_details_form.dart'
+    show EventMarketingDetailsForm;
+export 'src/widgets/event_marketing/event_marketing_details_form_fields.dart'
+    show EventMarketingDetailsFormFields;
+export 'src/widgets/event_marketing/event_marketing_fees_form.dart'
+    show EventMarketingFeesForm;
+export 'src/widgets/event_marketing/event_marketing_fees_form_fields.dart'
+    show EventMarketingFeesFormFields;
+export 'src/widgets/event_marketing/event_marketing_limits.dart'
+    show EventMarketingLimits;
+export 'src/widgets/event_marketing/event_marketing_membership_form.dart'
+    show EventMarketingMembershipForm;
+export 'src/widgets/event_marketing/event_marketing_membership_form_fields.dart'
+    show EventMarketingMembershipFormFields;
+export 'src/widgets/event_marketing/event_marketing_rows_form.dart'
+    show EventMarketingRowsForm;
+export 'src/widgets/event_marketing/event_marketing_rows_form_fields.dart'
+    show EventMarketingRowsFormFields;
+export 'src/widgets/event_marketing/marketing_date_text.dart'
+    show marketingDateText;
+export 'src/widgets/event_marketing/marketing_form_draft.dart'
+    show MarketingFormDraft;
 // Event schedule forms (pure UI, no SDK / no Riverpod). Form-local typed
 // values; the host translates to/from SDK types at the boundary.
 export 'src/widgets/event_schedule/camp_schedule_form.dart'

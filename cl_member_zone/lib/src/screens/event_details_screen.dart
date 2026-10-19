@@ -26,6 +26,7 @@ class EventDetailsScreen extends ConsumerWidget {
     this.onPublicProfileTap,
     this.onBack,
     this.onHistory,
+    this.onOpenMarketing,
     super.key,
   });
 
@@ -56,6 +57,9 @@ class EventDetailsScreen extends ConsumerWidget {
 
   /// Opens the event's audit history (admin-only affordance, issue #207).
   final VoidCallback? onHistory;
+
+  /// Opens the event's Marketing page (club_client#1).
+  final VoidCallback? onOpenMarketing;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -98,6 +102,7 @@ class EventDetailsScreen extends ConsumerWidget {
           onBack: onBack,
           onHistory: onHistory,
           onDeleted: onDeleted,
+          onOpenMarketing: onOpenMarketing,
         );
       },
     );

@@ -196,6 +196,12 @@ void main() {
         () => _event(tester, eventId)?.isActive ?? false,
         description: 'the camp to be unarchived on the server',
       );
+      // The server answers before the page redraws, so wait for the page too.
+      await waitFor(
+        tester,
+        () => _managementButton('Archive').evaluate().isNotEmpty,
+        description: 'the unarchived camp page with Archive',
+      );
       expect(_managementButton('Archive'), findsOneWidget);
       expect(_managementButton('Rename'), findsOneWidget);
 

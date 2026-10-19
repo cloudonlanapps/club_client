@@ -25,8 +25,7 @@ import 'programme_end_date_dialog_body.dart';
 /// A programme with no end date sets one, with a reason. One whose end is
 /// ahead moves it to another day, or removes it with **Clear end date**. The
 /// form states the last session the chosen day gives before anything is
-/// saved. Opened from a session (`proposedLastDay`), it starts on the day
-/// before it. A refusal stays in the dialog: on the last day when it is about
+/// saved. A refusal stays in the dialog: on the last day when it is about
 /// the day chosen, else as an inline message.
 class ProgrammeEndDateDialog extends ConsumerStatefulWidget {
   const ProgrammeEndDateDialog({
@@ -41,8 +40,7 @@ class ProgrammeEndDateDialog extends ConsumerStatefulWidget {
   /// The programme's schedules, when they could be read.
   final List<EventSchedule>? schedules;
 
-  /// The last day the dialog opens on instead of the programme's end, if
-  /// any; Save sends it without an edit.
+  /// The last day to open on instead of the end; saved without an edit.
   final DateTime? proposedLastDay;
 
   /// The dialog's title.

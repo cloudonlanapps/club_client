@@ -1,8 +1,5 @@
 # Changelog
 
-What changed in each version of the club app and website. The version is the
-one in `VERSION`; each release is tagged `RELEASE_VERSION_<major>_<minor>_<patch>`.
-
 ## 1.0.1
 
 - Review templates can be exported to a JSON file and imported from one (#27).

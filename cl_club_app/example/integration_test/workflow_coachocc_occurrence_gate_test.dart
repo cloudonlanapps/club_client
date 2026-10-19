@@ -60,12 +60,10 @@ const _kEvent = 'workflow_coachocc_event';
 
 const List<String> _kCast = [_kAdmin, _kCoach, _kOtherCoach];
 
-/// The occurrence actions the server keeps to the organizer or an admin.
-const List<String> _kManaged = [
-  'Reschedule',
-  'Cancel this occurrence',
-  'Cancel entire series',
-];
+/// The occurrence actions the server keeps to the organizer or an admin,
+/// on a one-off: Call off (club_client#178; a one-off is not rescheduled
+/// one occurrence at a time, and has no series to cancel).
+const List<String> _kManaged = ['Call off'];
 
 Future<SecureClient> _sudoClient() async {
   final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
@@ -158,7 +156,7 @@ void main() {
       await waitFor(
         tester,
         () => _kManaged.every(_occurrenceLabels().contains),
-        description: 'Reschedule and the cancel actions for the organizer',
+        description: 'Call off for the organizer',
       );
       await logout(tester);
 

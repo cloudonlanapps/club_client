@@ -33,7 +33,14 @@ class MarketingListDateCell extends StatelessWidget {
     final button = ShadButton.outline(
       enabled: enabled,
       leading: const Icon(LucideIcons.calendar, size: 16),
-      child: Text(day == null ? placeholder ?? '' : marketingDateText(day)),
+      // A narrow column shortens the date rather than overflowing.
+      child: Flexible(
+        child: Text(
+          day == null ? placeholder ?? '' : marketingDateText(day),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
     );
     return Row(
       children: [

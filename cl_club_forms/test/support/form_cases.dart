@@ -350,4 +350,74 @@ final List<FormCase> formCases = [
     ),
     typed: false,
   ),
+  (
+    name: 'EventBasicMarketingForm',
+    build: ({required enabled}) => EventBasicMarketingForm(
+      enabled: enabled,
+      initialValues: const {
+        EventBasicMarketingFormFields.stampId: 'New',
+        EventBasicMarketingFormFields.highlightsId: [
+          {EventMarketingColumns.textId: 'Skating basics'},
+        ],
+      },
+    ),
+    typed: true,
+  ),
+  (
+    name: 'EventMarketingDetailsForm',
+    build: ({required enabled}) => EventMarketingDetailsForm(
+      enabled: enabled,
+      initialValues: {
+        EventMarketingDetailsFormFields.durationTextId: '5 days',
+        EventMarketingDetailsFormFields.registrationDeadlineId: _day,
+      },
+    ),
+    typed: true,
+  ),
+  (
+    name: 'EventMarketingFeesForm',
+    build: ({required enabled}) => EventMarketingFeesForm(
+      enabled: enabled,
+      initialValues: const {
+        EventMarketingFeesFormFields.feeId: '4500',
+        EventMarketingFeesFormFields.feeStructureId: [
+          {
+            EventMarketingColumns.nameId: 'Coaching',
+            EventMarketingColumns.amountId: '4000',
+          },
+        ],
+      },
+    ),
+    typed: true,
+  ),
+  (
+    name: 'EventMarketingRowsForm',
+    build: ({required enabled}) => EventMarketingRowsForm(
+      enabled: enabled,
+      columns: EventMarketingColumns.offers,
+      addLabel: 'Add offer',
+      required: const {EventMarketingColumns.titleId},
+      initialRows: [
+        {
+          EventMarketingColumns.titleId: 'Early bird',
+          EventMarketingColumns.validUntilId: _day,
+        },
+      ],
+    ),
+    // Its one field is the list; the inputs are inside its rows.
+    typed: false,
+  ),
+  (
+    name: 'EventMarketingMembershipForm',
+    build: ({required enabled}) => EventMarketingMembershipForm(
+      enabled: enabled,
+      initialValues: const {
+        EventMarketingMembershipFormFields.titleId: 'Club membership',
+        EventMarketingMembershipFormFields.benefitsId: [
+          {EventMarketingColumns.textId: 'Free ice time'},
+        ],
+      },
+    ),
+    typed: true,
+  ),
 ];

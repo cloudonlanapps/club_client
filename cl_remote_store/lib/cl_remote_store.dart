@@ -35,6 +35,7 @@ export 'src/providers/capabilities.dart'
         creditSystemProvider,
         defaultCountryCodeProvider,
         evaluationsProvider,
+        eventMarketingProvider,
         fallbackCountryCode,
         identityVerificationProvider;
 export 'src/providers/client.dart' show secureClientProvider;
@@ -68,6 +69,8 @@ export 'src/providers/evaluations_master.dart'
 export 'src/providers/event_credit_roster.dart'
     show ClEventCreditRosterNotifier, clEventCreditRosterProvider;
 export 'src/providers/event_detail.dart';
+export 'src/providers/event_marketing_master.dart'
+    show ClEventMarketingMasterNotifier, clEventMarketingMasterProvider;
 export 'src/providers/event_media.dart'
     show
         EventGalleryImage,

@@ -53,6 +53,16 @@ final evaluationsProvider = Provider<bool?>(
   (ref) => ref.watch(capabilitiesProvider).valueOrNull?.evaluations,
 );
 
+/// Whether this deployment runs the Event Marketing module, or null while
+/// [capabilitiesProvider] has no answer (club_client#1).
+///
+/// The extended marketing block is read and written, and its editor shown,
+/// only when this is `true`: the module's routes answer 503 where it is
+/// off, and an unknown answer is never guessed either way.
+final eventMarketingProvider = Provider<bool?>(
+  (ref) => ref.watch(capabilitiesProvider).valueOrNull?.eventMarketing,
+);
+
 /// The country calling code used when the server reports none (#31).
 const String fallbackCountryCode = '91';
 

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-/// How an event's Marketing page lays out its [editor] and its [preview]
-/// (club_client#1): side by side on a wide screen; on a narrow one, one at
-/// a time, with a switch between them above. Switching keeps both built.
-class EventMarketingLayout extends StatefulWidget {
-  const EventMarketingLayout({
+/// A page's [editor] beside a live [preview] of what it edits
+/// (club_client#1, #28): side by side on a wide screen; on a narrow one,
+/// one at a time, with an Edit / Preview switch above. Switching keeps
+/// both built, so an editor left open keeps what was typed.
+///
+/// Each side gets the height it is given and scrolls on its own.
+class EditorPreviewLayout extends StatefulWidget {
+  /// Lays out [editor] and [preview].
+  const EditorPreviewLayout({
     required this.editor,
     required this.preview,
     super.key,
@@ -17,25 +21,35 @@ class EventMarketingLayout extends StatefulWidget {
   /// Padding around the switch.
   static const double switchPadding = 12;
 
-  /// The cards that edit.
+  /// Size of the switch's icons.
+  static const double switchIconSize = 16;
+
+  /// The switch's label for the editor.
+  static const String editLabel = 'Edit';
+
+  /// The switch's label for the preview.
+  static const String previewLabel = 'Preview';
+
+  /// What edits.
   final Widget editor;
 
   /// The live preview.
   final Widget preview;
 
   @override
-  State<EventMarketingLayout> createState() => EventMarketingLayoutState();
+  State<EditorPreviewLayout> createState() => EditorPreviewLayoutState();
 }
 
-/// State of [EventMarketingLayout]: which side a narrow screen shows.
-class EventMarketingLayoutState extends State<EventMarketingLayout> {
+/// State of [EditorPreviewLayout]: which side a narrow screen shows.
+class EditorPreviewLayoutState extends State<EditorPreviewLayout> {
+  /// Whether a narrow screen shows the preview.
   bool showingPreview = false;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth >= EventMarketingLayout.sideBySideMinWidth) {
+        if (constraints.maxWidth >= EditorPreviewLayout.sideBySideMinWidth) {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -49,9 +63,9 @@ class EventMarketingLayoutState extends State<EventMarketingLayout> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.all(EventMarketingLayout.switchPadding),
+              padding: const EdgeInsets.all(EditorPreviewLayout.switchPadding),
               child: Row(
-                spacing: EventMarketingLayout.switchPadding,
+                spacing: EditorPreviewLayout.switchPadding,
                 children: [
                   for (final preview in [false, true])
                     (preview == showingPreview
@@ -60,14 +74,17 @@ class EventMarketingLayoutState extends State<EventMarketingLayout> {
                       onPressed: () => setState(() => showingPreview = preview),
                       leading: Icon(
                         preview ? LucideIcons.eye : LucideIcons.pencil,
-                        size: 16,
+                        size: EditorPreviewLayout.switchIconSize,
                       ),
-                      child: Text(preview ? 'Preview' : 'Edit'),
+                      child: Text(
+                        preview
+                            ? EditorPreviewLayout.previewLabel
+                            : EditorPreviewLayout.editLabel,
+                      ),
                     ),
                 ],
               ),
             ),
-            // Both stay built, so an editor left open keeps what was typed.
             Expanded(
               child: IndexedStack(
                 index: showingPreview ? 1 : 0,

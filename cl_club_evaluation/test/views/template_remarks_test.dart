@@ -253,7 +253,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Skating (copy)'), findsOneWidget);
-      expect(find.text('Stops'), findsOneWidget);
+      expect(inTemplateEditor(find.text('Stops')), findsOneWidget);
       await tester.tap(find.text('Create'));
       await tester.pumpAndSettle();
       expect(stub.calls, ['create Skating (copy) 2']);

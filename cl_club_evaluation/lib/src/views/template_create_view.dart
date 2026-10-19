@@ -9,6 +9,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
     show
         ConfirmDialog,
+        EvaluationLayoutEntry,
         EvaluationTemplateCreateForm,
         EvaluationTemplateCreateFormFields,
         EvaluationTemplateCreateFormState;
@@ -18,10 +19,10 @@ import '../models/evaluation_template_copy.dart';
 import '../models/evaluation_template_form_submit.dart';
 import '../utils/evaluation_error_message.dart';
 import '../widgets/evaluation_item_dialog.dart';
-import '../widgets/evaluation_page.dart';
 import '../widgets/evaluation_section_title_dialog.dart';
-import '../widgets/evaluation_title_bar.dart';
 import '../widgets/existing_question_dialog.dart';
+import '../widgets/template_create_title_bar.dart';
+import '../widgets/template_editor_page.dart';
 
 /// The template designer (design 4.2, `reviews/templates/new`): a title bar
 /// with **Cancel** and **Create** (wrapping under the title when narrow),
@@ -35,6 +36,10 @@ import '../widgets/existing_question_dialog.dart';
 /// Given [initialValues] instead (**Import**, club_client#27), it opens
 /// pre-filled with them, as read from a template file. A name already
 /// taken (`TEMPLATE_NAME_TAKEN`) shows under the name.
+///
+/// Beside the form, or switched with it on a narrow screen, the template's
+/// live preview as the review form (club_client#28), following the
+/// unsaved layout.
 ///
 /// Leaving a changed form, by Cancel or back, asks first (form rule 20).
 /// While the template is created the form is turned off, and neither
@@ -75,7 +80,8 @@ class TemplateCreateView extends ConsumerStatefulWidget {
   ConsumerState<TemplateCreateView> createState() => TemplateCreateViewState();
 }
 
-/// State of [TemplateCreateView]: the form and the create in flight.
+/// State of [TemplateCreateView]: the form, its layout so far and the
+/// create in flight.
 class TemplateCreateViewState extends ConsumerState<TemplateCreateView> {
   /// The create form.
   final GlobalKey<EvaluationTemplateCreateFormState> formKey =
@@ -83,6 +89,10 @@ class TemplateCreateViewState extends ConsumerState<TemplateCreateView> {
 
   /// Whether the template is being created.
   bool creating = false;
+
+  /// The layout as the form last reported it; `null` until it changes,
+  /// when the preview shows the initial values' layout.
+  List<EvaluationLayoutEntry>? draftLayout;
 
   /// Leaves, asking first when the form has changed.
   Future<void> cancel() async {
@@ -156,36 +166,28 @@ class TemplateCreateViewState extends ConsumerState<TemplateCreateView> {
       return const Center(child: ShadProgress());
     }
     final source = templates?.valueOrNull?[copyOf];
+    final initialValues = source == null
+        ? widget.initialValues
+        : EvaluationTemplateCopy.initialValues(source);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop && !creating) unawaited(cancel());
       },
-      child: EvaluationPage(
-        children: [
-          EvaluationTitleBar(
-            title: EvaluationViewStrings.newTemplate,
-            actions: [
-              ShadButton.outline(
-                onPressed: creating ? null : cancel,
-                child: const Text(EvaluationViewStrings.cancel),
-              ),
-              ShadButton(
-                onPressed: creating ? null : create,
-                child: Text(
-                  creating
-                      ? EvaluationViewStrings.creating
-                      : EvaluationViewStrings.create,
-                ),
-              ),
-            ],
-          ),
+      child: TemplateEditorPage(
+        layout:
+            draftLayout ?? EvaluationTemplateCreateForm.layoutIn(initialValues),
+        header: TemplateCreateTitleBar(
+          creating: creating,
+          onCancel: cancel,
+          onCreate: create,
+        ),
+        editor: [
           EvaluationTemplateCreateForm(
             key: formKey,
-            initialValues: source == null
-                ? widget.initialValues
-                : EvaluationTemplateCopy.initialValues(source),
+            initialValues: initialValues,
             enabled: !creating,
+            onLayoutChanged: (layout) => setState(() => draftLayout = layout),
             onEditItem: (item) => showEvaluationItemDialog(context, item),
             onEditSectionTitle: (title) =>
                 showEvaluationSectionTitleDialog(context, title),

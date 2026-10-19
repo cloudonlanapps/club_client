@@ -3,9 +3,11 @@ import 'dart:typed_data';
 
 import 'package:cl_club_evaluation/cl_club_evaluation.dart';
 import 'package:cl_club_evaluation/src/models/evaluation_template_file.dart';
+import 'package:cl_club_evaluation/src/widgets/template_import_button.dart';
 import 'package:club_sdk_2/club_sdk_2.dart' as sdk;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 
 import '../support/evaluation_scope.dart';
 
@@ -69,6 +71,20 @@ Widget _designer(StubTemplates stub, Map<String, dynamic> values) =>
 
 void main() {
   group('Issue 27: Import', () {
+    testWidgets('Issue 179: Import shows the import icon, not upload', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _library(StubTemplates({}), pick: () async => null, imported: []),
+      );
+      await tester.pumpAndSettle();
+      final icons = find.descendant(
+        of: find.byType(TemplateImportButton),
+        matching: find.byType(Icon),
+      );
+      expect(tester.widget<Icon>(icons).icon, LucideIcons.import);
+    });
+
     testWidgets('Issue 27: a template file opens the designer pre-filled, '
         'and Create makes the template with new items', (tester) async {
       final stub = StubTemplates({});

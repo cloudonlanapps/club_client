@@ -22,9 +22,9 @@ Views only, plus the start dialog. Screens (`cl_member_zone`), routes
 | `reviews/mine` | `MyReviewsView` | `currentUser`, `onOpen(int id)` |
 | `reviews/mine/:id` | `EvaluationReadView` | `currentUser`, `username`, `evaluationId`, `onBack`, `onOpenPdfBytes(Uint8List bytes)` |
 | `reviews` (coach) | `CoachReviewsView` | `currentUser`, `onOpenEvaluation(int id)`, `onOpenTemplates()` (**Manage Templates**, every coach) |
-| `reviews` (admin, not coach), `reviews/templates` | `TemplateLibraryView` | `currentUser`, `onOpenTemplate(int id)`, `onCreateTemplate()`, `onDuplicateTemplate(int id)` |
-| `reviews/templates/new` (`?copy=<id>` to duplicate) | `TemplateCreateView` | `currentUser`, `onCreated(int id)`, `onCancel()`, `copyOfTemplateId?` |
-| `reviews/templates/:id` | `TemplateDetailView` | `currentUser`, `templateId`, `onBack` (also after Delete), `onDuplicate(int id)` |
+| `reviews` (admin, not coach), `reviews/templates` | `TemplateLibraryView` | `currentUser`, `onOpenTemplate(int id)`, `onCreateTemplate()`, `onDuplicateTemplate(int id)`, `onPickTemplateFile() → Future<Uint8List?>`, `onImportTemplate(Map initialValues)` |
+| `reviews/templates/new` (`?copy=<id>` to duplicate) | `TemplateCreateView` | `currentUser`, `onCreated(int id)`, `onCancel()`, `copyOfTemplateId?` or `initialValues?` (an imported file) |
+| `reviews/templates/:id` | `TemplateDetailView` | `currentUser`, `templateId`, `onBack` (also after Delete), `onDuplicate(int id)`, `onSaveTemplateFile(String fileName, Uint8List bytes) → Future<bool>` |
 | `reviews/:id` | `EvaluationEditView` | `currentUser`, `evaluationId`, `onBack`, `onDeleted`, `onTransferred`, `onOpenPdfBytes(Uint8List bytes)` |
 
 `showStartReviewDialog({context, currentUser, templateId?, username?, eventId?})
@@ -41,7 +41,8 @@ them (an admin's only evaluation role is templates). Restore is not
 offered in the UI yet: a deleted template leaves the library; it can be
 restored through the API/CLI (tracked separately). PDFs leave
 the package only as bytes (`onOpenPdfBytes`); the app decides how to show
-them.
+them. Template files likewise: the app picks and saves them
+(`onPickTemplateFile`, `onSaveTemplateFile`).
 
 **Evidence and the member copy are private** (roles self / coach / admin):
 a plain URL is refused without the bearer token. The gallery sends
@@ -65,6 +66,9 @@ lib/src/
                 updateLayout, addItem, replaceItem, removeItem),
               EvaluationTemplateCopy (Duplicate: a template as designer
                 values, "Name (copy)", items without id or origin),
+              EvaluationTemplateFile (Export / Import: a template as a
+                JSON file and back; TemplateFileException names a refused
+                file),
               EvaluationAnswerSubmit (putAnswer / clearAnswer;
                 clearsEvidence),
               EvaluationStartFormSubmit, EvaluationPeriodFormSubmit

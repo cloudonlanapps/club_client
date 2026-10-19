@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cl_club_evaluation/cl_club_evaluation.dart'
     show CoachReviewsView, TemplateLibraryView;
 import 'package:flutter/widgets.dart';
@@ -16,6 +18,8 @@ class ReviewsScreen extends StatelessWidget {
     required this.onOpenTemplate,
     required this.onCreateTemplate,
     required this.onDuplicateTemplate,
+    required this.onPickTemplateFile,
+    required this.onImportTemplate,
     required this.onOpenTemplates,
     required this.onHome,
     super.key,
@@ -33,6 +37,14 @@ class ReviewsScreen extends StatelessWidget {
   /// Opens the designer pre-filled with a copy of the template with this
   /// id (the admin's library).
   final ValueChanged<int> onDuplicateTemplate;
+
+  /// Picks a template file for **Import** and resolves to its bytes;
+  /// `null` when none was chosen (the admin's library).
+  final Future<Uint8List?> Function() onPickTemplateFile;
+
+  /// Opens the designer pre-filled with these initial values, read from an
+  /// imported file (the admin's library).
+  final ValueChanged<Map<String, dynamic>> onImportTemplate;
 
   /// Opens the template library from the coach view.
   final VoidCallback onOpenTemplates;
@@ -55,6 +67,8 @@ class ReviewsScreen extends StatelessWidget {
             onOpenTemplate: onOpenTemplate,
             onCreateTemplate: onCreateTemplate,
             onDuplicateTemplate: onDuplicateTemplate,
+            onPickTemplateFile: onPickTemplateFile,
+            onImportTemplate: onImportTemplate,
           ),
   );
 }

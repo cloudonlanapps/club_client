@@ -31,6 +31,7 @@ Future<StubTemplates> _pump(WidgetTester tester, {bool inUse = false}) async {
         templateId: 1,
         onBack: () {},
         onDuplicate: (_) {},
+        onSaveTemplateFile: (_, _) async => true,
       ),
     ),
   );

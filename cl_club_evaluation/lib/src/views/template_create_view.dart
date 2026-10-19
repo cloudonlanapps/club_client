@@ -32,7 +32,9 @@ import '../widgets/existing_question_dialog.dart';
 /// Given [copyOfTemplateId] (**Duplicate**), it opens pre-filled with a
 /// copy of that template — "Name (copy)", every question brand new and
 /// unlinked ([EvaluationTemplateCopy]) — and creates it as a new template.
-/// A name already taken (`TEMPLATE_NAME_TAKEN`) shows under the name.
+/// Given [initialValues] instead (**Import**, club_client#27), it opens
+/// pre-filled with them, as read from a template file. A name already
+/// taken (`TEMPLATE_NAME_TAKEN`) shows under the name.
 ///
 /// Leaving a changed form, by Cancel or back, asks first (form rule 20).
 /// While the template is created the form is turned off, and neither
@@ -46,14 +48,22 @@ class TemplateCreateView extends ConsumerStatefulWidget {
     required this.onCreated,
     required this.onCancel,
     this.copyOfTemplateId,
+    this.initialValues,
     super.key,
-  });
+  }) : assert(
+         copyOfTemplateId == null || initialValues == null,
+         'A template starts from a copy or from initial values, not both.',
+       );
 
   /// The signed-in coach or admin.
   final UserPrivate currentUser;
 
   /// The template to start from as a copy; a blank template when `null`.
   final int? copyOfTemplateId;
+
+  /// The designer's initial values, read from an imported template file;
+  /// a blank template when `null`.
+  final Map<String, dynamic>? initialValues;
 
   /// Called with the new template's id.
   final ValueChanged<int> onCreated;
@@ -173,7 +183,7 @@ class TemplateCreateViewState extends ConsumerState<TemplateCreateView> {
           EvaluationTemplateCreateForm(
             key: formKey,
             initialValues: source == null
-                ? null
+                ? widget.initialValues
                 : EvaluationTemplateCopy.initialValues(source),
             enabled: !creating,
             onEditItem: (item) => showEvaluationItemDialog(context, item),

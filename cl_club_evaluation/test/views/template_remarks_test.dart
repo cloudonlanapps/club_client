@@ -80,6 +80,8 @@ void main() {
             onOpenTemplate: (_) {},
             onCreateTemplate: () {},
             onDuplicateTemplate: onDuplicate ?? (_) {},
+            onPickTemplateFile: () async => null,
+            onImportTemplate: (_) {},
           ),
         ),
       );
@@ -178,6 +180,7 @@ void main() {
             templateId: t.id,
             onBack: onBack ?? () {},
             onDuplicate: onDuplicate ?? (_) {},
+            onSaveTemplateFile: (_, _) async => true,
           ),
         ),
       );

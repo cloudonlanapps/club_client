@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cl_club_evaluation/cl_club_evaluation.dart'
     show TemplateLibraryView;
 import 'package:flutter/widgets.dart';
@@ -14,6 +16,8 @@ class TemplateLibraryScreen extends StatelessWidget {
     required this.onOpenTemplate,
     required this.onCreateTemplate,
     required this.onDuplicateTemplate,
+    required this.onPickTemplateFile,
+    required this.onImportTemplate,
     required this.onHome,
     super.key,
   });
@@ -28,6 +32,14 @@ class TemplateLibraryScreen extends StatelessWidget {
   /// id.
   final ValueChanged<int> onDuplicateTemplate;
 
+  /// Picks a template file for **Import** and resolves to its bytes;
+  /// `null` when none was chosen.
+  final Future<Uint8List?> Function() onPickTemplateFile;
+
+  /// Opens the designer pre-filled with these initial values, read from an
+  /// imported file.
+  final ValueChanged<Map<String, dynamic>> onImportTemplate;
+
   /// Leaves a refused route for home.
   final VoidCallback onHome;
 
@@ -40,6 +52,8 @@ class TemplateLibraryScreen extends StatelessWidget {
       onOpenTemplate: onOpenTemplate,
       onCreateTemplate: onCreateTemplate,
       onDuplicateTemplate: onDuplicateTemplate,
+      onPickTemplateFile: onPickTemplateFile,
+      onImportTemplate: onImportTemplate,
     ),
   );
 }

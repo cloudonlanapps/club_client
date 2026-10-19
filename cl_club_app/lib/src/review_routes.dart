@@ -12,7 +12,9 @@ import 'package:cl_member_zone/cl_member_zone.dart'
 import 'package:go_router/go_router.dart';
 
 import 'utils/open_pdf_bytes.dart';
+import 'utils/pick_json_file.dart';
 import 'utils/router_helpers.dart';
+import 'utils/save_file_bytes.dart';
 
 /// The member's published reviews.
 const String myReviewsPath = '/memberzone/reviews/mine';
@@ -31,6 +33,11 @@ const String templateCopyParam = 'copy';
 
 /// The designer pre-filled with a copy of template [id] (**Duplicate**).
 String templateCopyPath(int id) => '$templateCreatePath?$templateCopyParam=$id';
+
+/// The designer's initial values carried as the route's `extra`
+/// (**Import**); `null` for any other `extra`, such as none after a reload.
+Map<String, dynamic>? importedTemplateValues(Object? extra) =>
+    extra is Map<String, dynamic> ? extra : null;
 
 /// The member-zone path of evaluation [id], in its owner's editor.
 String reviewEditPath(int id) => '$reviewsPath/$id';
@@ -77,6 +84,9 @@ List<RouteBase> reviewRoutes() => [
         onOpenTemplate: (id) => context.push(templatePath(id)),
         onCreateTemplate: () => context.push(templateCreatePath),
         onDuplicateTemplate: (id) => context.push(templateCopyPath(id)),
+        onPickTemplateFile: pickJsonFile,
+        onImportTemplate: (values) =>
+            context.push(templateCreatePath, extra: values),
         onOpenTemplates: () => context.push(templateLibraryPath),
         onHome: () => context.go('/'),
       ),
@@ -89,6 +99,9 @@ List<RouteBase> reviewRoutes() => [
         onOpenTemplate: (id) => context.push(templatePath(id)),
         onCreateTemplate: () => context.push(templateCreatePath),
         onDuplicateTemplate: (id) => context.push(templateCopyPath(id)),
+        onPickTemplateFile: pickJsonFile,
+        onImportTemplate: (values) =>
+            context.push(templateCreatePath, extra: values),
         onHome: () => context.go('/'),
       ),
     ),
@@ -100,6 +113,9 @@ List<RouteBase> reviewRoutes() => [
         copyOfTemplateId: int.tryParse(
           state.uri.queryParameters[templateCopyParam] ?? '',
         ),
+        initialValues: state.uri.queryParameters.containsKey(templateCopyParam)
+            ? null
+            : importedTemplateValues(state.extra),
         onCreated: (id) => context.pushReplacement(templatePath(id)),
         onCancel: () => popOrGo(context, reviewsPath),
         onHome: () => context.go('/'),
@@ -113,6 +129,7 @@ List<RouteBase> reviewRoutes() => [
         templateId: int.parse(state.pathParameters['id']!),
         onBack: () => popOrGo(context, reviewsPath),
         onDuplicate: (id) => context.push(templateCopyPath(id)),
+        onSaveTemplateFile: saveFileBytes,
         onHome: () => context.go('/'),
       ),
     ),

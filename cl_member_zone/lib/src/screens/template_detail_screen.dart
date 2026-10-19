@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cl_club_evaluation/cl_club_evaluation.dart'
     show TemplateDetailView;
 import 'package:flutter/widgets.dart';
@@ -12,6 +14,7 @@ class TemplateDetailScreen extends StatelessWidget {
     required this.templateId,
     required this.onBack,
     required this.onDuplicate,
+    required this.onSaveTemplateFile,
     required this.onHome,
     super.key,
   });
@@ -26,6 +29,11 @@ class TemplateDetailScreen extends StatelessWidget {
   /// id.
   final ValueChanged<int> onDuplicate;
 
+  /// Saves an exported template file of this name and these bytes;
+  /// resolves to whether it was saved.
+  final Future<bool> Function(String fileName, Uint8List bytes)
+  onSaveTemplateFile;
+
   /// Leaves a refused route for home.
   final VoidCallback onHome;
 
@@ -38,6 +46,7 @@ class TemplateDetailScreen extends StatelessWidget {
       templateId: templateId,
       onBack: onBack,
       onDuplicate: onDuplicate,
+      onSaveTemplateFile: onSaveTemplateFile,
     ),
   );
 }

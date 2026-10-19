@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEvaluationTemplatesMasterProvider, evaluationsProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
@@ -16,7 +18,9 @@ import '../widgets/template_detail_body.dart';
 /// an evaluation uses (`inUse`) opens with its layout read-only and an
 /// explanation; renaming stays open. Should it come into use after it was
 /// read, the server's `TEMPLATE_IN_USE` refusal turns it read-only the same
-/// way. **Duplicate** hands the template to [onDuplicate]; **Delete** is
+/// way. **Duplicate** hands the template to [onDuplicate]; **Export**
+/// saves it as a JSON file through [onSaveTemplateFile], in use or not
+/// (club_client#27); **Delete** is
 /// always shown, disabled while in use, and leaves through [onBack] once
 /// done. Open to coaches and admins.
 ///
@@ -28,6 +32,7 @@ class TemplateDetailView extends ConsumerWidget {
     required this.templateId,
     required this.onBack,
     required this.onDuplicate,
+    required this.onSaveTemplateFile,
     super.key,
   });
 
@@ -43,6 +48,11 @@ class TemplateDetailView extends ConsumerWidget {
   /// Opens the designer pre-filled with a copy of the template with this
   /// id.
   final ValueChanged<int> onDuplicate;
+
+  /// Saves an exported template file of this name and these bytes;
+  /// resolves to whether it was saved.
+  final Future<bool> Function(String fileName, Uint8List bytes)
+  onSaveTemplateFile;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -71,6 +81,7 @@ class TemplateDetailView extends ConsumerWidget {
           template: template,
           onDeleted: onBack,
           onDuplicate: () => onDuplicate(templateId),
+          onSaveFile: onSaveTemplateFile,
         );
       },
     );

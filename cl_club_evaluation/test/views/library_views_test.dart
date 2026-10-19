@@ -85,6 +85,8 @@ void main() {
             onOpenTemplate: opened.add,
             onCreateTemplate: () => created++,
             onDuplicateTemplate: (_) {},
+            onPickTemplateFile: () async => null,
+            onImportTemplate: (_) {},
           ),
         ),
       );
@@ -111,6 +113,8 @@ void main() {
             onOpenTemplate: (_) {},
             onCreateTemplate: () {},
             onDuplicateTemplate: (_) {},
+            onPickTemplateFile: () async => null,
+            onImportTemplate: (_) {},
           ),
         ),
       );
@@ -129,6 +133,8 @@ void main() {
             onOpenTemplate: (_) {},
             onCreateTemplate: () {},
             onDuplicateTemplate: (_) {},
+            onPickTemplateFile: () async => null,
+            onImportTemplate: (_) {},
           ),
         ),
       );
@@ -201,6 +207,7 @@ void main() {
             templateId: 1,
             onBack: () {},
             onDuplicate: (_) {},
+            onSaveTemplateFile: (_, _) async => true,
           ),
         ),
       );
@@ -235,6 +242,7 @@ void main() {
             templateId: 1,
             onBack: () {},
             onDuplicate: (_) {},
+            onSaveTemplateFile: (_, _) async => true,
           ),
         ),
       );
@@ -267,6 +275,7 @@ void main() {
             templateId: 1,
             onBack: () {},
             onDuplicate: (_) {},
+            onSaveTemplateFile: (_, _) async => true,
           ),
         ),
       );
@@ -294,6 +303,7 @@ void main() {
             templateId: 1,
             onBack: () {},
             onDuplicate: (_) {},
+            onSaveTemplateFile: (_, _) async => true,
           ),
         ),
       );

@@ -47,6 +47,7 @@ import 'package:cl_member_zone/cl_member_zone.dart'
         DashboardScreen,
         EventDetailsScreen,
         EventEnrolmentsScreen,
+        EventMarketingScreen,
         EventOccurencesAttendanceScreen,
         EventsCalendarScreen,
         EventsCampsNewScreen,
@@ -1029,6 +1030,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                   onHistory: () => GoRouter.of(
                     context,
                   ).push('/memberzone/audit-log/event/$eventId'),
+                  onOpenMarketing: () =>
+                      context.push('/memberzone/events/$eventId/marketing'),
                 ),
               );
             },
@@ -1151,6 +1154,24 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // poppable, else fall back to the event detail.
                   onBack: () => popOrGo(context, '/memberzone/events/$eventId'),
                   onOpenReview: (id) => context.push(reviewEditPath(id)),
+                ),
+              );
+            },
+          ),
+          // An event's Marketing page, from the link on its detail page
+          // (club_client#1).
+          GoRoute(
+            path: '/memberzone/events/:eventId/marketing',
+            pageBuilder: (context, state) {
+              final eventId = int.parse(state.pathParameters['eventId']!);
+              return NoTransitionPage(
+                child: EventMarketingScreen(
+                  eventId: eventId,
+                  onHome: () => context.go('/'),
+                  // Always show a back button (canPop() reads false inside the
+                  // shell pageBuilder even for pushed routes); pop when
+                  // poppable, else fall back to the event detail.
+                  onBack: () => popOrGo(context, '/memberzone/events/$eventId'),
                 ),
               );
             },

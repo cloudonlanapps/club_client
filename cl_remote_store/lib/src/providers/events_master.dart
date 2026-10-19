@@ -1,6 +1,7 @@
 import 'package:cl_remote_store/src/providers/client.dart';
 import 'package:cl_remote_store/src/providers/club_event_types.dart';
 import 'package:cl_remote_store/src/providers/current_user.dart';
+import 'package:cl_remote_store/src/providers/events_master_basic_marketing.dart';
 import 'package:cl_remote_store/src/providers/events_master_end_date.dart';
 import 'package:cl_remote_store/src/providers/events_master_lifecycle.dart';
 import 'package:cl_remote_store/src/providers/events_master_occurrences.dart';
@@ -33,7 +34,8 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
     with
         ClEventsOccurrenceMutations,
         ClEventsLifecycleMutations,
-        ClEventsEndDateMutations {
+        ClEventsEndDateMutations,
+        ClEventsBasicMarketingMutations {
   final _writes = WritesDuringLoad<int, Event>();
 
   @override

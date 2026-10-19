@@ -5,6 +5,7 @@ import 'club_identity_entries.dart';
 import 'credit_entries.dart';
 import 'event_entries.dart';
 import 'group_entries.dart';
+import 'marketing_entries.dart';
 import 'schedule_entries.dart';
 import 'user_entries.dart';
 import 'venue_entries.dart';
@@ -18,6 +19,7 @@ abstract final class FormDemoEntries {
     ...AccountEntries.all,
     ...UserEntries.all,
     ...EventEntries.all,
+    ...MarketingEntries.all,
     ...ScheduleEntries.all,
     ...CreditEntries.all,
     ...GroupEntries.all,

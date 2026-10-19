@@ -9,6 +9,9 @@ enum FormDemoGroup {
   /// Creating an event and its sections.
   events('Events'),
 
+  /// What an event's public page says about it.
+  marketing('Event marketing'),
+
   /// When an event runs.
   schedules('Schedules'),
 

@@ -22,6 +22,7 @@ export 'src/screens/credit_screen.dart' show CreditScreen;
 export 'src/screens/dashboard.dart' show DashboardScreen;
 export 'src/screens/event_details_screen.dart' show EventDetailsScreen;
 export 'src/screens/event_enrolments_screen.dart' show EventEnrolmentsScreen;
+export 'src/screens/event_marketing_screen.dart' show EventMarketingScreen;
 export 'src/screens/event_occurences_attendance_screen.dart'
     show EventOccurencesAttendanceScreen;
 export 'src/screens/events_calendar_screen.dart' show EventsCalendarScreen;

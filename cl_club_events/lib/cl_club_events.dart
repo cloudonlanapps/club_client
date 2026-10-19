@@ -51,9 +51,10 @@ export 'src/providers/public_highlights.dart' show publicHighlightsProvider;
 export 'src/utils/default_event_detail_copy.dart' show defaultEventDetailCopy;
 export 'src/utils/landing_event_selection.dart'
     show kMaxLandingEvents, selectLandingEvents;
-// Views
 export 'src/views/event_details_view.dart' show EventDetailsView;
 export 'src/views/event_enrolments_view.dart' show EventEnrolmentsView;
+// Views
+export 'src/views/event_marketing_view.dart' show EventMarketingView;
 export 'src/views/event_occurences_attendance_view.dart'
     show EventOccurencesAttendanceView;
 export 'src/views/events_calendar_view.dart' show EventsCalendarView;

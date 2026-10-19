@@ -11,6 +11,9 @@
 - Marketing date fields no longer overflow in a narrow column (#171).
 - Test fix: the archive workflow test waits for the page to redraw after
   Unarchive (#173).
+- A cancelled session no longer offers Attendance. From half an hour before
+  it starts, only a super-admin is offered Undo Cancel; a session cancelled
+  with its series offers nothing (#177).
 
 ## 1.0.0
 

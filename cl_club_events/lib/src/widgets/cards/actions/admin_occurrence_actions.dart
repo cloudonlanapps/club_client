@@ -1,4 +1,4 @@
-import 'package:cl_member_auth/cl_member_auth.dart';
+import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
@@ -6,30 +6,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart';
 
+import '../../../models/admin_occurrence_action.dart';
 import '../../../models/stale_version_message.dart';
+import '../../../utils/admin_occurrence_actions_for.dart';
 import '../../../utils/event_write_error_message.dart';
 import 'cancel_reason_dialog.dart';
 import 'manage_requests_dialog.dart';
 import 'occurrence_reschedule_dialog.dart';
 
-/// Resolves admin / coach / organizer actions for a single occurrence.
+/// The staff actions of a single occurrence, as [adminOccurrenceActionsFor]
+/// resolves them for the acting user, each wired to its call.
 ///
-/// Window-based gating against `DateTime.now()`:
-///
-/// - `< start − 30min`, scheduled / rescheduled: `[Reschedule, ⋮ {Cancel`
-///   `occurrence, Cancel series, Manage requests}]`
-/// - `< start − 30min`, cancelled: `[Undo Cancel]`
-/// - `start − 30min … start + 15d`: `[Attendance]` (both statuses)
-/// - `> start + 15d`: no actions (edit window closed)
-///
-/// A `rescheduled` occurrence is still a live day, so it gets the same
-/// management actions as a scheduled one — keyed by `originalStartTimeUtc` so a
-/// repeat reschedule moves the existing override, never the original slot.
-/// `completed` always renders no actions.
-///
-/// Attendance is offered to the event's staff (`canManageAttendance`); every
-/// other action to its organizer or an admin only (`canManageEvent`), as the
-/// server requires (club_core#146).
+/// Every action keys by `originalStartTimeUtc`, the occurrence's stable
+/// identity, so a repeat reschedule moves the existing override, never the
+/// original slot.
 ///
 /// Hosts the resolved actions and hands them to [builder] as a typed
 /// `List<ActionItem>` — the caller wraps them into an [EntityCard] via
@@ -57,114 +47,79 @@ class AdminOccurrenceActions extends ConsumerStatefulWidget {
 
 class AdminOccurrenceActionsState
     extends ConsumerState<AdminOccurrenceActions> {
-  String? _running;
+  /// The key of the action in flight, or `null`.
+  String? running;
 
   @override
   Widget build(BuildContext context) {
-    return widget.builder(context, _resolve());
+    return widget.builder(context, resolve());
   }
 
-  List<ActionItem> _resolve() {
+  /// The actions offered now, as [ActionItem]s.
+  List<ActionItem> resolve() {
     final actingUser = ref.watch(authStateProvider).valueOrNull;
     final event = ref
         .watch(clEventsMasterProvider)
         .valueOrNull?[widget.occurrence.eventId];
     if (actingUser == null || event == null) return const [];
-
-    final start = widget.occurrence.actualStartTimeUtc;
-    final end = widget.occurrence.actualEndTimeUtc;
-    final inSchedulingWindow = isInScheduleManagementWindow(start);
-    final inAttendanceWindow = canMarkAttendanceNow(
-      actingUser: actingUser,
-      effectiveStartTimeUtc: start,
-      effectiveEndTimeUtc: end,
-    );
-
-    if (inAttendanceWindow) {
-      if (!canManageAttendance(event, actingUser)) return const [];
-      return [
-        ActionItem(
-          label: 'Attendance',
-          onPressed: () => widget.onMarkAttendance(
-            widget.occurrence.eventId,
-            widget.occurrence.originalStartTimeUtc,
-          ),
-        ),
-      ];
-    }
-
-    if (!inSchedulingWindow) {
-      // Past the edit window — server rejects further mutations.
-      return const [];
-    }
-
-    // Reschedule, cancel, undo-cancel and request decisions are the
-    // organizer's or an admin's; an assigned coach's tier is attendance
-    // only (club_core#146).
-    if (!canManageEvent(event, actingUser)) return const [];
-
-    switch (widget.occurrence.status) {
-      // A rescheduled occurrence is still a live, future day — it offers the
-      // same management actions as a scheduled one (reschedule again, cancel,
-      // manage requests). Every action keys by `originalStartTimeUtc`, the
-      // occurrence's stable identity, so a repeat reschedule updates the
-      // existing override's effective start rather than the original slot.
-      case OccurrenceStatus.scheduled || OccurrenceStatus.rescheduled:
-        return _scheduledActions();
-
-      case OccurrenceStatus.cancelled:
-        return [
-          ActionItem(
-            label: 'Undo Cancel',
-            loading: _running == 'undo',
-            onPressed: _running != null
-                ? null
-                : () => _runAction('undo', _undoCancel),
-          ),
-        ];
-
-      case OccurrenceStatus.completed:
-        return const [];
-    }
-  }
-
-  List<ActionItem> _scheduledActions() {
     return [
-      ActionItem(
-        label: 'Reschedule',
-        icon: LucideIcons.calendarClock,
-        onPressed: _running == null ? _handleReschedule : null,
-      ),
-      ActionItem(
-        label: 'Cancel this occurrence',
-        icon: LucideIcons.calendarX,
-        destructive: true,
-        loading: _running == 'cancel-instance',
-        onPressed: _running != null
-            ? null
-            : () => _runAction('cancel-instance', _cancelInstance),
-      ),
-      ActionItem(
-        label: 'Cancel entire series',
-        icon: LucideIcons.calendarOff,
-        destructive: true,
-        loading: _running == 'cancel-series',
-        onPressed: _running != null
-            ? null
-            : () => _runAction('cancel-series', _cancelSeries),
-      ),
-      ActionItem(
-        label: 'Manage requests',
-        icon: LucideIcons.userCheck,
-        loading: _running == 'requests',
-        onPressed: _running != null
-            ? null
-            : () => _runAction('requests', handleManageRequests),
-      ),
+      for (final action in adminOccurrenceActionsFor(
+        occurrence: widget.occurrence,
+        event: event,
+        actingUser: actingUser,
+      ))
+        itemFor(action),
     ];
   }
 
-  Future<void> _cancelInstance() async {
+  /// The [ActionItem] of [action], wired to its call.
+  ActionItem itemFor(AdminOccurrenceAction action) => switch (action) {
+    AdminOccurrenceAction.attendance => ActionItem(
+      label: 'Attendance',
+      onPressed: () => widget.onMarkAttendance(
+        widget.occurrence.eventId,
+        widget.occurrence.originalStartTimeUtc,
+      ),
+    ),
+    AdminOccurrenceAction.reschedule => ActionItem(
+      label: 'Reschedule',
+      icon: LucideIcons.calendarClock,
+      onPressed: running == null ? handleReschedule : null,
+    ),
+    AdminOccurrenceAction.cancelOccurrence => ActionItem(
+      label: 'Cancel this occurrence',
+      icon: LucideIcons.calendarX,
+      destructive: true,
+      loading: running == 'cancel-instance',
+      onPressed: running != null
+          ? null
+          : () => runAction('cancel-instance', cancelInstance),
+    ),
+    AdminOccurrenceAction.cancelSeries => ActionItem(
+      label: 'Cancel entire series',
+      icon: LucideIcons.calendarOff,
+      destructive: true,
+      loading: running == 'cancel-series',
+      onPressed: running != null
+          ? null
+          : () => runAction('cancel-series', cancelSeries),
+    ),
+    AdminOccurrenceAction.manageRequests => ActionItem(
+      label: 'Manage requests',
+      icon: LucideIcons.userCheck,
+      loading: running == 'requests',
+      onPressed: running != null
+          ? null
+          : () => runAction('requests', handleManageRequests),
+    ),
+    AdminOccurrenceAction.undoCancel => ActionItem(
+      label: 'Undo Cancel',
+      loading: running == 'undo',
+      onPressed: running != null ? null : () => runAction('undo', undoCancel),
+    ),
+  };
+
+  Future<void> cancelInstance() async {
     final reason = await showDialog<String>(
       context: context,
       builder: (_) => const CancelReasonDialog(),
@@ -180,7 +135,7 @@ class AdminOccurrenceActionsState
         );
   }
 
-  Future<void> _cancelSeries() async {
+  Future<void> cancelSeries() async {
     final reason = await showDialog<String>(
       context: context,
       builder: (_) => const CancelReasonDialog(),
@@ -210,7 +165,7 @@ class AdminOccurrenceActionsState
     }
   }
 
-  Future<void> _undoCancel() async {
+  Future<void> undoCancel() async {
     await ref
         .read(clEventsMasterProvider.notifier)
         .undoCancelOccurrence(
@@ -220,7 +175,7 @@ class AdminOccurrenceActionsState
         );
   }
 
-  Future<void> _handleReschedule() async {
+  Future<void> handleReschedule() async {
     final rescheduled = await showShadDialog<bool>(
       context: context,
       builder: (_) => OccurrenceRescheduleDialog(occurrence: widget.occurrence),
@@ -261,11 +216,11 @@ class AdminOccurrenceActionsState
     );
   }
 
-  Future<void> _runAction(
+  Future<void> runAction(
     String key,
     Future<void> Function() run,
   ) async {
-    setState(() => _running = key);
+    setState(() => running = key);
     try {
       await run();
     } on StaleVersionException catch (e) {
@@ -287,7 +242,7 @@ class AdminOccurrenceActionsState
         ShadToast.destructive(description: Text(eventWriteErrorMessage(e))),
       );
     } finally {
-      if (mounted) setState(() => _running = null);
+      if (mounted) setState(() => running = null);
     }
   }
 }

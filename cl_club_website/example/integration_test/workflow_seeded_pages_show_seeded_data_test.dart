@@ -46,9 +46,6 @@ import 'package:cl_club_website/src/widgets/hero_section.dart'
     show HeroSection, HeroSectionState;
 import 'package:cl_club_website/src/widgets/history_content.dart'
     show HistoryContent;
-import 'package:cl_club_website/src/widgets/page_data_scaffold.dart'
-    show ErrorContent, LoadingContent;
-import 'package:cl_club_website/src/widgets/page_hero.dart' show PageHero;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show MediaUrlBuilder, clPublicClubInfoProvider, contactInfoProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -57,7 +54,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show MapEmbed, ThemedMarkdown;
+import 'package:ui_lib/src/widgets/content_page/page_hero.dart' show PageHero;
+import 'package:ui_lib/ui_lib.dart'
+    show ErrorContent, LoadingContent, MapEmbed, ThemedMarkdown;
 
 import '_helpers/capabilities.dart';
 import '_helpers/pump.dart';

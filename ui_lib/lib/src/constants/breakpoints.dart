@@ -10,6 +10,10 @@ abstract final class Breakpoints {
   /// Layout widths below this are treated as a single-column "mobile"
   /// layout.
   static const double mobileMaxWidth = 600;
+
+  /// A public content page (the website's pages, and the event page it
+  /// shares with the app) lays out for a phone below this width.
+  static const double contentPageMobileMaxWidth = 768;
 }
 
 /// Whether the current layout width is below [Breakpoints.mobileMaxWidth].

@@ -1,12 +1,14 @@
-import 'package:meta/meta.dart';
+import 'package:flutter/foundation.dart';
 
-import 'page_common.dart';
+import 'page_cta_data.dart';
+import 'page_empty_state_data.dart';
+import 'page_hero_data.dart';
+import 'page_section_header_data.dart';
 
 /// Unified page data for list pages (programs, camps, events, coaches,
 /// locations).
 ///
-/// Built from the site's own localised copy — see `site_copy.dart`. It used to
-/// be parsed from `/static/pages/*.json`.
+/// A host builds it from its own copy (the website from its ARB).
 /// - Programs: pastSection is null (ongoing, no past/active distinction)
 /// - Camps/One-offs: pastSection has value for past events section
 /// - Coaches/Locations: simpler pages using hero, activeSection, emptyState,
@@ -90,7 +92,7 @@ class PageData {
         other.cta == cta &&
         other.landingSection == landingSection &&
         other.errorTitle == errorTitle &&
-        _mapEquals(other.cardLabels, cardLabels);
+        mapEquals(other.cardLabels, cardLabels);
   }
 
   @override
@@ -104,12 +106,4 @@ class PageData {
     errorTitle,
     Object.hashAll(cardLabels.entries),
   );
-}
-
-bool _mapEquals(Map<String, String> a, Map<String, String> b) {
-  if (a.length != b.length) return false;
-  for (final key in a.keys) {
-    if (a[key] != b[key]) return false;
-  }
-  return true;
 }

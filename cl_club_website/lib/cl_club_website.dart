@@ -21,10 +21,8 @@ export 'src/models/site_config.dart'
         loadBundledContactInfo,
         siteConfigProvider;
 // The site's own copy, and the shapes the pages read it in.
-export 'src/page_content/event_detail_page_data.dart';
 export 'src/page_content/landing_page_data.dart';
-export 'src/page_content/page_common.dart';
-export 'src/page_content/page_data.dart';
+export 'src/page_content/not_found_labels.dart';
 export 'src/page_content/page_type.dart';
 export 'src/page_content/site_copy.dart';
 export 'src/providers/contact_fab_visibility.dart';
@@ -59,7 +57,6 @@ export 'src/widgets/club_logo.dart' show ClubLogo;
 export 'src/widgets/hero_section.dart' show heroThemeToggleTag;
 export 'src/widgets/inquiry_view.dart' show InquiryView;
 export 'src/widgets/not_found_page.dart' show NotFoundPage;
-export 'src/widgets/page_data_scaffold.dart' show CtaSection, PageDataContent;
 // Shared utilities (for navbar in app)
 export 'src/widgets/route_labels.dart' show routeLabel;
 export 'src/widgets/site_strings_gate.dart' show SiteStringsGate;

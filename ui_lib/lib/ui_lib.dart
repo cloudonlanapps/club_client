@@ -3,7 +3,7 @@
 // stays in `src/`; a test that needs one imports it from there.
 
 // Responsive layout breakpoints
-export 'src/constants/breakpoints.dart' show isMobileWidth;
+export 'src/constants/breakpoints.dart' show Breakpoints, isMobileWidth;
 // Evaluations (pure UI, no SDK / no Riverpod, #173): form-local types, the
 // answer input, the item editor, the layout editor, the template create
 // form, the fill body and the read-only body. The host adapts SDK models.
@@ -20,6 +20,13 @@ export 'src/models/evaluation_rating_scale.dart' show EvaluationRatingScale;
 export 'src/models/evaluation_rating_style.dart' show EvaluationRatingStyle;
 export 'src/models/evaluation_start_options.dart'
     show EvaluationStartChoice, EvaluationStartMember;
+// Content pages (pure UI, no Riverpod, no routes; club_client#157): the
+// page copy shapes a host fills from its own text.
+export 'src/models/page_cta_data.dart' show PageCtaData;
+export 'src/models/page_data.dart' show PageData;
+export 'src/models/page_empty_state_data.dart' show PageEmptyStateData;
+export 'src/models/page_hero_data.dart' show PageHeroData;
+export 'src/models/page_section_header_data.dart' show PageSectionHeaderData;
 // Theme
 export 'src/theme/custom_colors.dart'
     show FilmRollColorsExtension, darkCustomColors, lightCustomColors;
@@ -54,7 +61,12 @@ export 'src/widgets/cards/entity_image.dart' show EntityImage;
 export 'src/widgets/confirm_dialog.dart' show ConfirmDialog;
 export 'src/widgets/contact/email_contact.dart' show EmailContact;
 export 'src/widgets/contact/phone_contact.dart' show PhoneContact;
-// Content page hero
+// Content page layout: hero, sections, empty state and CTA (club_client#157)
+export 'src/widgets/content_page/error_content.dart' show ErrorContent;
+export 'src/widgets/content_page/loading_content.dart' show LoadingContent;
+export 'src/widgets/content_page/page_data_content.dart' show PageDataContent;
+export 'src/widgets/content_page/responsive_container.dart'
+    show ResponsiveContainer;
 export 'src/widgets/content_page_hero_section.dart' show ContentPageHeroSection;
 export 'src/widgets/credentialed_network_image.dart'
     show CredentialedNetworkImage;

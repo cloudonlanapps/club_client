@@ -11,10 +11,19 @@ import 'package:cl_club_events/cl_club_events.dart'
         EventDetailHighlightsLabels,
         EventDetailLabels,
         EventDetailOffersLabels,
-        EventDetailPackagesLabels;
+        EventDetailPackagesLabels,
+        EventDetailPageData;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show ClubHistoryData, ClubInfo, ClubValueCardData, EventType;
 import 'package:flutter/widgets.dart';
+import 'package:ui_lib/ui_lib.dart'
+    show
+        PageCtaData,
+        PageData,
+        PageEmptyStateData,
+        PageHeroData,
+        PageSectionHeaderData;
+
 import '../l10n/site_strings.dart';
 
 import 'contact/contact_form_labels.dart';
@@ -22,10 +31,8 @@ import 'contact/contact_info_labels.dart';
 import 'contact/contact_map_labels.dart';
 import 'contact/contact_page_labels.dart';
 import 'contact/contact_subject_options.dart';
-import 'event_detail_page_data.dart';
 import 'landing_page_data.dart';
-import 'page_common.dart';
-import 'page_data.dart';
+import 'not_found_labels.dart';
 import 'page_type.dart';
 
 export '../l10n/site_strings.dart' show SiteStrings;
@@ -95,6 +102,13 @@ class SiteCopy {
   // ══════════════════════════════════════════════════════════════════════════
   // CONTENT PAGES
   // ══════════════════════════════════════════════════════════════════════════
+
+  /// The copy of the listing page of the events of [type].
+  PageData listingPageData(EventType type) => pageData(switch (type) {
+    EventType.camp => PageType.learningCamps,
+    EventType.programme => PageType.trainingSessions,
+    EventType.oneOff => PageType.clubEvents,
+  });
 
   PageData pageData(PageType pageType) {
     switch (pageType) {

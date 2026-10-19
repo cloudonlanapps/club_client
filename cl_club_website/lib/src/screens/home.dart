@@ -1,16 +1,19 @@
 import 'dart:async';
 
 import 'package:cl_club_branding/cl_club_branding.dart' show ContactFab;
+import 'package:cl_club_events/cl_club_events.dart' show LandingEventsSection;
 import 'package:club_sdk_2/club_sdk_2.dart' show EventType;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 
+import '../page_content/site_copy.dart';
 import '../providers/contact_fab_visibility.dart';
 import '../providers/navbar_visibility.dart';
 import '../providers/scroll_direction.dart';
+import '../site/site_routes.dart';
 import '../widgets/hero_section.dart';
-import '../widgets/landing_events_section.dart';
 import '../widgets/page_meta_publisher.dart';
 import '../widgets/public_page_shell.dart';
 import '../widgets/scroll_animated_section.dart';
@@ -149,6 +152,7 @@ class LandingPageState extends ConsumerState<LandingPage> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.sizeOf(context).height;
+    final copy = SiteCopy.of(context);
 
     // The home page: titled with the club's name, and described as the site
     // was built.
@@ -179,7 +183,12 @@ class LandingPageState extends ConsumerState<LandingPage> {
                     scrollController: _scrollController,
                     builder: ({required isVisible}) => LandingEventsSection(
                       type: EventType.camp,
+                      pageData: copy.listingPageData(EventType.camp),
                       visible: isVisible,
+                      onSeeAll: () =>
+                          context.go(SiteRoutes.listing(EventType.camp)),
+                      onEventTap: (publicId) =>
+                          context.go(SiteRoutes.event(publicId)),
                     ),
                   ),
                 ),
@@ -192,7 +201,12 @@ class LandingPageState extends ConsumerState<LandingPage> {
                     scrollController: _scrollController,
                     builder: ({required isVisible}) => LandingEventsSection(
                       type: EventType.programme,
+                      pageData: copy.listingPageData(EventType.programme),
                       visible: isVisible,
+                      onSeeAll: () =>
+                          context.go(SiteRoutes.listing(EventType.programme)),
+                      onEventTap: (publicId) =>
+                          context.go(SiteRoutes.event(publicId)),
                     ),
                   ),
                 ),
@@ -205,7 +219,12 @@ class LandingPageState extends ConsumerState<LandingPage> {
                     scrollController: _scrollController,
                     builder: ({required isVisible}) => LandingEventsSection(
                       type: EventType.oneOff,
+                      pageData: copy.listingPageData(EventType.oneOff),
                       visible: isVisible,
+                      onSeeAll: () =>
+                          context.go(SiteRoutes.listing(EventType.oneOff)),
+                      onEventTap: (publicId) =>
+                          context.go(SiteRoutes.event(publicId)),
                     ),
                   ),
                 ),

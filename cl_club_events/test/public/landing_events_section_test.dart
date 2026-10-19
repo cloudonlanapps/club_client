@@ -1,6 +1,5 @@
-import 'package:cl_club_events/cl_club_events.dart' show PublicEventCard;
-import 'package:cl_club_website/src/l10n/site_strings.dart';
-import 'package:cl_club_website/src/widgets/landing_events_section.dart';
+import 'package:cl_club_events/cl_club_events.dart'
+    show LandingEventsSection, PublicEventCard;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clPublicEventsProvider;
 import 'package:cl_server_config/cl_server_config.dart';
@@ -9,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart'
+    show PageData, PageEmptyStateData, PageHeroData, PageSectionHeaderData;
 
 import 'support/public_events.dart';
 
@@ -30,15 +31,39 @@ Future<void> _pump(
         clPublicEventsProvider(type).overrideWith((ref) async => events),
       ],
       child: ShadApp(
-        home: SiteStringsScope(
-          strings: SiteStrings(const {}),
-          child: Scaffold(body: SingleChildScrollView(child: child)),
-        ),
+        home: Scaffold(body: SingleChildScrollView(child: child)),
       ),
     ),
   );
   await tester.pumpAndSettle();
 }
+
+/// A listing page's copy whose landing header reads as its own key, or none.
+PageData _page(String key, {bool header = true}) => PageData(
+  hero: const PageHeroData(title: 'listing'),
+  emptyState: const PageEmptyStateData(
+    iconName: 'sparkles',
+    title: 'empty',
+    description: 'empty',
+    buttonText: 'empty',
+  ),
+  landingSection: header
+      ? PageSectionHeaderData(
+          badge: '${key}LandingBadge',
+          title: '${key}LandingTitle',
+          description: '${key}LandingDescription',
+          buttonText: '${key}LandingButton',
+        )
+      : null,
+);
+
+LandingEventsSection _section(EventType type, PageData pageData) =>
+    LandingEventsSection(
+      type: type,
+      pageData: pageData,
+      onSeeAll: () {},
+      onEventTap: (_) {},
+    );
 
 List<String> _cardTitles(WidgetTester tester) => tester
     .widgetList<PublicEventCard>(find.byType(PublicEventCard))
@@ -52,7 +77,7 @@ void main() {
     ) async {
       await _pump(
         tester,
-        const LandingEventsSection(type: EventType.camp),
+        _section(EventType.camp, _page('camps')),
         type: EventType.camp,
         events: [
           testPublicEvent(
@@ -85,7 +110,7 @@ void main() {
     ) async {
       await _pump(
         tester,
-        const LandingEventsSection(type: EventType.programme),
+        _section(EventType.programme, _page('programs')),
         type: EventType.programme,
         events: [
           testPublicEvent(
@@ -118,7 +143,7 @@ void main() {
     ) async {
       await _pump(
         tester,
-        const LandingEventsSection(type: EventType.oneOff),
+        _section(EventType.oneOff, _page('oneOff')),
         type: EventType.oneOff,
         events: [
           testPublicEvent(type: EventType.oneOff, isPast: true),
@@ -127,6 +152,20 @@ void main() {
 
       expect(find.byType(PublicEventCard), findsNothing);
       expect(find.text('oneOffLandingTitle'), findsNothing);
+    });
+
+    testWidgets('Issue 157: with no landing header the fallback copy shows', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _section(EventType.camp, _page('camps', header: false)),
+        type: EventType.camp,
+        events: [testPublicEvent(publicId: 'c1', title: 'First')],
+      );
+
+      expect(_cardTitles(tester), ['First']);
+      expect(find.text('Upcoming Camps'), findsOneWidget);
     });
   });
 }

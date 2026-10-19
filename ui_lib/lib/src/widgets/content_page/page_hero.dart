@@ -1,21 +1,18 @@
-import 'package:cl_remote_store/cl_remote_store.dart'
-    show SiteMediaSlot, clPublicSiteMediaProvider;
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ui_lib/ui_lib.dart' show ContentPageHeroSection;
 
-import '../extensions/site_media_slot_bundled_asset.dart';
-import '../page_content/page_common.dart';
+import '../../models/page_hero_data.dart';
+import '../content_page_hero_section.dart';
 
-/// A page's hero: its [PageHeroData] in ui_lib's [ContentPageHeroSection].
+/// A page's hero: its [PageHeroData] in [ContentPageHeroSection].
 ///
-/// A page without an image of its own — every content page, and a venue
-/// without a photo — shows the site's default hero slot instead, so the
-/// badge, title and description never go with the picture.
-class PageHero extends ConsumerWidget {
+/// A page without an image of its own shows [fallbackImageUri] instead (a
+/// site's default hero), so the badge, title and description never go
+/// without a picture.
+class PageHero extends StatelessWidget {
   const PageHero({
     required this.data,
     super.key,
+    this.fallbackImageUri,
     this.topWidget,
     this.bottomWidget,
     this.useStampBadge = false,
@@ -25,6 +22,9 @@ class PageHero extends ConsumerWidget {
 
   /// The page's hero copy and optional image.
   final PageHeroData data;
+
+  /// Shown when [data] has no image of its own.
+  final String? fallbackImageUri;
 
   /// Shown above the badge / title (e.g., info cards for programmes).
   final Widget? topWidget;
@@ -42,17 +42,13 @@ class PageHero extends ConsumerWidget {
   final IconData? icon;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return ContentPageHeroSection(
       title: data.title,
       badge: data.badge,
       description: data.description,
       imageUri: data.imageUri,
-      fallbackImageUri:
-          ref
-              .watch(clPublicSiteMediaProvider(SiteMediaSlot.pageHeroDefault))
-              ?.uri ??
-          SiteMediaSlot.pageHeroDefault.bundledAsset,
+      fallbackImageUri: fallbackImageUri,
       topWidget: topWidget,
       bottomWidget: bottomWidget,
       useStampBadge: useStampBadge,

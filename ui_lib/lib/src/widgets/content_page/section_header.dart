@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ClubTextTheme, ThemedMarkdown;
 
-import '../page_content/page_common.dart';
+import '../../models/page_section_header_data.dart';
+import '../../theme/text_theme_extensions.dart';
+import '../markdown/themed_markdown.dart';
 
 /// Section header with badge, title, and description.
 class SectionHeader extends StatelessWidget {

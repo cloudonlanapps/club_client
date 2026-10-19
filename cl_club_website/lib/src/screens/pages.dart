@@ -2,7 +2,7 @@ import 'package:cl_club_events/cl_club_events.dart'
     show
         PublicEventCardGrid,
         PublicEventCardList,
-        PublicEventDetailContent,
+        PublicEventPage,
         PublicEventViewDates,
         publicEventByIdProvider,
         publicEventsByTypeProvider;
@@ -21,18 +21,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart'
+    show
+        ErrorContent,
+        LoadingContent,
+        PageData,
+        PageEmptyStateData,
+        PageHeroData;
 
 import '../models/site_config.dart';
-import '../page_content/page_common.dart';
-import '../page_content/page_data.dart';
 import '../page_content/page_type.dart';
 import '../page_content/site_copy.dart';
+import '../providers/page_hero_fallback_uri.dart';
 import '../site/site_routes.dart';
 import '../widgets/club_content_section.dart';
 import '../widgets/contact_content_section.dart';
 import '../widgets/not_found_page.dart';
 import '../widgets/page_data_scaffold.dart';
 import '../widgets/public_page_shell.dart';
+import '../widgets/site_page_data_content.dart';
 
 /// Learning Camps page - displays the club's camps.
 /// Shows active camps at the top and past camps below.
@@ -266,7 +273,7 @@ class ContactUsPage extends ConsumerWidget {
     return PublicPageShell(
       pageTitle: 'Contact Us',
       description: copy.strings.contactHeroDescription,
-      child: PageDataContent(
+      child: SitePageDataContent(
         pageData: copy.pageData(PageType.contactUs),
         activeContent: ContactContentSection(
           contactPageLabels: copy.contactLabels,
@@ -302,8 +309,7 @@ class EventDetailPage extends ConsumerWidget {
         if (event == null) {
           return NotFoundPage(notFoundKey: notFoundKey);
         }
-        final isProgram = event.event.type == EventType.programme;
-        final detailData = SiteCopy.of(context).eventDetail(
+        final copy = SiteCopy.of(context).eventDetail(
           event.type,
           badge: event.stamp,
           title: event.title,
@@ -315,16 +321,12 @@ class EventDetailPage extends ConsumerWidget {
         return PublicPageShell(
           pageTitle: event.title,
           description: event.tagline,
-          child: PageDataContent(
-            pageData: detailData.pageData,
-            heroLeftAlign: isProgram,
-            heroUseStampBadge: true,
-            useActiveSectionWrapper: false,
-            activeContent: PublicEventDetailContent(
-              event: event,
-              labels: detailData.labels,
-              onVenueTap: (publicId) => context.go(SiteRoutes.venue(publicId)),
-            ),
+          child: PublicEventPage(
+            event: event,
+            copy: copy,
+            heroFallbackImageUri: ref.watch(pageHeroFallbackUriProvider),
+            onVenueTap: (publicId) => context.go(SiteRoutes.venue(publicId)),
+            onNavigate: context.go,
           ),
         );
       },
@@ -377,7 +379,7 @@ class VenuePage extends ConsumerWidget {
         return PublicPageShell(
           pageTitle: venue.name,
           description: venue.address,
-          child: PageDataContent(
+          child: SitePageDataContent(
             pageData: pageData,
             heroIcon: LucideIcons.mapPin,
             useActiveSectionWrapper: false,

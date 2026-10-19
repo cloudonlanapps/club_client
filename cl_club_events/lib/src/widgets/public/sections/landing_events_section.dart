@@ -1,36 +1,42 @@
-import 'package:cl_club_events/cl_club_events.dart'
-    show
-        PublicEventsSection,
-        PublicEventsSectionError,
-        publicEventsByTypeProvider,
-        selectLandingEvents;
 import 'package:club_sdk_2/club_sdk_2.dart' show EventType;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:ui_lib/ui_lib.dart'
+    show Breakpoints, PageData, ResponsiveContainer;
 
-import '../page_content/landing_events_section_fallback.dart';
-import '../page_content/page_type.dart';
-import '../page_content/site_copy.dart';
-import '../site/site_routes.dart';
-import 'responsive_container.dart';
+import '../../../models/public/landing_events_section_fallback.dart';
+import '../../../providers/public_events_by_type.dart';
+import '../../../utils/landing_event_selection.dart';
+import 'public_events_section.dart';
+import 'public_events_section_error.dart';
 
-/// The landing page's section for one event type: its copy from the site's
-/// strings, the few events `selectLandingEvents` picks, and links to the full
-/// listing and each event's page.
+/// A landing page's section for one event type: its copy from [pageData]
+/// (the type's listing page), the few events `selectLandingEvents` picks,
+/// and links to the full listing and each event's page.
 ///
 /// Nothing shows while loading or when there is no live event of the type.
 class LandingEventsSection extends ConsumerWidget {
   const LandingEventsSection({
     required this.type,
+    required this.pageData,
+    required this.onSeeAll,
+    required this.onEventTap,
     this.visible = true,
     super.key,
   });
 
-  /// Narrower than this is laid out for a phone.
-  static const double mobileBreakpoint = 768;
-
+  /// The event type the section shows.
   final EventType type;
+
+  /// The copy of the type's listing page: its landing section header, card
+  /// labels and error title.
+  final PageData pageData;
+
+  /// Opens the type's full listing.
+  final VoidCallback onSeeAll;
+
+  /// Called with an event's public id when its card is tapped.
+  final ValueChanged<String> onEventTap;
 
   /// Whether the section has scrolled into view.
   final bool visible;
@@ -38,12 +44,9 @@ class LandingEventsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final split = ref.watch(publicEventsByTypeProvider(type));
-    final pageData = SiteCopy.of(context).pageData(switch (type) {
-      EventType.camp => PageType.learningCamps,
-      EventType.programme => PageType.trainingSessions,
-      EventType.oneOff => PageType.clubEvents,
-    });
-    final isMobile = MediaQuery.sizeOf(context).width < mobileBreakpoint;
+    final isMobile =
+        MediaQuery.sizeOf(context).width <
+        Breakpoints.contentPageMobileMaxWidth;
 
     return split.when(
       loading: () => const SizedBox.shrink(),
@@ -69,8 +72,8 @@ class LandingEventsSection extends ConsumerWidget {
             buttonText: header?.buttonText ?? fallback.buttonText,
             cardLabels: pageData.cardLabels,
             visible: visible,
-            onSeeAll: () => context.go(SiteRoutes.listing(type)),
-            onEventTap: (publicId) => context.go(SiteRoutes.event(publicId)),
+            onSeeAll: onSeeAll,
+            onEventTap: onEventTap,
           ),
         );
       },

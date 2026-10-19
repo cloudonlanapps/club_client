@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../page_content/page_common.dart';
+import '../page_content/not_found_labels.dart';
 import '../page_content/site_copy.dart';
 import 'public_page_shell.dart';
 

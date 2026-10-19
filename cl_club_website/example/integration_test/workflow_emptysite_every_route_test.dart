@@ -33,8 +33,6 @@ import 'package:cl_club_website/src/widgets/club_content_section.dart'
 import 'package:cl_club_website/src/widgets/hero_section.dart' show HeroSection;
 import 'package:cl_club_website/src/widgets/history_content.dart'
     show HistoryContent;
-import 'package:cl_club_website/src/widgets/page_data_scaffold.dart'
-    show EmptyStateSection, ErrorContent, LoadingContent;
 import 'package:cl_club_website/src/widgets/public_page_shell.dart'
     show PublicFooter;
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -45,6 +43,9 @@ import 'package:club_sdk_2/club_sdk_2.dart' show InquiryKind;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:ui_lib/src/widgets/content_page/empty_state_section.dart'
+    show EmptyStateSection;
+import 'package:ui_lib/ui_lib.dart' show ErrorContent, LoadingContent;
 
 import '_helpers/pump.dart';
 

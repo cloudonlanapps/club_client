@@ -35,6 +35,7 @@ export 'src/models/public/detail_labels/event_detail_offers_labels.dart'
     show EventDetailOffersLabels;
 export 'src/models/public/detail_labels/event_detail_packages_labels.dart'
     show EventDetailPackagesLabels;
+export 'src/models/public/event_detail_page_data.dart' show EventDetailPageData;
 export 'src/models/public/event_highlight.dart' show EventHighlight;
 export 'src/models/public/event_time_slot.dart' show EventTimeSlot;
 export 'src/models/public/highlight.dart' show Highlight;
@@ -47,6 +48,7 @@ export 'src/providers/public_event_by_id.dart' show publicEventByIdProvider;
 export 'src/providers/public_events_by_type.dart'
     show publicEventsByTypeProvider;
 export 'src/providers/public_highlights.dart' show publicHighlightsProvider;
+export 'src/utils/default_event_detail_copy.dart' show defaultEventDetailCopy;
 export 'src/utils/landing_event_selection.dart'
     show kMaxLandingEvents, selectLandingEvents;
 // Views
@@ -73,6 +75,7 @@ export 'src/widgets/my_events_section.dart' show MyEventsSection;
 // Public website widgets
 export 'src/widgets/public/detail/public_event_detail_content.dart'
     show PublicEventDetailContent;
+export 'src/widgets/public/detail/public_event_page.dart' show PublicEventPage;
 export 'src/widgets/public/public_event_card.dart' show PublicEventCard;
 export 'src/widgets/public/public_event_card_grid.dart'
     show PublicEventCardGrid;
@@ -84,6 +87,8 @@ export 'src/widgets/public/public_event_hero_card.dart'
     show PublicEventHeroCard;
 export 'src/widgets/public/public_event_info_cards.dart'
     show PublicEventInfoCards;
+export 'src/widgets/public/sections/landing_events_section.dart'
+    show LandingEventsSection;
 export 'src/widgets/public/sections/public_events_section.dart'
     show PublicEventsSection;
 export 'src/widgets/public/sections/public_events_section_error.dart'

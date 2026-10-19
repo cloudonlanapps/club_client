@@ -53,11 +53,11 @@ const _inAttendanceWindow = Duration(minutes: 10);
 /// Past the attendance edit window, open only to a super-admin.
 const _pastEditWindow = Duration(days: -20);
 
-Event _camp({DateTime? untilTimeUtc}) => Event(
+Event _camp({DateTime? untilTimeUtc, EventType type = EventType.camp}) => Event(
   id: _eventId,
   title: 'current camp',
   description: '',
-  type: EventType.camp,
+  type: type,
   visibility: Visibility.public,
   venueId: 1,
   startTimeUtc: _futureUtc(const Duration(days: 3)),
@@ -445,6 +445,53 @@ void main() {
           ),
         ),
         ['Undo Cancel'],
+      );
+    });
+  });
+
+  group('Issue 178: the actions follow the event type', () {
+    testWidgets('Issue 178: a programme ends from here instead of cancelling '
+        'its series', (tester) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrence(OccurrenceStatus.scheduled),
+          event: _camp(type: EventType.programme),
+        ),
+        [
+          'Reschedule',
+          'Cancel this occurrence',
+          'End programme from here',
+          'Manage requests',
+        ],
+      );
+    });
+
+    testWidgets('Issue 178: a one-off is called off, with no series and no '
+        'reschedule', (tester) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrence(OccurrenceStatus.scheduled),
+          event: _camp(type: EventType.oneOff),
+        ),
+        ['Call off', 'Manage requests'],
+      );
+    });
+
+    testWidgets('Issue 178: a camp keeps every action', (tester) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrence(OccurrenceStatus.scheduled),
+          event: _camp(),
+        ),
+        [
+          'Reschedule',
+          'Cancel this occurrence',
+          'Cancel entire series',
+          'Manage requests',
+        ],
       );
     });
   });

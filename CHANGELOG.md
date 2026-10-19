@@ -14,6 +14,10 @@
 - A cancelled session no longer offers Attendance. From half an hour before
   it starts, only a super-admin is offered Undo Cancel; a session cancelled
   with its series offers nothing (#177).
+- A session's actions follow its event type. A programme's session offers
+  End programme from here, which opens Adjust end date on the day before
+  it, in place of Cancel entire series. A one-off's session offers Call off
+  and Manage requests, with no series action and no Reschedule (#178).
 
 ## 1.0.0
 

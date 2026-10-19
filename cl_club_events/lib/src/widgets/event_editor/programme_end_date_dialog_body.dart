@@ -17,6 +17,7 @@ class ProgrammeEndDateDialogBody extends StatelessWidget {
     required this.event,
     required this.enabled,
     this.schedules,
+    this.proposedLastDay,
     super.key,
   });
 
@@ -31,6 +32,9 @@ class ProgrammeEndDateDialogBody extends StatelessWidget {
 
   /// Whether the form takes input: off while a save is in flight.
   final bool enabled;
+
+  /// The last day to open on instead of the programme's end, if any.
+  final DateTime? proposedLastDay;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +54,7 @@ class ProgrammeEndDateDialogBody extends StatelessWidget {
           resultOf: (day) =>
               programmeEndResultLine(event, day, schedules: schedules),
           enabled: enabled,
+          proposedLastDay: proposedLastDay,
         ),
       ),
     );

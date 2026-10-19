@@ -13,6 +13,12 @@ enum AdminOccurrenceAction {
   /// Cancel the camp from this occurrence on.
   cancelSeries,
 
+  /// End the programme from this occurrence on (terminate, or move its end).
+  endProgramme,
+
+  /// Call off a one-off: cancel its single occurrence.
+  callOff,
+
   /// Decide the event's pending enrollment requests.
   manageRequests,
 

@@ -105,11 +105,38 @@ String programmeEndDateLine(Event event, {List<EventSchedule>? schedules}) {
 DateTime? programmeEndDay(Event event, {List<EventSchedule>? schedules}) {
   final until = event.untilTimeUtc;
   if (until == null) return null;
+  return programmeLastDayBefore(event, until, schedules: schedules);
+}
+
+/// The last local day [event] runs on when it stops at [cutoffUtc]: the day
+/// of its last session before it, else the day before [cutoffUtc].
+DateTime programmeLastDayBefore(
+  Event event,
+  DateTime cutoffUtc, {
+  List<EventSchedule>? schedules,
+}) {
   final last =
-      programmeLastSessionBefore(event, until, schedules: schedules) ??
-      until.subtract(const Duration(days: 1));
+      programmeLastSessionBefore(event, cutoffUtc, schedules: schedules) ??
+      cutoffUtc.subtract(const Duration(days: 1));
   final local = last.toLocal();
   return DateTime(local.year, local.month, local.day);
+}
+
+/// The last day to propose for ending [event] from its session starting at
+/// [sessionStartUtc]: the day of its last session on an earlier day, so the
+/// session's day is the first it no longer runs on.
+DateTime programmeLastDayBeforeSession(
+  Event event,
+  DateTime sessionStartUtc, {
+  List<EventSchedule>? schedules,
+}) {
+  final local = sessionStartUtc.toLocal();
+  final dayStart = DateTime(local.year, local.month, local.day);
+  return programmeLastDayBefore(
+    event,
+    dayStart.toUtc(),
+    schedules: schedules,
+  );
 }
 
 /// The Adjust Schedule dialog's warning for a programme that has an end

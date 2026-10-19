@@ -7,9 +7,12 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart';
 
 import '../../../models/admin_occurrence_action.dart';
+import '../../../models/event_cancellation_messages.dart';
 import '../../../models/stale_version_message.dart';
 import '../../../utils/admin_occurrence_actions_for.dart';
 import '../../../utils/event_write_error_message.dart';
+import '../../../utils/programme_end_date.dart';
+import '../../event_editor/programme_end_date_dialog.dart';
 import 'cancel_reason_dialog.dart';
 import 'manage_requests_dialog.dart';
 import 'occurrence_reschedule_dialog.dart';
@@ -45,6 +48,9 @@ class AdminOccurrenceActions extends ConsumerStatefulWidget {
       AdminOccurrenceActionsState();
 }
 
+/// The label of [AdminOccurrenceAction.endProgramme].
+const String endProgrammeLabel = 'End programme from here';
+
 class AdminOccurrenceActionsState
     extends ConsumerState<AdminOccurrenceActions> {
   /// The key of the action in flight, or `null`.
@@ -68,56 +74,78 @@ class AdminOccurrenceActionsState
         event: event,
         actingUser: actingUser,
       ))
-        itemFor(action),
+        itemFor(action, event),
     ];
   }
 
-  /// The [ActionItem] of [action], wired to its call.
-  ActionItem itemFor(AdminOccurrenceAction action) => switch (action) {
-    AdminOccurrenceAction.attendance => ActionItem(
-      label: 'Attendance',
-      onPressed: () => widget.onMarkAttendance(
-        widget.occurrence.eventId,
-        widget.occurrence.originalStartTimeUtc,
-      ),
-    ),
-    AdminOccurrenceAction.reschedule => ActionItem(
-      label: 'Reschedule',
-      icon: LucideIcons.calendarClock,
-      onPressed: running == null ? handleReschedule : null,
-    ),
-    AdminOccurrenceAction.cancelOccurrence => ActionItem(
-      label: 'Cancel this occurrence',
-      icon: LucideIcons.calendarX,
-      destructive: true,
-      loading: running == 'cancel-instance',
-      onPressed: running != null
-          ? null
-          : () => runAction('cancel-instance', cancelInstance),
-    ),
-    AdminOccurrenceAction.cancelSeries => ActionItem(
-      label: 'Cancel entire series',
-      icon: LucideIcons.calendarOff,
-      destructive: true,
-      loading: running == 'cancel-series',
-      onPressed: running != null
-          ? null
-          : () => runAction('cancel-series', cancelSeries),
-    ),
-    AdminOccurrenceAction.manageRequests => ActionItem(
-      label: 'Manage requests',
-      icon: LucideIcons.userCheck,
-      loading: running == 'requests',
-      onPressed: running != null
-          ? null
-          : () => runAction('requests', handleManageRequests),
-    ),
-    AdminOccurrenceAction.undoCancel => ActionItem(
-      label: 'Undo Cancel',
-      loading: running == 'undo',
-      onPressed: running != null ? null : () => runAction('undo', undoCancel),
-    ),
-  };
+  /// The [ActionItem] of [action] on an occurrence of [event], wired to its
+  /// call.
+  ActionItem itemFor(AdminOccurrenceAction action, Event event) =>
+      switch (action) {
+        AdminOccurrenceAction.attendance => ActionItem(
+          label: 'Attendance',
+          onPressed: () => widget.onMarkAttendance(
+            widget.occurrence.eventId,
+            widget.occurrence.originalStartTimeUtc,
+          ),
+        ),
+        AdminOccurrenceAction.reschedule => ActionItem(
+          label: 'Reschedule',
+          icon: LucideIcons.calendarClock,
+          onPressed: running == null ? handleReschedule : null,
+        ),
+        AdminOccurrenceAction.cancelOccurrence => ActionItem(
+          label: 'Cancel this occurrence',
+          icon: LucideIcons.calendarX,
+          destructive: true,
+          loading: running == 'cancel-instance',
+          onPressed: running != null
+              ? null
+              : () => runAction('cancel-instance', cancelInstance),
+        ),
+        AdminOccurrenceAction.cancelSeries => ActionItem(
+          label: 'Cancel entire series',
+          icon: LucideIcons.calendarOff,
+          destructive: true,
+          loading: running == 'cancel-series',
+          onPressed: running != null
+              ? null
+              : () => runAction('cancel-series', cancelSeries),
+        ),
+        AdminOccurrenceAction.endProgramme => ActionItem(
+          label: endProgrammeLabel,
+          icon: LucideIcons.calendarOff,
+          destructive: true,
+          loading: running == 'end-programme',
+          onPressed: running != null
+              ? null
+              : () => runAction('end-programme', () => endProgramme(event)),
+        ),
+        AdminOccurrenceAction.callOff => ActionItem(
+          label: EventCancellationMessages.callOff,
+          icon: LucideIcons.calendarX,
+          destructive: true,
+          loading: running == 'cancel-instance',
+          onPressed: running != null
+              ? null
+              : () => runAction('cancel-instance', cancelInstance),
+        ),
+        AdminOccurrenceAction.manageRequests => ActionItem(
+          label: 'Manage requests',
+          icon: LucideIcons.userCheck,
+          loading: running == 'requests',
+          onPressed: running != null
+              ? null
+              : () => runAction('requests', handleManageRequests),
+        ),
+        AdminOccurrenceAction.undoCancel => ActionItem(
+          label: 'Undo Cancel',
+          loading: running == 'undo',
+          onPressed: running != null
+              ? null
+              : () => runAction('undo', undoCancel),
+        ),
+      };
 
   Future<void> cancelInstance() async {
     final reason = await showDialog<String>(
@@ -163,6 +191,32 @@ class AdminOccurrenceActionsState
         ),
       );
     }
+  }
+
+  /// Opens Adjust end date for the programme [event], on the last day
+  /// before this occurrence's: Save terminates it there, or moves the end
+  /// it has.
+  Future<void> endProgramme(Event event) async {
+    List<EventSchedule>? schedules;
+    try {
+      schedules = await ref.read(clEventSchedulesProvider(event.id).future);
+    } on Object catch (_) {
+      // The event then stands for its current schedule.
+      schedules = null;
+    }
+    if (!mounted) return;
+    await showShadDialog<void>(
+      context: context,
+      builder: (_) => ProgrammeEndDateDialog(
+        event: event,
+        schedules: schedules,
+        proposedLastDay: programmeLastDayBeforeSession(
+          event,
+          widget.occurrence.originalStartTimeUtc,
+          schedules: schedules,
+        ),
+      ),
+    );
   }
 
   Future<void> undoCancel() async {

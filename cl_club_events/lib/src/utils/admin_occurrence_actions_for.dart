@@ -8,7 +8,7 @@ import '../models/admin_occurrence_action.dart';
 ///
 /// | Occurrence | Before `start − 30min` | From `start − 30min` |
 /// |---|---|---|
-/// | scheduled / rescheduled | Reschedule, Cancel this occurrence, Cancel entire series, Manage requests | Attendance, until `end + 15d` (a super-admin: no end) |
+/// | scheduled / rescheduled | [scheduledActionsFor] the event's type, and Manage requests | Attendance, until `end + 15d` (a super-admin: no end) |
 /// | cancelled | Undo Cancel | Undo Cancel, a super-admin only |
 /// | completed | none | Attendance, as above |
 ///
@@ -59,10 +59,8 @@ List<AdminOccurrenceAction> adminOccurrenceActionsFor({
     // A rescheduled occurrence is still a live, future day: it offers the
     // same actions as a scheduled one, all keyed by `originalStartTimeUtc`.
     case OccurrenceStatus.scheduled || OccurrenceStatus.rescheduled:
-      return const [
-        AdminOccurrenceAction.reschedule,
-        AdminOccurrenceAction.cancelOccurrence,
-        AdminOccurrenceAction.cancelSeries,
+      return [
+        ...scheduledActionsFor(event.type),
         AdminOccurrenceAction.manageRequests,
       ];
     case OccurrenceStatus.cancelled || OccurrenceStatus.completed:
@@ -76,3 +74,26 @@ bool isCutOffBySeries(Event event, Occurrence occurrence) {
   final cutoff = event.untilTimeUtc;
   return cutoff != null && !occurrence.originalStartTimeUtc.isBefore(cutoff);
 }
+
+/// The actions on a live, future occurrence that change its schedule, as
+/// the server offers them for [type] (club_client#178):
+///
+/// - a camp: Reschedule, Cancel this occurrence, Cancel entire series;
+/// - a programme: Reschedule, Cancel this occurrence, End programme from
+///   here (a programme is terminated, never cancelled as a series);
+/// - a one-off: Call off. Its one occurrence is moved with the event's own
+///   reschedule, on its event page.
+List<AdminOccurrenceAction> scheduledActionsFor(EventType type) =>
+    switch (type) {
+      EventType.camp => const [
+        AdminOccurrenceAction.reschedule,
+        AdminOccurrenceAction.cancelOccurrence,
+        AdminOccurrenceAction.cancelSeries,
+      ],
+      EventType.programme => const [
+        AdminOccurrenceAction.reschedule,
+        AdminOccurrenceAction.cancelOccurrence,
+        AdminOccurrenceAction.endProgramme,
+      ],
+      EventType.oneOff => const [AdminOccurrenceAction.callOff],
+    };

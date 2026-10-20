@@ -1,7 +1,7 @@
 name: Task / chore
 description: Refactor, tooling, docs, dependency bump, or other maintenance work.
 title: "[Task]: "
-labels: ["type:task", "status:triage"]
+labels: ["status:triage"]
 body:
   - type: markdown
     attributes:

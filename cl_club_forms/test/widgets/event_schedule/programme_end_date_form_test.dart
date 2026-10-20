@@ -15,6 +15,7 @@ Future<ProgrammeEndDateFormState> _pump(
   WidgetTester tester, {
   required bool reasonRequired,
   DateTime? initialDay,
+  DateTime? proposedLastDay,
 }) async {
   tester.view.physicalSize = const Size(1000, 1600);
   tester.view.devicePixelRatio = 1;
@@ -27,6 +28,7 @@ Future<ProgrammeEndDateFormState> _pump(
           initialValues: {ProgrammeEndDateFormFields.lastDayId: initialDay},
           reasonRequired: reasonRequired,
           resultOf: (day) => 'Last session: day ${day.day}.',
+          proposedLastDay: proposedLastDay,
         ),
       ),
     ),
@@ -156,5 +158,23 @@ void main() {
     expect(r('  ', required: true), isNotNull);
     expect(r('  ', required: false), isNull);
     expect(r('x' * 501, required: false), isNotNull);
+  });
+
+  testWidgets('Issue 178: a proposed last day opens the field on it and is a '
+      'change from the end the programme has', (tester) async {
+    final state = await _pump(
+      tester,
+      reasonRequired: false,
+      initialDay: _day(9),
+      proposedLastDay: _day(4),
+    );
+
+    expect(state.lastDay, _day(4));
+    expect(find.text('Last session: day ${_day(4).day}.'), findsOneWidget);
+    expect(state.isDirty, isTrue);
+    expect(state.validate()?[ProgrammeEndDateFormFields.lastDayId], _day(4));
+
+    await _pick(tester, state, _day(9));
+    expect(state.isDirty, isFalse, reason: 'back on the end it has');
   });
 }

@@ -31,6 +31,7 @@ class ProgrammeEndDateDialog extends ConsumerStatefulWidget {
   const ProgrammeEndDateDialog({
     required this.event,
     this.schedules,
+    this.proposedLastDay,
     super.key,
   });
 
@@ -38,6 +39,9 @@ class ProgrammeEndDateDialog extends ConsumerStatefulWidget {
 
   /// The programme's schedules, when they could be read.
   final List<EventSchedule>? schedules;
+
+  /// The last day to open on instead of the end; saved without an edit.
+  final DateTime? proposedLastDay;
 
   /// The dialog's title.
   static const String title = 'Adjust end date';
@@ -188,6 +192,7 @@ class ProgrammeEndDateDialogState
           event: widget.event,
           schedules: widget.schedules,
           enabled: !saving,
+          proposedLastDay: widget.proposedLastDay,
         ),
       ),
     );

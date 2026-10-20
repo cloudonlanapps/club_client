@@ -11,6 +11,15 @@
 - Marketing date fields no longer overflow in a narrow column (#171).
 - Test fix: the archive workflow test waits for the page to redraw after
   Unarchive (#173).
+- A cancelled session no longer offers Attendance. From half an hour before
+  it starts, only a super-admin is offered Undo Cancel; a session cancelled
+  with its series offers nothing (#177).
+- A session's actions follow its event type. A programme's session offers
+  End programme from here, which opens Adjust end date on the day before
+  it, in place of Cancel entire series. A one-off's session offers Call off
+  and Manage requests, with no series action and no Reschedule (#178).
+- The review template library's Import button shows an import icon, not an
+  upload one (#179).
 
 ## 1.0.0
 

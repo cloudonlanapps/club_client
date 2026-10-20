@@ -58,7 +58,7 @@ class TemplateImportButtonState extends State<TemplateImportButton> {
   @override
   Widget build(BuildContext context) => ShadButton.outline(
     onPressed: picking ? null : import,
-    leading: const Icon(LucideIcons.upload),
+    leading: const Icon(LucideIcons.import),
     child: const Text(TemplateFileStrings.import),
   );
 }

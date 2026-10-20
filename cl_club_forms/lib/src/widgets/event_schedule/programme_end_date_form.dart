@@ -25,6 +25,7 @@ class ProgrammeEndDateForm extends StatefulWidget {
     required this.reasonRequired,
     required this.resultOf,
     this.enabled = true,
+    this.proposedLastDay,
     super.key,
   });
 
@@ -42,6 +43,12 @@ class ProgrammeEndDateForm extends StatefulWidget {
   /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
 
+  /// The day the Last day field opens on, when the host proposes one other
+  /// than the end the programme has (ending it from a session: the day
+  /// before it). The form is dirty while the chosen day differs from that
+  /// end, so a proposed day is saved without being edited.
+  final DateTime? proposedLastDay;
+
   @override
   State<ProgrammeEndDateForm> createState() => ProgrammeEndDateFormState();
 }
@@ -58,8 +65,11 @@ class ProgrammeEndDateFormState extends State<ProgrammeEndDateForm>
   DateTime? get initialDay =>
       widget.initialValues[ProgrammeEndDateFormFields.lastDayId] as DateTime?;
 
+  /// The day the field opens on: the proposed one, else the end.
+  DateTime? get openingDay => widget.proposedLastDay ?? initialDay;
+
   /// The day chosen now.
-  late DateTime? lastDay = initialDay;
+  late DateTime? lastDay = openingDay;
 
   /// The reason typed so far, trimmed.
   String get reason =>
@@ -93,7 +103,7 @@ class ProgrammeEndDateFormState extends State<ProgrammeEndDateForm>
     return ShadForm(
       key: formKey,
       initialValue: {
-        ProgrammeEndDateFormFields.lastDayId: initialDay,
+        ProgrammeEndDateFormFields.lastDayId: openingDay,
         ProgrammeEndDateFormFields.reasonId:
             widget.initialValues[ProgrammeEndDateFormFields.reasonId]
                 as String? ??
@@ -107,7 +117,7 @@ class ProgrammeEndDateFormState extends State<ProgrammeEndDateForm>
             required: true,
             field: CLDatePickerFormField(
               id: ProgrammeEndDateFormFields.lastDayId,
-              initialValue: initialDay,
+              initialValue: openingDay,
               enabled: widget.enabled,
               yearsBefore: 0,
               validator: ProgrammeEndDateFormValidators.lastDay,

@@ -32,17 +32,39 @@ Occurrence _occurrence(OccurrenceStatus status, {int version = 1}) {
   );
 }
 
-Event _camp() => Event(
+/// A cancelled or live occurrence starting [fromNow] from now (negative for
+/// one already started).
+Occurrence _occurrenceAt(Duration fromNow, OccurrenceStatus status) {
+  final start = DateTime.now().toUtc().add(fromNow);
+  return Occurrence(
+    eventId: _eventId,
+    originalStartTimeUtc: start,
+    actualStartTimeUtc: start,
+    actualEndTimeUtc: start.add(const Duration(hours: 1)),
+    status: status,
+    venueId: 1,
+  );
+}
+
+/// Inside the attendance window: 30 minutes before the start until 15 days
+/// after the end.
+const _inAttendanceWindow = Duration(minutes: 10);
+
+/// Past the attendance edit window, open only to a super-admin.
+const _pastEditWindow = Duration(days: -20);
+
+Event _camp({DateTime? untilTimeUtc, EventType type = EventType.camp}) => Event(
   id: _eventId,
   title: 'current camp',
   description: '',
-  type: EventType.camp,
+  type: type,
   visibility: Visibility.public,
   venueId: 1,
   startTimeUtc: _futureUtc(const Duration(days: 3)),
   endTimeUtc: _futureUtc(const Duration(days: 3, hours: 1)),
   organizerName: _organizer,
   coachNames: const [_assignedCoach],
+  untilTimeUtc: untilTimeUtc,
   createdAtUtc: DateTime.now().toUtc(),
   updatedAtUtc: DateTime.now().toUtc(),
 );
@@ -84,6 +106,15 @@ UserPrivate _adminUser() => UserPrivate(
   status: UserStatus.active,
   isSuperAdmin: false,
   roles: const UserRoles(isAdmin: true),
+  createdAtUtc: DateTime.now().toUtc(),
+);
+
+UserPrivate _superAdmin() => UserPrivate(
+  username: 'super_user',
+  displayName: 'Super User',
+  status: UserStatus.active,
+  isSuperAdmin: true,
+  roles: const UserRoles(),
   createdAtUtc: DateTime.now().toUtc(),
 );
 
@@ -138,10 +169,12 @@ Future<List<String>> _resolveLabels(
   WidgetTester tester,
   Occurrence occurrence, {
   UserPrivate? user,
+  Event? event,
 }) async => (await _resolveActions(
   tester,
   occurrence,
   user: user,
+  camp: event == null ? null : _StaticCampNotifier({_eventId: event}),
 )).map((a) => a.label).toList();
 
 void main() {
@@ -299,6 +332,166 @@ void main() {
       expect(
         await _resolveLabels(tester, _occurrence(OccurrenceStatus.cancelled)),
         ['Undo Cancel'],
+      );
+    });
+  });
+
+  group('Issue 177: a cancelled occurrence in the attendance window', () {
+    testWidgets('Issue 177: offers an admin nothing', (tester) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrenceAt(_inAttendanceWindow, OccurrenceStatus.cancelled),
+        ),
+        isEmpty,
+      );
+    });
+
+    testWidgets('Issue 177: offers the organizer nothing', (tester) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrenceAt(_inAttendanceWindow, OccurrenceStatus.cancelled),
+          user: _coach(_organizer),
+        ),
+        isEmpty,
+      );
+    });
+
+    testWidgets('Issue 177: offers a super-admin Undo Cancel only', (
+      tester,
+    ) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrenceAt(_inAttendanceWindow, OccurrenceStatus.cancelled),
+          user: _superAdmin(),
+        ),
+        ['Undo Cancel'],
+      );
+    });
+
+    testWidgets('Issue 177: offers a super-admin Undo Cancel after the edit '
+        'window too', (tester) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrenceAt(_pastEditWindow, OccurrenceStatus.cancelled),
+          user: _superAdmin(),
+        ),
+        ['Undo Cancel'],
+      );
+    });
+
+    testWidgets('Issue 177: a live occurrence there still offers Attendance', (
+      tester,
+    ) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrenceAt(_inAttendanceWindow, OccurrenceStatus.scheduled),
+        ),
+        ['Attendance'],
+      );
+    });
+  });
+
+  group('Issue 177: a slot cut off by a series cancellation', () {
+    testWidgets('Issue 177: offers no Undo Cancel before the attendance '
+        'window', (tester) async {
+      final occurrence = _occurrence(OccurrenceStatus.cancelled);
+      expect(
+        await _resolveLabels(
+          tester,
+          occurrence,
+          event: _camp(untilTimeUtc: occurrence.originalStartTimeUtc),
+        ),
+        isEmpty,
+      );
+    });
+
+    testWidgets('Issue 177: offers a super-admin no Undo Cancel in the '
+        'attendance window', (tester) async {
+      final occurrence = _occurrenceAt(
+        _inAttendanceWindow,
+        OccurrenceStatus.cancelled,
+      );
+      expect(
+        await _resolveLabels(
+          tester,
+          occurrence,
+          user: _superAdmin(),
+          event: _camp(
+            untilTimeUtc: occurrence.originalStartTimeUtc.subtract(
+              const Duration(days: 1),
+            ),
+          ),
+        ),
+        isEmpty,
+      );
+    });
+
+    testWidgets('Issue 177: a slot before the cutoff still offers Undo '
+        'Cancel', (tester) async {
+      final occurrence = _occurrence(OccurrenceStatus.cancelled);
+      expect(
+        await _resolveLabels(
+          tester,
+          occurrence,
+          event: _camp(
+            untilTimeUtc: occurrence.originalStartTimeUtc.add(
+              const Duration(days: 7),
+            ),
+          ),
+        ),
+        ['Undo Cancel'],
+      );
+    });
+  });
+
+  group('Issue 178: the actions follow the event type', () {
+    testWidgets('Issue 178: a programme ends from here instead of cancelling '
+        'its series', (tester) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrence(OccurrenceStatus.scheduled),
+          event: _camp(type: EventType.programme),
+        ),
+        [
+          'Reschedule',
+          'Cancel this occurrence',
+          'End programme from here',
+          'Manage requests',
+        ],
+      );
+    });
+
+    testWidgets('Issue 178: a one-off is called off, with no series and no '
+        'reschedule', (tester) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrence(OccurrenceStatus.scheduled),
+          event: _camp(type: EventType.oneOff),
+        ),
+        ['Call off', 'Manage requests'],
+      );
+    });
+
+    testWidgets('Issue 178: a camp keeps every action', (tester) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrence(OccurrenceStatus.scheduled),
+          event: _camp(),
+        ),
+        [
+          'Reschedule',
+          'Cancel this occurrence',
+          'Cancel entire series',
+          'Manage requests',
+        ],
       );
     });
   });

@@ -12,6 +12,7 @@ class ProfileAdminSections extends StatelessWidget {
   const ProfileAdminSections({
     required this.user,
     required this.isSuperAdmin,
+    this.viewerUsername,
     this.onRoleToggle,
     this.onStatusAction,
     this.onAdminResetPassword,
@@ -23,6 +24,10 @@ class ProfileAdminSections extends StatelessWidget {
 
   /// Whether the viewer is a super admin.
   final bool isSuperAdmin;
+
+  /// The signed-in viewer, whose own account is not offered Block, Mark as
+  /// Left or Delete.
+  final String? viewerUsername;
 
   /// Called when a role is toggled. If null, Roles is not shown.
   final void Function(Role role, {required bool selected})? onRoleToggle;
@@ -46,6 +51,7 @@ class ProfileAdminSections extends StatelessWidget {
           UserManagementSection(
             user: user,
             isSuperAdmin: isSuperAdmin,
+            viewerUsername: viewerUsername,
             onAdminResetPassword: onAdminResetPassword,
             onStatusAction: onStatusAction,
           ),

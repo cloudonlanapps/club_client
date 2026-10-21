@@ -18,6 +18,7 @@ class UserManagementSection extends StatelessWidget {
   const UserManagementSection({
     required this.user,
     required this.isSuperAdmin,
+    this.viewerUsername,
     this.onAdminResetPassword,
     this.onStatusAction,
     super.key,
@@ -25,6 +26,10 @@ class UserManagementSection extends StatelessWidget {
 
   final UserPrivate user;
   final bool isSuperAdmin;
+
+  /// The signed-in viewer: Block, Mark as Left and Delete are not offered
+  /// on their own account.
+  final String? viewerUsername;
   final VoidCallback? onAdminResetPassword;
   final ValueChanged<String>? onStatusAction;
 
@@ -32,7 +37,11 @@ class UserManagementSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
     final actions = onStatusAction != null
-        ? adminActionsFor(user, isSuperAdmin: isSuperAdmin)
+        ? adminActionsFor(
+            user,
+            isSuperAdmin: isSuperAdmin,
+            viewerUsername: viewerUsername,
+          )
         : const <UserAdminAction>[];
     final buttons = <Widget>[
       if (onAdminResetPassword != null)

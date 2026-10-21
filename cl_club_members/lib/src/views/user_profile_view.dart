@@ -164,6 +164,7 @@ class UserProfileView extends ConsumerWidget {
                       ProfileAdminSections(
                         user: user,
                         isSuperAdmin: viewerIsSuperAdmin,
+                        viewerUsername: viewer?.username,
                         onRoleToggle: onRoleToggle,
                         onStatusAction: onStatusAction,
                         onAdminResetPassword: onAdminResetPassword,
@@ -177,6 +178,7 @@ class UserProfileView extends ConsumerWidget {
                         user: user,
                         isMobile: isMobile,
                         isSuperAdmin: viewerIsSuperAdmin,
+                        viewerUsername: viewer?.username,
                         onResetPassword: onResetPassword,
                         onAdminResetPassword: onAdminResetPassword,
                         onStatusAction: onStatusAction,

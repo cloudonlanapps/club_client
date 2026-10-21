@@ -10,6 +10,7 @@ class ProfileActionsSection extends StatelessWidget {
     required this.user,
     required this.isMobile,
     required this.isSuperAdmin,
+    this.viewerUsername,
     this.onResetPassword,
     this.onAdminResetPassword,
     this.onStatusAction,
@@ -19,6 +20,10 @@ class ProfileActionsSection extends StatelessWidget {
   final UserPrivate user;
   final bool isMobile;
   final bool isSuperAdmin;
+
+  /// The signed-in viewer: Block, Mark as Left and Delete are not offered
+  /// on their own account.
+  final String? viewerUsername;
   final VoidCallback? onResetPassword;
   final VoidCallback? onAdminResetPassword;
   final ValueChanged<String>? onStatusAction;
@@ -26,7 +31,11 @@ class ProfileActionsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actions = onStatusAction != null
-        ? adminActionsFor(user, isSuperAdmin: isSuperAdmin)
+        ? adminActionsFor(
+            user,
+            isSuperAdmin: isSuperAdmin,
+            viewerUsername: viewerUsername,
+          )
         : const <UserAdminAction>[];
     final buttons = <Widget>[
       if (onResetPassword != null)

@@ -52,8 +52,9 @@ class UserAdminAction {
       'UserAdminAction(key: $key, label: $label, reason: $reason)';
 }
 
-/// The actions the server refuses on the super admin.
-const _superAdminProtected = {'block', 'markLeft', 'delete'};
+/// The actions the server refuses on the super admin, and that are not
+/// offered on the viewer's own account.
+const _protected = {'block', 'markLeft', 'delete'};
 
 /// The set of lifecycle actions the admin can apply to [user], in the order
 /// they should be presented.
@@ -62,10 +63,12 @@ const _superAdminProtected = {'block', 'markLeft', 'delete'};
 /// super admins only, Hard Delete. Every other status follows the standard
 /// lifecycle transition matrix, with Delete appended as the final action.
 /// On the super admin, Block, Mark as Left and Delete carry
-/// [superAdminProtectedReason].
+/// [superAdminProtectedReason]. On the viewer's own account
+/// ([viewerUsername]) they are not offered at all (club_client#225).
 List<UserAdminAction> adminActionsFor(
   UserPrivate user, {
   required bool isSuperAdmin,
+  String? viewerUsername,
 }) {
   if (user.deletedAtUtc != null) {
     return [
@@ -105,10 +108,16 @@ List<UserAdminAction> adminActionsFor(
       break;
   }
   actions.add(const UserAdminAction(key: 'delete', label: 'Delete'));
+  if (user.username == viewerUsername) {
+    return [
+      for (final action in actions)
+        if (!_protected.contains(action.key)) action,
+    ];
+  }
   if (!user.isSuperAdmin) return actions;
   return [
     for (final action in actions)
-      if (_superAdminProtected.contains(action.key))
+      if (_protected.contains(action.key))
         action.unavailable(superAdminProtectedReason)
       else
         action,

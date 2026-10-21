@@ -1,5 +1,7 @@
 import 'dart:developer' as developer;
 
+import 'package:cl_server_config/cl_server_config.dart'
+    show NetworkStatus, networkStatusProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,11 +15,27 @@ import 'token_storage.dart';
 ///
 /// `null`             → not logged in (show login form)
 /// `UserPrivate`      → logged in (show dashboard)
-/// `AsyncError`       → either a status blocker (pending/blocked/left) or a
-///                       transient error to surface in the UI.
+/// `AsyncError`       → either a status blocker (pending/blocked/left), a
+///                       [SessionRestoreUnreachable] while the stored
+///                       session cannot be checked, or a transient error to
+///                       surface in the UI.
 final authStateProvider = AsyncNotifierProvider<AuthNotifier, UserPrivate?>(
   AuthNotifier.new,
 );
+
+/// The stored session could not be restored because the server could not
+/// be reached; [error] is what the request failed with. The token and the
+/// saved credentials are kept, and the restore runs again once the network
+/// monitor sees the server back (#192).
+class SessionRestoreUnreachable implements Exception {
+  const SessionRestoreUnreachable(this.error);
+
+  /// The network failure or 5xx answer behind it.
+  final Object error;
+
+  @override
+  String toString() => 'SessionRestoreUnreachable: $error';
+}
 
 class AuthNotifier extends AsyncNotifier<UserPrivate?> {
   TokenStorage get storage => ref.read(tokenStorageProvider);
@@ -32,13 +50,31 @@ class AuthNotifier extends AsyncNotifier<UserPrivate?> {
 
   @override
   Future<UserPrivate?> build() async {
+    // A restore that could not reach the server tries again as soon as the
+    // network monitor sees the server back (#192).
+    ref.listen<NetworkStatus>(networkStatusProvider, (previous, next) {
+      if (next == NetworkStatus.online &&
+          previous != NetworkStatus.online &&
+          state.error is SessionRestoreUnreachable) {
+        ref.invalidateSelf();
+      }
+    });
     return restoreFromStoredSession();
   }
 
+  /// Signs in again from what this device stored: the session token, else
+  /// the saved credentials.
+  ///
+  /// Only the server's refusal clears what is stored. When the server
+  /// cannot be reached (no response, or a 5xx) the token and the saved
+  /// credentials are kept and the restore fails with
+  /// [SessionRestoreUnreachable]; it runs again once the server is back
+  /// (#192). A refused account (blocked, left, not found) clears everything
+  /// and is rethrown so the login view explains it.
   Future<UserPrivate?> restoreFromStoredSession() async {
     final session = await storage.read();
 
-    // Valid token — try using it directly.
+    // Valid token: try using it directly.
     if (session != null && !session.isExpired) {
       final client = await ref.read(clientProvider.future);
       try {
@@ -46,20 +82,18 @@ class AuthNotifier extends AsyncNotifier<UserPrivate?> {
         checkStatus(user);
         ref.read(tokenExpiryProvider.notifier).state = session.expiresAtUtc;
         return user;
-      } on SdkException catch (e) {
-        if (e.code == SdkErrorCode.accountBlocked ||
-            e.code == SdkErrorCode.userNotFound ||
-            e.code == SdkErrorCode.accountLeft) {
+      } on Exception catch (e) {
+        if (unreachable(e)) throw _unreachableRestore(e);
+        if (e is SdkException && accountRefusalCodes.contains(e.code)) {
           await _clearAll();
           rethrow;
         }
-        // Token rejected — fall through to credential-based re-login.
-      } on Object catch (_) {
-        // Token rejected — fall through to credential-based re-login.
+        // Token rejected: fall through to credential-based re-login.
       }
     }
 
-    // Token missing or expired — try re-login with saved credentials.
+    // Token missing, expired or rejected: try re-login with saved
+    // credentials.
     if (session != null) {
       await storage.clear();
       ref.invalidate(clientProvider);
@@ -82,11 +116,36 @@ class AuthNotifier extends AsyncNotifier<UserPrivate?> {
 
     try {
       return await _loginWithCredentials(saved.username, saved.password);
-    } on Object catch (_) {
-      // Re-login failed — clear everything and show login screen.
+    } on Exception catch (e) {
+      if (unreachable(e)) throw _unreachableRestore(e);
+      // The server refused the saved credentials: clear everything. A
+      // refused account is reported; anything else shows the login form.
       await _clearAll();
+      if (e is SdkException && accountRefusalCodes.contains(e.code)) rethrow;
       return null;
     }
+  }
+
+  /// Codes that refuse the account itself, not just the token or password.
+  static const Set<String> accountRefusalCodes = {
+    SdkErrorCode.accountBlocked,
+    SdkErrorCode.userNotFound,
+    SdkErrorCode.accountLeft,
+  };
+
+  /// Whether [error] says the server could not be reached rather than that
+  /// it refused: a failure with no response, or a 5xx answer.
+  static bool unreachable(Object error) => switch (error) {
+    ServerException(:final statusCode) => statusCode >= 500,
+    SdkException() => false,
+    _ => true,
+  };
+
+  SessionRestoreUnreachable _unreachableRestore(Object error) {
+    // A 5xx answer reaches no network callback; ask the monitor to look, so
+    // the network-failure screen and its retry follow the server.
+    ref.read(networkStatusProvider.notifier).checkNow();
+    return SessionRestoreUnreachable(error);
   }
 
   Future<void> login(String username, String password) async {

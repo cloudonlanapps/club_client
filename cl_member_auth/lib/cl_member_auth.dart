@@ -20,7 +20,8 @@ export 'src/permissions/event_permissions.dart'
     show canManageEnrollments, canManageEvent, userAllowedForEvents;
 // Providers
 export 'src/providers/api_http_client.dart' show apiHttpClientProvider;
-export 'src/providers/auth.dart' show AuthNotifier, authStateProvider;
+export 'src/providers/auth.dart'
+    show AuthNotifier, SessionRestoreUnreachable, authStateProvider;
 export 'src/providers/client.dart' show ClientNotifier, clientProvider;
 export 'src/providers/credential_storage.dart'
     show CredentialStorage, credentialStorageProvider;

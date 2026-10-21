@@ -2,6 +2,8 @@ import 'dart:developer' as developer;
 
 import 'package:cl_club_forms/cl_club_forms.dart'
     show LoginFormFields, LoginFormState;
+import 'package:cl_server_config/cl_server_config.dart'
+    show NetworkFailureScreen, NetworkStatus, networkStatusProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -186,6 +188,17 @@ class LoginViewState extends ConsumerState<LoginView> {
                 ? const LoadingIndicator(message: 'Redirecting…')
                 : panel,
             error: (error, _) {
+              // The stored session could not be checked: say the server
+              // cannot be reached; the restore runs again once it is back
+              // (#192).
+              if (error is SessionRestoreUnreachable) {
+                final status = ref.watch(networkStatusProvider);
+                return NetworkFailureScreen(
+                  status: status == NetworkStatus.online
+                      ? NetworkStatus.serverUnavailable
+                      : status,
+                );
+              }
               final code = error is SdkException ? error.code : null;
               if (code == SdkErrorCode.accountBlocked) {
                 return AccountBlockedView(onBack: resetAuth);

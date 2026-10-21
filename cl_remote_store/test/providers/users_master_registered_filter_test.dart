@@ -9,6 +9,7 @@ class _FakeUsersSource extends Fake implements UserSource {
   _FakeUsersSource(this.items);
 
   final List<UserInfo> items;
+  int registeredReads = 0;
 
   @override
   Future<PaginatedList<UserInfo>> getUsers({
@@ -22,12 +23,23 @@ class _FakeUsersSource extends Fake implements UserSource {
     String? sortBy,
     bool descending = false,
   }) async {
+    if (status == UserStatus.registered) registeredReads++;
+    final listed = [
+      for (final u in items)
+        if (status == null || u.status == status) u,
+    ];
     return PaginatedList<UserInfo>(
-      items: items,
-      total: items.length,
+      items: listed,
+      total: listed.length,
       offset: offset,
       limit: limit,
     );
+  }
+
+  @override
+  Future<UserInfo> reconsiderUser(String username, String reason) async {
+    final i = items.indexWhere((u) => u.username == username);
+    return items[i] = items[i].copyWith(status: UserStatus.registered);
   }
 }
 
@@ -82,6 +94,44 @@ void main() {
       );
       expect(map.containsKey('reg1'), isFalse);
       expect(map.containsKey('reg2'), isFalse);
+    },
+  );
+
+  test(
+    'Issue 233: after reconsiderUser the members master drops the user and '
+    'the registered list is refetched with them',
+    () async {
+      final users = _FakeUsersSource([
+        _u('active1', UserStatus.active),
+        _u('pending1', UserStatus.pending),
+      ]);
+      final container = ProviderContainer(
+        overrides: [
+          currentUserProvider.overrideWith((ref) => _admin()),
+          secureClientProvider.overrideWith((ref) async => _buildClient(users)),
+        ],
+      );
+      addTearDown(container.dispose);
+      final registered = container.listen(
+        clRegisteredUsersProvider,
+        (_, _) {},
+      );
+      addTearDown(registered.close);
+      await container.read(clUsersMasterProvider.future);
+      expect(await container.read(clRegisteredUsersProvider.future), isEmpty);
+      expect(users.registeredReads, 1);
+
+      await container
+          .read(clUsersMasterProvider.notifier)
+          .reconsiderUser('pending1', 'add a photo');
+
+      expect(
+        container.read(clUsersMasterProvider).requireValue.keys,
+        ['active1'],
+      );
+      final after = await container.read(clRegisteredUsersProvider.future);
+      expect(users.registeredReads, 2);
+      expect(after.map((u) => u.username), ['pending1']);
     },
   );
 }

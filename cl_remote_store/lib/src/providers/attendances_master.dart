@@ -7,6 +7,7 @@ import 'package:cl_remote_store/src/providers/my_attendances_master.dart';
 import 'package:cl_remote_store/src/providers/notifications_master.dart';
 import 'package:cl_remote_store/src/providers/pending_actions_master.dart';
 import 'package:cl_remote_store/src/providers/resource_version.dart';
+import 'package:cl_remote_store/src/utils/bump_attendance_version.dart';
 import 'package:cl_remote_store/src/utils/bump_credits_version.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -86,6 +87,7 @@ class ClAttendancesMasterNotifier
 
         // A mark charges credit (or, changing an uncharged record, may).
         bumpCreditsVersion(ref);
+        bumpAttendanceVersion(ref);
         for (final record in records) {
           ref.invalidate(
             clMyAttendancesMasterProvider((
@@ -115,6 +117,7 @@ class ClAttendancesMasterNotifier
       await future;
       // Clearing a charged mark refunds it.
       bumpCreditsVersion(ref);
+      bumpAttendanceVersion(ref);
 
       ref.invalidate(
         clMyAttendancesMasterProvider((
@@ -137,23 +140,8 @@ class ClAttendancesMasterNotifier
       );
       ref.invalidateSelf();
       await future;
-      crossInvalidateMember(username);
+      crossInvalidateMembers([username]);
     }, refetch: () => refetchAfterUncertainWrite([username]));
-  }
-
-  /// Approve multiple leave requests.
-  Future<void> approveLeaveBulk(List<String> usernames) {
-    return refetchIfWriteUncertain(() async {
-      final client = await ref.read(secureClientProvider.future);
-      await client.attendance.approveLeaveBulk(
-        key.eventId,
-        usernames,
-        key.occurrenceTimeUtc,
-      );
-      ref.invalidateSelf();
-      await future;
-      usernames.forEach(crossInvalidateMember);
-    }, refetch: () => refetchAfterUncertainWrite(usernames));
   }
 
   /// Reject a leave request.
@@ -171,27 +159,8 @@ class ClAttendancesMasterNotifier
       );
       ref.invalidateSelf();
       await future;
-      crossInvalidateMember(username);
+      crossInvalidateMembers([username]);
     }, refetch: () => refetchAfterUncertainWrite([username]));
-  }
-
-  /// Reject multiple leave requests.
-  Future<void> rejectLeaveBulk(
-    List<String> usernames, {
-    String? reason,
-  }) {
-    return refetchIfWriteUncertain(() async {
-      final client = await ref.read(secureClientProvider.future);
-      await client.attendance.rejectLeaveBulk(
-        key.eventId,
-        usernames,
-        key.occurrenceTimeUtc,
-        reason: reason,
-      );
-      ref.invalidateSelf();
-      await future;
-      usernames.forEach(crossInvalidateMember);
-    }, refetch: () => refetchAfterUncertainWrite(usernames));
   }
 
   // -- Cross-Invalidation -----------------------------------------------------
@@ -204,24 +173,29 @@ class ClAttendancesMasterNotifier
       ..invalidateSelf()
       ..invalidate(clEnrollmentsMasterProvider(key.eventId))
       ..invalidate(clEnrollmentRecordsMasterProvider(key.eventId));
-    usernames.forEach(crossInvalidateMember);
-    bumpCreditsVersion(ref);
+    crossInvalidateMembers(usernames);
   }
 
-  void crossInvalidateMember(String username) {
-    ref
-      ..invalidate(
+  /// Invalidate the occurrence record of each of [usernames] and the
+  /// notification feeds, then bump `creditsVersion` (club_client#238) and
+  /// `attendanceVersion` (club_client#232) once.
+  void crossInvalidateMembers(List<String> usernames) {
+    for (final username in usernames) {
+      ref.invalidate(
         clMyAttendancesMasterProvider((
           username: username,
           eventId: key.eventId,
           occurrenceTimeUtc: key.occurrenceTimeUtc,
         )),
-      )
+      );
+    }
+    ref
       // Approve/reject leave (or any future attendance correction)
       // resolves the matching attendance_correction pending action.
       ..invalidate(clPendingActionsMasterProvider)
       ..invalidate(clNotificationsMasterProvider);
     // An approved leave refunds a charged session; a rejected one charges.
     bumpCreditsVersion(ref);
+    bumpAttendanceVersion(ref);
   }
 }

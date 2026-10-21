@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -23,6 +25,9 @@ class FakeMyCredits extends Fake implements MyCreditsSource {
   final Map<String, List<CreditEntry>> entries = {};
   final List<String> calls = [];
 
+  /// When set, a statement page past the first waits for it to complete.
+  Completer<void>? laterPageGate;
+
   @override
   Future<List<CreditAccount>> listMyAccounts(
     String username, {
@@ -45,6 +50,7 @@ class FakeMyCredits extends Fake implements MyCreditsSource {
     int limit = 50,
   }) async {
     calls.add('entries($username, ${order?.name}, $offset, $limit)');
+    if (offset > 0) await laterPageGate?.future;
     final all = entries[username] ?? const <CreditEntry>[];
     final page = all.skip(offset).take(limit).toList();
     return PaginatedList(

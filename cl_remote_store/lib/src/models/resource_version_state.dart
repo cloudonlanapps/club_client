@@ -12,6 +12,7 @@ class ResourceVersionState {
     this.occurrencesVersion = 0,
     this.creditsVersion = 0,
     this.evaluationsVersion = 0,
+    this.attendanceVersion = 0,
   });
 
   factory ResourceVersionState.fromMap(Map<String, dynamic> map) {
@@ -19,6 +20,7 @@ class ResourceVersionState {
       occurrencesVersion: map['occurrencesVersion'] as int? ?? 0,
       creditsVersion: map['creditsVersion'] as int? ?? 0,
       evaluationsVersion: map['evaluationsVersion'] as int? ?? 0,
+      attendanceVersion: map['attendanceVersion'] as int? ?? 0,
     );
   }
 
@@ -40,15 +42,22 @@ class ResourceVersionState {
   /// refetch.
   final int evaluationsVersion;
 
+  /// Bumped by every attendance write: a mark, a clear, a leave request or
+  /// its cancellation, a leave decision (club_client#232), so the member's
+  /// attendance list and occurrences refetch.
+  final int attendanceVersion;
+
   ResourceVersionState copyWith({
     int? occurrencesVersion,
     int? creditsVersion,
     int? evaluationsVersion,
+    int? attendanceVersion,
   }) {
     return ResourceVersionState(
       occurrencesVersion: occurrencesVersion ?? this.occurrencesVersion,
       creditsVersion: creditsVersion ?? this.creditsVersion,
       evaluationsVersion: evaluationsVersion ?? this.evaluationsVersion,
+      attendanceVersion: attendanceVersion ?? this.attendanceVersion,
     );
   }
 
@@ -57,6 +66,7 @@ class ResourceVersionState {
       'occurrencesVersion': occurrencesVersion,
       'creditsVersion': creditsVersion,
       'evaluationsVersion': evaluationsVersion,
+      'attendanceVersion': attendanceVersion,
     };
   }
 
@@ -66,7 +76,8 @@ class ResourceVersionState {
   String toString() =>
       'ResourceVersionState(occurrencesVersion: $occurrencesVersion, '
       'creditsVersion: $creditsVersion, '
-      'evaluationsVersion: $evaluationsVersion)';
+      'evaluationsVersion: $evaluationsVersion, '
+      'attendanceVersion: $attendanceVersion)';
 
   @override
   bool operator ==(Object other) {
@@ -74,7 +85,8 @@ class ResourceVersionState {
     return other is ResourceVersionState &&
         other.occurrencesVersion == occurrencesVersion &&
         other.creditsVersion == creditsVersion &&
-        other.evaluationsVersion == evaluationsVersion;
+        other.evaluationsVersion == evaluationsVersion &&
+        other.attendanceVersion == attendanceVersion;
   }
 
   @override
@@ -82,5 +94,6 @@ class ResourceVersionState {
     occurrencesVersion,
     creditsVersion,
     evaluationsVersion,
+    attendanceVersion,
   );
 }

@@ -3,6 +3,7 @@ import 'package:cl_remote_store/src/providers/current_user.dart';
 import 'package:cl_remote_store/src/providers/manual_refresh.dart';
 import 'package:cl_remote_store/src/providers/notifications_master.dart';
 import 'package:cl_remote_store/src/providers/pending_actions_master.dart';
+import 'package:cl_remote_store/src/providers/registered_users.dart';
 import 'package:cl_remote_store/src/utils/fetch_all_pages.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
 import 'package:cl_remote_store/src/utils/writes_during_load.dart';
@@ -221,12 +222,19 @@ class ClUsersMasterNotifier extends AsyncNotifier<Map<String, UserInfo>> {
   ///
   /// Server transitions the user back to a state where they can act on the
   /// note and resubmit (SDK #376). [reason] is required.
+  ///
+  /// The user is then `registered`, which this master leaves out, so they
+  /// are removed from it and [clRegisteredUsersProvider] refetches
+  /// (club_client#233).
   Future<UserInfo> reconsiderUser(String username, String reason) async {
-    return statusMutation(
+    final updated = await statusMutation(
       username,
       expectedTo: UserStatus.registered,
       action: (client) => client.users.reconsiderUser(username, reason),
     );
+    removeLocally(username);
+    ref.invalidate(clRegisteredUsersProvider);
+    return updated;
   }
 
   /// Unblock a user (blocked -> active).
@@ -389,9 +397,12 @@ class ClUsersMasterNotifier extends AsyncNotifier<Map<String, UserInfo>> {
       return serverResult;
     } catch (e) {
       // Revert on failure, then reload a change that may have landed
-      // (club_core#138); the profile provider follows this master.
-      if (existing != null) {
-        replaceLocally(existing);
+      // (club_core#138); the profile provider follows this master. Only the
+      // status this call set is undone, on the user as they are now, so a
+      // change that completed meanwhile (a role) stays (club_client#235).
+      final now = state.valueOrNull?[username];
+      if (existing != null && now != null && now.status == expectedTo) {
+        replaceLocally(now.copyWith(status: existing.status));
       }
       if (writeMayHaveLanded(e)) ref.invalidateSelf();
       rethrow;

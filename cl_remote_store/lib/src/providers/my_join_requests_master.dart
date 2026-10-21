@@ -1,6 +1,5 @@
 import 'package:cl_remote_store/src/providers/client.dart';
 import 'package:cl_remote_store/src/providers/manual_refresh.dart';
-import 'package:cl_remote_store/src/providers/user_groups.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
 import 'package:cl_remote_store/src/utils/writes_during_load.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -56,13 +55,6 @@ class ClMyJoinRequestsMasterNotifier
   /// into local state.
   void replaceLocally(JoinRequest request) {
     final next = _writes.put(state.valueOrNull, request.id, request);
-    if (next == null) return;
-    state = AsyncData(next);
-    // When a request is approved (server-side, by admin) and the user
-    // is added to the group, the next view that re-reads
-    // `clUserGroupsProvider` should reflect that — invalidate to be safe.
-    if (request.status == JoinRequestStatus.approved) {
-      ref.invalidate(clUserGroupsProvider(arg));
-    }
+    if (next != null) state = AsyncData(next);
   }
 }

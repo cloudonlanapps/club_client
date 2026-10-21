@@ -28,10 +28,8 @@ class MyEventsListNotifier
 
   @override
   Future<List<AggregatedMyEvent>> build(MyEventsListFilter arg) async {
-    if (filter.selectedUsernames.isEmpty) return [];
-
     final aggregated = await ref.watch(
-      clMyEventsAggregatedProvider(filter.selectedUsernames).future,
+      clMyEventsAggregatedProvider(filter.username).future,
     );
 
     var results = aggregated.toList();

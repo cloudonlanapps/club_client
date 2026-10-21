@@ -21,6 +21,19 @@ void main() {
     expect(await load, {3: 'three', 2: 'renamed'});
   });
 
+  test('Issue 234: a replaceAll made during a load replaces its listing, '
+      'and later writes go over it', () async {
+    final writes = WritesDuringLoad<int, String>();
+    final gate = Completer<Map<int, String>>();
+
+    final load = writes.load(() => gate.future);
+    expect(writes.replaceAll({2: 'two'}), {2: 'two'});
+    writes.put(null, 3, 'three');
+    gate.complete({1: 'one'});
+
+    expect(await load, {2: 'two', 3: 'three'});
+  });
+
   test('Issue 137: a write made with no load in flight is not kept for the '
       'next load', () async {
     final writes = WritesDuringLoad<int, String>()..put(null, 2, 'stale');

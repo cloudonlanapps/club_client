@@ -4,6 +4,7 @@ import 'package:cl_remote_store/src/providers/manual_refresh.dart';
 import 'package:cl_remote_store/src/providers/notifications_master.dart';
 import 'package:cl_remote_store/src/utils/fetch_all_pages.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
+import 'package:cl_remote_store/src/utils/writes_during_load.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -29,8 +30,10 @@ clBroadcastsMasterProvider =
     );
 
 class ClBroadcastsMasterNotifier extends AsyncNotifier<Map<int, Broadcast>> {
+  final _writes = WritesDuringLoad<int, Broadcast>();
+
   @override
-  Future<Map<int, Broadcast>> build() async {
+  Future<Map<int, Broadcast>> build() => _writes.load(() async {
     final currentUser = ref.watch(currentUserProvider);
     if (currentUser == null || !currentUser.isCoachOrAdmin) {
       return const <int, Broadcast>{};
@@ -39,7 +42,7 @@ class ClBroadcastsMasterNotifier extends AsyncNotifier<Map<int, Broadcast>> {
     final client = await ref.watch(secureClientProvider.future);
     final items = await fetchAllPages(client.broadcasts.listBroadcasts);
     return {for (final b in items) b.id: b};
-  }
+  });
 
   Future<void> refresh() async {
     state = const AsyncLoading();
@@ -138,11 +141,7 @@ class ClBroadcastsMasterNotifier extends AsyncNotifier<Map<int, Broadcast>> {
   }
 
   void _replaceLocally(Broadcast b) {
-    final current = state.valueOrNull;
-    if (current == null) {
-      state = AsyncData({b.id: b});
-      return;
-    }
-    state = AsyncData({...current, b.id: b});
+    final next = _writes.put(state.valueOrNull, b.id, b);
+    if (next != null) state = AsyncData(next);
   }
 }

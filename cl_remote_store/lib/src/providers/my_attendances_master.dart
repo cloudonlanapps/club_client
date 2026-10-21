@@ -1,6 +1,7 @@
 import 'package:cl_remote_store/src/providers/attendances_master.dart';
 import 'package:cl_remote_store/src/providers/client.dart';
 import 'package:cl_remote_store/src/providers/manual_refresh.dart';
+import 'package:cl_remote_store/src/utils/bump_attendance_version.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -93,6 +94,7 @@ class ClMyAttendancesMasterNotifier
           occurrenceTimeUtc: key.occurrenceTimeUtc,
         )),
       );
+    bumpAttendanceVersion(ref);
   }
 
   /// Re-reads the member's record after a leave mutation and invalidates
@@ -101,7 +103,7 @@ class ClMyAttendancesMasterNotifier
   /// The mutation has already succeeded, so a failed re-read does not throw:
   /// it lands in [state] as an [AsyncError], which the occurrence actions
   /// show as a reload (club_core#139). The staff register is invalidated
-  /// either way.
+  /// and `attendanceVersion` bumped either way.
   Future<void> refetchAndCrossInvalidate() async {
     try {
       final client = await ref.read(secureClientProvider.future);
@@ -119,6 +121,7 @@ class ClMyAttendancesMasterNotifier
           occurrenceTimeUtc: key.occurrenceTimeUtc,
         )),
       );
+      bumpAttendanceVersion(ref);
     }
   }
 }

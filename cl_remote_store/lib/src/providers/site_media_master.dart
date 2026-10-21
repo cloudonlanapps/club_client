@@ -2,6 +2,7 @@ import 'package:cl_remote_store/src/providers/client.dart';
 import 'package:cl_remote_store/src/providers/current_user.dart';
 import 'package:cl_remote_store/src/providers/manual_refresh.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
+import 'package:cl_remote_store/src/utils/writes_during_load.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -29,16 +30,21 @@ clSiteMediaMasterProvider =
     );
 
 class ClSiteMediaMasterNotifier extends AsyncNotifier<Map<String, MediaRef>> {
+  final _writes = WritesDuringLoad<String, MediaRef>();
+
   @override
   Future<Map<String, MediaRef>> build() async {
-    ref.watch(clManualRefreshProvider);
-    final currentUser = ref.watch(currentUserProvider);
-    if (currentUser == null || !currentUser.isSuperAdmin) {
-      return const <String, MediaRef>{};
-    }
-    final client = await ref.watch(secureClientProvider.future);
-    final info = await client.public.getPublicClubInfo();
-    return Map<String, MediaRef>.unmodifiable(info.siteMedia);
+    final slots = await _writes.load(() async {
+      ref.watch(clManualRefreshProvider);
+      final currentUser = ref.watch(currentUserProvider);
+      if (currentUser == null || !currentUser.isSuperAdmin) {
+        return const <String, MediaRef>{};
+      }
+      final client = await ref.watch(secureClientProvider.future);
+      final info = await client.public.getPublicClubInfo();
+      return info.siteMedia;
+    });
+    return Map<String, MediaRef>.unmodifiable(slots);
   }
 
   /// Write [slots] as the whole `site_media` map. A 422
@@ -50,7 +56,9 @@ class ClSiteMediaMasterNotifier extends AsyncNotifier<Map<String, MediaRef>> {
       await client.admin.setPreference(siteMediaPreferenceKey, {
         for (final entry in slots.entries) entry.key: entry.value.uuid,
       });
-      state = AsyncData(Map<String, MediaRef>.unmodifiable(slots));
+      state = AsyncData(
+        Map<String, MediaRef>.unmodifiable(_writes.replaceAll(slots)),
+      );
     }, refetch: ref.invalidateSelf);
   }
 

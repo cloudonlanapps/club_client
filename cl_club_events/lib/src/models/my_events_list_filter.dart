@@ -4,13 +4,13 @@ import 'package:flutter/foundation.dart';
 @immutable
 class MyEventsListFilter {
   const MyEventsListFilter({
-    this.selectedUsernames = const {},
+    required this.username,
     this.searchTerm,
     this.includePast = false,
   });
 
-  /// Usernames to include in the filter.
-  final Set<String> selectedUsernames;
+  /// The member whose events are listed.
+  final String username;
 
   /// Text search term applied to event title and description.
   final String? searchTerm;
@@ -19,12 +19,12 @@ class MyEventsListFilter {
   final bool includePast;
 
   MyEventsListFilter copyWith({
-    Set<String>? selectedUsernames,
+    String? username,
     String? Function()? searchTerm,
     bool? includePast,
   }) {
     return MyEventsListFilter(
-      selectedUsernames: selectedUsernames ?? this.selectedUsernames,
+      username: username ?? this.username,
       searchTerm: searchTerm != null ? searchTerm() : this.searchTerm,
       includePast: includePast ?? this.includePast,
     );
@@ -32,7 +32,7 @@ class MyEventsListFilter {
 
   @override
   String toString() {
-    return 'MyEventsListFilter(selectedUsernames: $selectedUsernames, '
+    return 'MyEventsListFilter(username: $username, '
         'searchTerm: $searchTerm, includePast: $includePast)';
   }
 
@@ -40,15 +40,11 @@ class MyEventsListFilter {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is MyEventsListFilter &&
-        setEquals(other.selectedUsernames, selectedUsernames) &&
+        other.username == username &&
         other.searchTerm == searchTerm &&
         other.includePast == includePast;
   }
 
   @override
-  int get hashCode => Object.hash(
-    Object.hashAllUnordered(selectedUsernames),
-    searchTerm,
-    includePast,
-  );
+  int get hashCode => Object.hash(username, searchTerm, includePast);
 }

@@ -98,9 +98,8 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             clMyEventsAggregatedProvider.overrideWith(
-              (ref, usernames) async => [
-                for (final e in _all)
-                  AggregatedMyEvent(event: e, enrollments: const []),
+              (ref, username) async => [
+                for (final e in _all) AggregatedMyEvent(event: e),
               ],
             ),
           ],
@@ -109,7 +108,7 @@ void main() {
 
         final listed = await container.read(
           myEventsListProvider(
-            const MyEventsListFilter(selectedUsernames: {member}),
+            const MyEventsListFilter(username: member),
           ).future,
         );
 

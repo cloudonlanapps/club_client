@@ -13,8 +13,9 @@ typedef ClMyOccurrencesKey = ({
 
 /// Read-only provider for a member's occurrences within a date range.
 ///
-/// Watches `occurrencesVersion` from [clResourceVersionProvider] and
-/// refetches when any occurrence mutation bumps the version.
+/// Watches `occurrencesVersion` and `attendanceVersion` from
+/// [clResourceVersionProvider] and refetches when an occurrence mutation or
+/// an attendance write bumps either.
 final AutoDisposeFutureProviderFamily<List<Occurrence>, ClMyOccurrencesKey>
 clMyOccurrencesProvider = FutureProvider.autoDispose
     .family<List<Occurrence>, ClMyOccurrencesKey>(
@@ -22,6 +23,9 @@ clMyOccurrencesProvider = FutureProvider.autoDispose
         ref
           ..watch(
             clResourceVersionProvider.select((s) => s.occurrencesVersion),
+          )
+          ..watch(
+            clResourceVersionProvider.select((s) => s.attendanceVersion),
           )
           ..watch(clManualRefreshProvider);
         final client = await ref.read(secureClientProvider.future);

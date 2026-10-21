@@ -6,8 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Fetches attendance records for a user within a date range.
 ///
-/// Watches [clResourceVersionProvider] occurrencesVersion to rebuild
-/// when attendance-related mutations occur.
+/// Watches [clResourceVersionProvider] `occurrencesVersion` and
+/// `attendanceVersion`, so it refetches after an occurrence change or any
+/// attendance write.
 /// Returns a list of [MyAttendanceRecord] sorted by occurrence time.
 final AutoDisposeFutureProviderFamily<
   List<MyAttendanceRecord>,
@@ -22,6 +23,9 @@ clMyAttendanceListProvider = FutureProvider.autoDispose
         ref
           ..watch(
             clResourceVersionProvider.select((s) => s.occurrencesVersion),
+          )
+          ..watch(
+            clResourceVersionProvider.select((s) => s.attendanceVersion),
           )
           ..watch(clManualRefreshProvider);
         final client = await ref.read(secureClientProvider.future);

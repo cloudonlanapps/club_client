@@ -7,6 +7,7 @@ import 'package:cl_remote_store/src/providers/my_attendances_master.dart';
 import 'package:cl_remote_store/src/providers/notifications_master.dart';
 import 'package:cl_remote_store/src/providers/pending_actions_master.dart';
 import 'package:cl_remote_store/src/providers/resource_version.dart';
+import 'package:cl_remote_store/src/utils/bump_attendance_version.dart';
 import 'package:cl_remote_store/src/utils/bump_credits_version.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -86,6 +87,7 @@ class ClAttendancesMasterNotifier
 
         // A mark charges credit (or, changing an uncharged record, may).
         bumpCreditsVersion(ref);
+        bumpAttendanceVersion(ref);
         for (final record in records) {
           ref.invalidate(
             clMyAttendancesMasterProvider((
@@ -115,6 +117,7 @@ class ClAttendancesMasterNotifier
       await future;
       // Clearing a charged mark refunds it.
       bumpCreditsVersion(ref);
+      bumpAttendanceVersion(ref);
 
       ref.invalidate(
         clMyAttendancesMasterProvider((
@@ -174,7 +177,8 @@ class ClAttendancesMasterNotifier
   }
 
   /// Invalidate the occurrence record of each of [usernames] and the
-  /// notification feeds, then bump `creditsVersion` once (club_client#238).
+  /// notification feeds, then bump `creditsVersion` (club_client#238) and
+  /// `attendanceVersion` (club_client#232) once.
   void crossInvalidateMembers(List<String> usernames) {
     for (final username in usernames) {
       ref.invalidate(
@@ -192,5 +196,6 @@ class ClAttendancesMasterNotifier
       ..invalidate(clNotificationsMasterProvider);
     // An approved leave refunds a charged session; a rejected one charges.
     bumpCreditsVersion(ref);
+    bumpAttendanceVersion(ref);
   }
 }

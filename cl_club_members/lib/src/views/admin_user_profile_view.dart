@@ -17,6 +17,7 @@ class AdminUserProfileView extends ConsumerWidget {
     this.eventsSection,
     this.onReview,
     this.onBack,
+    this.onBroadcast,
     this.onHistory,
     this.onOpenReview,
     super.key,
@@ -36,6 +37,10 @@ class AdminUserProfileView extends ConsumerWidget {
 
   final VoidCallback? onBack;
 
+  /// Opens the one-to-one Broadcast screen for this user (admin-only
+  /// affordance, club_client#252).
+  final VoidCallback? onBroadcast;
+
   /// Opens this user's audit history (admin-only affordance, issue #207).
   final VoidCallback? onHistory;
 
@@ -53,6 +58,7 @@ class AdminUserProfileView extends ConsumerWidget {
       targetUsername: targetUsername,
       eventsSection: eventsSection,
       onBack: onBack,
+      onBroadcast: onBroadcast,
       onHistory: onHistory,
       onOpenReview: onOpenReview,
       onBioSave: isAdmin

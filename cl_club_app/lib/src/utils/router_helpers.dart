@@ -1,3 +1,5 @@
+import 'package:cl_remote_store/cl_remote_store.dart'
+    show BroadcastScope, BroadcastScopeKind;
 import 'package:club_sdk_2/club_sdk_2.dart' show EventType;
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
@@ -41,3 +43,41 @@ Page<void> notFoundPage(BuildContext context) => NoTransitionPage(
     onHome: () => context.go('/'),
   ),
 );
+
+/// The Broadcast screen's route (club_client#252): one route, the audience
+/// as its filter. No filter is all members.
+const String broadcastRoute = '/memberzone/broadcast';
+
+/// The Broadcast screen's URL for [scope]: [broadcastRoute] with `?group=`,
+/// `?event=` or `?member=`.
+String broadcastPath(BroadcastScope scope) {
+  final query = switch (scope.kind) {
+    BroadcastScopeKind.all => null,
+    BroadcastScopeKind.group => 'group=${scope.id}',
+    BroadcastScopeKind.event => 'event=${scope.id}',
+    BroadcastScopeKind.member =>
+      'member=${Uri.encodeQueryComponent(scope.username!)}',
+  };
+  return query == null ? broadcastRoute : '$broadcastRoute?$query';
+}
+
+/// The audience a Broadcast screen URL filters on ([broadcastPath]), or
+/// `null` when the filter cannot be read: an id that is not a number, an
+/// empty member, or more than one filter.
+BroadcastScope? broadcastScopeFrom(Map<String, String> query) {
+  final group = query['group'];
+  final event = query['event'];
+  final member = query['member'];
+  final filters = [group, event, member].whereType<String>().length;
+  if (filters == 0) return const BroadcastScope.all();
+  if (filters > 1) return null;
+  if (group != null) {
+    final id = int.tryParse(group);
+    return id == null ? null : BroadcastScope.group(id);
+  }
+  if (event != null) {
+    final id = int.tryParse(event);
+    return id == null ? null : BroadcastScope.event(id);
+  }
+  return member!.isEmpty ? null : BroadcastScope.member(member);
+}

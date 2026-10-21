@@ -34,9 +34,6 @@ abstract final class MemberWriteMessages {
   /// Cancelling a group join request.
   static const cancelRequestFailed = 'Could not cancel the request.';
 
-  /// Sending a message to a group.
-  static const sendMessageFailed = 'Could not send the message. Try again.';
-
   /// Creating a user.
   static const createUserFailed = 'Could not create user.';
 

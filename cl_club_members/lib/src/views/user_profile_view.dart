@@ -35,6 +35,7 @@ class UserProfileView extends ConsumerWidget {
     this.onResetPassword,
     this.onAdminResetPassword,
     this.onBack,
+    this.onBroadcast,
     this.onHistory,
     this.onOpenReview,
     super.key,
@@ -73,6 +74,11 @@ class UserProfileView extends ConsumerWidget {
   final VoidCallback? onAdminResetPassword;
 
   final VoidCallback? onBack;
+
+  /// Opens the one-to-one Broadcast screen for this member. The title-row
+  /// affordance is shown only to an admin viewing another active member
+  /// (club_client#252).
+  final VoidCallback? onBroadcast;
 
   /// Opens this user's audit history. The title-row affordance is shown only
   /// to admin viewers (issue #207).
@@ -120,6 +126,11 @@ class UserProfileView extends ConsumerWidget {
                   ? 'Profile — ${user.displayName}'
                   : 'Profile',
               onBack: onBack,
+              // The server delivers a broadcast to active members only.
+              onBroadcast:
+                  viewerIsAdmin && !isSelf && user.status == UserStatus.active
+                  ? onBroadcast
+                  : null,
               onHistory: viewerIsAdmin ? onHistory : null,
             ),
             const Divider(height: 1),

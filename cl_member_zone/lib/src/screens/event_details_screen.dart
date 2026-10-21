@@ -24,6 +24,7 @@ class EventDetailsScreen extends ConsumerWidget {
     this.onMemberTap,
     this.onPublicProfileTap,
     this.onBack,
+    this.onBroadcast,
     this.onHistory,
     this.onOpenMarketing,
     super.key,
@@ -53,6 +54,10 @@ class EventDetailsScreen extends ConsumerWidget {
   /// Supplied by the router so the view's back button visibility matches
   /// how the screen was reached.
   final VoidCallback? onBack;
+
+  /// Opens the Broadcast screen for this event's members (admin-only
+  /// affordance, club_client#252).
+  final VoidCallback? onBroadcast;
 
   /// Opens the event's audit history (admin-only affordance, issue #207).
   final VoidCallback? onHistory;
@@ -93,6 +98,7 @@ class EventDetailsScreen extends ConsumerWidget {
               onMemberTap: onMemberTap,
               onPublicProfileTap: onPublicProfileTap,
               onBack: onBack,
+              onBroadcast: onBroadcast,
               onHistory: onHistory,
               onDeleted: onDeleted,
               onOpenMarketing: onOpenMarketing,

@@ -14,6 +14,7 @@ class AdminGroupProfileScreen extends ConsumerWidget {
     required this.onHome,
     this.sourceNotificationId,
     this.onBack,
+    this.onBroadcast,
     this.onHistory,
     super.key,
   });
@@ -24,6 +25,9 @@ class AdminGroupProfileScreen extends ConsumerWidget {
   final VoidCallback onOpenAllMembers;
   final VoidCallback onDeleted;
   final VoidCallback? onBack;
+
+  /// Opens the Broadcast screen for this page's audience (club_client#252).
+  final VoidCallback? onBroadcast;
   final VoidCallback? onHistory;
 
   /// Goes to the dashboard from a refusal. Supplied by the router.
@@ -41,6 +45,7 @@ class AdminGroupProfileScreen extends ConsumerWidget {
         onOpenAllMembers: onOpenAllMembers,
         onDeleted: onDeleted,
         onBack: onBack,
+        onBroadcast: onBroadcast,
         onHistory: onHistory,
       ),
     );

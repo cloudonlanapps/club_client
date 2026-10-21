@@ -14,7 +14,7 @@ class AdminQuickActionsStrip extends StatelessWidget {
     required this.onCreateUser,
     required this.onCreateGroup,
     required this.onCreateEvent,
-    required this.onAnnouncement,
+    required this.onBroadcast,
     required this.eventTypes,
     super.key,
   });
@@ -22,7 +22,7 @@ class AdminQuickActionsStrip extends StatelessWidget {
   final VoidCallback onCreateUser;
   final VoidCallback onCreateGroup;
   final ValueChanged<EventType> onCreateEvent;
-  final VoidCallback onAnnouncement;
+  final VoidCallback onBroadcast;
 
   /// The event types the club runs.
   final Set<EventType> eventTypes;
@@ -58,9 +58,9 @@ class AdminQuickActionsStrip extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: QuickActionTile(
-              icon: LucideIcons.megaphone,
-              label: 'Announcement',
-              onTap: onAnnouncement,
+              icon: LucideIcons.messageSquare,
+              label: 'Broadcast',
+              onTap: onBroadcast,
             ),
           ),
         ],

@@ -26,6 +26,7 @@ class EventDetailsView extends ConsumerWidget {
     this.onMemberTap,
     this.onPublicProfileTap,
     this.onBack,
+    this.onBroadcast,
     this.onHistory,
     this.onDeleted,
     this.onOpenMarketing,
@@ -42,6 +43,11 @@ class EventDetailsView extends ConsumerWidget {
   /// read-only (non-admin) preview, so the host can open the public profile.
   final ValueChanged<String>? onPublicProfileTap;
   final VoidCallback? onBack;
+
+  /// Opens the Broadcast screen for this event's members. The title-row
+  /// affordance is shown only to admins, on an active event
+  /// (club_client#252).
+  final VoidCallback? onBroadcast;
 
   /// Opens the event's audit history. The title-row affordance is shown only
   /// to admins (issue #207).
@@ -76,6 +82,9 @@ class EventDetailsView extends ConsumerWidget {
             TitleRow(
               title: event.title,
               onBack: onBack,
+              onBroadcast: currentUser.isAdmin && event.isActive
+                  ? onBroadcast
+                  : null,
               onHistory: currentUser.isAdmin ? onHistory : null,
             ),
             const Divider(height: 1),

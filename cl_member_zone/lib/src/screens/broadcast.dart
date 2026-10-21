@@ -1,19 +1,25 @@
 import 'package:cl_member_auth/cl_member_auth.dart';
+import 'package:cl_remote_store/cl_remote_store.dart' show BroadcastScope;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../theme/layout_constants.dart';
-import '../widgets/panels/broadcast_panel_body.dart';
+import '../views/broadcast_view.dart';
 
-/// Full-width Broadcast screen reachable from the admin dashboard's
-/// Announcement quick action. Hosts [BroadcastPanelBody] in its screen
-/// presentation (all broadcasts, scrollable, Close button next to Send).
+/// The one Broadcast screen, at `/memberzone/broadcast`, for every audience
+/// (club_client#252). The router builds [scope] from the route's filter
+/// (none: all members; `?group=`, `?event=`, `?member=`) and the message
+/// icon of the dashboard, a group, an event or a member's profile opens it.
+/// Admin only.
 class BroadcastScreen extends ConsumerWidget {
   const BroadcastScreen({
+    required this.scope,
     required this.onClose,
     required this.onHome,
     super.key,
   });
+
+  /// The audience the screen sends to and lists.
+  final BroadcastScope scope;
 
   final VoidCallback onClose;
   final VoidCallback onHome;
@@ -23,10 +29,9 @@ class BroadcastScreen extends ConsumerWidget {
     return RoleGate(
       allow: RoleGate.admin,
       onHome: onHome,
-      builder: (_) => Padding(
-        padding: LayoutConstants.contentPadding,
-        child: BroadcastPanelBody(onClose: onClose),
-      ),
+      onBack: onClose,
+      builder: (user) =>
+          BroadcastView(currentUser: user, scope: scope, onClose: onClose),
     );
   }
 }

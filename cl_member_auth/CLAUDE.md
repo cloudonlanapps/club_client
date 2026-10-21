@@ -58,6 +58,14 @@ Views (`LoginView`, `SignupView`, `ForgotPasswordView`, `ChangePasswordView`) re
 | `clientProvider` | `AsyncNotifierProvider<ClientNotifier, SecureClient>` | Authenticated SDK client, auto-configured from stored session |
 | `tokenStorageProvider` | `Provider<TokenStorage>` | SharedPreferences-backed session persistence |
 
+### Widgets and types
+
+| Symbol | Purpose |
+|--------|---------|
+| `RoleGate` | Screen gate by role: loader while the member is unknown, `AccessDeniedView` when `allow` refuses, else `builder(currentUser)`. Helpers `RoleGate.admin`, `.coachOrAdmin`, `.superAdmin` (club_client#203) |
+| `AccessDeniedView` | The one "Access Denied" page a screen shows when its gate refuses |
+| `SessionRestoreUnreachable` | The error a session restore fails with when the server cannot be reached; stored session and credentials are kept (club_client#192) |
+
 ### AuthNotifier Actions
 
 | Method | Purpose |
@@ -213,7 +221,11 @@ restoreFromStoredSession()
          +--> Status: pending --> clear token, throw AccountPendingException
          +--> Status: blocked --> clear token, throw AccountBlockedException
          +--> Status: left    --> clear token, throw UserNotFoundException
-         +--> Network/auth error --> clear token, return null
+         +--> Refused (blocked / left / not found) --> clear everything, rethrow
+         +--> Network failure or 5xx --> keep token and saved credentials,
+                fail with SessionRestoreUnreachable (the login view shows the
+                network-failure screen); restore runs again when
+                networkStatusProvider goes back online (club_client#192)
 ```
 
 ## Status Handling

@@ -253,8 +253,7 @@ Routes are defined in `cl_club_app/lib/src/router.dart` (`routerProvider`). Each
 
 Each screen:
 
-- Watches `authStateProvider` from `cl_member_auth` to obtain the current user.
-- Performs status / role / relationship gating using helpers from `cl_member_auth` (`userAllowedForEvents`, `myEventsAccessProvider`, `onboardingGateAllows`, …) and renders `AccessDeniedView` (or `ErrorView` with `tone: ErrorTone.neutral`) from `ui_lib` when the gate fails.
+- Gates by role with `RoleGate` from `cl_member_auth` (`allow: (user) => …`, `onHome`, `builder: (currentUser) => View(...)`; helpers `RoleGate.admin`, `.coachOrAdmin`, `.superAdmin`): it shows a loader while the member is unknown, `AccessDeniedView` when `allow` refuses, and otherwise builds the view with `currentUser` (club_client#203). A gate that is not a role (a relationship, the screen's own data, an onboarding status: `userAllowedForEvents`, `myEventsAccessProvider`, `onboardingGateAllows`, …) keeps its own check and refuses with `AccessDeniedView` (cl_member_auth), never a hand-written "Access Denied" `ErrorView`.
 - Forwards `currentUser` and any path / navigation parameters to a same-named view in the underlying feature package.
 
 Each public view in a feature package takes `required UserPrivate currentUser` so role-aware UI can rely on a non-null user. Views never watch `authStateProvider` themselves.
@@ -265,7 +264,7 @@ Each domain shell — `AuthShell`, `OnboardingShell`, `MemberZoneShell` — wrap
 
 ## No Hardcoded Routes in Sub-Packages
 
-Only `cl_club_app` (which owns the GoRouter) constructs route strings. `cl_member_zone`, `cl_club_events`, `cl_club_members`, `cl_club_venues`, and any future feature module **must not** call `context.push` / `context.go` / `context.pop` with a hardcoded path, or `GoRouter.of(context).push/go(...)` with a hardcoded path. Navigation is expressed as callback parameters on screens and views (`onEventTap(int eventId)`, `onCreateNew()`, `onBack()`, …) and supplied by the router. Screens forward callbacks down to their wrapped views unchanged.
+Only `cl_club_app` (which owns the GoRouter) constructs route strings. `cl_member_zone`, `cl_club_events`, `cl_club_members`, `cl_club_venues`, and any future feature module **must not** call `context.push` / `context.go` / `context.pop` with a hardcoded path, or `GoRouter.of(context).push/go(...)` with a hardcoded path. Navigation is expressed as callback parameters on screens and views (`onEventTap(int eventId)`, `onCreateNew()`, `onBack()`, …) and supplied by the router. Screens forward callbacks down to their wrapped views unchanged. The member-zone sidebar names its entries with `SidebarDestination`; the router maps each to a route (`memberZoneSidebarRoute`) and passes the current location (club_client#204).
 
 **Route navigation via `Navigator` is the same violation.** A view or shared widget must not move around the route stack by any API — neither the GoRouter forms above nor `Navigator.of(context).push(...)` / `Navigator.of(context).pop()` used to *leave the current screen* (e.g. popping the route after a save or delete). All of these become callbacks supplied by the screen (`onClose`, `onDeleted`, `onDismissed`, …).
 
@@ -288,7 +287,7 @@ Full master-provider inventory: [`cl_server_config/docs/master_providers.md`](cl
 
 Permission checks split cleanly between screens and views:
 
-- **Screens own route-level gating.** Whether the user is allowed to reach this route at all — by status, role, or relationship — is checked in the screen, which renders `AccessDeniedView` / `ErrorView` on failure.
+- **Screens own route-level gating.** Whether the user is allowed to reach this route at all — by status, role, or relationship — is checked in the screen, which gates with `RoleGate` (or refuses with `AccessDeniedView`).
 - **Views own intra-view conditional rendering.** Whether to show an admin-only button, a status action, or a role-specific section inside an otherwise reachable view is the view's responsibility. Read `authStateProvider` for the current user's roles and conditionally render. Do not expose admin actions as callbacks that callers must gate — callers control navigation, not authorization.
 
 Inside a view:

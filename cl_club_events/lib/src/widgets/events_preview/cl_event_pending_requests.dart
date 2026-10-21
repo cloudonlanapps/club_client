@@ -74,6 +74,7 @@ class ClEventPendingRequests extends ConsumerWidget {
               Expanded(
                 child: Text(
                   pendingAsync.when(
+                    skipLoadingOnReload: true,
                     data: (e) => 'Pending requests (${e.length})',
                     loading: () => 'Pending requests',
                     error: (_, _) => 'Pending requests',
@@ -108,6 +109,7 @@ class ClEventPendingRequests extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           pendingAsync.when(
+            skipLoadingOnReload: true,
             loading: () => const Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
               child: Center(child: CircularProgressIndicator()),

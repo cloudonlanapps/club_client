@@ -16,7 +16,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Admin master provider for enrollments of a specific event.
 ///
 /// Keyed by eventId. Holds `Map<String, EnrollmentStatus>` for that event.
-/// Watches the event master to react if the event is deleted.
+/// Watches the event master for what changes the event's enrolments
+/// ([enrollmentEventInputs]: the event's presence, archive and cutoff), not
+/// the whole event, so a save of its title, visibility or description does
+/// not read them again (club_client#230).
 /// Cross-invalidates member enrollment providers after mutations.
 final AsyncNotifierProviderFamily<
   ClEnrollmentsMasterNotifier,
@@ -39,10 +42,12 @@ class ClEnrollmentsMasterNotifier
 
   @override
   Future<Map<String, EnrollmentStatus>> build(int arg) async {
-    // React to event deletion/changes and manual refresh.
+    // React to the event's deletion, archive or cutoff, and manual refresh.
     ref
       ..watch(
-        clEventsMasterProvider.select((s) => s.valueOrNull?[eventId]),
+        clEventsMasterProvider.select(
+          (s) => enrollmentEventInputs(s.valueOrNull?[eventId]),
+        ),
       )
       ..watch(clManualRefreshProvider);
     return fetch();
@@ -251,3 +256,13 @@ class ClEnrollmentsMasterNotifier
     bumpCreditsVersion(ref);
   }
 }
+
+/// What of [event] its enrolment masters depend on: whether it is there,
+/// archived, and its cutoff. A record, so equal values compare equal and a
+/// save that changes none of them reloads no enrolments (club_client#230).
+({bool present, DateTime? deletedAtUtc, DateTime? untilTimeUtc})
+enrollmentEventInputs(Event? event) => (
+  present: event != null,
+  deletedAtUtc: event?.deletedAtUtc,
+  untilTimeUtc: event?.untilTimeUtc,
+);

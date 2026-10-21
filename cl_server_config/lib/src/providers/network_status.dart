@@ -72,6 +72,8 @@ class NetworkStatusNotifier extends StateNotifier<NetworkStatus> {
       final response = await http
           .get(Uri.parse(healthUrl))
           .timeout(const Duration(seconds: 5));
+      // The provider may have been disposed while the request was in flight.
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
         if (state != NetworkStatus.online) {
@@ -89,6 +91,7 @@ class NetworkStatusNotifier extends StateNotifier<NetworkStatus> {
         }
       }
     } on Object catch (e) {
+      if (!mounted) return;
       if (kDebugMode) {
         print('[NetworkStatus] Health check error: $e');
       }

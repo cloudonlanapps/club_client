@@ -92,14 +92,18 @@ class ClMyEnrollmentsMasterNotifier
 
   // -- Helpers ----------------------------------------------------------------
 
+  /// Invalidates everything an enrollment change touches, then re-reads the
+  /// member's enrollment after a mutation.
+  ///
+  /// The mutation has already succeeded, so a failed re-read does not throw:
+  /// it lands in [state] as an [AsyncError] for the view to reload, and the
+  /// other views are refreshed before it (club_client#227).
   Future<void> refetchAndCrossInvalidate() async {
-    final client = await ref.read(secureClientProvider.future);
-    final updated = await client.myEvents.getMyEnrollment(
-      key.username,
-      key.eventId,
-    );
-    state = AsyncData(updated);
     crossInvalidate();
+    state = await AsyncValue.guard(() async {
+      final client = await ref.read(secureClientProvider.future);
+      return client.myEvents.getMyEnrollment(key.username, key.eventId);
+    });
   }
 
   /// After a write that may have landed ([refetchIfWriteUncertain]): reload

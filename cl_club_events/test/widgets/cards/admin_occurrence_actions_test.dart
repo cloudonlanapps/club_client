@@ -658,4 +658,46 @@ void main() {
       expect(find.text(EventCancellationMessages.calledOff), findsOneWidget);
     });
   });
+
+  group('Issue 187: the card calls a one-off off by the same rule as the '
+      'event page', () {
+    Event oneOff() => _camp(type: EventType.oneOff);
+
+    testWidgets('Issue 187: an admin is offered no Call off inside the last '
+        '30 minutes', (tester) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrenceAt(_inAttendanceWindow, OccurrenceStatus.scheduled),
+          event: oneOff(),
+        ),
+        ['Attendance'],
+      );
+    });
+
+    testWidgets('Issue 187: a super-admin is offered Call off on a one-off '
+        'that has started', (tester) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrenceAt(const Duration(hours: -1), OccurrenceStatus.scheduled),
+          user: _superAdmin(),
+          event: oneOff(),
+        ),
+        ['Attendance', 'Call off'],
+      );
+    });
+
+    testWidgets('Issue 187: a camp keeps Attendance alone for a super-admin '
+        'once it has started', (tester) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrenceAt(const Duration(hours: -1), OccurrenceStatus.scheduled),
+          user: _superAdmin(),
+        ),
+        ['Attendance'],
+      );
+    });
+  });
 }

@@ -12,6 +12,7 @@ import 'one_off_time_rules.dart';
 /// | scheduled / rescheduled | [scheduledActionsFor] the event's type, and Manage requests | Attendance, until `end + 15d` (a super-admin: no end) |
 /// | cancelled | Undo Cancel | Undo Cancel, a super-admin only |
 /// | cancelled one-off | Reinstate | Reinstate until the start, then none |
+/// | live one-off, for a super-admin | as above | Attendance, and Call off |
 /// | completed | none | Attendance, as above |
 ///
 /// Attendance is offered to the event's staff (`canManageAttendance`); every
@@ -24,7 +25,10 @@ import 'one_off_time_rules.dart';
 /// `reinstate`), never the per-occurrence cancel and undo-cancel, which the
 /// server refuses for it (club_server#48). A called-off one-off offers
 /// Reinstate until its start and nothing after it, for a super-admin too
-/// (one-off R7, [canReinstateOneOffAt]; club_client#183).
+/// (one-off R7, [canReinstateOneOffAt]; club_client#183). A super-admin
+/// may call a live one-off off after the 30-minute mark and after its
+/// start too (R5a, [canCallOffOneOffAt]), as on its event page
+/// (club_client#187).
 ///
 /// A slot at or after the event's cutoff (`untilTimeUtc`) was cancelled with
 /// the series: it comes back only when the series cancel is undone, so it
@@ -57,9 +61,15 @@ List<AdminOccurrenceAction> adminOccurrenceActionsFor({
     effectiveEndTimeUtc: occurrence.actualEndTimeUtc,
   );
   if (inAttendanceWindow) {
-    return canManageAttendance(event, actingUser)
-        ? const [AdminOccurrenceAction.attendance]
-        : const [];
+    return [
+      if (canManageAttendance(event, actingUser))
+        AdminOccurrenceAction.attendance,
+      if (event.type == EventType.oneOff &&
+          occurrence.status != OccurrenceStatus.cancelled &&
+          canManageEvent(event, actingUser) &&
+          canCallOffOneOffAt(start, actingUser))
+        AdminOccurrenceAction.callOff,
+    ];
   }
 
   // Past the edit window, the server rejects further mutations; the

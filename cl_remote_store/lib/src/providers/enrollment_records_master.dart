@@ -1,4 +1,6 @@
 import 'package:cl_remote_store/src/providers/client.dart';
+import 'package:cl_remote_store/src/providers/enrollments_master.dart'
+    show enrollmentEventInputs;
 import 'package:cl_remote_store/src/providers/events_master.dart';
 import 'package:cl_remote_store/src/providers/manual_refresh.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -34,10 +36,15 @@ class ClEnrollmentRecordsMasterNotifier
 
   @override
   Future<Map<String, Enrollment>> build(int arg) async {
-    // React to event deletion/changes and manual refresh, mirroring
-    // clEnrollmentsMasterProvider's freshness model.
+    // React to the event's deletion, archive or cutoff and manual refresh,
+    // mirroring clEnrollmentsMasterProvider's freshness model
+    // (club_client#230).
     ref
-      ..watch(clEventsMasterProvider.select((s) => s.valueOrNull?[eventId]))
+      ..watch(
+        clEventsMasterProvider.select(
+          (s) => enrollmentEventInputs(s.valueOrNull?[eventId]),
+        ),
+      )
       ..watch(clManualRefreshProvider);
     final client = await ref.read(secureClientProvider.future);
     return client.enrollments.listEnrollmentsDetailed(eventId);

@@ -8,12 +8,16 @@ import 'package:ui_lib/ui_lib.dart';
 
 import '../../../models/admin_occurrence_action.dart';
 import '../../../models/event_cancellation_messages.dart';
+import '../../../models/programme_schedule_form_helpers.dart';
 import '../../../models/stale_version_message.dart';
 import '../../../utils/admin_occurrence_actions_for.dart';
+import '../../../utils/event_cancellation_error.dart';
 import '../../../utils/event_write_error_message.dart';
 import '../../../utils/programme_end_date.dart';
+import '../../../utils/programme_end_date_messages.dart';
+import '../../../utils/read_programme_schedules.dart';
+import '../../event_editor/event_cancellation_dialog.dart';
 import '../../event_editor/programme_end_date_dialog.dart';
-import 'cancel_reason_dialog.dart';
 import 'manage_requests_dialog.dart';
 import 'occurrence_reschedule_dialog.dart';
 
@@ -51,18 +55,21 @@ class AdminOccurrenceActions extends ConsumerStatefulWidget {
 /// The label of [AdminOccurrenceAction.endProgramme].
 const String endProgrammeLabel = 'End programme from here';
 
+/// The label of [AdminOccurrenceAction.clearEndDate].
+const String clearEndDateLabel = ProgrammeEndDateDialog.clearLabel;
+
 class AdminOccurrenceActionsState
     extends ConsumerState<AdminOccurrenceActions> {
   /// The key of the action in flight, or `null`.
-  String? running;
+  String? _running;
 
   @override
   Widget build(BuildContext context) {
-    return widget.builder(context, resolve());
+    return widget.builder(context, _resolve());
   }
 
   /// The actions offered now, as [ActionItem]s.
-  List<ActionItem> resolve() {
+  List<ActionItem> _resolve() {
     final actingUser = ref.watch(authStateProvider).valueOrNull;
     final event = ref
         .watch(clEventsMasterProvider)
@@ -74,13 +81,13 @@ class AdminOccurrenceActionsState
         event: event,
         actingUser: actingUser,
       ))
-        itemFor(action, event),
+        _itemFor(action, event),
     ];
   }
 
   /// The [ActionItem] of [action] on an occurrence of [event], wired to its
   /// call.
-  ActionItem itemFor(AdminOccurrenceAction action, Event event) =>
+  ActionItem _itemFor(AdminOccurrenceAction action, Event event) =>
       switch (action) {
         AdminOccurrenceAction.attendance => ActionItem(
           label: 'Attendance',
@@ -92,118 +99,117 @@ class AdminOccurrenceActionsState
         AdminOccurrenceAction.reschedule => ActionItem(
           label: 'Reschedule',
           icon: LucideIcons.calendarClock,
-          onPressed: running == null ? handleReschedule : null,
+          onPressed: _running == null ? _handleReschedule : null,
         ),
         AdminOccurrenceAction.cancelOccurrence => ActionItem(
           label: 'Cancel this occurrence',
           icon: LucideIcons.calendarX,
           destructive: true,
-          loading: running == 'cancel-instance',
-          onPressed: running != null
+          loading: _running == 'cancel-instance',
+          onPressed: _running != null
               ? null
-              : () => runAction('cancel-instance', cancelInstance),
+              : () => _runAction(
+                  'cancel-instance',
+                  () => _cancelInstance(event),
+                ),
         ),
         AdminOccurrenceAction.cancelSeries => ActionItem(
           label: 'Cancel entire series',
           icon: LucideIcons.calendarOff,
           destructive: true,
-          loading: running == 'cancel-series',
-          onPressed: running != null
+          loading: _running == 'cancel-series',
+          onPressed: _running != null
               ? null
-              : () => runAction('cancel-series', cancelSeries),
+              : () => _runAction('cancel-series', () => _cancelSeries(event)),
         ),
         AdminOccurrenceAction.endProgramme => ActionItem(
           label: endProgrammeLabel,
           icon: LucideIcons.calendarOff,
           destructive: true,
-          loading: running == 'end-programme',
-          onPressed: running != null
+          loading: _running == 'end-programme',
+          onPressed: _running != null
               ? null
-              : () => runAction('end-programme', () => endProgramme(event)),
+              : () => _runAction('end-programme', () => _endProgramme(event)),
+        ),
+        AdminOccurrenceAction.clearEndDate => ActionItem(
+          label: clearEndDateLabel,
+          icon: LucideIcons.calendarRange,
+          loading: _running == 'clear-end',
+          onPressed: _running != null
+              ? null
+              : () => _runAction('clear-end', () => _clearEndDate(event)),
         ),
         AdminOccurrenceAction.callOff => ActionItem(
           label: EventCancellationMessages.callOff,
           icon: LucideIcons.calendarX,
           destructive: true,
-          loading: running == 'cancel-instance',
-          onPressed: running != null
+          loading: _running == 'call-off',
+          onPressed: _running != null
               ? null
-              : () => runAction('cancel-instance', cancelInstance),
+              : () => _runAction('call-off', () => _callOff(event)),
         ),
         AdminOccurrenceAction.manageRequests => ActionItem(
           label: 'Manage requests',
           icon: LucideIcons.userCheck,
-          loading: running == 'requests',
-          onPressed: running != null
+          loading: _running == 'requests',
+          onPressed: _running != null
               ? null
-              : () => runAction('requests', handleManageRequests),
+              : () => _runAction('requests', _handleManageRequests),
         ),
         AdminOccurrenceAction.undoCancel => ActionItem(
           label: 'Undo Cancel',
-          loading: running == 'undo',
-          onPressed: running != null
+          loading: _running == 'undo',
+          onPressed: _running != null
               ? null
-              : () => runAction('undo', undoCancel),
+              : () => _runAction('undo', _undoCancel),
+        ),
+        AdminOccurrenceAction.reinstate => ActionItem(
+          label: EventCancellationMessages.reinstate,
+          loading: _running == 'reinstate',
+          onPressed: _running != null
+              ? null
+              : () => _runAction('reinstate', () => _reinstate(event)),
         ),
       };
 
-  Future<void> cancelInstance() async {
-    final reason = await showDialog<String>(
-      context: context,
-      builder: (_) => const CancelReasonDialog(),
-    );
-    if (reason == null || reason.isEmpty || !mounted) return;
-    await ref
-        .read(clEventsMasterProvider.notifier)
-        .cancelOccurrence(
-          widget.occurrence.eventId,
-          widget.occurrence.originalStartTimeUtc,
-          version: widget.occurrence.version,
-          reason: reason,
-        );
-  }
+  /// Cancels this session of [event] alone, in the cancellation dialog,
+  /// which asks for the reason and saves while it is open (club_client#213).
+  Future<void> _cancelInstance(Event event) => _openCancellation(
+    EventCancellationDialog.occurrence(
+      event: event,
+      occurrence: widget.occurrence,
+    ),
+    done: EventCancellationMessages.occurrenceCancelled,
+  );
 
-  Future<void> cancelSeries() async {
-    final reason = await showDialog<String>(
+  /// Cancels the camp [event] from this session on, in the cancellation
+  /// dialog (club_client#213).
+  Future<void> _cancelSeries(Event event) => _openCancellation(
+    EventCancellationDialog.seriesFrom(
+      event: event,
+      occurrence: widget.occurrence,
+    ),
+    done: EventCancellationMessages.campCancelled,
+  );
+
+  /// Opens [dialog]; toasts [done] once the server accepted the change.
+  Future<void> _openCancellation(
+    EventCancellationDialog dialog, {
+    required String done,
+  }) async {
+    final accepted = await showShadDialog<bool>(
       context: context,
-      builder: (_) => const CancelReasonDialog(),
+      builder: (_) => dialog,
     );
-    if (reason == null || reason.isEmpty || !mounted) return;
-    // Pass null reference — master forwards a now() default to the SDK
-    // (the SDK signature still requires non-null; follow-up will make it
-    // nullable so null flows end-to-end).
-    // No version is passed: the master sends the one it holds for the event
-    // this session belongs to (club_client#123).
-    try {
-      await ref
-          .read(clEventsMasterProvider.notifier)
-          .cancelSeries(
-            widget.occurrence.eventId,
-            reason: reason,
-            effectiveDateTimeUtc: widget.occurrence.originalStartTimeUtc,
-          );
-    } on StaleVersionException catch (e) {
-      // The master has already reloaded the event and its sessions.
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        ShadToast.destructive(
-          description: Text(staleVersionMessage(e, subject: 'This event')),
-        ),
-      );
-    }
+    if (accepted != true || !mounted) return;
+    ShadToaster.of(context).show(ShadToast(description: Text(done)));
   }
 
   /// Opens Adjust end date for the programme [event], on the last day
   /// before this occurrence's: Save terminates it there, or moves the end
   /// it has.
-  Future<void> endProgramme(Event event) async {
-    List<EventSchedule>? schedules;
-    try {
-      schedules = await ref.read(clEventSchedulesProvider(event.id).future);
-    } on Object catch (_) {
-      // The event then stands for its current schedule.
-      schedules = null;
-    }
+  Future<void> _endProgramme(Event event) async {
+    final schedules = await readProgrammeSchedules(ref, event.id);
     if (!mounted) return;
     await showShadDialog<void>(
       context: context,
@@ -219,7 +225,93 @@ class AdminOccurrenceActionsState
     );
   }
 
-  Future<void> undoCancel() async {
+  /// Asks to clear the programme [event]'s end date, naming the day it ends
+  /// on now; on yes it runs indefinitely (club_client#184).
+  Future<void> _clearEndDate(Event event) async {
+    final schedules = await readProgrammeSchedules(ref, event.id);
+    final lastDay = programmeEndDay(event, schedules: schedules);
+    if (lastDay == null || !mounted) return;
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: clearEndDateLabel,
+      message: programmeClearEndConfirm(lastDay),
+      confirmLabel: clearEndDateLabel,
+    );
+    if (!confirmed || !mounted) return;
+    final toaster = ShadToaster.of(context);
+    try {
+      await ProgrammeScheduleFormSubmit.adjustEndDate(
+        event: event,
+        lastDay: null,
+        reason: '',
+        notifier: ref.read(clEventsMasterProvider.notifier),
+        schedules: schedules,
+      );
+      toaster.show(
+        const ShadToast(description: Text(programmeEndDateClearedMessage)),
+      );
+    } on StaleVersionException catch (e) {
+      // The master has already reloaded the programme.
+      toaster.show(
+        ShadToast.destructive(
+          description: Text(staleVersionMessage(e, subject: 'This programme')),
+        ),
+      );
+    } on Object catch (e) {
+      toaster.show(
+        ShadToast.destructive(description: Text(programmeEndDateFailureOf(e))),
+      );
+    }
+  }
+
+  /// Calls the one-off [event] off (`drop`) in the event page's Call off
+  /// dialog, which saves while it is open and shows what the server
+  /// refuses; toasts once the server accepted it (club_client#183).
+  Future<void> _callOff(Event event) => _openCancellation(
+    EventCancellationDialog(
+      event: event,
+      occurrenceVersion: widget.occurrence.version,
+    ),
+    done: EventCancellationMessages.calledOff,
+  );
+
+  /// Reinstates the called-off one-off [event] after the event page's
+  /// confirmation, with its messages (club_client#183).
+  Future<void> _reinstate(Event event) async {
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: EventCancellationMessages.reinstateTitle,
+      message: EventCancellationMessages.reinstateConfirm(event.title),
+      confirmLabel: EventCancellationMessages.reinstate,
+      cancelLabel: EventCancellationMessages.back,
+    );
+    if (!confirmed || !mounted) return;
+    final toaster = ShadToaster.of(context);
+    try {
+      await ref
+          .read(clEventsMasterProvider.notifier)
+          .reinstate(event.id, version: widget.occurrence.version);
+      toaster.show(
+        const ShadToast(
+          description: Text(EventCancellationMessages.reinstated),
+        ),
+      );
+    } on Object catch (e, st) {
+      toaster.show(
+        ShadToast.destructive(
+          description: Text(
+            eventCancellationErrorMessage(
+              e,
+              stackTrace: st,
+              fallback: EventCancellationMessages.reinstateFailed,
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _undoCancel() async {
     await ref
         .read(clEventsMasterProvider.notifier)
         .undoCancelOccurrence(
@@ -229,7 +321,7 @@ class AdminOccurrenceActionsState
         );
   }
 
-  Future<void> handleReschedule() async {
+  Future<void> _handleReschedule() async {
     final rescheduled = await showShadDialog<bool>(
       context: context,
       builder: (_) => OccurrenceRescheduleDialog(occurrence: widget.occurrence),
@@ -241,10 +333,9 @@ class AdminOccurrenceActionsState
     }
   }
 
-  /// Public so widget tests can drive the action without opening the
-  /// PopupMenuButton overlay (which is fragile in tests). The unit-test
-  /// path is otherwise the same as the production path.
-  Future<void> handleManageRequests() async {
+  /// Reloads the event's enrolments and opens Manage requests on the
+  /// pending ones, or says there are none.
+  Future<void> _handleManageRequests() async {
     ref.invalidate(clEnrollmentsMasterProvider(widget.occurrence.eventId));
     final enrollments = await ref.read(
       clEnrollmentsMasterProvider(widget.occurrence.eventId).future,
@@ -270,11 +361,11 @@ class AdminOccurrenceActionsState
     );
   }
 
-  Future<void> runAction(
+  Future<void> _runAction(
     String key,
     Future<void> Function() run,
   ) async {
-    setState(() => running = key);
+    setState(() => _running = key);
     try {
       await run();
     } on StaleVersionException catch (e) {
@@ -296,7 +387,7 @@ class AdminOccurrenceActionsState
         ShadToast.destructive(description: Text(eventWriteErrorMessage(e))),
       );
     } finally {
-      if (mounted) setState(() => running = null);
+      if (mounted) setState(() => _running = null);
     }
   }
 }

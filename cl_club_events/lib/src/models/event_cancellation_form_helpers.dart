@@ -46,7 +46,10 @@ List<EventCancellationSession> buildEventCancellationSessions(
   ];
 }
 
-/// Bridges `EventCancellationForm` to the SDK's cancel and drop calls.
+/// Bridges `EventCancellationForm` to the SDK's cancel and drop calls: a
+/// camp from a session the form picks ([cancelCamp]) or from a given one
+/// ([cancelCampFrom]), one session ([cancelOccurrence]), and a one-off
+/// ([callOff]).
 class EventCancellationFormSubmit {
   const EventCancellationFormSubmit._();
 
@@ -65,6 +68,39 @@ class EventCancellationFormSubmit {
       reason: values[EventCancellationFormFields.reasonId] as String,
       effectiveDateTimeUtc:
           values[EventCancellationFormFields.fromSessionId] as DateTime,
+    );
+  }
+
+  /// Cancels the camp [eventId] from the session whose slot is [fromUtc],
+  /// with the reason in the form's [values]. With no [eventVersion] the
+  /// master sends the version of the camp it holds (club_client#123).
+  static Future<Event> cancelCampFrom({
+    required int eventId,
+    required DateTime fromUtc,
+    required Map<String, dynamic> values,
+    required ClEventsMasterNotifier notifier,
+    int? eventVersion,
+  }) {
+    return notifier.cancelSeries(
+      eventId,
+      version: eventVersion,
+      reason: values[EventCancellationFormFields.reasonId] as String,
+      effectiveDateTimeUtc: fromUtc,
+    );
+  }
+
+  /// Cancels [occurrence] alone, with the reason in the form's [values]. It
+  /// is identified by its slot and sends its own version (club_core#69).
+  static Future<void> cancelOccurrence({
+    required Occurrence occurrence,
+    required Map<String, dynamic> values,
+    required ClEventsMasterNotifier notifier,
+  }) {
+    return notifier.cancelOccurrence(
+      occurrence.eventId,
+      occurrence.originalStartTimeUtc,
+      version: occurrence.version,
+      reason: values[EventCancellationFormFields.reasonId] as String,
     );
   }
 

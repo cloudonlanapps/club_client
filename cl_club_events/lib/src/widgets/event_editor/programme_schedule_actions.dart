@@ -1,5 +1,3 @@
-import 'package:cl_remote_store/cl_remote_store.dart'
-    show clEventSchedulesProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +5,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../models/programme_schedule_form_helpers.dart';
 import '../../utils/programme_end_date.dart';
+import '../../utils/read_programme_schedules.dart';
 import 'programme_adjust_schedule_dialog.dart';
 import 'programme_end_date_dialog.dart';
 import 'schedule_note.dart';
@@ -45,13 +44,8 @@ class ProgrammeScheduleActionsState
 
   /// The programme's schedules, or `null` when they cannot be read: the
   /// event itself then stands for its current schedule.
-  Future<List<EventSchedule>?> loadSchedules() async {
-    try {
-      return await ref.read(clEventSchedulesProvider(widget.event.id).future);
-    } on Object catch (_) {
-      return null;
-    }
-  }
+  Future<List<EventSchedule>?> loadSchedules() =>
+      readProgrammeSchedules(ref, widget.event.id);
 
   Future<void> adjustSchedule() async {
     if (opening) return;

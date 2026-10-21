@@ -177,4 +177,42 @@ void main() {
     await _pick(tester, state, _day(9));
     expect(state.isDirty, isFalse, reason: 'back on the end it has');
   });
+
+  testWidgets('Issue 182: a proposed last day before today is accepted, and '
+      'no day before it', (tester) async {
+    final state = await _pump(
+      tester,
+      reasonRequired: false,
+      proposedLastDay: _day(-2),
+    );
+
+    expect(state.validate()?[ProgrammeEndDateFormFields.lastDayId], _day(-2));
+
+    await _pick(tester, state, _day(-1));
+    expect(state.validate()?[ProgrammeEndDateFormFields.lastDayId], _day(-1));
+
+    await _pick(tester, state, _day(-3));
+    expect(state.validate(), isNull);
+    expect(
+      find.text(ProgrammeEndDateFormValidators.dayBeforeProposedMessage),
+      findsOneWidget,
+    );
+  });
+
+  test('Issue 182: the last day may be as early as a given first day', () {
+    final today = DateTime(2030, 5, 14, 16);
+    const v = ProgrammeEndDateFormValidators.lastDay;
+    final first = DateTime(2030, 5, 12);
+    expect(v(DateTime(2030, 5, 12), today: today, earliest: first), isNull);
+    expect(v(DateTime(2030, 5, 13), today: today, earliest: first), isNull);
+    expect(
+      v(DateTime(2030, 5, 11), today: today, earliest: first),
+      ProgrammeEndDateFormValidators.dayBeforeProposedMessage,
+    );
+    expect(
+      v(DateTime(2030, 5, 13), today: today, earliest: DateTime(2030, 5, 20)),
+      ProgrammeEndDateFormValidators.dayInPastMessage,
+      reason: 'a first day after today does not move the bound',
+    );
+  });
 }

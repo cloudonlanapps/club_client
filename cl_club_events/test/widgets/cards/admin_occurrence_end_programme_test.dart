@@ -1,3 +1,5 @@
+import 'package:cl_club_events/src/utils/programme_end_date.dart';
+import 'package:cl_club_events/src/utils/programme_end_date_messages.dart';
 import 'package:cl_club_events/src/widgets/cards/actions/admin_occurrence_actions.dart';
 import 'package:cl_club_events/src/widgets/event_editor/programme_end_date_dialog.dart';
 import 'package:cl_club_forms/cl_club_forms.dart'
@@ -40,9 +42,9 @@ Occurrence _session(int days) {
   );
 }
 
-/// Pumps the card actions of [occurrence] of [event] and opens End
-/// programme from here.
-Future<RecordingScheduleEvents> _openEndProgramme(
+/// Pumps the card actions of [occurrence] of [event]; returns the master
+/// and the actions offered.
+Future<(RecordingScheduleEvents, List<ActionItem>)> _pumpActions(
   WidgetTester tester,
   Event event,
   Occurrence occurrence,
@@ -75,10 +77,30 @@ Future<RecordingScheduleEvents> _openEndProgramme(
     ),
   );
   await tester.pumpAndSettle();
-  actions.singleWhere((a) => a.label == 'End programme from here').onPressed!();
+  return (events, actions);
+}
+
+/// Pumps the card actions of [occurrence] of [event] and presses the one
+/// labelled [label].
+Future<RecordingScheduleEvents> _press(
+  WidgetTester tester,
+  Event event,
+  Occurrence occurrence,
+  String label,
+) async {
+  final (events, actions) = await _pumpActions(tester, event, occurrence);
+  actions.singleWhere((a) => a.label == label).onPressed!();
   await tester.pumpAndSettle();
   return events;
 }
+
+/// Pumps the card actions of [occurrence] of [event] and opens End
+/// programme from here.
+Future<RecordingScheduleEvents> _openEndProgramme(
+  WidgetTester tester,
+  Event event,
+  Occurrence occurrence,
+) => _press(tester, event, occurrence, 'End programme from here');
 
 ProgrammeEndDateFormState _form(WidgetTester tester) =>
     tester.state<ProgrammeEndDateFormState>(find.byType(ProgrammeEndDateForm));
@@ -125,5 +147,148 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(events.endDateCalls, ['extend(${localNoon(5).toUtc()}, null)']);
+  });
+
+  testWidgets('Issue 182: End programme from here on a session later today '
+      'terminates at that session', (tester) async {
+    // A daily programme whose sessions start 45 minutes from now: today's
+    // is still inside the scheduling window.
+    final now = DateTime.now();
+    final today = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+      now.minute,
+    ).add(const Duration(minutes: 45));
+    final start = today.subtract(const Duration(days: 20)).toUtc();
+    final event = programmeFixture().copyWith(
+      startTimeUtc: start,
+      endTimeUtc: start.add(const Duration(hours: 1)),
+    );
+    final session = Occurrence(
+      eventId: 1,
+      originalStartTimeUtc: today.toUtc(),
+      actualStartTimeUtc: today.toUtc(),
+      actualEndTimeUtc: today.toUtc().add(const Duration(hours: 1)),
+      status: OccurrenceStatus.scheduled,
+      venueId: 7,
+    );
+    final events = await _openEndProgramme(tester, event, session);
+
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(ProgrammeEndDateForm),
+        matching: find.byType(EditableText),
+      ),
+      'Season over',
+    );
+    await tester.pump();
+    await tester.tap(find.widgetWithText(ShadButton, 'Save'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('The end date cannot be before today'),
+      findsNothing,
+    );
+    expect(events.endDateCalls, ['terminate(${today.toUtc()}, Season over)']);
+  });
+
+  group('Issue 184: clearing the end is its own action', () {
+    testWidgets('Issue 184: End programme from here on a programme with an '
+        'end shows no Clear end date', (tester) async {
+      await _openEndProgramme(
+        tester,
+        programmeFixture(untilTimeUtc: localNoon(10).toUtc()),
+        _session(5),
+      );
+
+      expect(find.byType(ProgrammeEndDateDialog), findsOneWidget);
+      expect(
+        find.widgetWithText(ShadButton, ProgrammeEndDateDialog.clearLabel),
+        findsNothing,
+      );
+      expect(find.widgetWithText(ShadButton, 'Save'), findsOneWidget);
+    });
+
+    testWidgets('Issue 184: Clear end date is offered on a programme whose '
+        'end is ahead', (tester) async {
+      final (_, actions) = await _pumpActions(
+        tester,
+        programmeFixture(untilTimeUtc: localNoon(10).toUtc()),
+        _session(5),
+      );
+
+      expect(actions.map((a) => a.label), [
+        'Reschedule',
+        'Cancel this occurrence',
+        'End programme from here',
+        clearEndDateLabel,
+        'Manage requests',
+      ]);
+    });
+
+    testWidgets('Issue 184: Clear end date is not offered on a programme '
+        'with no end', (tester) async {
+      final (_, actions) = await _pumpActions(
+        tester,
+        programmeFixture(),
+        _session(5),
+      );
+
+      expect(actions.map((a) => a.label), isNot(contains(clearEndDateLabel)));
+    });
+
+    testWidgets('Issue 184: Clear end date is not offered once the end has '
+        'passed', (tester) async {
+      final (_, actions) = await _pumpActions(
+        tester,
+        programmeFixture(untilTimeUtc: localNoon(-1).toUtc()),
+        _session(5),
+      );
+
+      expect(actions.map((a) => a.label), isNot(contains(clearEndDateLabel)));
+    });
+
+    testWidgets('Issue 184: its confirmation names the last day, and '
+        'confirming clears the end', (tester) async {
+      final event = programmeFixture(untilTimeUtc: localNoon(10).toUtc());
+      final events = await _press(
+        tester,
+        event,
+        _session(5),
+        clearEndDateLabel,
+      );
+
+      final lastDay = programmeEndDayFormat.format(localNoon(9));
+      expect(
+        find.text(
+          'You are marking this programme to run indefinitely and not to '
+          'end on $lastDay.',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.widgetWithText(ShadButton, clearEndDateLabel));
+      await tester.pumpAndSettle();
+
+      expect(events.endDateCalls, ['extendIndefinitely(null)']);
+      expect(find.text(programmeEndDateClearedMessage), findsOneWidget);
+    });
+
+    testWidgets('Issue 184: Cancel at the confirmation changes nothing', (
+      tester,
+    ) async {
+      final events = await _press(
+        tester,
+        programmeFixture(untilTimeUtc: localNoon(10).toUtc()),
+        _session(5),
+        clearEndDateLabel,
+      );
+
+      await tester.tap(find.widgetWithText(ShadButton, 'Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(events.endDateCalls, isEmpty);
+    });
   });
 }

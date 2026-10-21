@@ -1,5 +1,5 @@
 import 'package:cl_remote_store/cl_remote_store.dart';
-import 'package:club_sdk_2/club_sdk_2.dart';
+import 'package:club_sdk_2/club_sdk_2.dart' show Event;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Family provider for event notifier.
@@ -8,11 +8,13 @@ final AutoDisposeAsyncNotifierProviderFamily<EventNotifier, Event, int>
 eventNotifierProvider = AsyncNotifierProvider.autoDispose
     .family<EventNotifier, Event, int>(EventNotifier.new);
 
-/// AsyncNotifier that manages a single event by ID.
+/// A read-only view of a single event by ID.
 ///
-/// Watches [clEventsMasterProvider] for reactive updates. Mutation methods
-/// delegate to the master notifier — the master updates its state, which
-/// triggers this provider to rebuild automatically.
+/// Watches [clEventsMasterProvider] for reactive updates. It has no
+/// mutation methods: each change of an event is a type-specific call on the
+/// master notifier (`cancelSeries` for a camp, `terminate` for a programme,
+/// `drop` for a one-off, …), so no caller sends one type's call for another
+/// (club_client#188).
 class EventNotifier extends AutoDisposeFamilyAsyncNotifier<Event, int> {
   /// Event ID is available via [arg] property from Riverpod family notifier.
   int get eventId => arg;
@@ -25,72 +27,5 @@ class EventNotifier extends AutoDisposeFamilyAsyncNotifier<Event, int> {
     // Not in master map — fetch via the master notifier so SDK access
     // stays in cl_remote_store.
     return ref.read(clEventsMasterProvider.notifier).getEvent(eventId);
-  }
-
-  /// Correction for cosmetic changes (typos, clarifications, visibility).
-  ///
-  /// Changes apply to ALL occurrences (past and future).
-  /// For semantic changes (time/venue/organizer), use
-  /// updateEventForAllFuture().
-  Future<Event> updateEvent({
-    String? title,
-    String? description,
-    Visibility? visibility,
-  }) async {
-    return ref
-        .read(clEventsMasterProvider.notifier)
-        .correctionOnEvent(
-          eventId,
-          title: title,
-          description: description,
-          visibility: visibility,
-        );
-  }
-
-  /// Split the programme's timetable at [effectiveDateTimeUtc]
-  /// (club_core#16). The event keeps its id; the response carries its new
-  /// current schedule.
-  Future<Event> updateEventForAllFuture({
-    required DateTime effectiveDateTimeUtc,
-    int? venueId,
-    String? organizerName,
-    List<String>? Function()? coachNames,
-    DateTime? startTimeUtc,
-    DateTime? endTimeUtc,
-    String? rrule,
-    List<EventSession>? Function()? sessions,
-  }) async {
-    return ref
-        .read(clEventsMasterProvider.notifier)
-        .updateEventForAllFuture(
-          eventId,
-          effectiveDateTimeUtc: effectiveDateTimeUtc,
-          venueId: venueId,
-          organizerName: organizerName,
-          coachNames: coachNames,
-          startTimeUtc: startTimeUtc,
-          endTimeUtc: endTimeUtc,
-          rrule: rrule,
-          sessions: sessions,
-        );
-  }
-
-  /// Cancel the event series from [effectiveDateTimeUtc] onward.
-  ///
-  /// The server requires the effective time; for camps it must be a real
-  /// occurrence start. Sends the version of the event this notifier holds
-  /// (club_client#123).
-  Future<Event> cancelEvent({
-    required String reason,
-    required DateTime effectiveDateTimeUtc,
-  }) async {
-    return ref
-        .read(clEventsMasterProvider.notifier)
-        .cancelSeries(
-          eventId,
-          version: state.valueOrNull?.version,
-          reason: reason,
-          effectiveDateTimeUtc: effectiveDateTimeUtc,
-        );
   }
 }

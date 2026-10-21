@@ -1,8 +1,11 @@
 /// The labels, dialogs and toasts of calling an event off and taking that
-/// back, from the Event Management card (club_client#40).
+/// back, from the Event Management card (club_client#40) and the occurrence
+/// card (club_client#213).
 ///
 /// A camp is cancelled from a session onward and the cancellation undone; a
-/// one-off is called off and reinstated.
+/// one-off is called off and reinstated; one session of a camp or a
+/// programme is cancelled and restored with Undo Cancel. Each dialog says
+/// how its change is taken back: none of them is final.
 abstract final class EventCancellationMessages {
   /// Button that cancels a camp.
   static const String cancelCamp = 'Cancel camp';
@@ -25,6 +28,20 @@ abstract final class EventCancellationMessages {
   /// Button that closes a dialog without doing anything.
   static const String back = 'Back';
 
+  /// Title of the dialog that cancels one session, as the occurrence card
+  /// labels the action.
+  static const String cancelOccurrenceTitle = 'Cancel this occurrence';
+
+  /// Button that cancels one session.
+  static const String cancelOccurrence = 'Cancel occurrence';
+
+  /// Title of the dialog that cancels a camp from one of its sessions, as
+  /// the occurrence card labels the action.
+  static const String cancelSeriesTitle = 'Cancel entire series';
+
+  /// Button that cancels a camp from one of its sessions.
+  static const String cancelSeries = 'Cancel series';
+
   /// Title of the Undo cancel confirmation.
   static const String undoCancelTitle = 'Undo cancellation';
 
@@ -34,12 +51,24 @@ abstract final class EventCancellationMessages {
   /// Body of the Cancel camp dialog.
   static const String cancelCampDescription =
       'The camp is cancelled from the chosen session onward; sessions '
-      'before it still run. Enrolled members are notified, with the reason.';
+      'before it still run. Enrolled members are notified, with the reason. '
+      'You can take it back later with Undo cancel.';
 
   /// Body of the Call off dialog.
   static const String callOffDescription =
       'The event is called off. Enrolled members are notified, with the '
-      'reason.';
+      'reason. You can reinstate it until it starts.';
+
+  /// Body of the dialog that cancels one session.
+  static const String cancelOccurrenceDescription =
+      'This session is cancelled. Enrolled members are notified, with the '
+      'reason. You can restore it later with Undo Cancel.';
+
+  /// Body of the dialog that cancels a camp from one of its sessions.
+  static const String cancelSeriesDescription =
+      'The camp is cancelled from this session onward; sessions before it '
+      'still run. Enrolled members are notified, with the reason. You can '
+      'take it back later with Undo cancel on the event page.';
 
   /// Shown in the Cancel camp dialog while the camp's sessions load.
   static const String loadingSessions = 'Loading the sessions…';
@@ -56,6 +85,9 @@ abstract final class EventCancellationMessages {
   /// Toast after a camp is cancelled.
   static const String campCancelled = 'Camp cancelled.';
 
+  /// Toast after one session is cancelled.
+  static const String occurrenceCancelled = 'Session cancelled.';
+
   /// Toast after a camp's cancellation is undone.
   static const String cancelUndone = 'Cancellation undone.';
 
@@ -68,6 +100,10 @@ abstract final class EventCancellationMessages {
   /// Fallback when cancelling a camp fails.
   static const String cancelCampFailed =
       'Could not cancel the camp. Please try again.';
+
+  /// Fallback when cancelling one session fails.
+  static const String cancelOccurrenceFailed =
+      'Could not cancel the session. Please try again.';
 
   /// Fallback when undoing a cancellation fails.
   static const String undoCancelFailed =
@@ -105,6 +141,14 @@ abstract final class EventCancellationMessages {
 
   /// `CANCELLED_OCCURRENCE`.
   static const String alreadyCalledOff = 'This event is already called off.';
+
+  /// `PAST_OCCURRENCE` on one session's cancel.
+  static const String sessionAlreadyStarted =
+      'This session has already started and cannot be cancelled.';
+
+  /// `CANCELLED_OCCURRENCE` on one session's cancel.
+  static const String sessionAlreadyCancelled =
+      'This session is already cancelled.';
 
   /// `INVALID_STATE` on a reinstate.
   static const String cannotReinstate =

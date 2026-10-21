@@ -13,6 +13,7 @@ import 'package:ui_lib/ui_lib.dart' show ConfirmDialog;
 import '../../models/event_cancellation_messages.dart';
 import '../../models/event_management_action.dart';
 import '../../utils/event_cancellation_error.dart';
+import '../../utils/one_off_time_rules.dart';
 import 'event_cancellation_dialog.dart';
 
 /// Resolves the Event Management actions that call an event off and take
@@ -22,12 +23,15 @@ import 'event_cancellation_dialog.dart';
 /// |---|---|---|
 /// | Camp | Cancel camp | not cancelled (no cutoff) |
 /// | Camp | Undo cancel | cancelled |
-/// | One-off | Call off | its occurrence is not cancelled |
-/// | One-off | Reinstate | its occurrence is cancelled |
+/// | One-off | Call off | not cancelled, before `start − 30min` |
+/// | One-off | Reinstate | cancelled, until its start |
 ///
 /// A programme has none, nor has an archived event. A one-off's state and
 /// the version its calls send are those of its single occurrence, so its
-/// actions appear once that occurrence has loaded.
+/// actions appear once that occurrence has loaded. The one-off's time rules
+/// are the server's (a super-admin may call one off any time), shared with
+/// the occurrence card ([canCallOffOneOffAt],
+/// [canReinstateOneOffAt]; club_client#187).
 ///
 /// Hosts the resolved actions and hands them to [builder].
 class EventCancellationActions extends ConsumerStatefulWidget {
@@ -142,8 +146,9 @@ class EventCancellationActionsState
         )
         .valueOrNull;
     if (occurrence == null) return const [];
+    final cancelled = occurrence.status == OccurrenceStatus.cancelled;
     return [
-      if (occurrence.status == OccurrenceStatus.cancelled)
+      if (cancelled && canReinstateOneOffAt(occurrence.originalStartTimeUtc))
         (
           label: EventCancellationMessages.reinstate,
           onPressed: () => handleTakeBack(
@@ -155,8 +160,12 @@ class EventCancellationActionsState
             done: EventCancellationMessages.reinstated,
             failed: EventCancellationMessages.reinstateFailed,
           ),
-        )
-      else
+        ),
+      if (!cancelled &&
+          canCallOffOneOffAt(
+            occurrence.actualStartTimeUtc,
+            widget.currentUser,
+          ))
         (
           label: EventCancellationMessages.callOff,
           onPressed: () => handleCallOff(

@@ -16,6 +16,7 @@ import '../../models/event_schema_fields.dart';
 import '../../models/event_timetable_form_helpers.dart';
 import '../../models/stale_version_message.dart';
 import '../../utils/event_save_error.dart';
+import '../../utils/read_programme_schedules.dart';
 import '../events_preview/cl_event_schedule.dart' show ClEventScheduleBody;
 import 'schedule_note.dart';
 
@@ -82,11 +83,8 @@ class EventTimetableSectionState extends ConsumerState<EventTimetableSection> {
   /// corrects the latest schedule, which the event itself describes.
   Future<bool> loadSchedules() async {
     if (!isProgramme) return true;
-    try {
-      await ref.read(clEventSchedulesProvider(widget.event.id).future);
-    } on Object catch (_) {
-      // The editor falls back to the event's own (latest) schedule.
-    }
+    // Unread, the editor falls back to the event's own (latest) schedule.
+    await readProgrammeSchedules(ref, widget.event.id);
     return true;
   }
 

@@ -16,12 +16,19 @@ enum AdminOccurrenceAction {
   /// End the programme from this occurrence on (terminate, or move its end).
   endProgramme,
 
+  /// Remove the programme's end date, after a confirmation: it runs
+  /// indefinitely.
+  clearEndDate,
+
   /// Call off a one-off: cancel its single occurrence.
   callOff,
 
   /// Decide the event's pending enrollment requests.
   manageRequests,
 
-  /// Restore a cancelled occurrence.
+  /// Restore a cancelled occurrence of a camp or a programme.
   undoCancel,
+
+  /// Reinstate a called-off one-off: restore its single occurrence.
+  reinstate,
 }

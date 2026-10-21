@@ -32,6 +32,7 @@ Event _event(
   EventType type, {
   bool cancelled = false,
   bool archived = false,
+  DateTime? start,
 }) => Event(
   id: 1,
   version: 3,
@@ -42,8 +43,8 @@ Event _event(
   venueId: 7,
   organizerName: _organizer,
   rrule: type == EventType.camp ? 'FREQ=DAILY;COUNT=3' : null,
-  startTimeUtc: _day(10),
-  endTimeUtc: _day(10).add(const Duration(hours: 2)),
+  startTimeUtc: start ?? _day(10),
+  endTimeUtc: (start ?? _day(10)).add(const Duration(hours: 2)),
   untilTimeUtc: cancelled ? _day(11) : null,
   createdAtUtc: DateTime.utc(2026),
   updatedAtUtc: DateTime.utc(2026),
@@ -68,11 +69,12 @@ UserPrivate _person(
   String username, {
   bool admin = false,
   bool coach = false,
+  bool superAdmin = false,
 }) => UserPrivate(
   username: username,
   displayName: username,
   status: UserStatus.active,
-  isSuperAdmin: false,
+  isSuperAdmin: superAdmin,
   roles: UserRoles(isAdmin: admin, isCoach: coach),
   createdAtUtc: DateTime.utc(2024),
 );
@@ -466,6 +468,56 @@ void main() {
         now.add(const Duration(days: 1)),
         now.add(const Duration(days: 2)),
       ]);
+    });
+  });
+
+  group("Issue 187: a one-off's actions follow the server's time rules", () {
+    /// A one-off starting [fromNow] from now (negative: already started).
+    Event oneOffAt(Duration fromNow) => _event(
+      EventType.oneOff,
+      start: DateTime.now().toUtc().add(fromNow),
+    );
+
+    testWidgets('Issue 187: a called-off one-off that has started offers no '
+        'Reinstate', (tester) async {
+      await _pump(
+        tester,
+        oneOffAt(const Duration(hours: -1)),
+        oneOffStatus: OccurrenceStatus.cancelled,
+      );
+      _expectOnly(null);
+    });
+
+    testWidgets('Issue 187: a called-off one-off starting in 10 minutes '
+        'still offers Reinstate', (tester) async {
+      await _pump(
+        tester,
+        oneOffAt(const Duration(minutes: 10)),
+        oneOffStatus: OccurrenceStatus.cancelled,
+      );
+      _expectOnly(EventCancellationMessages.reinstate);
+    });
+
+    testWidgets('Issue 187: a one-off that finished yesterday offers an '
+        'admin no Call off', (tester) async {
+      await _pump(tester, oneOffAt(const Duration(days: -1)));
+      _expectOnly(null);
+    });
+
+    testWidgets('Issue 187: a one-off starting in 10 minutes offers an '
+        'admin no Call off', (tester) async {
+      await _pump(tester, oneOffAt(const Duration(minutes: 10)));
+      _expectOnly(null);
+    });
+
+    testWidgets('Issue 187: a super-admin may call off a one-off that has '
+        'started', (tester) async {
+      await _pump(
+        tester,
+        oneOffAt(const Duration(hours: -1)),
+        user: _person('the_super', superAdmin: true),
+      );
+      _expectOnly(EventCancellationMessages.callOff);
     });
   });
 }

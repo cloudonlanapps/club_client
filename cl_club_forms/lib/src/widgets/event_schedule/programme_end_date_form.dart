@@ -9,7 +9,8 @@ import 'programme_end_date_form_fields.dart';
 import 'programme_end_date_form_validators.dart';
 
 /// Pure-UI editor of a programme's end date: the last day it runs on, any
-/// day from today, and the reason.
+/// day from today (or from the proposed day, when that is earlier), and the
+/// reason.
 ///
 /// Under the day the form states what the choice gives, as the host words
 /// it in [resultOf] (e.g. `Last session: Sat 14 Nov 2026.`), before
@@ -47,6 +48,10 @@ class ProgrammeEndDateForm extends StatefulWidget {
   /// than the end the programme has (ending it from a session: the day
   /// before it). The form is dirty while the chosen day differs from that
   /// end, so a proposed day is saved without being edited.
+  ///
+  /// A proposed day before today is accepted, as is any day from it on:
+  /// ending a programme from a session later today proposes the day of the
+  /// session before it (club_client#182).
   final DateTime? proposedLastDay;
 
   @override
@@ -120,7 +125,10 @@ class ProgrammeEndDateFormState extends State<ProgrammeEndDateForm>
               initialValue: openingDay,
               enabled: widget.enabled,
               yearsBefore: 0,
-              validator: ProgrammeEndDateFormValidators.lastDay,
+              validator: (value) => ProgrammeEndDateFormValidators.lastDay(
+                value,
+                earliest: widget.proposedLastDay,
+              ),
               onChanged: (value) => setState(() => lastDay = value),
             ),
           ),

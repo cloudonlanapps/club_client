@@ -72,6 +72,7 @@ class ClEventEnrolmentsSummary extends ConsumerWidget {
               Expanded(
                 child: Text(
                   activeAsync.when(
+                    skipLoadingOnReload: true,
                     data: (e) => 'Enrolments (${e.length})',
                     loading: () => 'Enrolments',
                     error: (_, _) => 'Enrolments',
@@ -89,6 +90,7 @@ class ClEventEnrolmentsSummary extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           activeAsync.when(
+            skipLoadingOnReload: true,
             loading: () => const Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
               child: Center(child: CircularProgressIndicator()),

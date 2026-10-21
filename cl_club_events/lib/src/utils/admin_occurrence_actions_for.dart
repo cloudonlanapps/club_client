@@ -2,21 +2,34 @@ import 'package:cl_member_auth/cl_member_auth.dart' show canManageEvent;
 import 'package:club_sdk_2/club_sdk_2.dart';
 
 import '../models/admin_occurrence_action.dart';
+import 'one_off_time_rules.dart';
+import 'programme_end_date.dart';
 
 /// The actions the occurrence card offers [actingUser] on [occurrence] of
 /// [event], in display order, as the server accepts them:
 ///
 /// | Occurrence | Before `start − 30min` | From `start − 30min` |
 /// |---|---|---|
-/// | scheduled / rescheduled | [scheduledActionsFor] the event's type, and Manage requests | Attendance, until `end + 15d` (a super-admin: no end) |
+/// | scheduled / rescheduled | [scheduledActionsFor] the event, and Manage requests | Attendance, until `end + 15d` (a super-admin: no end) |
 /// | cancelled | Undo Cancel | Undo Cancel, a super-admin only |
+/// | cancelled one-off | Reinstate | Reinstate until the start, then none |
+/// | live one-off, for a super-admin | as above | Attendance, and Call off |
 /// | completed | none | Attendance, as above |
 ///
 /// Attendance is offered to the event's staff (`canManageAttendance`); every
 /// other action to its organizer or an admin only (`canManageEvent`), as the
 /// server requires (club_core#146). From 30 minutes before the start the
 /// server restores a cancelled occurrence for a super-admin only, and never
-/// records attendance on one (club_client#177).
+/// record attendance on one (club_client#177).
+///
+/// A one-off is called off and reinstated through its own verbs (`drop`,
+/// `reinstate`), never the per-occurrence cancel and undo-cancel, which the
+/// server refuses for it (club_server#48). A called-off one-off offers
+/// Reinstate until its start and nothing after it, for a super-admin too
+/// (one-off R7, [canReinstateOneOffAt]; club_client#183). A super-admin
+/// may call a live one-off off after the 30-minute mark and after its
+/// start too (R5a, [canCallOffOneOffAt]), as on its event page
+/// (club_client#187).
 ///
 /// A slot at or after the event's cutoff (`untilTimeUtc`) was cancelled with
 /// the series: it comes back only when the series cancel is undone, so it
@@ -32,6 +45,11 @@ List<AdminOccurrenceAction> adminOccurrenceActionsFor({
   if (occurrence.status == OccurrenceStatus.cancelled) {
     if (isCutOffBySeries(event, occurrence)) return const [];
     if (!canManageEvent(event, actingUser)) return const [];
+    if (event.type == EventType.oneOff) {
+      return canReinstateOneOffAt(occurrence.originalStartTimeUtc)
+          ? const [AdminOccurrenceAction.reinstate]
+          : const [];
+    }
     if (inSchedulingWindow || actingUser.isSuperAdmin) {
       return const [AdminOccurrenceAction.undoCancel];
     }
@@ -44,9 +62,15 @@ List<AdminOccurrenceAction> adminOccurrenceActionsFor({
     effectiveEndTimeUtc: occurrence.actualEndTimeUtc,
   );
   if (inAttendanceWindow) {
-    return canManageAttendance(event, actingUser)
-        ? const [AdminOccurrenceAction.attendance]
-        : const [];
+    return [
+      if (canManageAttendance(event, actingUser))
+        AdminOccurrenceAction.attendance,
+      if (event.type == EventType.oneOff &&
+          occurrence.status != OccurrenceStatus.cancelled &&
+          canManageEvent(event, actingUser) &&
+          canCallOffOneOffAt(start, actingUser))
+        AdminOccurrenceAction.callOff,
+    ];
   }
 
   // Past the edit window, the server rejects further mutations; the
@@ -55,17 +79,31 @@ List<AdminOccurrenceAction> adminOccurrenceActionsFor({
     return const [];
   }
 
-  switch (occurrence.status) {
-    // A rescheduled occurrence is still a live, future day: it offers the
-    // same actions as a scheduled one, all keyed by `originalStartTimeUtc`.
-    case OccurrenceStatus.scheduled || OccurrenceStatus.rescheduled:
-      return [
-        ...scheduledActionsFor(event.type),
-        AdminOccurrenceAction.manageRequests,
-      ];
-    case OccurrenceStatus.cancelled || OccurrenceStatus.completed:
-      return const [];
-  }
+  // A rescheduled occurrence is still a live, future day: it offers the
+  // same actions as a scheduled one, all keyed by `originalStartTimeUtc`.
+  final live =
+      occurrence.status == OccurrenceStatus.scheduled ||
+      occurrence.status == OccurrenceStatus.rescheduled;
+  if (!live) return const [];
+  // Cancel entire series and End programme from here send the slot
+  // (`originalStartTimeUtc`), which the server checks against its time
+  // rules; on a rescheduled day it may be closer than the actual start
+  // (club_client#189). A super-admin may cancel a camp's series late (camp
+  // R5c); a programme's cutoff has no such bypass (`validate_cutoff`).
+  final slotInWindow = isInScheduleManagementWindow(
+    occurrence.originalStartTimeUtc,
+  );
+  return [
+    for (final action in scheduledActionsFor(event))
+      if (switch (action) {
+        AdminOccurrenceAction.cancelSeries =>
+          slotInWindow || actingUser.isSuperAdmin,
+        AdminOccurrenceAction.endProgramme => slotInWindow,
+        _ => true,
+      })
+        action,
+    AdminOccurrenceAction.manageRequests,
+  ];
 }
 
 /// Whether [occurrence] is at or after [event]'s cutoff, so cancelled with
@@ -75,25 +113,29 @@ bool isCutOffBySeries(Event event, Occurrence occurrence) {
   return cutoff != null && !occurrence.originalStartTimeUtc.isBefore(cutoff);
 }
 
-/// The actions on a live, future occurrence that change its schedule, as
-/// the server offers them for [type] (club_client#178):
+/// The actions on a live, future occurrence of [event] that change its
+/// schedule, as the server offers them for its type (club_client#178):
 ///
 /// - a camp: Reschedule, Cancel this occurrence, Cancel entire series;
 /// - a programme: Reschedule, Cancel this occurrence, End programme from
-///   here (a programme is terminated, never cancelled as a series);
+///   here (a programme is terminated, never cancelled as a series), and
+///   Clear end date while it has an end that has not passed
+///   (club_client#184);
 /// - a one-off: Call off. Its one occurrence is moved with the event's own
 ///   reschedule, on its event page.
-List<AdminOccurrenceAction> scheduledActionsFor(EventType type) =>
-    switch (type) {
+List<AdminOccurrenceAction> scheduledActionsFor(Event event) =>
+    switch (event.type) {
       EventType.camp => const [
         AdminOccurrenceAction.reschedule,
         AdminOccurrenceAction.cancelOccurrence,
         AdminOccurrenceAction.cancelSeries,
       ],
-      EventType.programme => const [
+      EventType.programme => [
         AdminOccurrenceAction.reschedule,
         AdminOccurrenceAction.cancelOccurrence,
         AdminOccurrenceAction.endProgramme,
+        if (event.untilTimeUtc != null && !programmeHasEnded(event))
+          AdminOccurrenceAction.clearEndDate,
       ],
       EventType.oneOff => const [AdminOccurrenceAction.callOff],
     };

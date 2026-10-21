@@ -245,4 +245,33 @@ void main() {
       });
     });
   }
+
+  test('Issue 188: cancelSeries on a camp with no version given sends the '
+      'version of the camp the master holds', () async {
+    final camp = _event(version: 6).copyWith(
+      type: EventType.camp,
+      rrule: () => 'FREQ=DAILY;COUNT=5',
+    );
+    final events = _FakeEvents(camp);
+    final campContainer = ProviderContainer(
+      overrides: [
+        currentUserProvider.overrideWithValue(null),
+        secureClientProvider.overrideWith(
+          (ref) async => fakeSecureClient(events: events),
+        ),
+      ],
+    );
+    addTearDown(campContainer.dispose);
+    await campContainer.read(clEventsMasterProvider.future);
+
+    await campContainer
+        .read(clEventsMasterProvider.notifier)
+        .cancelSeries(
+          camp.id,
+          reason: 'Rink closed',
+          effectiveDateTimeUtc: cutoff,
+        );
+
+    expect(events.calls, ['cancelSeries(v6)']);
+  });
 }

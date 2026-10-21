@@ -104,4 +104,16 @@ void main() {
       expect(find.text(AuthViewStrings.signInNotKept), findsNothing);
     });
   });
+
+  testWidgets('Issue 199: a sign-in from the form calls onLoginSuccess once', (
+    tester,
+  ) async {
+    expect(await signIn(tester, saved: true), 1);
+  });
+
+  testWidgets('Issue 199: a sign-in whose credentials are not kept calls '
+      'onLoginSuccess once, after the notice', (tester) async {
+    expect(await signIn(tester, saved: false), 1);
+    expect(find.text(AuthViewStrings.signInNotKept), findsOneWidget);
+  });
 }

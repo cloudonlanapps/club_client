@@ -1,46 +1,45 @@
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/foundation.dart';
 
-/// An event combined with the enrollments of selected family members.
+/// An event combined with the member's enrollment in it.
 ///
-/// Used by the My Events dashboard to display one card per event,
-/// with subtitle lines showing each enrolled member's status.
+/// Used by the My Events dashboard, one card per event.
 @immutable
 class AggregatedMyEvent {
   const AggregatedMyEvent({
     required this.event,
-    required this.enrollments,
+    this.enrollment,
   });
 
   /// The event data.
   final Event event;
 
-  /// Enrollments for the selected family members in this event.
-  final List<Enrollment> enrollments;
+  /// The member's enrollment in this event, or null when they have none.
+  final Enrollment? enrollment;
 
   AggregatedMyEvent copyWith({
     Event? event,
-    List<Enrollment>? enrollments,
+    Enrollment? Function()? enrollment,
   }) {
     return AggregatedMyEvent(
       event: event ?? this.event,
-      enrollments: enrollments ?? this.enrollments,
+      enrollment: enrollment != null ? enrollment() : this.enrollment,
     );
   }
 
   @override
   String toString() =>
       'AggregatedMyEvent(event: ${event.id}, '
-      'enrollments: ${enrollments.length})';
+      'enrollment: ${enrollment?.status})';
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is AggregatedMyEvent &&
         other.event == event &&
-        listEquals(other.enrollments, enrollments);
+        other.enrollment == enrollment;
   }
 
   @override
-  int get hashCode => event.hashCode ^ enrollments.hashCode;
+  int get hashCode => Object.hash(event, enrollment);
 }

@@ -42,7 +42,7 @@ Event _event() {
 class _StaticListNotifier extends MyEventsListNotifier {
   @override
   Future<List<AggregatedMyEvent>> build(MyEventsListFilter arg) async => [
-    AggregatedMyEvent(event: _event(), enrollments: const []),
+    AggregatedMyEvent(event: _event()),
   ];
 }
 

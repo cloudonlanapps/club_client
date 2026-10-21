@@ -43,15 +43,6 @@ class MyEventsAllViewState extends ConsumerState<MyEventsAllView> {
   Timer? debounceTimer;
   String searchTerm = '';
   EventFilter filter = const EventFilter();
-  late Set<String> selectedUsernames = {widget.targetUsername};
-
-  @override
-  void didUpdateWidget(covariant MyEventsAllView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.targetUsername != widget.targetUsername) {
-      selectedUsernames = {widget.targetUsername};
-    }
-  }
 
   @override
   void dispose() {
@@ -68,7 +59,7 @@ class MyEventsAllViewState extends ConsumerState<MyEventsAllView> {
   }
 
   MyEventsListFilter buildFilter() => MyEventsListFilter(
-    selectedUsernames: selectedUsernames,
+    username: widget.targetUsername,
     searchTerm: searchTerm.isEmpty ? null : searchTerm,
     includePast: filter.includePast,
   );

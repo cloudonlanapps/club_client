@@ -1,5 +1,6 @@
 import 'package:cl_club_events/src/views/event_marketing_view.dart';
 import 'package:cl_club_events/src/widgets/event_marketing/event_marketing_preview.dart';
+import 'package:cl_member_auth/cl_member_auth.dart' show AccessDeniedView;
 import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:cl_server_config/cl_server_config.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -7,7 +8,7 @@ import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ErrorView, SectionEditButton;
+import 'package:ui_lib/ui_lib.dart' show SectionEditButton;
 
 import '../support/credit_scope.dart';
 
@@ -160,7 +161,7 @@ void main() {
     ) async {
       await _pump(tester, user: person(staffCoach, coach: true), module: true);
 
-      expect(find.byType(ErrorView), findsOneWidget);
+      expect(find.byType(AccessDeniedView), findsOneWidget);
       expect(find.text('Basic'), findsNothing);
     });
 

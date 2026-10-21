@@ -62,13 +62,13 @@ UserInfo _admin() => const UserInfo(
   roles: UserRoles(isAdmin: true),
 );
 
-ProviderContainer _container(BroadcastSource broadcasts) {
+ProviderContainer _container(BroadcastSource broadcasts, {UserInfo? user}) {
   final c = ProviderContainer(
     overrides: [
       secureClientProvider.overrideWith(
         (ref) async => _buildClient(broadcasts),
       ),
-      currentUserProvider.overrideWith((ref) => _admin()),
+      currentUserProvider.overrideWith((ref) => user ?? _admin()),
     ],
   );
   addTearDown(c.dispose);
@@ -169,6 +169,25 @@ void main() {
 
     expect(map.length, 45);
   });
+
+  test('Issue 256: a coach who is not an admin lists no broadcasts', () async {
+    final fake = _PagedBroadcasts(3);
+    final c = _container(
+      fake,
+      user: const UserInfo(
+        username: 'coach',
+        displayName: 'coach',
+        status: UserStatus.active,
+        isSuperAdmin: false,
+        roles: UserRoles(isCoach: true),
+      ),
+    );
+
+    final map = await c.read(clBroadcastsMasterProvider.future);
+
+    expect(map, isEmpty);
+    expect(fake.listCalls, 0, reason: 'GET /broadcasts is admin only');
+  });
 }
 
 /// Lists [count] broadcasts, a page of at most `limit` at a time.
@@ -177,11 +196,15 @@ class _PagedBroadcasts extends Fake implements BroadcastSource {
 
   final int count;
 
+  /// How many pages were asked for.
+  int listCalls = 0;
+
   @override
   Future<PaginatedList<Broadcast>> listBroadcasts({
     int offset = 0,
     int limit = 20,
   }) async {
+    listCalls++;
     final end = (offset + limit).clamp(0, count);
     return PaginatedList<Broadcast>(
       items: [

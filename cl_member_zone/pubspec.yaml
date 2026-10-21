@@ -36,7 +36,6 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_riverpod: 2.6.1
-  go_router: 18.0.0
   meta: 1.19.0
   shadcn_ui: 0.56.1
   shared_preferences: 2.5.5
@@ -46,6 +45,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  go_router: 18.0.0
   very_good_analysis: 10.3.0
 
 #dependency_overrides:

@@ -35,7 +35,7 @@ class ClBroadcastsMasterNotifier extends AsyncNotifier<Map<int, Broadcast>> {
   @override
   Future<Map<int, Broadcast>> build() => _writes.load(() async {
     final currentUser = ref.watch(currentUserProvider);
-    if (currentUser == null || !currentUser.isCoachOrAdmin) {
+    if (currentUser == null || !currentUser.isAdmin) {
       return const <int, Broadcast>{};
     }
     ref.watch(clManualRefreshProvider);

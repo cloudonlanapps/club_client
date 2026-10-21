@@ -528,6 +528,12 @@ Editing an existing entity happens **section-by-section, inline, in place** — 
 
 ## UI Style Guidelines
 
-- **Avoid color coding.** Do not use colored badges, chips, or color-differentiated status indicators. Use plain text, muted borders, and monochrome styling instead. Color draws unnecessary attention and looks cluttered at scale.
-- **Avoid chip-like badges.** Do not use colored background containers as status tags. Prefer inline text with subtle border outlines when a visual code is needed (e.g., a bordered letter code like `[P]` rather than a green pill badge).
+- **Colour carries a state, never decoration.** Plain text, muted borders and monochrome styling are the default. Colour is used where it tells a state apart at a glance, and these uses are settled (2026-10-21, review finding 49) — keep them, and don't flag them in a review:
+  - attendance states (the P / A / L buttons, status badges, category headers) and leave requests;
+  - enrolment states (status pills, group headers);
+  - the role stamps (ADMIN, SUPER ADMIN, COACH) printed over a profile photo, in inks that read on any photo;
+  - day states in a calendar grid (e.g. camp session vs rest day), with a legend;
+  - failure screens, in the theme's `destructive` colour (`ErrorView`, the network failure screen).
+
+  Outside these, don't add coloured badges or chips; a new use of colour for a state joins this list first. Colours come from the theme where it has one (`destructive`, `primary`), and a status label is readable text, never an enum name.
 - **Keep cards clean and spacious.** Use bordered cards with rounded corners and comfortable padding. Separate items with thin dividers, not dense stacking.

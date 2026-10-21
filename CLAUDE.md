@@ -196,6 +196,20 @@ provider-backed wrappers live in `cl_club_branding` or the feature packages.
 
 For module roles, see each `<module>/pubspec.yaml` `description:` field. For inter-module dependencies, see each module's `pubspec.yaml` `dependencies:` block. The boundary rules below are the contract those dependencies must respect.
 
+## Dates and instants
+
+Two kinds of time value, handled differently:
+
+- **A date-only value** (date of birth, credit valid-from / valid-until, rest
+  days) has no time of day: it is sent and stored as **UTC midnight**, so it
+  reads the same day everywhere and needs no conversion.
+- **An instant** (a session's start or end, a timestamp) is a moment. Its
+  calendar day is the **viewer's local day**: convert before taking the date,
+  `DateUtils.dateOnly(instantUtc.toLocal())`, never
+  `DateUtils.dateOnly(instantUtc)`. A day or month range sent to the server
+  is local bounds converted to UTC: `DateTime(y, m).toUtc()` ..
+  `DateTime(y, m + 1).toUtc()`, never `DateTime.utc(y, m)` (club_client#209).
+
 ## View naming
 
 Routes are defined in `cl_club_app/lib/src/router.dart` (`routerProvider`). Each route mounts a `Screen` (suffix `Screen`) from the package that owns its domain shell — `cl_member_auth/lib/src/screens/` for `/auth/**`, `cl_member_onboarding/lib/src/screens/` for `/onboarding/**`, `cl_member_zone/lib/src/screens/` for post-onboarding authenticated routes. The screen wraps a same-named view in the underlying feature package. **Use the exact view names from those directories — do not invent variants** (no "Admin Calendar", etc.).

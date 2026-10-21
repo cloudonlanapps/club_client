@@ -57,7 +57,7 @@ Status mutations update local state first, call the server, then reconcile. On f
 
 ## Auth Sync
 
-When a mutation affects the logged-in user, the calling widget invalidates `authStateProvider`. The master notifier does not cross into the auth module.
+When a mutation returns the signed-in user (a profile save on your own account), the calling widget hands the returned `UserPrivate` to `authStateProvider.notifier.setUser` (`syncSignedInUser` in cl_club_members does this, checking the username). A save on anyone else changes nothing about the session. Never `ref.invalidate(authStateProvider)` after a save: that re-runs the session restore (storage, `/me`, status check) (club_client#231). The master notifier does not cross into the auth module.
 
 ## Shared Models
 

@@ -36,8 +36,13 @@ class ClCreditEntriesMasterNotifier
   /// Set while a [loadMore] is in flight, so a scroll does not ask twice.
   bool loadingMore = false;
 
+  /// Counts the builds, so a page requested before a rebuild is dropped
+  /// rather than appended to the rebuilt statement (club_client#228).
+  int _generation = 0;
+
   @override
   Future<CreditStatement> build(String arg) async {
+    _generation++;
     ref
       ..watch(clManualRefreshProvider)
       ..watch(clResourceVersionProvider.select((s) => s.creditsVersion));
@@ -59,12 +64,17 @@ class ClCreditEntriesMasterNotifier
   }
 
   /// Appends the next page of older entries, if there is one.
+  ///
+  /// A page that arrives after the statement rebuilt (a credit action bumps
+  /// `creditsVersion`) belongs to the old statement and is dropped.
   Future<void> loadMore() async {
     final current = state.valueOrNull;
     if (current == null || !current.hasMore || loadingMore) return;
+    final generation = _generation;
     loadingMore = true;
     try {
       final page = await fetchPage(current.entries.length);
+      if (generation != _generation) return;
       state = AsyncData((
         entries: [...current.entries, ...page.items],
         hasMore: page.hasMore,

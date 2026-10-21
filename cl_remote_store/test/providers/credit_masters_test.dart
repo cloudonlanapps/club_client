@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -202,5 +204,48 @@ void main() {
         'entries($_member, newestFirst, $pageSize, $pageSize)',
       ]);
     });
+
+    test(
+      'Issue 228: a page that arrives after the statement reloaded is '
+      'dropped, so the new first page stays',
+      () async {
+        final s = _setUp();
+        s.myCredits.entries[_member] = [
+          for (var i = 1; i <= creditStatementPageSize + 5; i++)
+            creditEntry(i, membername: _member, totalAfter: 100 - i),
+        ];
+        await s.container.read(capabilitiesProvider.future);
+        await _settled(s.container, clCreditEntriesMasterProvider(_member));
+
+        final gate = s.myCredits.laterPageGate = Completer<void>();
+        final loading = s.container
+            .read(clCreditEntriesMasterProvider(_member).notifier)
+            .loadMore();
+
+        // A credit action lands a new line and bumps creditsVersion.
+        final fresh = creditEntry(999, membername: _member, totalAfter: 200);
+        s.myCredits.entries[_member] = [
+          fresh,
+          ...s.myCredits.entries[_member]!,
+        ];
+        final version = s.container.read(clResourceVersionProvider);
+        s.container.read(clResourceVersionProvider.notifier).state = version
+            .copyWith(creditsVersion: version.creditsVersion + 1);
+        final reloaded = await _settled(
+          s.container,
+          clCreditEntriesMasterProvider(_member),
+        );
+        expect(reloaded.entries.first.id, fresh.id);
+
+        gate.complete();
+        await loading;
+
+        final after = s.container
+            .read(clCreditEntriesMasterProvider(_member))
+            .requireValue;
+        expect(after.entries.first.id, fresh.id);
+        expect(after.entries, hasLength(creditStatementPageSize));
+      },
+    );
   });
 }

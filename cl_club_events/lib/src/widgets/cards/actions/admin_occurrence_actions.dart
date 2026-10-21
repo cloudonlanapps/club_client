@@ -8,11 +8,13 @@ import 'package:ui_lib/ui_lib.dart';
 
 import '../../../models/admin_occurrence_action.dart';
 import '../../../models/event_cancellation_messages.dart';
+import '../../../models/programme_schedule_form_helpers.dart';
 import '../../../models/stale_version_message.dart';
 import '../../../utils/admin_occurrence_actions_for.dart';
 import '../../../utils/event_cancellation_error.dart';
 import '../../../utils/event_write_error_message.dart';
 import '../../../utils/programme_end_date.dart';
+import '../../../utils/programme_end_date_messages.dart';
 import '../../event_editor/event_cancellation_dialog.dart';
 import '../../event_editor/programme_end_date_dialog.dart';
 import 'cancel_reason_dialog.dart';
@@ -52,6 +54,9 @@ class AdminOccurrenceActions extends ConsumerStatefulWidget {
 
 /// The label of [AdminOccurrenceAction.endProgramme].
 const String endProgrammeLabel = 'End programme from here';
+
+/// The label of [AdminOccurrenceAction.clearEndDate].
+const String clearEndDateLabel = ProgrammeEndDateDialog.clearLabel;
 
 class AdminOccurrenceActionsState
     extends ConsumerState<AdminOccurrenceActions> {
@@ -122,6 +127,14 @@ class AdminOccurrenceActionsState
           onPressed: running != null
               ? null
               : () => runAction('end-programme', () => endProgramme(event)),
+        ),
+        AdminOccurrenceAction.clearEndDate => ActionItem(
+          label: clearEndDateLabel,
+          icon: LucideIcons.calendarRange,
+          loading: running == 'clear-end',
+          onPressed: running != null
+              ? null
+              : () => runAction('clear-end', () => clearEndDate(event)),
         ),
         AdminOccurrenceAction.callOff => ActionItem(
           label: EventCancellationMessages.callOff,
@@ -226,6 +239,51 @@ class AdminOccurrenceActionsState
         ),
       ),
     );
+  }
+
+  /// Asks to clear the programme [event]'s end date, naming the day it ends
+  /// on now; on yes it runs indefinitely (club_client#184).
+  Future<void> clearEndDate(Event event) async {
+    List<EventSchedule>? schedules;
+    try {
+      schedules = await ref.read(clEventSchedulesProvider(event.id).future);
+    } on Object catch (_) {
+      // The event then stands for its current schedule.
+      schedules = null;
+    }
+    final lastDay = programmeEndDay(event, schedules: schedules);
+    if (lastDay == null || !mounted) return;
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: clearEndDateLabel,
+      message: programmeClearEndConfirm(lastDay),
+      confirmLabel: clearEndDateLabel,
+    );
+    if (!confirmed || !mounted) return;
+    final toaster = ShadToaster.of(context);
+    try {
+      await ProgrammeScheduleFormSubmit.adjustEndDate(
+        event: event,
+        lastDay: null,
+        reason: '',
+        notifier: ref.read(clEventsMasterProvider.notifier),
+        schedules: schedules,
+      );
+      toaster.show(
+        const ShadToast(description: Text(programmeEndDateClearedMessage)),
+      );
+    } on StaleVersionException catch (e) {
+      // The master has already reloaded the programme.
+      toaster.show(
+        ShadToast.destructive(
+          description: Text(staleVersionMessage(e, subject: 'This programme')),
+        ),
+      );
+    } on Object catch (e) {
+      toaster.show(
+        ShadToast.destructive(description: Text(programmeEndDateFailureOf(e))),
+      );
+    }
   }
 
   /// Calls the one-off [event] off (`drop`) in the event page's Call off

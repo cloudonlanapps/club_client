@@ -23,7 +23,10 @@ import 'programme_end_date_dialog_body.dart';
 /// [ProgrammeScheduleFormSubmit.adjustEndDate].
 ///
 /// A programme with no end date sets one, with a reason. One whose end is
-/// ahead moves it to another day, or removes it with **Clear end date**. The
+/// ahead moves it to another day, or removes it with **Clear end date**
+/// (not when the dialog is opened from a session to end the programme
+/// there, [proposedLastDay]: clearing is the occurrence card's own action,
+/// club_client#184). The
 /// form states the last session the chosen day gives before anything is
 /// saved. A refusal stays in the dialog: on the last day when it is about
 /// the day chosen, else as an inline message.
@@ -68,6 +71,11 @@ class ProgrammeEndDateDialogState
 
   /// Whether the programme has an end date to move or clear.
   bool get hasEnd => widget.event.untilTimeUtc != null;
+
+  /// Whether the dialog offers Clear end date: the programme has an end,
+  /// and the admin opened the dialog to edit it, not to end the programme
+  /// from a session.
+  bool get offersClear => hasEnd && widget.proposedLastDay == null;
 
   Future<void> save() async {
     final form = formKey.currentState;
@@ -177,7 +185,7 @@ class ProgrammeEndDateDialogState
             onPressed: saving ? null : () => Navigator.of(context).pop(),
             child: const Text('Cancel'),
           ),
-          if (hasEnd)
+          if (offersClear)
             ShadButton.outline(
               onPressed: saving ? null : clear,
               child: const Text(ProgrammeEndDateDialog.clearLabel),

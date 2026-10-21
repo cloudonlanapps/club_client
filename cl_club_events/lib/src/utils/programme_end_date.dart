@@ -139,6 +139,12 @@ DateTime programmeLastDayBeforeSession(
   );
 }
 
+/// The confirmation of Clear end date on the occurrence card, for a
+/// programme whose last day is now [lastDay] (club_client#184).
+String programmeClearEndConfirm(DateTime lastDay) =>
+    'You are marking this programme to run indefinitely and not to end on '
+    '${programmeEndDayFormat.format(lastDay)}.';
+
 /// The Adjust Schedule dialog's warning for a programme that has an end
 /// date, or `null` when it has none: the server opens the new schedule with
 /// no end, so the end date has to be set again afterwards.

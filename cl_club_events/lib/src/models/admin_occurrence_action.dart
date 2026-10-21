@@ -16,6 +16,10 @@ enum AdminOccurrenceAction {
   /// End the programme from this occurrence on (terminate, or move its end).
   endProgramme,
 
+  /// Remove the programme's end date, after a confirmation: it runs
+  /// indefinitely.
+  clearEndDate,
+
   /// Call off a one-off: cancel its single occurrence.
   callOff,
 

@@ -3,13 +3,14 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 
 import '../models/admin_occurrence_action.dart';
 import 'one_off_time_rules.dart';
+import 'programme_end_date.dart';
 
 /// The actions the occurrence card offers [actingUser] on [occurrence] of
 /// [event], in display order, as the server accepts them:
 ///
 /// | Occurrence | Before `start − 30min` | From `start − 30min` |
 /// |---|---|---|
-/// | scheduled / rescheduled | [scheduledActionsFor] the event's type, and Manage requests | Attendance, until `end + 15d` (a super-admin: no end) |
+/// | scheduled / rescheduled | [scheduledActionsFor] the event, and Manage requests | Attendance, until `end + 15d` (a super-admin: no end) |
 /// | cancelled | Undo Cancel | Undo Cancel, a super-admin only |
 /// | cancelled one-off | Reinstate | Reinstate until the start, then none |
 /// | live one-off, for a super-admin | as above | Attendance, and Call off |
@@ -85,7 +86,7 @@ List<AdminOccurrenceAction> adminOccurrenceActionsFor({
       occurrence.status == OccurrenceStatus.rescheduled;
   return live
       ? [
-          ...scheduledActionsFor(event.type),
+          ...scheduledActionsFor(event),
           AdminOccurrenceAction.manageRequests,
         ]
       : const [];
@@ -98,25 +99,29 @@ bool isCutOffBySeries(Event event, Occurrence occurrence) {
   return cutoff != null && !occurrence.originalStartTimeUtc.isBefore(cutoff);
 }
 
-/// The actions on a live, future occurrence that change its schedule, as
-/// the server offers them for [type] (club_client#178):
+/// The actions on a live, future occurrence of [event] that change its
+/// schedule, as the server offers them for its type (club_client#178):
 ///
 /// - a camp: Reschedule, Cancel this occurrence, Cancel entire series;
 /// - a programme: Reschedule, Cancel this occurrence, End programme from
-///   here (a programme is terminated, never cancelled as a series);
+///   here (a programme is terminated, never cancelled as a series), and
+///   Clear end date while it has an end that has not passed
+///   (club_client#184);
 /// - a one-off: Call off. Its one occurrence is moved with the event's own
 ///   reschedule, on its event page.
-List<AdminOccurrenceAction> scheduledActionsFor(EventType type) =>
-    switch (type) {
+List<AdminOccurrenceAction> scheduledActionsFor(Event event) =>
+    switch (event.type) {
       EventType.camp => const [
         AdminOccurrenceAction.reschedule,
         AdminOccurrenceAction.cancelOccurrence,
         AdminOccurrenceAction.cancelSeries,
       ],
-      EventType.programme => const [
+      EventType.programme => [
         AdminOccurrenceAction.reschedule,
         AdminOccurrenceAction.cancelOccurrence,
         AdminOccurrenceAction.endProgramme,
+        if (event.untilTimeUtc != null && !programmeHasEnded(event))
+          AdminOccurrenceAction.clearEndDate,
       ],
       EventType.oneOff => const [AdminOccurrenceAction.callOff],
     };

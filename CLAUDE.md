@@ -210,6 +210,15 @@ Two kinds of time value, handled differently:
   is local bounds converted to UTC: `DateTime(y, m).toUtc()` ..
   `DateTime(y, m + 1).toUtc()`, never `DateTime.utc(y, m)` (club_client#209).
 
+**Daylight saving is not supported.** Every deployment today runs in IST,
+which has none. Some calendar code steps days by adding 24-hour `Duration`s
+to a local midnight (ui_lib `camp_schedule_calendar.dart`; cl_club_forms
+`camp_date_exclusion_calendar.dart`, `credit_grant_form.dart`,
+`credit_transfer_form.dart`, `event_create_form_defaults.dart`), which drifts
+by a day across a clock change. That is known and accepted (review finding
+20, 2026-10-21): don't flag it in a review. A club in a daylight-saving time
+zone needs it changed first, to calendar-day steps (`DateTime(y, m, d + n)`).
+
 ## View naming
 
 Routes are defined in `cl_club_app/lib/src/router.dart` (`routerProvider`). Each route mounts a `Screen` (suffix `Screen`) from the package that owns its domain shell — `cl_member_auth/lib/src/screens/` for `/auth/**`, `cl_member_onboarding/lib/src/screens/` for `/onboarding/**`, `cl_member_zone/lib/src/screens/` for post-onboarding authenticated routes. The screen wraps a same-named view in the underlying feature package. **Use the exact view names from those directories — do not invent variants** (no "Admin Calendar", etc.).

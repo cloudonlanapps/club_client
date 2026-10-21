@@ -15,6 +15,7 @@ import '../../../utils/event_cancellation_error.dart';
 import '../../../utils/event_write_error_message.dart';
 import '../../../utils/programme_end_date.dart';
 import '../../../utils/programme_end_date_messages.dart';
+import '../../../utils/read_programme_schedules.dart';
 import '../../event_editor/event_cancellation_dialog.dart';
 import '../../event_editor/programme_end_date_dialog.dart';
 import 'manage_requests_dialog.dart';
@@ -208,13 +209,7 @@ class AdminOccurrenceActionsState
   /// before this occurrence's: Save terminates it there, or moves the end
   /// it has.
   Future<void> endProgramme(Event event) async {
-    List<EventSchedule>? schedules;
-    try {
-      schedules = await ref.read(clEventSchedulesProvider(event.id).future);
-    } on Object catch (_) {
-      // The event then stands for its current schedule.
-      schedules = null;
-    }
+    final schedules = await readProgrammeSchedules(ref, event.id);
     if (!mounted) return;
     await showShadDialog<void>(
       context: context,
@@ -233,13 +228,7 @@ class AdminOccurrenceActionsState
   /// Asks to clear the programme [event]'s end date, naming the day it ends
   /// on now; on yes it runs indefinitely (club_client#184).
   Future<void> clearEndDate(Event event) async {
-    List<EventSchedule>? schedules;
-    try {
-      schedules = await ref.read(clEventSchedulesProvider(event.id).future);
-    } on Object catch (_) {
-      // The event then stands for its current schedule.
-      schedules = null;
-    }
+    final schedules = await readProgrammeSchedules(ref, event.id);
     final lastDay = programmeEndDay(event, schedules: schedules);
     if (lastDay == null || !mounted) return;
     final confirmed = await ConfirmDialog.show(

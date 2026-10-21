@@ -397,9 +397,12 @@ class ClUsersMasterNotifier extends AsyncNotifier<Map<String, UserInfo>> {
       return serverResult;
     } catch (e) {
       // Revert on failure, then reload a change that may have landed
-      // (club_core#138); the profile provider follows this master.
-      if (existing != null) {
-        replaceLocally(existing);
+      // (club_core#138); the profile provider follows this master. Only the
+      // status this call set is undone, on the user as they are now, so a
+      // change that completed meanwhile (a role) stays (club_client#235).
+      final now = state.valueOrNull?[username];
+      if (existing != null && now != null && now.status == expectedTo) {
+        replaceLocally(now.copyWith(status: existing.status));
       }
       if (writeMayHaveLanded(e)) ref.invalidateSelf();
       rethrow;

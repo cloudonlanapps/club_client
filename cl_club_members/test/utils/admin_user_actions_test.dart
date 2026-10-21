@@ -66,12 +66,33 @@ void main() {
       expect(keys(actions), ['unblock', 'delete']);
     });
 
-    test('Issue 248: left → reactivate, restore, delete', () {
+    test('Issue 248: left → reactivate, delete', () {
       final actions = adminActionsFor(
         _user(status: UserStatus.left),
         isSuperAdmin: false,
       );
-      expect(keys(actions), ['reactivate', 'restore', 'delete']);
+      expect(keys(actions), ['reactivate', 'delete']);
+    });
+
+    test('Issue 223: a left member is not offered Restore', () {
+      for (final isSuperAdmin in [false, true]) {
+        final actions = adminActionsFor(
+          _user(status: UserStatus.left),
+          isSuperAdmin: isSuperAdmin,
+        );
+        expect(keys(actions), isNot(contains('restore')));
+        expect(keys(actions), containsAll(['reactivate', 'delete']));
+      }
+      // A deleted member keeps Restore: it undoes the delete.
+      expect(
+        keys(
+          adminActionsFor(
+            _user(status: UserStatus.left, deletedAtUtc: DateTime.utc(2025)),
+            isSuperAdmin: false,
+          ),
+        ),
+        contains('restore'),
+      );
     });
 
     test('Issue 402: registered → empty action list (no delete)', () {

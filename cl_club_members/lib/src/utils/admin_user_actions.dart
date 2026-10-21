@@ -70,9 +70,11 @@ List<UserAdminAction> adminActionsFor(
     case UserStatus.blocked:
       actions.add(const UserAdminAction(key: 'unblock', label: 'Unblock'));
     case UserStatus.left:
-      actions
-        ..add(const UserAdminAction(key: 'reactivate', label: 'Reactivate'))
-        ..add(const UserAdminAction(key: 'restore', label: 'Restore'));
+      // Restore only undoes a delete (the server refuses it otherwise with
+      // NOTHING_TO_RESTORE); a left member comes back through Reactivate.
+      actions.add(
+        const UserAdminAction(key: 'reactivate', label: 'Reactivate'),
+      );
     case UserStatus.registered:
       // Handled by early return above.
       break;

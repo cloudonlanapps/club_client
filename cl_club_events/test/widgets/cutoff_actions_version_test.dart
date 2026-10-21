@@ -1,6 +1,5 @@
 import 'package:cl_club_events/src/models/event_cancellation_messages.dart';
 import 'package:cl_club_events/src/widgets/cards/actions/admin_occurrence_actions.dart';
-import 'package:cl_club_events/src/widgets/cards/actions/cancel_reason_dialog.dart';
 import 'package:cl_club_events/src/widgets/event_editor/event_cancellation_dialog.dart';
 import 'package:cl_club_events/src/widgets/event_editor/event_management_section.dart';
 import 'package:cl_club_events/src/widgets/event_editor/programme_end_date_dialog.dart';
@@ -226,12 +225,13 @@ Future<RecordingCutoffEvents> _cancelSeriesFromSession(
   await tester.pumpAndSettle();
   await tester.enterText(
     find.descendant(
-      of: find.byType(CancelReasonDialog),
+      of: find.byType(EventCancellationDialog),
       matching: find.byType(EditableText),
     ),
     _reason,
   );
-  await _press(tester, 'Cancel Session');
+  await tester.pump();
+  await _press(tester, EventCancellationMessages.cancelSeries);
   return events;
 }
 

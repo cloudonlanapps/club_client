@@ -1,6 +1,8 @@
 import 'package:cl_club_events/src/models/event_cancellation_messages.dart';
 import 'package:cl_club_events/src/widgets/cards/actions/admin_occurrence_actions.dart';
 import 'package:cl_club_events/src/widgets/event_editor/event_cancellation_dialog.dart';
+import 'package:cl_club_forms/src/widgets/event_cancellation/event_cancellation_form_validators.dart'
+    show EventCancellationFormValidators;
 import 'package:cl_member_auth/cl_member_auth.dart';
 import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -95,6 +97,19 @@ class _StaticCampNotifier extends ClEventsMasterNotifier {
     required String reason,
   }) async {
     calls.add('cancelOccurrence(v$version, $reason)');
+  }
+
+  @override
+  Future<Event> cancelSeries(
+    int eventId, {
+    required String reason,
+    required DateTime effectiveDateTimeUtc,
+    int? version,
+  }) async {
+    calls.add(
+      'cancelSeries(${effectiveDateTimeUtc.toIso8601String()}, $reason)',
+    );
+    return _events[eventId]!;
   }
 
   @override
@@ -752,6 +767,170 @@ void main() {
         ),
         isNot(contains('End programme from here')),
       );
+    });
+  });
+
+  group('Issue 213: the card cancels through the cancellation dialog, worded '
+      'for the action that opened it', () {
+    /// Presses [label] on [occurrence] of [event] and returns the master.
+    Future<_StaticCampNotifier> open(
+      WidgetTester tester,
+      String label, {
+      Event? event,
+      Occurrence? occurrence,
+    }) async {
+      final events = _StaticCampNotifier({_eventId: event ?? _camp()});
+      final actions = await _resolveActions(
+        tester,
+        occurrence ?? _occurrence(OccurrenceStatus.scheduled, version: 4),
+        camp: events,
+      );
+      actions.singleWhere((a) => a.label == label).onPressed!();
+      await tester.pumpAndSettle();
+      expect(find.byType(EventCancellationDialog), findsOneWidget);
+      return events;
+    }
+
+    Finder inDialog(Finder finder) => find.descendant(
+      of: find.byType(EventCancellationDialog),
+      matching: finder,
+    );
+
+    Future<void> typeReason(WidgetTester tester, String reason) async {
+      await tester.enterText(inDialog(find.byType(EditableText)), reason);
+      await tester.pump();
+    }
+
+    Future<void> confirm(WidgetTester tester, String label) async {
+      await tester.tap(inDialog(find.widgetWithText(ShadButton, label)));
+      await tester.pumpAndSettle();
+    }
+
+    void expectWording({
+      required String title,
+      required String description,
+      required String confirmLabel,
+    }) {
+      expect(inDialog(find.text(title)), findsWidgets);
+      expect(inDialog(find.text(description)), findsOneWidget);
+      expect(
+        inDialog(find.widgetWithText(ShadButton, confirmLabel)),
+        findsOneWidget,
+      );
+      expect(find.textContaining('cannot be undone'), findsNothing);
+    }
+
+    testWidgets('Issue 213: Cancel this occurrence is worded for one session '
+        'and says Undo Cancel restores it', (tester) async {
+      await open(tester, 'Cancel this occurrence');
+
+      expectWording(
+        title: EventCancellationMessages.cancelOccurrenceTitle,
+        description: EventCancellationMessages.cancelOccurrenceDescription,
+        confirmLabel: EventCancellationMessages.cancelOccurrence,
+      );
+      expect(
+        EventCancellationMessages.cancelOccurrenceDescription,
+        contains('Undo Cancel'),
+      );
+    });
+
+    testWidgets('Issue 213: a blank reason keeps Cancel this occurrence open '
+        'on the required message and sends nothing', (tester) async {
+      final events = await open(tester, 'Cancel this occurrence');
+
+      await typeReason(tester, '   ');
+      await confirm(tester, EventCancellationMessages.cancelOccurrence);
+
+      expect(find.byType(EventCancellationDialog), findsOneWidget);
+      expect(
+        find.text(EventCancellationFormValidators.reasonRequired),
+        findsOneWidget,
+      );
+      expect(events.calls, isEmpty);
+    });
+
+    testWidgets('Issue 213: Cancel this occurrence sends the session cancel '
+        'with the reason and the occurrence version', (tester) async {
+      final events = await open(tester, 'Cancel this occurrence');
+
+      await typeReason(tester, 'Coach unavailable');
+      await confirm(tester, EventCancellationMessages.cancelOccurrence);
+
+      expect(events.calls, ['cancelOccurrence(v4, Coach unavailable)']);
+      expect(find.byType(EventCancellationDialog), findsNothing);
+      expect(
+        find.text(EventCancellationMessages.occurrenceCancelled),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Issue 213: Cancel entire series is worded for the series '
+        'and says Undo cancel takes it back', (tester) async {
+      await open(tester, 'Cancel entire series');
+
+      expectWording(
+        title: EventCancellationMessages.cancelSeriesTitle,
+        description: EventCancellationMessages.cancelSeriesDescription,
+        confirmLabel: EventCancellationMessages.cancelSeries,
+      );
+      expect(
+        EventCancellationMessages.cancelSeriesDescription,
+        contains('Undo cancel'),
+      );
+    });
+
+    testWidgets('Issue 213: a blank reason keeps Cancel entire series open '
+        'and sends nothing; a reason cancels from this session', (
+      tester,
+    ) async {
+      final occurrence = _occurrence(OccurrenceStatus.scheduled);
+      final events = await open(
+        tester,
+        'Cancel entire series',
+        occurrence: occurrence,
+      );
+
+      await confirm(tester, EventCancellationMessages.cancelSeries);
+      expect(find.byType(EventCancellationDialog), findsOneWidget);
+      expect(
+        find.text(EventCancellationFormValidators.reasonRequired),
+        findsOneWidget,
+      );
+      expect(events.calls, isEmpty);
+
+      await typeReason(tester, 'Rink closed');
+      await confirm(tester, EventCancellationMessages.cancelSeries);
+
+      final from = occurrence.originalStartTimeUtc.toIso8601String();
+      expect(events.calls, ['cancelSeries($from, Rink closed)']);
+      expect(
+        find.text(EventCancellationMessages.campCancelled),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Issue 213: a one-off Call off is worded for calling off '
+        'and says it can be reinstated', (tester) async {
+      final events = await open(
+        tester,
+        'Call off',
+        event: _camp(type: EventType.oneOff),
+      );
+
+      expectWording(
+        title: EventCancellationMessages.callOff,
+        description: EventCancellationMessages.callOffDescription,
+        confirmLabel: EventCancellationMessages.callOff,
+      );
+      expect(
+        EventCancellationMessages.callOffDescription,
+        contains('reinstate'),
+      );
+
+      await confirm(tester, EventCancellationMessages.callOff);
+      expect(find.byType(EventCancellationDialog), findsOneWidget);
+      expect(events.calls, isEmpty);
     });
   });
 }

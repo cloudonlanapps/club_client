@@ -17,7 +17,6 @@ import '../../../utils/programme_end_date.dart';
 import '../../../utils/programme_end_date_messages.dart';
 import '../../event_editor/event_cancellation_dialog.dart';
 import '../../event_editor/programme_end_date_dialog.dart';
-import 'cancel_reason_dialog.dart';
 import 'manage_requests_dialog.dart';
 import 'occurrence_reschedule_dialog.dart';
 
@@ -108,7 +107,10 @@ class AdminOccurrenceActionsState
           loading: running == 'cancel-instance',
           onPressed: running != null
               ? null
-              : () => runAction('cancel-instance', cancelInstance),
+              : () => runAction(
+                  'cancel-instance',
+                  () => cancelInstance(event),
+                ),
         ),
         AdminOccurrenceAction.cancelSeries => ActionItem(
           label: 'Cancel entire series',
@@ -117,7 +119,7 @@ class AdminOccurrenceActionsState
           loading: running == 'cancel-series',
           onPressed: running != null
               ? null
-              : () => runAction('cancel-series', cancelSeries),
+              : () => runAction('cancel-series', () => cancelSeries(event)),
         ),
         AdminOccurrenceAction.endProgramme => ActionItem(
           label: endProgrammeLabel,
@@ -169,50 +171,37 @@ class AdminOccurrenceActionsState
         ),
       };
 
-  Future<void> cancelInstance() async {
-    final reason = await showDialog<String>(
-      context: context,
-      builder: (_) => const CancelReasonDialog(),
-    );
-    if (reason == null || reason.isEmpty || !mounted) return;
-    await ref
-        .read(clEventsMasterProvider.notifier)
-        .cancelOccurrence(
-          widget.occurrence.eventId,
-          widget.occurrence.originalStartTimeUtc,
-          version: widget.occurrence.version,
-          reason: reason,
-        );
-  }
+  /// Cancels this session of [event] alone, in the cancellation dialog,
+  /// which asks for the reason and saves while it is open (club_client#213).
+  Future<void> cancelInstance(Event event) => openCancellation(
+    EventCancellationDialog.occurrence(
+      event: event,
+      occurrence: widget.occurrence,
+    ),
+    done: EventCancellationMessages.occurrenceCancelled,
+  );
 
-  Future<void> cancelSeries() async {
-    final reason = await showDialog<String>(
+  /// Cancels the camp [event] from this session on, in the cancellation
+  /// dialog (club_client#213).
+  Future<void> cancelSeries(Event event) => openCancellation(
+    EventCancellationDialog.seriesFrom(
+      event: event,
+      occurrence: widget.occurrence,
+    ),
+    done: EventCancellationMessages.campCancelled,
+  );
+
+  /// Opens [dialog]; toasts [done] once the server accepted the change.
+  Future<void> openCancellation(
+    EventCancellationDialog dialog, {
+    required String done,
+  }) async {
+    final accepted = await showShadDialog<bool>(
       context: context,
-      builder: (_) => const CancelReasonDialog(),
+      builder: (_) => dialog,
     );
-    if (reason == null || reason.isEmpty || !mounted) return;
-    // Pass null reference — master forwards a now() default to the SDK
-    // (the SDK signature still requires non-null; follow-up will make it
-    // nullable so null flows end-to-end).
-    // No version is passed: the master sends the one it holds for the event
-    // this session belongs to (club_client#123).
-    try {
-      await ref
-          .read(clEventsMasterProvider.notifier)
-          .cancelSeries(
-            widget.occurrence.eventId,
-            reason: reason,
-            effectiveDateTimeUtc: widget.occurrence.originalStartTimeUtc,
-          );
-    } on StaleVersionException catch (e) {
-      // The master has already reloaded the event and its sessions.
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        ShadToast.destructive(
-          description: Text(staleVersionMessage(e, subject: 'This event')),
-        ),
-      );
-    }
+    if (accepted != true || !mounted) return;
+    ShadToaster.of(context).show(ShadToast(description: Text(done)));
   }
 
   /// Opens Adjust end date for the programme [event], on the last day
@@ -289,19 +278,13 @@ class AdminOccurrenceActionsState
   /// Calls the one-off [event] off (`drop`) in the event page's Call off
   /// dialog, which saves while it is open and shows what the server
   /// refuses; toasts once the server accepted it (club_client#183).
-  Future<void> callOff(Event event) async {
-    final accepted = await showShadDialog<bool>(
-      context: context,
-      builder: (_) => EventCancellationDialog(
-        event: event,
-        occurrenceVersion: widget.occurrence.version,
-      ),
-    );
-    if (accepted != true || !mounted) return;
-    ShadToaster.of(context).show(
-      const ShadToast(description: Text(EventCancellationMessages.calledOff)),
-    );
-  }
+  Future<void> callOff(Event event) => openCancellation(
+    EventCancellationDialog(
+      event: event,
+      occurrenceVersion: widget.occurrence.version,
+    ),
+    done: EventCancellationMessages.calledOff,
+  );
 
   /// Reinstates the called-off one-off [event] after the event page's
   /// confirmation, with its messages (club_client#183).

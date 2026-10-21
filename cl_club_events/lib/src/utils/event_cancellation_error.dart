@@ -15,11 +15,13 @@ import 'event_save_error.dart';
 /// `reinstate` reads as a fixed message; a stale version, a missing
 /// permission, a deleted event and an unreachable server are worded by
 /// [eventSaveErrorMessage], which also logs the error with [stackTrace].
-/// The raw error never reaches the user.
+/// The raw error never reaches the user. [aboutSession] words the
+/// refusals of one session's cancel for a session rather than an event.
 String eventCancellationErrorMessage(
   Object error, {
   required String fallback,
   StackTrace? stackTrace,
+  bool aboutSession = false,
 }) {
   final general = eventSaveErrorMessage(
     error,
@@ -38,9 +40,14 @@ String eventCancellationErrorMessage(
     SdkErrorCode.eventAlreadyCancelled =>
       EventCancellationMessages.alreadyCancelled,
     SdkErrorCode.eventNotCancelled => EventCancellationMessages.notCancelled,
-    SdkErrorCode.pastOccurrence => EventCancellationMessages.alreadyHappened,
+    SdkErrorCode.pastOccurrence =>
+      aboutSession
+          ? EventCancellationMessages.sessionAlreadyStarted
+          : EventCancellationMessages.alreadyHappened,
     SdkErrorCode.cancelledOccurrence =>
-      EventCancellationMessages.alreadyCalledOff,
+      aboutSession
+          ? EventCancellationMessages.sessionAlreadyCancelled
+          : EventCancellationMessages.alreadyCalledOff,
     SdkErrorCode.invalidState => EventCancellationMessages.cannotReinstate,
     SdkErrorCode.invalidEventType => EventCancellationMessages.wrongEventType,
     _ => general,

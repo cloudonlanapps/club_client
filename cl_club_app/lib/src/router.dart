@@ -800,8 +800,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/memberzone/venues/new',
             pageBuilder: (context, state) => NoTransitionPage(
               child: VenueCreateScreen(
-                onCreated: () => context.pop(),
-                onCancel: () => context.pop(),
+                onCreated: () => popOrGo(context, '/memberzone/venues'),
+                onCancel: () => popOrGo(context, '/memberzone/venues'),
               ),
             ),
           ),
@@ -840,8 +840,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/memberzone/groups/new',
             pageBuilder: (context, state) => NoTransitionPage(
               child: GroupCreateScreen(
-                onCreated: () => context.pop(),
-                onCancel: () => context.pop(),
+                onCreated: () => popOrGo(context, '/memberzone/groups'),
+                onCancel: () => popOrGo(context, '/memberzone/groups'),
               ),
             ),
           ),
@@ -939,8 +939,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/memberzone/events/camps/new',
             pageBuilder: (context, state) => NoTransitionPage(
               child: EventsCampsNewScreen(
-                onCreated: () => context.pop(),
-                onCancel: () => context.pop(),
+                onCreated: () => popOrGo(context, '/memberzone/events/camps'),
+                onCancel: () => popOrGo(context, '/memberzone/events/camps'),
                 onHome: () => context.go('/'),
               ),
             ),
@@ -965,8 +965,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/memberzone/events/one-off/new',
             pageBuilder: (context, state) => NoTransitionPage(
               child: EventsOneOffNewScreen(
-                onCreated: () => context.pop(),
-                onCancel: () => context.pop(),
+                onCreated: () => popOrGo(context, '/memberzone/events/one-off'),
+                onCancel: () => popOrGo(context, '/memberzone/events/one-off'),
                 onHome: () => context.go('/'),
               ),
             ),
@@ -991,8 +991,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/memberzone/events/programmes/new',
             pageBuilder: (context, state) => NoTransitionPage(
               child: EventsProgrammesNewScreen(
-                onCreated: () => context.pop(),
-                onCancel: () => context.pop(),
+                onCreated: () =>
+                    popOrGo(context, '/memberzone/events/programmes'),
+                onCancel: () =>
+                    popOrGo(context, '/memberzone/events/programmes'),
                 onHome: () => context.go('/'),
               ),
             ),

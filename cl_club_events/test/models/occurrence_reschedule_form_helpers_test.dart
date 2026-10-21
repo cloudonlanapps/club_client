@@ -226,11 +226,25 @@ void main() {
         ServerException(statusCode: 422, message: 'raw', code: code),
       );
 
-      expect(msg('PAST_RESCHEDULE_TIME'), contains('must be in the future'));
+      expect(msg('POSTPONE_ONLY'), contains('later time'));
       expect(msg('RESCHEDULE_LEAD_TIME_VIOLATED'), contains('too close'));
       expect(msg('VENUE_NOT_FOUND'), contains('no longer available'));
       expect(msg('CANCELLED_OCCURRENCE'), contains('cancelled'));
       expect(msg('NOTHING_TO_RESCHEDULE'), contains('before saving'));
+    });
+
+    test('Issue 216: the retired PAST_RESCHEDULE_TIME has no words of its '
+        'own', () {
+      expect(
+        occurrenceRescheduleRefusal(
+          const ServerException(
+            statusCode: 400,
+            message: 'raw',
+            code: 'PAST_RESCHEDULE_TIME',
+          ),
+        ),
+        isNull,
+      );
     });
 
     test('Issue 750: falls back to the server message for other codes', () {

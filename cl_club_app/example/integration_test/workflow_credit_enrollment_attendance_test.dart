@@ -388,7 +388,7 @@ void main() {
       expect(requestNow.onPressed, isNotNull);
       requestNow.onPressed!();
       await settle(tester);
-      await _memberAction(tester, _kM4, 'Requested');
+      await _memberAction(tester, _kM4, 'Cancel Request');
       await logout(tester);
 
       await loginViaUi(tester, _kAdmin, _kPwd);

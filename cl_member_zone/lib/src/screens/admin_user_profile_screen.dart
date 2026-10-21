@@ -12,6 +12,7 @@ class AdminUserProfileScreen extends ConsumerWidget {
     required this.eventsSection,
     required this.onHome,
     this.onBack,
+    this.onBroadcast,
     this.onHistory,
     this.onOpenReview,
     super.key,
@@ -21,6 +22,9 @@ class AdminUserProfileScreen extends ConsumerWidget {
   final VoidCallback onReview;
   final Widget Function(String username) eventsSection;
   final VoidCallback? onBack;
+
+  /// Opens the Broadcast screen for this page's audience (club_client#252).
+  final VoidCallback? onBroadcast;
   final VoidCallback? onHistory;
 
   /// Opens an evaluation a coach started from the profile (club_core#174).
@@ -39,6 +43,7 @@ class AdminUserProfileScreen extends ConsumerWidget {
         onReview: onReview,
         eventsSection: eventsSection,
         onBack: onBack,
+        onBroadcast: onBroadcast,
         onHistory: onHistory,
         onOpenReview: onOpenReview,
       ),

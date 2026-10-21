@@ -81,7 +81,7 @@ import 'package:cl_member_zone/cl_member_zone.dart'
         VenueProfileScreen,
         VenuesScreen;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show AuditLogScope, identityVerificationProvider;
+    show AuditLogScope, BroadcastScope, identityVerificationProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -551,7 +551,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 onCreateGroup: () => context.push('/memberzone/groups/new'),
                 onCreateEvent: (type) =>
                     context.push('${eventsListPath(type)}/new'),
-                onAnnouncement: () => context.push('/memberzone/broadcast'),
+                onBroadcast: () => context.push(broadcastRoute),
                 onAuditLog: () => context.push('/memberzone/audit-log'),
                 onHome: () => context.go('/'),
               ),
@@ -567,14 +567,21 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ),
           ),
+          // One Broadcast screen for every audience; the query is its filter
+          // (none: all members, ?group=, ?event=, ?member=) (club_client#252).
           GoRoute(
-            path: '/memberzone/broadcast',
-            pageBuilder: (context, state) => NoTransitionPage(
-              child: BroadcastScreen(
-                onClose: () => popOrGo(context, '/'),
-                onHome: () => context.go('/'),
-              ),
-            ),
+            path: broadcastRoute,
+            pageBuilder: (context, state) {
+              final scope = broadcastScopeFrom(state.uri.queryParameters);
+              if (scope == null) return notFoundPage(context);
+              return NoTransitionPage(
+                child: BroadcastScreen(
+                  scope: scope,
+                  onClose: () => popOrGo(context, '/'),
+                  onHome: () => context.go('/'),
+                ),
+              );
+            },
           ),
           GoRoute(
             path: '/memberzone/pending-actions',
@@ -773,6 +780,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // shell pageBuilder even for pushed routes); pop when
                   // poppable, else fall back to the members list.
                   onBack: () => popOrGo(context, '/memberzone/users'),
+                  onBroadcast: () => context.push(
+                    broadcastPath(BroadcastScope.member(targetUsername)),
+                  ),
                   onHistory: () => GoRouter.of(
                     context,
                   ).push('/memberzone/audit-log/user/$targetUsername'),
@@ -884,6 +894,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // shell pageBuilder even for pushed routes); pop when
                   // poppable, else fall back to the groups list.
                   onBack: () => popOrGo(context, '/memberzone/groups'),
+                  onBroadcast: () =>
+                      context.push(broadcastPath(BroadcastScope.group(id))),
                   onHistory: () => GoRouter.of(
                     context,
                   ).push('/memberzone/audit-log/group/$id'),
@@ -1050,6 +1062,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // poppable, else fall back to the dashboard, as Home does:
                   // the event may be of any type.
                   onBack: () => popOrGo(context, '/'),
+                  onBroadcast: () => context.push(
+                    broadcastPath(BroadcastScope.event(eventId)),
+                  ),
                   onHistory: () => GoRouter.of(
                     context,
                   ).push('/memberzone/audit-log/event/$eventId'),

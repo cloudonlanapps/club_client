@@ -37,7 +37,7 @@ class DashboardScreen extends ConsumerWidget {
     required this.onCreateUser,
     required this.onCreateGroup,
     required this.onCreateEvent,
-    required this.onAnnouncement,
+    required this.onBroadcast,
     required this.onAuditLog,
     required this.onHome,
     super.key,
@@ -77,8 +77,9 @@ class DashboardScreen extends ConsumerWidget {
   /// for the chosen event type.
   final ValueChanged<EventType> onCreateEvent;
 
-  /// Admin Quick Actions strip — Announcement tile (pushes Broadcast screen).
-  final VoidCallback onAnnouncement;
+  /// Admin Quick Actions strip — Broadcast tile: opens the Broadcast screen
+  /// for all members (club_client#252).
+  final VoidCallback onBroadcast;
 
   /// Opens the super-admin global audit-log feed (issue #207). Rendered only
   /// for super-admins.
@@ -115,7 +116,7 @@ class DashboardScreen extends ConsumerWidget {
                 onCreateUser: onCreateUser,
                 onCreateGroup: onCreateGroup,
                 onCreateEvent: onCreateEvent,
-                onAnnouncement: onAnnouncement,
+                onBroadcast: onBroadcast,
                 eventTypes: ref.watch(clubEventTypesProvider),
               ),
               LayoutConstants.sectionGap,

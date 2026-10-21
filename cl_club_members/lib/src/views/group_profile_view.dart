@@ -5,7 +5,6 @@ import 'package:cl_club_members/src/widgets/group_eligibility_section.dart';
 import 'package:cl_club_members/src/widgets/group_info_section.dart';
 import 'package:cl_club_members/src/widgets/group_management_section.dart';
 import 'package:cl_club_members/src/widgets/group_member_list.dart';
-import 'package:cl_club_members/src/widgets/group_message_section.dart';
 import 'package:cl_club_members/src/widgets/group_pending_requests_card.dart';
 import 'package:cl_club_members/src/widgets/group_rename_dialog.dart';
 import 'package:cl_club_members/src/widgets/removed_group_view.dart';
@@ -47,6 +46,7 @@ class AdminGroupProfileView extends ConsumerWidget {
     this.sourceNotificationId,
     this.onMemberTap,
     this.onBack,
+    this.onBroadcast,
     this.onHistory,
     super.key,
   });
@@ -56,6 +56,10 @@ class AdminGroupProfileView extends ConsumerWidget {
 
   final VoidCallback onOpenRequests;
   final VoidCallback onOpenAllMembers;
+
+  /// Opens the Broadcast screen for this group's members (admin-only
+  /// affordance, club_client#252).
+  final VoidCallback? onBroadcast;
 
   /// Opens the group's audit history (admin-only affordance, issue #207).
   final VoidCallback? onHistory;
@@ -79,6 +83,7 @@ class AdminGroupProfileView extends ConsumerWidget {
       onMemberTap: onMemberTap,
       onOpenRequests: onOpenRequests,
       onOpenAllMembers: onOpenAllMembers,
+      onBroadcast: onBroadcast,
       onHistory: onHistory,
       onDescriptionSave: isAdmin
           ? (value) => handleDescriptionSave(ref, context, value)
@@ -267,6 +272,7 @@ class GroupProfileView extends ConsumerWidget {
     this.onOpenRequests,
     this.onOpenAllMembers,
     this.onBack,
+    this.onBroadcast,
     this.onHistory,
     super.key,
   });
@@ -295,6 +301,11 @@ class GroupProfileView extends ConsumerWidget {
   final VoidCallback? onOpenAllMembers;
 
   final VoidCallback? onBack;
+
+  /// Opens the Broadcast screen for this group's members. The title-row
+  /// affordance is shown only to admins, on an active group
+  /// (club_client#252).
+  final VoidCallback? onBroadcast;
 
   /// Opens the group's audit history. The title-row affordance is shown only
   /// to admins (issue #207).
@@ -341,6 +352,7 @@ class GroupProfileView extends ConsumerWidget {
             TitleRow(
               title: group.name,
               onBack: onBack,
+              onBroadcast: isAdmin && group.isActive ? onBroadcast : null,
               onHistory: isAdmin ? onHistory : null,
             ),
             const Divider(height: 1),
@@ -350,13 +362,6 @@ class GroupProfileView extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if ((isAdmin || isSuperAdmin) && group.isActive) ...[
-                      GroupMessageSection(
-                        groupId: group.id,
-                        groupName: group.name,
-                      ),
-                      const SizedBox(height: 20),
-                    ],
                     GroupHeroImage(
                       groupId: group.id,
                       canEdit: isAdmin && group.isActive,

@@ -13,18 +13,21 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 /// host via [onBack] rather than a raw `Navigator` here. The host decides
 /// whether the route is poppable and supplies `null` to hide the button.
 ///
-/// The trailing slot is reserved for **one** sanctioned affordance: an
+/// The trailing slot is reserved for **two** sanctioned affordances: an
+/// optional Broadcast button ([onBroadcast], club_client#252) and an
 /// optional audit-history button ([onHistory], issue #207). Issue #252's rule
-/// still holds for everything else — pencil edit affordances, kebab menus,
-/// bulk-action buttons, status indicators, and save commits all live in the
-/// body of the screen, never here. History is the single exception because it
-/// is pure navigation (a callback), not an action on the entity, and the host
-/// supplies `null` to hide it for viewers who may not see it.
+/// (club_core's) still holds for everything else — pencil edit affordances,
+/// kebab menus, bulk-action buttons, status indicators, and save commits all
+/// live in the body of the screen, never here. Broadcast and History are the
+/// exceptions because each is pure navigation (a callback) to another
+/// screen, not an action on the entity, and the host supplies `null` to hide
+/// it for viewers who may not use it.
 class TitleRow extends StatelessWidget {
   const TitleRow({
     required this.title,
     this.subtitle,
     this.onBack,
+    this.onBroadcast,
     this.onHistory,
     super.key,
   });
@@ -35,6 +38,12 @@ class TitleRow extends StatelessWidget {
   /// Invoked when the back button is pressed. When `null`, no back button is
   /// rendered (the leading slot stays reserved so title alignment is stable).
   final VoidCallback? onBack;
+
+  /// Opens the Broadcast screen for this page's audience (a group, an event,
+  /// a member), club_client#252. When `null` (the default, and every viewer
+  /// who may not broadcast) no button renders. The host passes a callback
+  /// only for admins.
+  final VoidCallback? onBroadcast;
 
   /// Invoked when the audit-history button is pressed. When `null` (the
   /// default, and every viewer who may not see history), no button renders
@@ -88,6 +97,12 @@ class TitleRow extends StatelessWidget {
               ],
             ),
           ),
+          if (onBroadcast != null)
+            IconButton(
+              icon: const Icon(LucideIcons.messageSquare, size: 20),
+              tooltip: 'Broadcast',
+              onPressed: onBroadcast,
+            ),
           if (onHistory != null)
             IconButton(
               icon: const Icon(Icons.history, size: 20),

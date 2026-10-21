@@ -160,4 +160,44 @@ void main() {
       },
     );
   });
+
+  test('Issue 198: the broadcasts master loads every page', () async {
+    final fake = _PagedBroadcasts(45);
+    final c = _container(fake);
+
+    final map = await c.read(clBroadcastsMasterProvider.future);
+
+    expect(map.length, 45);
+  });
+}
+
+/// Lists [count] broadcasts, a page of at most `limit` at a time.
+class _PagedBroadcasts extends Fake implements BroadcastSource {
+  _PagedBroadcasts(this.count);
+
+  final int count;
+
+  @override
+  Future<PaginatedList<Broadcast>> listBroadcasts({
+    int offset = 0,
+    int limit = 20,
+  }) async {
+    final end = (offset + limit).clamp(0, count);
+    return PaginatedList<Broadcast>(
+      items: [
+        for (var id = offset; id < end; id++)
+          Broadcast(
+            id: id,
+            audienceSelector: const AudienceSelector.allUsers(),
+            payload: const {},
+            sentAtUtc: DateTime.utc(2026),
+            status: BroadcastStatus.sent,
+            recipientCount: 1,
+          ),
+      ],
+      total: count,
+      offset: offset,
+      limit: limit,
+    );
+  }
 }

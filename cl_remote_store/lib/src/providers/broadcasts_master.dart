@@ -2,6 +2,7 @@ import 'package:cl_remote_store/src/providers/client.dart';
 import 'package:cl_remote_store/src/providers/current_user.dart';
 import 'package:cl_remote_store/src/providers/manual_refresh.dart';
 import 'package:cl_remote_store/src/providers/notifications_master.dart';
+import 'package:cl_remote_store/src/utils/fetch_all_pages.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,8 +37,8 @@ class ClBroadcastsMasterNotifier extends AsyncNotifier<Map<int, Broadcast>> {
     }
     ref.watch(clManualRefreshProvider);
     final client = await ref.watch(secureClientProvider.future);
-    final page = await client.broadcasts.listBroadcasts();
-    return {for (final b in page.items) b.id: b};
+    final items = await fetchAllPages(client.broadcasts.listBroadcasts);
+    return {for (final b in items) b.id: b};
   }
 
   Future<void> refresh() async {

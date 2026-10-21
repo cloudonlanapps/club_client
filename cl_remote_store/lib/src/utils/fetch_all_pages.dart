@@ -3,7 +3,8 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 /// Fetches all pages from a paginated API endpoint.
 ///
 /// Calls [fetcher] repeatedly with increasing offsets until all items
-/// are loaded (`hasMore` returns false).
+/// are loaded (`hasMore` returns false), or a page comes back empty: the
+/// offset would not move, so asking again would return the same page.
 ///
 /// Returns the combined list of all items across all pages.
 Future<List<T>> fetchAllPages<T>(
@@ -21,7 +22,7 @@ Future<List<T>> fetchAllPages<T>(
     final page = await fetcher(offset: offset, limit: pageSize);
     allItems.addAll(page.items);
 
-    if (!page.hasMore) break;
+    if (!page.hasMore || page.items.isEmpty) break;
     offset += page.items.length;
   }
 

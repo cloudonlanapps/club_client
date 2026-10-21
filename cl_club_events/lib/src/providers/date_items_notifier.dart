@@ -45,7 +45,7 @@ class DateItemsNotifier
     // Filter to only occurrences on this specific date
     final dateOnly = DateUtils.dateOnly(key.date);
     final dateOccurrences = occurrences.where((occ) {
-      return DateUtils.dateOnly(occ.actualStartTimeUtc) == dateOnly;
+      return DateUtils.dateOnly(occ.actualStartTimeUtc.toLocal()) == dateOnly;
     }).toList();
 
     // Fetch corresponding events - watching each event individually

@@ -57,8 +57,15 @@ class MyEventsAttendanceViewState
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
 
-    final fromTimeUtc = DateTime.utc(currentMonth.year, currentMonth.month);
-    final toTimeUtc = DateTime.utc(currentMonth.year, currentMonth.month + 1);
+    // The local month's bounds, as instants.
+    final fromTimeUtc = DateTime(
+      currentMonth.year,
+      currentMonth.month,
+    ).toUtc();
+    final toTimeUtc = DateTime(
+      currentMonth.year,
+      currentMonth.month + 1,
+    ).toUtc();
 
     final attendanceAsync = ref.watch(
       clMyAttendanceListProvider((

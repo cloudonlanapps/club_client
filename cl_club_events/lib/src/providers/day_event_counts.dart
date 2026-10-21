@@ -47,8 +47,8 @@ dayEventCountsProvider = FutureProvider.autoDispose
       final result = <DateTime, DayEventCounts>{};
 
       for (final occ in occurrences) {
-        // Normalize to date only (UTC midnight)
-        final date = DateUtils.dateOnly(occ.actualStartTimeUtc);
+        // The local day the session starts on (date only).
+        final date = DateUtils.dateOnly(occ.actualStartTimeUtc.toLocal());
 
         // Get event type from pre-fetched map
         final eventType = eventTypeMap[occ.eventId];

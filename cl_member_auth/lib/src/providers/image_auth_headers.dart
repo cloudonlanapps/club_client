@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'auth.dart';
+import 'token_expiry.dart';
 import 'token_storage.dart';
 
 /// HTTP headers to send when fetching authenticated image URLs.
@@ -11,9 +13,16 @@ import 'token_storage.dart';
 ///
 /// Currently public endpoints simply ignore the extra header, so the same
 /// widget keeps working before and after the server protects the endpoint.
+///
+/// Read again whenever the stored token changes: every write and clear of
+/// the session moves [tokenExpiryProvider] (sign-in, restore, refresh,
+/// sign-out), and a different signed-in user rebuilds it too.
 final imageAuthHeadersProvider = FutureProvider<Map<String, String>>((
   ref,
 ) async {
+  ref
+    ..watch(tokenExpiryProvider)
+    ..watch(authStateProvider.select((auth) => auth.valueOrNull?.username));
   final storage = ref.watch(tokenStorageProvider);
   final session = await storage.read();
   final token = session?.accessToken;

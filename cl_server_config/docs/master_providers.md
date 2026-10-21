@@ -25,8 +25,8 @@ No other module calls the SDK directly.
 | `clEventsMasterProvider` | `events_master.dart` | `Map<int, Event>` keyed by eventId | `createEvent`, `updateEvent`, `correctionOnEvent`, `updateEventForAllFuture`, `cancelSeries`, `deleteEvent`, `restoreEvent`, `hardDeleteEvent`, `rescheduleOccurrence`, `cancelOccurrence`, `undoCancelOccurrence` |
 | `clVenuesMasterProvider` | `venues_master.dart` | `Map<int, Venue>` keyed by venueId | `createVenue`, `updateVenue`, `deleteVenue`, `restoreVenue`, `hardDeleteVenue` |
 | `clGroupsMasterProvider` | `groups_master.dart` | `Map<int, Group>` keyed by groupId | `createGroup`, `updateGroup`, `deleteGroup`, `restoreGroup`, `hardDeleteGroup`, `addMember`, `removeMember`, `addMembersBulk` |
-| `clEnrollmentsMasterProvider(eventId)` | `enrollments_master.dart` | Per-event `Map<String, EnrollmentStatus>` (family by `int` eventId) | `invite`, `inviteBulk`, `assign`, `assignBulk`, `assignTrial`, `approveRequest`, `approveRequestsBulk`, `rejectRequest`, `removeEnrollment`, `approveWithdraw`, `approveWithdrawBulk`, `rejectWithdraw` |
-| `clAttendancesMasterProvider(key)` | `attendances_master.dart` | Per-occurrence attendance (family by `AttendanceKey` = eventId + occurrenceTimeUtc) | `markAttendance`, `approveLeave`, `approveLeaveBulk`, `rejectLeave`, `rejectLeaveBulk` |
+| `clEnrollmentsMasterProvider(eventId)` | `enrollments_master.dart` | Per-event `Map<String, EnrollmentStatus>` (family by `int` eventId) | `invite`, `inviteBulk`, `assign`, `assignBulk`, `assignTrial`, `approveRequest`, `rejectRequest`, `removeEnrollment`, `approveWithdraw`, `rejectWithdraw` |
+| `clAttendancesMasterProvider(key)` | `attendances_master.dart` | Per-occurrence attendance (family by `AttendanceKey` = eventId + occurrenceTimeUtc) | `markAttendance`, `clearAttendance`, `approveLeave`, `rejectLeave` |
 | `clNotificationsMasterProvider` | `notifications_master.dart` | Paged list of in-app notifications | `loadMore`, `refresh`, `markRead`, `markAllRead`, `deleteNotification` |
 | `clPendingActionsMasterProvider` | `pending_actions_master.dart` | Paged list of pending-action notifications | `loadMore`, `refresh`, `dismissLocally` |
 | `clInquiriesMasterProvider` | `inquiries_master.dart` | `InquiryInbox`: the admin inquiry inbox page for the current `InquiryFilter` (kind, handled; server-side, paged) plus the open count across the inbox; empty with no call unless admin | `setFilter`, `nextPage`, `previousPage`, `refresh`, `setHandled`, `deleteInquiry` |
@@ -92,7 +92,6 @@ These mirror the admin masters but for the currently-logged-in member.
 | `clEvaluationMediaProvider(evaluationId)` | `evaluation_media.dart` | `EvaluationMediaSource.listGrouped` (the owner's view: `EvaluationMemberMedia` with evidence on every item, private included, and the member copy; autoDispose; null with no call unless `evaluationsProvider` is true; refetched on `evaluationsVersion`) |
 | `clEvaluationItemSearchProvider(EvaluationItemSearchQuery)` | `evaluation_item_search.dart` | `EvaluationSource.searchItems` ("Existing question": the first `evaluationItemSearchLimit` hits for text + item type; autoDispose; empty with no call unless `evaluationsProvider` is true) |
 | `clCreditUsableForEventProvider((username, eventId, trial))` | `credit_usable_for_event.dart` | `clCreditAccountsMasterProvider` (general or this programme, matching trial flag: the server's funding rule) |
-| `occurrencesNotifierProvider(args)` | `occurrences_notifier.dart` | `clEventsMasterProvider` (autoDispose) |
 
 ## Public Providers (token-free `/public`, apps and website)
 
@@ -137,7 +136,7 @@ club_core#31).
 
 | Provider | File | Role |
 |----------|------|------|
-| `clResourceVersionProvider` | `resource_version.dart` | Bumps a version counter to invalidate derived providers across resources (e.g., when an attendance change should refresh occurrence views). `creditsVersion` is bumped by credit actions, attendance marks and clears, leave decisions and enrollment changes; every credit provider watches it. `evaluationsVersion` is bumped by every evaluation and evaluation-template write; the member-surface evaluation providers watch it. |
+| `clResourceVersionProvider` | `resource_version.dart` | Bumps a version counter to invalidate derived providers across resources (e.g., when an attendance change should refresh occurrence views). `creditsVersion` is bumped by credit actions, attendance marks and clears, leave decisions and enrollment changes; every credit provider watches it. `evaluationsVersion` is bumped by every evaluation and evaluation-template write; the member-surface evaluation providers watch it. `attendanceVersion` is bumped by every attendance write (mark, clear, leave request, cancel and decision); the member's attendance list and occurrences watch it (club_client#232). |
 
 ## What `cl_server_config` Provides (for reference)
 

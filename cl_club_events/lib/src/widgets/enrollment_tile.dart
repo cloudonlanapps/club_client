@@ -7,6 +7,7 @@ import 'package:ui_lib/ui_lib.dart' show ActionGroup;
 
 import '../models/enrollment_category.dart';
 import '../models/withdrawal_reasons.dart';
+import '../utils/enrollment_status_label.dart';
 import 'cards/actions/admin_enrollment_actions.dart';
 import 'cards/actions/enrollment_review_action.dart';
 import 'enrollment_member_lines.dart';
@@ -218,7 +219,7 @@ class EnrollmentStatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
-        status.name,
+        enrollmentStatusLabel(status),
         style: TextStyle(
           fontSize: 10,
           color: color,

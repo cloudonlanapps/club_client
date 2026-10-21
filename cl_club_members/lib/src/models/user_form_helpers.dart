@@ -245,7 +245,7 @@ class UserFormSubmit {
   /// when the editor was allowed to change them — public-name flag, gender,
   /// and date of birth). Only the keys present in [values] are sent, so other
   /// sections are untouched.
-  static Future<void> updatePersonalDetails({
+  static Future<UserPrivate> updatePersonalDetails({
     required Map<String, dynamic> values,
     required String username,
     required ClUsersMasterNotifier notifier,
@@ -272,7 +272,7 @@ class UserFormSubmit {
   }
 
   /// Partial update of the address section.
-  static Future<void> updateAddress({
+  static Future<UserPrivate> updateAddress({
     required Map<String, dynamic> values,
     required String username,
     required ClUsersMasterNotifier notifier,
@@ -289,7 +289,7 @@ class UserFormSubmit {
   /// The phone and the emergency contact's phone are stored in international
   /// format, completed with [defaultCountryCode] when typed without a
   /// country code (#31).
-  static Future<void> updateContact({
+  static Future<UserPrivate> updateContact({
     required Map<String, dynamic> values,
     required String username,
     required ClUsersMasterNotifier notifier,

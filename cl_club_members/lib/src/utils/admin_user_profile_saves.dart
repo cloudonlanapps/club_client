@@ -1,7 +1,7 @@
 import 'dart:async';
 
+import 'package:cl_club_members/src/utils/sync_signed_in_user.dart';
 import 'package:cl_club_members/src/widgets/admin_reset_password_result_dialog.dart';
-import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clUsersMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -19,14 +19,14 @@ Future<void> adminSaveUserField(
   String? Function()? achievements,
 }) async {
   try {
-    await ref
+    final updated = await ref
         .read(clUsersMasterProvider.notifier)
         .updateUser(
           targetUsername,
           bio: bio,
           achievements: achievements,
         );
-    ref.invalidate(authStateProvider);
+    syncSignedInUser(ref, updated);
     if (!context.mounted) return;
     ShadToaster.of(context).show(
       const ShadToast(description: Text('Profile updated.')),

@@ -122,8 +122,6 @@ class GroupCreateViewState extends ConsumerState<GroupCreateView> {
             groupId,
             currentUser.username,
           );
-      // Auth Sync: the logged-in user's group membership changed.
-      ref.invalidate(authStateProvider);
       return null;
     } on ServerException catch (e) {
       // Auto-group eligibility failures: server emits NOT_ELIGIBLE /

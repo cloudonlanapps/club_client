@@ -2,6 +2,7 @@ import 'package:cl_member_auth/cl_member_auth.dart' show canManageEvent;
 import 'package:club_sdk_2/club_sdk_2.dart';
 
 import '../models/admin_occurrence_action.dart';
+import 'one_off_time_rules.dart';
 
 /// The actions the occurrence card offers [actingUser] on [occurrence] of
 /// [event], in display order, as the server accepts them:
@@ -10,13 +11,20 @@ import '../models/admin_occurrence_action.dart';
 /// |---|---|---|
 /// | scheduled / rescheduled | [scheduledActionsFor] the event's type, and Manage requests | Attendance, until `end + 15d` (a super-admin: no end) |
 /// | cancelled | Undo Cancel | Undo Cancel, a super-admin only |
+/// | cancelled one-off | Reinstate | Reinstate until the start, then none |
 /// | completed | none | Attendance, as above |
 ///
 /// Attendance is offered to the event's staff (`canManageAttendance`); every
 /// other action to its organizer or an admin only (`canManageEvent`), as the
 /// server requires (club_core#146). From 30 minutes before the start the
 /// server restores a cancelled occurrence for a super-admin only, and never
-/// records attendance on one (club_client#177).
+/// record attendance on one (club_client#177).
+///
+/// A one-off is called off and reinstated through its own verbs (`drop`,
+/// `reinstate`), never the per-occurrence cancel and undo-cancel, which the
+/// server refuses for it (club_server#48). A called-off one-off offers
+/// Reinstate until its start and nothing after it, for a super-admin too
+/// (one-off R7, [canReinstateOneOffAt]; club_client#183).
 ///
 /// A slot at or after the event's cutoff (`untilTimeUtc`) was cancelled with
 /// the series: it comes back only when the series cancel is undone, so it
@@ -32,6 +40,11 @@ List<AdminOccurrenceAction> adminOccurrenceActionsFor({
   if (occurrence.status == OccurrenceStatus.cancelled) {
     if (isCutOffBySeries(event, occurrence)) return const [];
     if (!canManageEvent(event, actingUser)) return const [];
+    if (event.type == EventType.oneOff) {
+      return canReinstateOneOffAt(occurrence.originalStartTimeUtc)
+          ? const [AdminOccurrenceAction.reinstate]
+          : const [];
+    }
     if (inSchedulingWindow || actingUser.isSuperAdmin) {
       return const [AdminOccurrenceAction.undoCancel];
     }
@@ -55,17 +68,17 @@ List<AdminOccurrenceAction> adminOccurrenceActionsFor({
     return const [];
   }
 
-  switch (occurrence.status) {
-    // A rescheduled occurrence is still a live, future day: it offers the
-    // same actions as a scheduled one, all keyed by `originalStartTimeUtc`.
-    case OccurrenceStatus.scheduled || OccurrenceStatus.rescheduled:
-      return [
-        ...scheduledActionsFor(event.type),
-        AdminOccurrenceAction.manageRequests,
-      ];
-    case OccurrenceStatus.cancelled || OccurrenceStatus.completed:
-      return const [];
-  }
+  // A rescheduled occurrence is still a live, future day: it offers the
+  // same actions as a scheduled one, all keyed by `originalStartTimeUtc`.
+  final live =
+      occurrence.status == OccurrenceStatus.scheduled ||
+      occurrence.status == OccurrenceStatus.rescheduled;
+  return live
+      ? [
+          ...scheduledActionsFor(event.type),
+          AdminOccurrenceAction.manageRequests,
+        ]
+      : const [];
 }
 
 /// Whether [occurrence] is at or after [event]'s cutoff, so cancelled with

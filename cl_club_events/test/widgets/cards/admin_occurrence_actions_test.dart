@@ -1,4 +1,6 @@
+import 'package:cl_club_events/src/models/event_cancellation_messages.dart';
 import 'package:cl_club_events/src/widgets/cards/actions/admin_occurrence_actions.dart';
+import 'package:cl_club_events/src/widgets/event_editor/event_cancellation_dialog.dart';
 import 'package:cl_member_auth/cl_member_auth.dart';
 import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -79,8 +81,37 @@ class _StaticCampNotifier extends ClEventsMasterNotifier {
   /// When set, undo-cancel throws this.
   Exception? undoError;
 
+  /// The occurrence-level and one-off calls made, in order.
+  final List<String> calls = [];
+
   @override
   Future<Map<int, Event>> build() async => _events;
+
+  @override
+  Future<void> cancelOccurrence(
+    int eventId,
+    DateTime occurrenceTimeUtc, {
+    required int version,
+    required String reason,
+  }) async {
+    calls.add('cancelOccurrence(v$version, $reason)');
+  }
+
+  @override
+  Future<Event> drop(
+    int eventId, {
+    required int version,
+    required String reason,
+  }) async {
+    calls.add('drop(v$version, $reason)');
+    return _events[eventId]!;
+  }
+
+  @override
+  Future<Event> reinstate(int eventId, {required int version}) async {
+    calls.add('reinstate(v$version)');
+    return _events[eventId]!;
+  }
 
   @override
   Future<void> undoCancelOccurrence(
@@ -89,6 +120,7 @@ class _StaticCampNotifier extends ClEventsMasterNotifier {
     required int version,
   }) async {
     undoVersions.add(version);
+    calls.add('undoCancelOccurrence(v$version)');
     if (undoError != null) throw undoError!;
   }
 }
@@ -493,6 +525,137 @@ void main() {
           'Manage requests',
         ],
       );
+    });
+  });
+
+  group('Issue 183: a one-off is called off and reinstated as on its event '
+      'page', () {
+    Event oneOff() => _camp(type: EventType.oneOff);
+
+    testWidgets('Issue 183: a called-off one-off offers Reinstate, not Undo '
+        'Cancel', (tester) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrence(OccurrenceStatus.cancelled),
+          event: oneOff(),
+        ),
+        ['Reinstate'],
+      );
+    });
+
+    testWidgets('Issue 183: Reinstate is offered to an admin until the '
+        'start, inside the last 30 minutes too', (tester) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrenceAt(_inAttendanceWindow, OccurrenceStatus.cancelled),
+          event: oneOff(),
+        ),
+        ['Reinstate'],
+      );
+    });
+
+    testWidgets('Issue 183: a called-off one-off that has started offers a '
+        'super-admin nothing', (tester) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrenceAt(const Duration(hours: -1), OccurrenceStatus.cancelled),
+          user: _superAdmin(),
+          event: oneOff(),
+        ),
+        isEmpty,
+      );
+    });
+
+    testWidgets('Issue 183: a coach on the event is not offered Reinstate', (
+      tester,
+    ) async {
+      expect(
+        await _resolveLabels(
+          tester,
+          _occurrence(OccurrenceStatus.cancelled),
+          user: _coach(_assignedCoach),
+          event: oneOff(),
+        ),
+        isEmpty,
+      );
+    });
+
+    testWidgets('Issue 183: Reinstate asks the event page question and '
+        'sends reinstate with the occurrence version', (tester) async {
+      final events = _StaticCampNotifier({_eventId: oneOff()});
+      final actions = await _resolveActions(
+        tester,
+        _occurrence(OccurrenceStatus.cancelled, version: 3),
+        camp: events,
+      );
+
+      actions.singleWhere((a) => a.label == 'Reinstate').onPressed!();
+      await tester.pumpAndSettle();
+      expect(
+        find.text(EventCancellationMessages.reinstateConfirm('current camp')),
+        findsOneWidget,
+      );
+      await tester.tap(find.widgetWithText(ShadButton, 'Reinstate'));
+      await tester.pumpAndSettle();
+
+      expect(events.calls, ['reinstate(v3)']);
+      expect(find.text(EventCancellationMessages.reinstated), findsOneWidget);
+    });
+
+    testWidgets('Issue 183: Back at the Reinstate question sends nothing', (
+      tester,
+    ) async {
+      final events = _StaticCampNotifier({_eventId: oneOff()});
+      final actions = await _resolveActions(
+        tester,
+        _occurrence(OccurrenceStatus.cancelled),
+        camp: events,
+      );
+
+      actions.singleWhere((a) => a.label == 'Reinstate').onPressed!();
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.widgetWithText(ShadButton, EventCancellationMessages.back),
+      );
+      await tester.pumpAndSettle();
+
+      expect(events.calls, isEmpty);
+    });
+
+    testWidgets('Issue 183: Call off opens the event page Call off dialog '
+        'and sends drop with the occurrence version', (tester) async {
+      final events = _StaticCampNotifier({_eventId: oneOff()});
+      final actions = await _resolveActions(
+        tester,
+        _occurrence(OccurrenceStatus.scheduled, version: 5),
+        camp: events,
+      );
+
+      actions.singleWhere((a) => a.label == 'Call off').onPressed!();
+      await tester.pumpAndSettle();
+      expect(find.byType(EventCancellationDialog), findsOneWidget);
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(EventCancellationDialog),
+          matching: find.byType(EditableText),
+        ),
+        'Rink closed',
+      );
+      await tester.pump();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(EventCancellationDialog),
+          matching: find.widgetWithText(ShadButton, 'Call off'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(events.calls, ['drop(v5, Rink closed)']);
+      expect(find.byType(EventCancellationDialog), findsNothing);
+      expect(find.text(EventCancellationMessages.calledOff), findsOneWidget);
     });
   });
 }

@@ -10,8 +10,10 @@ import '../../../models/admin_occurrence_action.dart';
 import '../../../models/event_cancellation_messages.dart';
 import '../../../models/stale_version_message.dart';
 import '../../../utils/admin_occurrence_actions_for.dart';
+import '../../../utils/event_cancellation_error.dart';
 import '../../../utils/event_write_error_message.dart';
 import '../../../utils/programme_end_date.dart';
+import '../../event_editor/event_cancellation_dialog.dart';
 import '../../event_editor/programme_end_date_dialog.dart';
 import 'cancel_reason_dialog.dart';
 import 'manage_requests_dialog.dart';
@@ -125,10 +127,10 @@ class AdminOccurrenceActionsState
           label: EventCancellationMessages.callOff,
           icon: LucideIcons.calendarX,
           destructive: true,
-          loading: running == 'cancel-instance',
+          loading: running == 'call-off',
           onPressed: running != null
               ? null
-              : () => runAction('cancel-instance', cancelInstance),
+              : () => runAction('call-off', () => callOff(event)),
         ),
         AdminOccurrenceAction.manageRequests => ActionItem(
           label: 'Manage requests',
@@ -144,6 +146,13 @@ class AdminOccurrenceActionsState
           onPressed: running != null
               ? null
               : () => runAction('undo', undoCancel),
+        ),
+        AdminOccurrenceAction.reinstate => ActionItem(
+          label: EventCancellationMessages.reinstate,
+          loading: running == 'reinstate',
+          onPressed: running != null
+              ? null
+              : () => runAction('reinstate', () => reinstate(event)),
         ),
       };
 
@@ -217,6 +226,59 @@ class AdminOccurrenceActionsState
         ),
       ),
     );
+  }
+
+  /// Calls the one-off [event] off (`drop`) in the event page's Call off
+  /// dialog, which saves while it is open and shows what the server
+  /// refuses; toasts once the server accepted it (club_client#183).
+  Future<void> callOff(Event event) async {
+    final accepted = await showShadDialog<bool>(
+      context: context,
+      builder: (_) => EventCancellationDialog(
+        event: event,
+        occurrenceVersion: widget.occurrence.version,
+      ),
+    );
+    if (accepted != true || !mounted) return;
+    ShadToaster.of(context).show(
+      const ShadToast(description: Text(EventCancellationMessages.calledOff)),
+    );
+  }
+
+  /// Reinstates the called-off one-off [event] after the event page's
+  /// confirmation, with its messages (club_client#183).
+  Future<void> reinstate(Event event) async {
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: EventCancellationMessages.reinstateTitle,
+      message: EventCancellationMessages.reinstateConfirm(event.title),
+      confirmLabel: EventCancellationMessages.reinstate,
+      cancelLabel: EventCancellationMessages.back,
+    );
+    if (!confirmed || !mounted) return;
+    final toaster = ShadToaster.of(context);
+    try {
+      await ref
+          .read(clEventsMasterProvider.notifier)
+          .reinstate(event.id, version: widget.occurrence.version);
+      toaster.show(
+        const ShadToast(
+          description: Text(EventCancellationMessages.reinstated),
+        ),
+      );
+    } on Object catch (e, st) {
+      toaster.show(
+        ShadToast.destructive(
+          description: Text(
+            eventCancellationErrorMessage(
+              e,
+              stackTrace: st,
+              fallback: EventCancellationMessages.reinstateFailed,
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> undoCancel() async {

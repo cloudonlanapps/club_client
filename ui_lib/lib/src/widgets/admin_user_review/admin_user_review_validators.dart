@@ -17,13 +17,4 @@ abstract class AdminUserReviewFormValidators {
     }
     return null;
   }
-
-  /// Whether the Confirm button should be enabled. Reason is optional, so
-  /// the button is enabled unless the user has typed past the max length.
-  static bool canConfirm({
-    required AdminUserReviewAction action,
-    required String reason,
-  }) {
-    return reason.trim().length <= kAdminReviewReasonMaxLength;
-  }
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import 'markdown_guide_dialog.dart';
 import 'themed_markdown.dart';
 
 /// Displays rendered markdown text. On tap, opens a centered editor popover
@@ -165,37 +166,7 @@ class MarkdownEditorDialogState extends State<MarkdownEditorDialog> {
   late TextEditingController controller;
   bool showPreview = false;
 
-  Future<void> showMarkdownHelp() async {
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => PointerInterceptor(
-        child: AlertDialog(
-          title: const Text('Markdown Guide'),
-          content: const SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                HelpRow(syntax: '**bold**', description: 'Bold text'),
-                HelpRow(syntax: '*italic*', description: 'Italic text'),
-                HelpRow(syntax: '# Heading', description: 'Heading'),
-                HelpRow(syntax: '- item', description: 'Bullet list'),
-                HelpRow(syntax: '1. item', description: 'Numbered list'),
-                HelpRow(syntax: '[text](url)', description: 'Link'),
-                HelpRow(syntax: '> quote', description: 'Block quote'),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Close'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Future<void> showMarkdownHelp() => showMarkdownGuide(context);
 
   @override
   void initState() {
@@ -415,39 +386,6 @@ class MarkdownEditorDialogState extends State<MarkdownEditorDialog> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class HelpRow extends StatelessWidget {
-  const HelpRow({
-    required this.syntax,
-    required this.description,
-    super.key,
-  });
-
-  final String syntax;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 140,
-            child: Text(
-              syntax,
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 13,
-              ),
-            ),
-          ),
-          Text(description),
-        ],
       ),
     );
   }

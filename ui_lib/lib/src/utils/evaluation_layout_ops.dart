@@ -31,18 +31,32 @@ abstract final class EvaluationLayoutOps {
     return child == null ? entry.item : entry.sectionItems[child];
   }
 
+  /// Whether the row at [pos] can move one place by [delta]: an item in a
+  /// section always can (past either end it leaves the section); a
+  /// top-level row can unless it is first moving up or last moving down.
+  /// The same answer as `move(...) != null`, without building the layout.
+  static bool canMove(
+    List<EvaluationLayoutEntry> layout,
+    EvaluationLayoutPosition pos,
+    int delta,
+  ) {
+    if (pos.child != null) return true;
+    final j = pos.entry + delta;
+    return j >= 0 && j < layout.length;
+  }
+
   /// [layout] with the row at [pos] moved one place by [delta] (−1 up,
-  /// +1 down), or `null` when it cannot move that way.
+  /// +1 down), or `null` when it cannot move that way ([canMove]).
   static List<EvaluationLayoutEntry>? move(
     List<EvaluationLayoutEntry> layout,
     EvaluationLayoutPosition pos,
     int delta,
   ) {
+    if (!canMove(layout, pos, delta)) return null;
     final child = pos.child;
     if (child != null) return moveInSection(layout, pos.entry, child, delta);
     final i = pos.entry;
     final j = i + delta;
-    if (j < 0 || j >= layout.length) return null;
     final entry = layout[i];
     final neighbour = layout[j];
     final next = [...layout];

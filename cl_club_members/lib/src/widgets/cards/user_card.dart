@@ -37,8 +37,8 @@ class UserCard extends ConsumerWidget {
   final UserInfo? user;
 
   /// Row tap handler. Typically navigates to the user profile screen.
-  /// Suppressed automatically for non-active users so admins can't tap
-  /// through to a blocked / left user's detail.
+  /// Wired for every status: a blocked / left user's card is muted, not
+  /// disabled, so an admin can still open their profile.
   final VoidCallback? onTap;
 
   /// Pending/registered users only — wires the Review action to the

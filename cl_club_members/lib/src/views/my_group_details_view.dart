@@ -159,7 +159,7 @@ class PendingJoinRequestCardState
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
     final requestedAt = DateTime.fromMillisecondsSinceEpoch(
-      widget.request.requestedAt * 1000,
+      widget.request.requestedAt,
       isUtc: true,
     );
 

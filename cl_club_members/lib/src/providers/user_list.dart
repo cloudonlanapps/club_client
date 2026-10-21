@@ -10,19 +10,23 @@ import 'package:meta/meta.dart';
 class UserListState {
   const UserListState({
     required this.items,
-    required this.total,
+    required this.all,
   });
 
+  /// The users the filter keeps.
   final List<UserInfo> items;
-  final int total;
+
+  /// Every user the filter chooses from, before it is applied (super
+  /// admins excluded), for the "Showing N of M" line.
+  final List<UserInfo> all;
 
   UserListState copyWith({
     List<UserInfo>? items,
-    int? total,
+    List<UserInfo>? all,
   }) {
     return UserListState(
       items: items ?? this.items,
-      total: total ?? this.total,
+      all: all ?? this.all,
     );
   }
 }
@@ -83,7 +87,10 @@ class UserListNotifier extends AsyncNotifier<UserListState> {
         ? await ref.watch(clRegisteredUsersProvider.future)
         : (await ref.watch(clUsersMasterProvider.future)).values.toList();
     final filtered = _applyFilter(users, filter);
-    return UserListState(items: filtered, total: filtered.length);
+    return UserListState(
+      items: filtered,
+      all: applyUserListPostProcessing(users),
+    );
   }
 
   /// Re-fetch all user data from the server.

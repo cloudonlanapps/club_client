@@ -164,13 +164,11 @@ class UserListViewState extends ConsumerState<UserListView> {
               // Admin: hide pending users (they're surfaced via the
               // PendingApprovalsBanner / AdminUserReviewView instead).
               // Coach: only show active users.
-              final items = isAdmin
-                  ? state.items
-                        .where((u) => u.status != UserStatus.pending)
-                        .toList()
-                  : state.items
-                        .where((u) => u.status == UserStatus.active)
-                        .toList();
+              bool shown(UserInfo u) => isAdmin
+                  ? u.status != UserStatus.pending
+                  : u.status == UserStatus.active;
+              final items = state.items.where(shown).toList();
+              final total = state.all.where(shown).length;
 
               if (items.isEmpty) {
                 return Center(
@@ -187,7 +185,7 @@ class UserListViewState extends ConsumerState<UserListView> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                       child: Text(
-                        'Showing ${items.length} of ${state.total}',
+                        'Showing ${items.length} of $total',
                         style: theme.textTheme.muted,
                       ),
                     ),

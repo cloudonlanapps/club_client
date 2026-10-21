@@ -3,6 +3,7 @@ import 'package:cl_remote_store/src/providers/current_user.dart';
 import 'package:cl_remote_store/src/providers/manual_refresh.dart';
 import 'package:cl_remote_store/src/utils/media_by_uuid.dart';
 import 'package:cl_remote_store/src/utils/uncertain_write.dart';
+import 'package:cl_remote_store/src/utils/writes_during_load.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,13 +50,30 @@ class ClIdentityDocsMasterNotifier
     extends FamilyAsyncNotifier<List<MediaLink>, String> {
   String get username => arg;
 
+  /// The links keyed by media uuid, in list order, so an upload or discard
+  /// made while the list loads is kept (club_client#234).
+  final _writes = WritesDuringLoad<String, MediaLink>();
+
   @override
   Future<List<MediaLink>> build(String arg) async {
-    ref.watch(clManualRefreshProvider);
-    final currentUser = ref.watch(currentUserProvider);
-    if (currentUser == null) return const [];
-    final client = await ref.watch(secureClientProvider.future);
-    return client.userMedia.listByTag(arg, kIdentityDocumentTag);
+    final links = await _writes.load(() async {
+      ref.watch(clManualRefreshProvider);
+      final currentUser = ref.watch(currentUserProvider);
+      if (currentUser == null) return const <String, MediaLink>{};
+      final client = await ref.watch(secureClientProvider.future);
+      final listed = await client.userMedia.listByTag(
+        arg,
+        kIdentityDocumentTag,
+      );
+      return {for (final link in listed) link.mediaUuid: link};
+    });
+    return links.values.toList();
+  }
+
+  Map<String, MediaLink>? get _currentByUuid {
+    final current = state.valueOrNull;
+    if (current == null) return null;
+    return {for (final link in current) link.mediaUuid: link};
   }
 
   /// Upload [bytes] as a new identity-document `Media` and attach it under
@@ -84,8 +102,8 @@ class ClIdentityDocsMasterNotifier
         tag: kIdentityDocumentTag,
         mediaUuid: media.uuid,
       );
-      final current = state.valueOrNull ?? const <MediaLink>[];
-      state = AsyncData([...current, link]);
+      final next = _writes.put(_currentByUuid, link.mediaUuid, link);
+      if (next != null) state = AsyncData(next.values.toList());
       return link;
     }, refetch: ref.invalidateSelf);
   }
@@ -109,11 +127,8 @@ class ClIdentityDocsMasterNotifier
           '$mediaUuid: $e\n$st',
         );
       }
-      final current = state.valueOrNull ?? const <MediaLink>[];
-      state = AsyncData([
-        for (final link in current)
-          if (link.mediaUuid != mediaUuid) link,
-      ]);
+      final next = _writes.remove(_currentByUuid, mediaUuid);
+      if (next != null) state = AsyncData(next.values.toList());
     }, refetch: ref.invalidateSelf);
   }
 

@@ -38,6 +38,20 @@ class WritesDuringLoad<K, V> {
     return current == null ? null : {...current, key: value};
   }
 
+  /// The master replaces its whole map with [next] (a save of the whole
+  /// map, club_client#234). Returns [next]: unlike a put, the result does
+  /// not depend on what the master held.
+  Map<K, V> replaceAll(Map<K, V> next) {
+    if (_load != null) {
+      _writes.add(
+        (map) => map
+          ..clear()
+          ..addAll(next),
+      );
+    }
+    return Map.of(next);
+  }
+
   /// The master removes [key]. Returns its map without the row, or null when
   /// [current] is null.
   Map<K, V>? remove(Map<K, V>? current, K key) {

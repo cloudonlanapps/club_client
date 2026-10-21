@@ -10,5 +10,3 @@ export 'src/providers/event_list.dart'
     show EventListNotifier, eventListProvider;
 export 'src/providers/event_notifier.dart'
     show EventNotifier, eventNotifierProvider;
-export 'src/providers/occurrence_list.dart'
-    show OccurrenceListNotifier, occurrenceListProvider;

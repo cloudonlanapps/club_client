@@ -99,6 +99,8 @@ void main() {
             testPublicEvent(
               dobOnOrBeforeUtc: DateTime.utc(2018, 5, 4),
               dobOnOrAfterUtc: DateTime.utc(2014, 5, 5),
+              minAge: const Age(years: 8),
+              maxAge: const Age(years: 11),
               genders: const [
                 Gender.male,
                 Gender.other,

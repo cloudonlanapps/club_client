@@ -17,7 +17,8 @@ import '../../../utils/event_write_error_message.dart';
 /// | enrollment.status        | actions                           |
 /// |--------------------------|-----------------------------------|
 /// | none (and canEnroll)     | `[Request to Join]`               |
-/// | `invited`                | `[Accept, ⋮ Decline]`             |
+/// | `invited`                | `[Accept, ⋮ Decline]` (Accept     |
+/// |                          | only when canEnroll)              |
 /// | `requested`              | `[Cancel Request]`                |
 /// | `withdrawRequested`      | `[Cancel Withdraw]`               |
 /// | `accepted`/`assigned`/   | `[Withdraw]`                      |
@@ -91,7 +92,10 @@ class UserEventActionsState extends ConsumerState<UserEventActions> {
     switch (enrollment.status) {
       case EnrollmentStatus.invited:
         return [
-          _item('Accept', _acceptInvite, key: 'accept', unfunded: unfunded),
+          // The server refuses an invite once the event has ended or the
+          // member cannot join it, as the event page does.
+          if (canEnrollOnEvent(widget.event, acting))
+            _item('Accept', _acceptInvite, key: 'accept', unfunded: unfunded),
           _item('Decline', _declineInvite, destructive: true, key: 'decline'),
         ];
       case EnrollmentStatus.requested:

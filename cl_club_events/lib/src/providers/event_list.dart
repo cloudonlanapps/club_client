@@ -50,13 +50,10 @@ class EventListNotifier
       events = events.where((e) => e.visibility == filter.visibility).toList();
     }
     if (!filter.includePast) {
-      final now = DateTime.now().toUtc();
+      // An event is past once its last session has ended (isPastEvent
+      // expands the rrule; endTimeUtc is only the first session's end).
       events = events
-          .where(
-            (e) =>
-                e.status == EventStatus.active &&
-                (e.endTimeUtc.isAfter(now) || isOpenEndedRecurring(e)),
-          )
+          .where((e) => e.status == EventStatus.active && !isPastEvent(e))
           .toList();
     }
     if (filter.searchTerm != null && filter.searchTerm!.isNotEmpty) {
@@ -73,12 +70,4 @@ class EventListNotifier
   Future<void> refresh() async {
     ref.invalidateSelf();
   }
-}
-
-/// Returns true if the event has an open-ended recurrence rule
-/// (RRULE with no COUNT and no UNTIL), meaning it recurs indefinitely.
-bool isOpenEndedRecurring(Event e) {
-  final rrule = e.rrule;
-  if (rrule == null) return false;
-  return !rrule.contains('COUNT') && !rrule.contains('UNTIL');
 }

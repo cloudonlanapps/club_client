@@ -14,9 +14,10 @@ abstract final class IdentityDocumentUploadErrors {
   /// the known upload-specific cases — callers then fall back to the form's
   /// generic "couldn't upload" message (or rethrow).
   static String? friendlyMessage(ServerException e) => switch (e.code) {
-    'ENCRYPTION_NOT_CONFIGURED' =>
+    SdkErrorCode.encryptionNotConfigured =>
       'Secure upload is temporarily unavailable. Please try again later.',
-    'ENCRYPTED_FILE_TOO_LARGE' || 'FILE_TOO_LARGE' =>
+    // The SDK has no constant for ENCRYPTED_FILE_TOO_LARGE yet.
+    'ENCRYPTED_FILE_TOO_LARGE' || SdkErrorCode.fileTooLarge =>
       'That file is too large. Please choose a smaller image.',
     _ => null,
   };

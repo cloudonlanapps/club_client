@@ -45,7 +45,7 @@ myDayEventCountsProvider = FutureProvider.autoDispose
 
       final result = <DateTime, DayEventCounts>{};
       for (final occ in occurrences) {
-        final date = DateUtils.dateOnly(occ.actualStartTimeUtc);
+        final date = DateUtils.dateOnly(occ.actualStartTimeUtc.toLocal());
         final eventType = eventTypeMap[occ.eventId];
         if (eventType == null) continue;
 

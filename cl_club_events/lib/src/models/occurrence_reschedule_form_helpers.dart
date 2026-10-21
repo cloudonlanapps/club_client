@@ -59,10 +59,6 @@ String occurrenceRescheduleErrorMessage(ServerException e) =>
   }
   const schedule = OccurrenceRescheduleFormFields.scheduleId;
   return switch (e.code) {
-    'PAST_RESCHEDULE_TIME' => (
-      message: 'The new start time must be in the future.',
-      fieldId: schedule,
-    ),
     SdkErrorCode.postponeOnly => (
       message:
           'A session can only be moved to a later time, not an earlier '
@@ -109,7 +105,7 @@ class OccurrenceRescheduleFormSubmit {
   /// time — the stable override key — matching the cancel / undo paths — and
   /// carries the occurrence's `version` as loaded (#69).
   ///
-  /// Throws on the server guards (`PAST_RESCHEDULE_TIME`,
+  /// Throws on the server guards (`POSTPONE_ONLY`,
   /// `RESCHEDULE_LEAD_TIME_VIOLATED`, `VENUE_NOT_FOUND`,
   /// `CANCELLED_OCCURRENCE`, `NOTHING_TO_RESCHEDULE`) and on a stale version
   /// (`StaleVersionException`); the caller surfaces a friendly message.

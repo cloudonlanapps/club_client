@@ -127,7 +127,9 @@ class EnrollmentActionButtonsState
             ),
           );
         case EnrollmentStatus.requested:
-          items.add(const ActionItem(label: 'Requested'));
+          items.add(
+            _item('Cancel Request', 'cancel', () => _master.withdraw()),
+          );
         case EnrollmentStatus.rejected ||
             EnrollmentStatus.declined ||
             EnrollmentStatus.withdrawn ||

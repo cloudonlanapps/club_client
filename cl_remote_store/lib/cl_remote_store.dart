@@ -18,7 +18,6 @@ export 'src/models/media_bytes_reader.dart' show MediaBytesReader;
 export 'src/models/media_url_builder.dart' show MediaUrlBuilder;
 export 'src/models/member_evaluation_key.dart' show MemberEvaluationKey;
 export 'src/models/occurrence_key.dart';
-export 'src/models/occurrences_key.dart';
 export 'src/models/resource_version_state.dart';
 export 'src/models/secure_client_not_provided.dart'
     show SecureClientNotProvided;
@@ -134,7 +133,6 @@ export 'src/providers/my_occurrences.dart';
 export 'src/providers/my_occurrences_list.dart';
 export 'src/providers/notifications_master.dart';
 export 'src/providers/occurrences.dart';
-export 'src/providers/occurrences_notifier.dart';
 export 'src/providers/pending_actions_master.dart';
 export 'src/providers/public_club_content.dart'
     show clPublicClubContentProvider;

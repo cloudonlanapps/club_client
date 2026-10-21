@@ -1,6 +1,8 @@
 import 'package:cl_club_events/src/models/enrollment_category.dart';
 import 'package:cl_club_events/src/models/withdrawal_reasons.dart';
 import 'package:cl_club_events/src/widgets/enrollment_group_section.dart';
+import 'package:cl_club_events/src/widgets/enrollment_tile.dart';
+import 'package:cl_club_events/src/widgets/inactive_filter_label.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,6 +28,13 @@ Widget _inactive() => creditScope(
       },
     ),
   ),
+);
+
+/// The Inactive filter labelled [label], apart from the status badges that
+/// read the same.
+Finder _filter(String label) => find.descendant(
+  of: find.byType(InactiveFilterLabel),
+  matching: find.text(label),
 );
 
 void main() {
@@ -57,7 +66,13 @@ void main() {
       // The filter bar's flag, plus the ended trial's row; the admin's
       // removal keeps the plain removed badge.
       expect(find.byIcon(LucideIcons.flag), findsNWidgets(2));
-      expect(find.text('removed'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(EnrollmentStatusBadge),
+          matching: find.text('Removed'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('Issue 98: filters narrow the group', (tester) async {
@@ -66,12 +81,12 @@ void main() {
       await tester.tap(find.text('Inactive'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Withdrawn'));
+      await tester.tap(_filter('Withdrawn'));
       await tester.pumpAndSettle();
       expect(find.text('Name left'), findsOneWidget);
       expect(find.text('Name ended'), findsNothing);
 
-      await tester.tap(find.text('Removed'));
+      await tester.tap(_filter('Removed'));
       await tester.pumpAndSettle();
       expect(find.text('Name removed_by_admin'), findsOneWidget);
       expect(find.text('Name ended'), findsNothing);

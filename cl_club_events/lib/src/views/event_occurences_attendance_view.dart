@@ -85,11 +85,6 @@ class EventOccurencesAttendanceViewState
   DateTime get effectiveEndTimeUtc =>
       _resolvedOccurrence?.actualEndTimeUtc ?? widget.occurrenceTimeUtc;
 
-  bool get isWithinEditWindow {
-    return DateTime.now().toUtc().difference(effectiveEndTimeUtc).inDays <=
-        attendanceEditWindow.inDays;
-  }
-
   bool get canMarkNow => canMarkAttendanceNow(
     actingUser: widget.currentUser,
     effectiveStartTimeUtc: effectiveStartTimeUtc,
@@ -122,14 +117,15 @@ class EventOccurencesAttendanceViewState
       return username;
     }
 
-    final opensAt = effectiveStartTimeUtc
-        .subtract(attendanceOpenLeadIn)
-        .toLocal();
+    final opensAtUtc = effectiveStartTimeUtc.subtract(attendanceOpenLeadIn);
+    final opensAt = opensAtUtc.toLocal();
+    // The SDK gate holds the server's window (super-admins exempt from its
+    // close); when it is shut, the banner says whether it has yet to open or
+    // has closed.
+    final notYetOpen = DateTime.now().toUtc().isBefore(opensAtUtc);
     final canManage =
         event != null && canManageAttendance(event, widget.currentUser);
-    // Rows are interactive only inside both windows; the banners above explain
-    // why when they are not.
-    final canEdit = canManage && canMarkNow && isWithinEditWindow;
+    final canEdit = canManage && canMarkNow;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -140,14 +136,14 @@ class EventOccurencesAttendanceViewState
           onBack: widget.onBack,
         ),
         const Divider(height: 1),
-        if (!canMarkNow)
+        if (!canMarkNow && notYetOpen)
           AttendanceWindowBanner(
             icon: Icons.schedule,
             message:
                 'Attendance opens 30 minutes before the session starts '
                 '(opens $opensAt).',
           ),
-        if (canMarkNow && !isWithinEditWindow)
+        if (!canMarkNow && !notYetOpen)
           AttendanceWindowBanner(
             icon: Icons.info_outline,
             message:

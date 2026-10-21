@@ -129,9 +129,9 @@ class GroupCreateViewState extends ConsumerState<GroupCreateView> {
       // Auto-group eligibility failures: server emits NOT_ELIGIBLE /
       // MEMBERS_INELIGIBLE / AUTO_GROUP_NOT_JOINABLE depending on the
       // exact path.
-      if (e.code == 'NOT_ELIGIBLE' ||
-          e.code == 'MEMBERS_INELIGIBLE' ||
-          e.code == 'AUTO_GROUP_NOT_JOINABLE') {
+      if (e.code == SdkErrorCode.notEligible ||
+          e.code == SdkErrorCode.membersIneligible ||
+          e.code == SdkErrorCode.autoGroupNotJoinable) {
         return 'you do not meet the group criteria.';
       }
       return e.message;

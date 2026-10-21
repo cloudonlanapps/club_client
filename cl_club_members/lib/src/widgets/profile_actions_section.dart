@@ -42,6 +42,7 @@ class ProfileActionsSection extends StatelessWidget {
       for (final action in actions)
         ActionButton(
           label: action.label,
+          enabled: action.isAvailable,
           onPressed: () => onStatusAction!(action.key),
         ),
     ];

@@ -11,6 +11,9 @@ import 'package:ui_lib/ui_lib.dart' show ActionButton;
 /// Reactivate / Restore / Delete / Hard Delete) is driven by the target
 /// user's status via [adminActionsFor]. Surfaced alongside `RolesSection`
 /// on the admin user profile. Self-view uses `ProfileActionsSection`.
+///
+/// An action the server would refuse is greyed out, its reason under the
+/// heading, and never tried.
 class UserManagementSection extends StatelessWidget {
   const UserManagementSection({
     required this.user,
@@ -40,9 +43,13 @@ class UserManagementSection extends StatelessWidget {
       for (final action in actions)
         ActionButton(
           label: action.label,
+          enabled: action.isAvailable,
           onPressed: () => onStatusAction!(action.key),
         ),
     ];
+    final reasons = {
+      for (final action in actions) ?action.reason,
+    };
     while (buttons.length < 4) {
       buttons.add(
         const IgnorePointer(
@@ -60,6 +67,15 @@ class UserManagementSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('User Management', style: theme.textTheme.h4),
+          for (final reason in reasons) ...[
+            const SizedBox(height: 4),
+            Text(
+              reason,
+              style: theme.textTheme.small.copyWith(
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           TwoColumnGrid(
             spacing: 8,

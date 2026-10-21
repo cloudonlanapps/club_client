@@ -8,29 +8,52 @@ import 'package:flutter/foundation.dart';
 bool canMutateUser(UserPrivate user) =>
     user.status == UserStatus.active && user.deletedAtUtc == null;
 
+/// Why Block, Mark as Left and Delete are greyed out on the super admin:
+/// the server refuses all three for them (club_client#224).
+const String superAdminProtectedReason =
+    "The super admin can't be blocked, marked as left or deleted.";
+
 /// A lifecycle action the admin can apply to a user.
 ///
 /// [key] is the stable identifier passed to status-action callbacks
 /// (e.g. `'approve'`, `'block'`). [label] is the human label rendered on
-/// the button.
+/// the button. An action with a [reason] is shown greyed out with that
+/// reason and is never tried.
 @immutable
 class UserAdminAction {
-  const UserAdminAction({required this.key, required this.label});
+  const UserAdminAction({required this.key, required this.label, this.reason});
 
   final String key;
   final String label;
 
+  /// Why the action is unavailable; `null` when it can be used.
+  final String? reason;
+
+  /// Whether the action can be used.
+  bool get isAvailable => reason == null;
+
+  /// This action, unavailable for [why].
+  UserAdminAction unavailable(String why) =>
+      UserAdminAction(key: key, label: label, reason: why);
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is UserAdminAction && other.key == key && other.label == label;
+      other is UserAdminAction &&
+          other.key == key &&
+          other.label == label &&
+          other.reason == reason;
 
   @override
-  int get hashCode => key.hashCode ^ label.hashCode;
+  int get hashCode => Object.hash(key, label, reason);
 
   @override
-  String toString() => 'UserAdminAction(key: $key, label: $label)';
+  String toString() =>
+      'UserAdminAction(key: $key, label: $label, reason: $reason)';
 }
+
+/// The actions the server refuses on the super admin.
+const _superAdminProtected = {'block', 'markLeft', 'delete'};
 
 /// The set of lifecycle actions the admin can apply to [user], in the order
 /// they should be presented.
@@ -38,6 +61,8 @@ class UserAdminAction {
 /// Soft-deleted users (`deletedAtUtc != null`) surface Restore plus, for
 /// super admins only, Hard Delete. Every other status follows the standard
 /// lifecycle transition matrix, with Delete appended as the final action.
+/// On the super admin, Block, Mark as Left and Delete carry
+/// [superAdminProtectedReason].
 List<UserAdminAction> adminActionsFor(
   UserPrivate user, {
   required bool isSuperAdmin,
@@ -80,5 +105,12 @@ List<UserAdminAction> adminActionsFor(
       break;
   }
   actions.add(const UserAdminAction(key: 'delete', label: 'Delete'));
-  return actions;
+  if (!user.isSuperAdmin) return actions;
+  return [
+    for (final action in actions)
+      if (_superAdminProtected.contains(action.key))
+        action.unavailable(superAdminProtectedReason)
+      else
+        action,
+  ];
 }

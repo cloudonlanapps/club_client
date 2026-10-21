@@ -100,15 +100,58 @@ void main() {
       );
     });
 
-    test('Issue 53: eligibility windows read as ages at the start', () {
+    test('Issue 53: the age band reads as ages', () {
       final view = testEventView(
         testPublicEvent(
           dobOnOrBeforeUtc: DateTime.utc(2018, 5, 4),
           dobOnOrAfterUtc: DateTime.utc(2014, 5, 5),
+          minAge: const Age(years: 8),
+          maxAge: const Age(years: 11),
         ),
       );
 
       expect(view.ageRange, '8-11');
+    });
+
+    test('Issue 214: the band shows as the club set it, whatever the start '
+        'instant', () {
+      // Starts 4 May 00:30 IST, which is 3 May in UTC; counted on 4 May.
+      final view = testEventView(
+        testPublicEvent(
+          start: DateTime.utc(2026, 5, 3, 19).toLocal(),
+          eligibilityReferenceDayUtc: DateTime.utc(2026, 5, 4),
+          dobOnOrBeforeUtc: DateTime.utc(2018, 5, 4),
+          dobOnOrAfterUtc: DateTime.utc(2013, 5, 5),
+          minAge: const Age(years: 8),
+          maxAge: const Age(years: 12),
+        ),
+      );
+
+      expect(view.ageRange, '8-12');
+    });
+
+    test('Issue 214: an open-ended band reads as one bound', () {
+      expect(
+        testEventView(
+          testPublicEvent(minAge: const Age(years: 8)),
+        ).ageRange,
+        '8+',
+      );
+      expect(
+        testEventView(
+          testPublicEvent(maxAge: const Age(years: 12)),
+        ).ageRange,
+        'up to 12',
+      );
+      expect(
+        testEventView(
+          testPublicEvent(
+            minAge: const Age(years: 5, months: 6),
+            maxAge: const Age(years: 8),
+          ),
+        ).ageRange,
+        '5 years 6 months to 8',
+      );
     });
 
     test('Issue 80: the genders read as a line of their own, apart from '
@@ -117,6 +160,8 @@ void main() {
         testPublicEvent(
           dobOnOrBeforeUtc: DateTime.utc(2018, 5, 4),
           dobOnOrAfterUtc: DateTime.utc(2014, 5, 5),
+          minAge: const Age(years: 8),
+          maxAge: const Age(years: 11),
           genders: const [Gender.female, Gender.male],
         ),
       );

@@ -1,6 +1,7 @@
-import 'package:cl_club_forms/cl_club_forms.dart' show GenderEligibilityText;
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show AgeEligibilityText, GenderEligibilityText;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show MediaUrlBuilder, formGendersFromSdk;
+    show MediaUrlBuilder, formAgeFromSdk, formGendersFromSdk;
 import 'package:club_sdk_2/club_sdk_2.dart';
 
 import 'event_highlight.dart';
@@ -143,25 +144,24 @@ class PublicEventView {
   bool get isRegistrationClosed =>
       marketing?.isRegistrationClosed(DateTime.now().toUtc()) ?? false;
 
-  /// The age window as a phrase.
+  /// The age band as a phrase: "8-12", "8+", "up to 12".
   ///
-  /// The server modelled free text (`ageRange`) and now models the window
-  /// itself — two dates of birth — so the phrase is derived
-  /// rather than sent. Ages are computed against the event's start, not
-  /// today: "for ages 8-12" means at the camp, not at the moment someone
-  /// reads the page.
+  /// Read from the band the club set ([PublicEvent.minAge] /
+  /// [PublicEvent.maxAge]), each age worded as on the member side
+  /// ([AgeEligibilityText.age]); the dates of birth the server derives from
+  /// it are not turned back into ages.
   String? get ageRange {
-    final after = event.dobOnOrAfterUtc;
-    final before = event.dobOnOrBeforeUtc;
-
-    // A later date of birth is a younger player, so the *oldest* eligible
-    // player is the one born on or after `dobOnOrAfterUtc`.
-    final youngest = before != null ? ageAtStart(before) : null;
-    final oldest = after != null ? ageAtStart(after) : null;
-
-    if (youngest != null && oldest != null) return '$youngest-$oldest';
-    if (youngest != null) return '$youngest+';
-    if (oldest != null) return 'up to $oldest';
+    final min = formAgeFromSdk(event.minAge);
+    final max = formAgeFromSdk(event.maxAge);
+    if (min != null && max != null) {
+      final from = AgeEligibilityText.age(min);
+      final to = AgeEligibilityText.age(max);
+      return min.isWholeYears && max.isWholeYears
+          ? '$from-$to'
+          : '$from to $to';
+    }
+    if (min != null) return '${AgeEligibilityText.age(min)}+';
+    if (max != null) return 'up to ${AgeEligibilityText.age(max)}';
     return null;
   }
 
@@ -170,17 +170,6 @@ class PublicEventView {
   /// gender.
   String? get genders =>
       GenderEligibilityText.line(formGendersFromSdk(event.genders));
-
-  /// The age, at the event's start, of someone born on [dob].
-  int ageAtStart(DateTime dob) {
-    final start = event.startTimeUtc;
-    var age = start.year - dob.year;
-    final hadBirthday =
-        start.month > dob.month ||
-        (start.month == dob.month && start.day >= dob.day);
-    if (!hadBirthday) age -= 1;
-    return age;
-  }
 
   // ══════════════════════════════════════════════════════════════════════════
   // HIGHLIGHTS

@@ -230,6 +230,20 @@ class UserSelectionDialogContentState
             ],
           ),
           const SizedBox(height: 12),
+          if (selectable.isNotEmpty) ...[
+            SelectedUsersLine(
+              users: [
+                for (final username in selectable)
+                  widget.users.firstWhere(
+                    (u) => u.username == username,
+                    orElse: () =>
+                        PickerUser(username: username, displayName: username),
+                  ),
+              ],
+              onRemove: toggle,
+            ),
+            const SizedBox(height: 12),
+          ],
           if (filtered.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -254,7 +268,9 @@ class UserSelectionDialogContentState
     );
   }
 
-  /// The selection minus anyone blocked since they were picked.
+  /// The selection minus anyone blocked since they were picked: what the
+  /// "Selected:" line names and what Confirm returns, whether or not the
+  /// search or the role filter currently shows them.
   Set<String> get selectable => selected.difference(widget.blockedUsernames);
 
   Widget tileFor(PickerUser u) {
@@ -288,6 +304,70 @@ class UserSelectionDialogContentState
         selected.add(username);
       }
     });
+  }
+}
+
+/// The "Selected:" line of the user picker: every selected user by name,
+/// including those the search or the role filter hides, each with a control
+/// that removes them from the selection.
+class SelectedUsersLine extends StatelessWidget {
+  const SelectedUsersLine({
+    required this.users,
+    required this.onRemove,
+    super.key,
+  });
+
+  /// The selected users, in the order they were picked.
+  final List<PickerUser> users;
+
+  /// Called with a username whose remove control was tapped.
+  final ValueChanged<String> onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    return Wrap(
+      spacing: 8,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text('Selected:', style: theme.textTheme.muted),
+        for (final u in users)
+          Container(
+            padding: const EdgeInsets.only(left: 8, right: 2),
+            decoration: BoxDecoration(
+              border: Border.all(color: theme.colorScheme.border),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(u.displayName, style: theme.textTheme.small),
+                Semantics(
+                  button: true,
+                  label: 'Remove ${u.displayName}',
+                  child: GestureDetector(
+                    key: ValueKey('picker-selected-remove-${u.username}'),
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => onRemove(u.username),
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(
+                          LucideIcons.x,
+                          size: 14,
+                          color: theme.colorScheme.mutedForeground,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
   }
 }
 

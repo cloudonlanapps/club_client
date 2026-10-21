@@ -34,7 +34,7 @@ clMyAttendanceListProvider = FutureProvider.autoDispose
           fromTimeUtc: key.fromTimeUtc,
           toTimeUtc: key.toTimeUtc,
         );
-        // Sort by occurrence time descending (most recent first within month)
+        // Sort by occurrence time ascending (oldest first).
         records.sort(
           (a, b) => a.occurrenceTimeUtc.compareTo(b.occurrenceTimeUtc),
         );

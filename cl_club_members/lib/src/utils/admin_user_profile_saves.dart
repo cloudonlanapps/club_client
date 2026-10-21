@@ -9,8 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-/// Saves [targetUsername]'s bio or achievements as an admin, and says so
-/// in a toast.
+/// Saves [targetUsername]'s bio or achievements, by an admin or by the
+/// member on their own profile, and says so in a toast.
 Future<void> adminSaveUserField(
   WidgetRef ref,
   BuildContext context,

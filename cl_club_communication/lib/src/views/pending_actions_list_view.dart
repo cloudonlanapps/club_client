@@ -6,6 +6,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show ErrorView, TitleRow;
 
 import '../utils/notification_deep_link.dart';
+import '../utils/notification_writes.dart';
 import '../widgets/notification_row.dart';
 import '../widgets/pending_action_trailing.dart';
 
@@ -78,13 +79,14 @@ class PendingActionsListView extends ConsumerWidget {
                     final n = sorted[index];
                     return NotificationRow(
                       notification: n,
-                      onTap: () {
+                      // Read once opened, as from Notifications.
+                      onTap: () => markReadThenOpen(context, ref, n.id, () {
                         final link = resolveDeepLink(
                           n,
                           currentUsername: currentUser.username,
                         );
                         if (link != null) onDeepLink(link);
-                      },
+                      }),
                       trailing: PendingActionTrailing(
                         notification: n,
                         currentUsername: currentUser.username,

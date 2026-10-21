@@ -155,9 +155,11 @@ class LoginViewState extends ConsumerState<LoginView> {
   Widget build(BuildContext context) {
     // Auto-redirect once we are logged in (covers the auto-restore case
     // where the user lands on the login view while already authenticated).
+    // A sign-in this view started reports its own success, after any
+    // notice, from handleLogin.
     ref.listen<AsyncValue<UserPrivate?>>(authStateProvider, (prev, next) {
       final user = next.valueOrNull;
-      if (user != null) widget.onLoginSuccess();
+      if (user != null && !isSubmitting) widget.onLoginSuccess();
     });
 
     final auth = ref.watch(authStateProvider);

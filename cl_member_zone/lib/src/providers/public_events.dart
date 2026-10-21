@@ -2,17 +2,8 @@ import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'committed_event_ids.dart';
 import 'selected_day.dart';
-
-/// Enrollment statuses that mean the user is committed to attending an
-/// event — events with one of these are surfaced in My Events instead.
-const Set<EnrollmentStatus> committedEnrollmentStatuses = {
-  EnrollmentStatus.invited,
-  EnrollmentStatus.accepted,
-  EnrollmentStatus.assigned,
-  EnrollmentStatus.assignedTrial,
-  EnrollmentStatus.withdrawRequested,
-};
 
 /// Future occurrences for the Public Events panel's selected day, limited to
 /// public events the user has not yet committed to.
@@ -66,21 +57,11 @@ todayPublicOccurrencesProvider =
           .toList();
       if (candidates.isEmpty) return const <Occurrence>[];
 
-      final candidateEventIds = {for (final o in candidates) o.eventId};
-      final enrollments = await Future.wait([
-        for (final id in candidateEventIds)
-          ref.watch(
-            clMyEnrollmentProvider((username: username, eventId: id)).future,
-          ),
+      final committed = await committedEventIds(ref, username, [
+        for (final o in candidates) o.eventId,
       ]);
-      final committedEventIds = <int>{
-        for (var i = 0; i < candidateEventIds.length; i++)
-          if (enrollments[i] != null &&
-              committedEnrollmentStatuses.contains(enrollments[i]!.status))
-            candidateEventIds.elementAt(i),
-      };
 
       return candidates
-          .where((o) => !committedEventIds.contains(o.eventId))
+          .where((o) => !committed.contains(o.eventId))
           .toList(growable: false);
     });

@@ -182,11 +182,18 @@ class HeroSectionState extends ConsumerState<HeroSection>
     final highlightsAsync = ref.watch(publicHighlightsProvider);
     final highlights = highlightsAsync.valueOrNull ?? [];
     final hasHighlights = highlights.isNotEmpty;
+    // The list can shrink under the carousel (an event unpublished, a
+    // reload after an outage): start again from the first.
+    if (currentIndex >= highlights.length) currentIndex = 0;
 
     final learnMoreText = SiteCopy.of(context).landing.hero.learnMoreButton;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (hasHighlights && autoScrollTimer == null) {
+      // (Re)start the carousel on the first highlights and whenever their
+      // number changes, so it never steps past the list.
+      if (!mounted) return;
+      if ((hasHighlights && autoScrollTimer == null) ||
+          highlights.length != _highlightCount) {
         startAutoScroll(highlights.length);
       }
     });

@@ -39,9 +39,16 @@ class _RecordingNotifier extends ClPublicInquiryNotifier {
   /// When set, a submission waits for it before answering.
   Completer<void>? hold;
 
+  /// How many of the next token fetches fail.
+  int failingTokens = 0;
+
   @override
   Future<String> formToken() async {
     tokens += 1;
+    if (failingTokens > 0) {
+      failingTokens -= 1;
+      throw const SocketException('unreachable');
+    }
     return 'token';
   }
 
@@ -127,8 +134,9 @@ Future<_RecordingNotifier> _pump(
   InquiryKind kind = InquiryKind.contact,
   bool messageRequired = true,
   List<InquiryChoice> choices = const [],
+  int failingTokens = 0,
 }) async {
-  final notifier = _RecordingNotifier();
+  final notifier = _RecordingNotifier()..failingTokens = failingTokens;
   await tester.binding.setSurfaceSize(const Size(800, 1600));
   addTearDown(() => tester.binding.setSurfaceSize(null));
   await tester.pumpWidget(
@@ -518,5 +526,27 @@ void main() {
         expect(offenders, isEmpty);
       },
     );
+  });
+
+  testWidgets('Issue 197: a token that failed to load is fetched again, so '
+      'the next Send goes through', (tester) async {
+    final notifier = await _pump(
+      tester,
+      capabilities: _noCountryCode,
+      strings: _siteCopy,
+      failingTokens: 1,
+    );
+
+    // The token fetched when the form appeared failed: this Send cannot go.
+    await _fillAndSend(tester, '98765 43210');
+    expect(notifier.submissions, isEmpty);
+    expect(find.text('Something went wrong.'), findsOneWidget);
+
+    await tester.tap(find.text('Send'));
+    await tester.pumpAndSettle();
+
+    expect(notifier.tokens, 2);
+    expect(notifier.submissions.single.token, 'token');
+    expect(find.text('Thanks'), findsOneWidget);
   });
 }

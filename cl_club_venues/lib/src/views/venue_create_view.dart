@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cl_club_forms/cl_club_forms.dart'
     show VenueCreateForm, VenueCreateFormState;
 import 'package:cl_remote_store/cl_remote_store.dart';
+import 'package:club_sdk_2/club_sdk_2.dart' show Venue;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -45,16 +46,12 @@ class VenueCreateViewState extends ConsumerState<VenueCreateView> {
   /// Creates the venue from the form's valid [values].
   Future<void> handleSubmit(Map<String, dynamic> values) async {
     setState(() => isSubmitting = true);
+    final Venue created;
     try {
-      final created = await VenueFormSubmit.create(
+      created = await VenueFormSubmit.create(
         values: values,
         notifier: ref.read(clVenuesMasterProvider.notifier),
       );
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        ShadToast(description: Text('Venue "${created.name}" created.')),
-      );
-      widget.onCreated();
     } on Object catch (e) {
       if (!mounted) return;
       // A field the server refused shows the refusal on itself; anything
@@ -71,9 +68,17 @@ class VenueCreateViewState extends ConsumerState<VenueCreateView> {
           ),
         ),
       );
+      return;
     } finally {
       if (mounted) setState(() => isSubmitting = false);
     }
+    if (!mounted) return;
+    ShadToaster.of(context).show(
+      ShadToast(description: Text('Venue "${created.name}" created.')),
+    );
+    // Outside the create's try: whatever the host does next is not a
+    // failed create.
+    widget.onCreated();
   }
 
   /// Leaves the view by Cancel, the back arrow or a system back. Asks first

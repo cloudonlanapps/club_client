@@ -99,4 +99,30 @@ void main() {
     expect(find.byType(ConfirmDialog), findsNothing);
     expect(confirmed, 1);
   });
+
+  test('Issue 196: requiresPassword without a verifier is refused where '
+      'the dialog is built', () {
+    var requiresPassword = true;
+    expect(
+      () => ConfirmDialog(
+        title: 'Delete account',
+        message: 'Enter your password',
+        confirmLabel: 'Delete',
+        onConfirm: () {},
+        requiresPassword: requiresPassword,
+      ),
+      throwsAssertionError,
+    );
+    requiresPassword = false;
+    expect(
+      () => ConfirmDialog(
+        title: 'Delete',
+        message: 'Sure?',
+        confirmLabel: 'Delete',
+        onConfirm: () {},
+        requiresPassword: requiresPassword,
+      ),
+      returnsNormally,
+    );
+  });
 }

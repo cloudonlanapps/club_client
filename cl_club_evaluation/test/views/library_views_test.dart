@@ -324,5 +324,49 @@ void main() {
       expect(find.text('Sort'), findsNothing);
       expect(inTemplateEditor(find.text('Stride')), findsOneWidget);
     });
+
+    testWidgets('Issue 200: after TEMPLATE_IN_USE, Delete on the template is '
+        'off too', (tester) async {
+      final stub = StubTemplates(
+        {1: _skating},
+        failWith: const sdk.ServerException(
+          statusCode: 422,
+          code: sdk.SdkErrorCode.templateInUse,
+          message: 'in use',
+        ),
+      );
+      await tallSurface(tester);
+      await tester.pumpWidget(
+        evaluationScope(
+          templates: stub,
+          child: TemplateDetailView(
+            currentUser: admin,
+            templateId: 1,
+            onBack: () {},
+            onDuplicate: (_) {},
+            onSaveTemplateFile: (_, _) async => true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      ShadButton deleteTemplate() =>
+          tester.widget<ShadButton>(find.widgetWithText(ShadButton, 'Delete'));
+      expect(deleteTemplate().onPressed, isNotNull);
+
+      await tester.tap(inTemplateEditor(find.text('Stride')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(ShadDialog),
+          matching: find.text('Delete'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete').last);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('in use by an evaluation'), findsWidgets);
+
+      expect(deleteTemplate().onPressed, isNull);
+    });
   });
 }

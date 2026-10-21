@@ -163,7 +163,7 @@ class GroupMemberList extends ConsumerWidget {
             groupId,
             username,
           );
-      ref.invalidate(clGroupMembersProvider(groupId));
+      // The groups master has reloaded the group's members.
       if (!context.mounted) return;
       ShadToaster.of(context).show(
         ShadToast(description: Text('Removed $username from group.')),

@@ -74,4 +74,18 @@ void main() {
       expect(screen.copyOfTemplateId, isNull);
     });
   });
+
+  group('Issue 207: a review route whose id is not a number', () {
+    for (final location in [
+      '$myReviewsPath/12x',
+      '$templateLibraryPath/12x',
+      '$reviewsPath/12x',
+    ]) {
+      testWidgets('Issue 207: $location shows Page not found', (tester) async {
+        await _open(tester, location);
+        expect(tester.takeException(), isNull);
+        expect(find.text('Page not found'), findsOneWidget);
+      });
+    }
+  });
 }

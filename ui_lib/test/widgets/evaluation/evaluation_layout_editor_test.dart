@@ -209,4 +209,15 @@ void main() {
       expect(host.emitted, isEmpty);
     });
   });
+
+  testWidgets('Issue 196: a renamed section title is trimmed, as an added '
+      'one is', (tester) async {
+    final host = _Host()
+      ..sectionResult = const EvaluationOutlineEdit.update('  Skills ');
+    await host.pump(tester);
+    await tester.tap(find.text('Skating'));
+    await tester.pumpAndSettle();
+
+    expect(host.emitted.single[1].sectionTitle, 'Skills');
+  });
 }

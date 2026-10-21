@@ -3,7 +3,7 @@ import 'package:cl_club_members/src/widgets/group_member_list.dart';
 import 'package:cl_club_members/src/widgets/removed_group_view.dart';
 import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clGroupMembersProvider, clGroupsMasterProvider;
+    show clGroupsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -114,10 +114,9 @@ class GroupMembersViewState extends ConsumerState<GroupMembersView> {
     );
   }
 
+  /// Opens Add member. The groups master reloads the group's members
+  /// itself once members are added.
   Future<void> handleAddMember(BuildContext context) async {
-    final added = await AddMemberDialog.show(context, groupId: widget.groupId);
-    if (added) {
-      ref.invalidate(clGroupMembersProvider(widget.groupId));
-    }
+    await AddMemberDialog.show(context, groupId: widget.groupId);
   }
 }

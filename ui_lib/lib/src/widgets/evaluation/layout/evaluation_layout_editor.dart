@@ -116,7 +116,9 @@ class EvaluationLayoutEditorState extends State<EvaluationLayoutEditor> {
         ),
       );
     } else if (title.trim().isNotEmpty) {
-      emit(EvaluationLayoutOps.renameSection(widget.layout, section, title));
+      emit(
+        EvaluationLayoutOps.renameSection(widget.layout, section, title.trim()),
+      );
     }
   }
 

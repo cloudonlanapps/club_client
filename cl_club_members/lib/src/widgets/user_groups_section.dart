@@ -72,7 +72,8 @@ class UserGroupsSectionState extends ConsumerState<UserGroupsSection> {
     Set<int> currentGroupIds,
     UserPrivate targetUser,
   ) async {
-    final added = await AddToGroupDialog.show(
+    // The groups master reloads the user's groups itself once added.
+    await AddToGroupDialog.show(
       context,
       username: widget.username,
       currentGroupIds: currentGroupIds,
@@ -80,9 +81,6 @@ class UserGroupsSectionState extends ConsumerState<UserGroupsSection> {
       gender: targetUser.gender,
       roles: targetUser.roles,
     );
-    if (added) {
-      ref.invalidate(clUserGroupsProvider(widget.username));
-    }
   }
 
   @override

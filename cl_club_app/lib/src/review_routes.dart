@@ -66,15 +66,19 @@ List<RouteBase> reviewRoutes() => [
   ),
   GoRoute(
     path: '$myReviewsPath/:id',
-    pageBuilder: (context, state) => NoTransitionPage(
-      child: MyReviewScreen(
-        evaluationId: int.parse(state.pathParameters['id']!),
-        username: state.uri.queryParameters[reviewUsernameParam],
-        onBack: () => popOrGo(context, myReviewsPath),
-        onOpenPdfBytes: (bytes) => unawaited(openPdfBytes(bytes)),
-        onHome: () => context.go('/'),
-      ),
-    ),
+    pageBuilder: (context, state) {
+      final id = intPathParam(state, 'id');
+      if (id == null) return notFoundPage(context);
+      return NoTransitionPage(
+        child: MyReviewScreen(
+          evaluationId: id,
+          username: state.uri.queryParameters[reviewUsernameParam],
+          onBack: () => popOrGo(context, myReviewsPath),
+          onOpenPdfBytes: (bytes) => unawaited(openPdfBytes(bytes)),
+          onHome: () => context.go('/'),
+        ),
+      );
+    },
   ),
   GoRoute(
     path: reviewsPath,
@@ -124,27 +128,35 @@ List<RouteBase> reviewRoutes() => [
   ),
   GoRoute(
     path: '$templateLibraryPath/:id',
-    pageBuilder: (context, state) => NoTransitionPage(
-      child: TemplateDetailScreen(
-        templateId: int.parse(state.pathParameters['id']!),
-        onBack: () => popOrGo(context, reviewsPath),
-        onDuplicate: (id) => context.push(templateCopyPath(id)),
-        onSaveTemplateFile: saveFileBytes,
-        onHome: () => context.go('/'),
-      ),
-    ),
+    pageBuilder: (context, state) {
+      final id = intPathParam(state, 'id');
+      if (id == null) return notFoundPage(context);
+      return NoTransitionPage(
+        child: TemplateDetailScreen(
+          templateId: id,
+          onBack: () => popOrGo(context, reviewsPath),
+          onDuplicate: (id) => context.push(templateCopyPath(id)),
+          onSaveTemplateFile: saveFileBytes,
+          onHome: () => context.go('/'),
+        ),
+      );
+    },
   ),
   GoRoute(
     path: '$reviewsPath/:id',
-    pageBuilder: (context, state) => NoTransitionPage(
-      child: ReviewEditScreen(
-        evaluationId: int.parse(state.pathParameters['id']!),
-        onBack: () => popOrGo(context, reviewsPath),
-        onDeleted: () => popOrGo(context, reviewsPath),
-        onTransferred: () => popOrGo(context, reviewsPath),
-        onOpenPdfBytes: (bytes) => unawaited(openPdfBytes(bytes)),
-        onHome: () => context.go('/'),
-      ),
-    ),
+    pageBuilder: (context, state) {
+      final id = intPathParam(state, 'id');
+      if (id == null) return notFoundPage(context);
+      return NoTransitionPage(
+        child: ReviewEditScreen(
+          evaluationId: id,
+          onBack: () => popOrGo(context, reviewsPath),
+          onDeleted: () => popOrGo(context, reviewsPath),
+          onTransferred: () => popOrGo(context, reviewsPath),
+          onOpenPdfBytes: (bytes) => unawaited(openPdfBytes(bytes)),
+          onHome: () => context.go('/'),
+        ),
+      );
+    },
   ),
 ];

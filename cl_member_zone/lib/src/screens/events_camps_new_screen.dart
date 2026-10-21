@@ -23,7 +23,7 @@ class EventsCampsNewScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).valueOrNull;
     // Only coaches/admins may create events; members are denied the route.
-    if (!userAllowedForEvents(user) || !(user?.isCoachOrAdmin ?? false)) {
+    if (!userAllowedForEvents(user)) {
       return ErrorView(
         tone: ErrorTone.neutral,
         icon: LucideIcons.shieldAlert,

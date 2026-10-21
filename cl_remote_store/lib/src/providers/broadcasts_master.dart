@@ -1,3 +1,4 @@
+import 'package:cl_remote_store/src/models/broadcast_scope.dart';
 import 'package:cl_remote_store/src/providers/client.dart';
 import 'package:cl_remote_store/src/providers/current_user.dart';
 import 'package:cl_remote_store/src/providers/manual_refresh.dart';
@@ -14,10 +15,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// current user has the admin role; non-admins get an empty map without
 /// hitting the server (the broadcasts API would 403). Mutations:
 ///
-///   * `sendText(text)` — convenience helper for the dashboard's inline
-///     compose. Posts a `{v:1, type:'broadcast.text', data:{text}}`
-///     payload to an `allUsers` audience with no expiry, then folds the
-///     server's `Broadcast` into local state.
+///   * `send(scope:, audience:, text:)` — posts a `broadcast.text` payload
+///     carrying the Broadcast screen's [BroadcastScope] as `source` to any
+///     audience, with no expiry, then folds the server's `Broadcast` into
+///     local state. [clBroadcastsForScopeProvider] lists one screen's.
 ///   * `revoke(id)` — soft-revoke; replaces the local entry with the
 ///     server's updated `Broadcast` (status `revoked`).
 ///
@@ -49,60 +50,36 @@ class ClBroadcastsMasterNotifier extends AsyncNotifier<Map<int, Broadcast>> {
     state = await AsyncValue.guard(build);
   }
 
-  /// Send a free-text broadcast to all users.
+  /// Send a free-text broadcast to [audience] from the Broadcast screen of
+  /// [scope] (club_client#252).
   ///
-  /// Wraps the input in the server's payload envelope:
-  /// `{v:1, type:'broadcast.text', data:{text}}`.
+  /// Wraps the input in the server's payload envelope,
+  /// `{v:1, type:'broadcast.text', data:{text}, source}`, where `source` is
+  /// [BroadcastScope.toPayload]: the screen's sent list reads it back
+  /// ([BroadcastScope.lists]), since a narrowed [audience] (a `users` list)
+  /// does not name the group or event.
+  ///
   /// When [email] is true the broadcast is also delivered by email using
   /// [emailSubject] as the subject and [text] as the (markdown) body; the
   /// caller is responsible for supplying a non-empty subject.
   /// Returns the server's [Broadcast] record so callers can show
   /// recipient counts immediately.
-  Future<Broadcast> sendText(
-    String text, {
+  Future<Broadcast> send({
+    required BroadcastScope scope,
+    required AudienceSelector audience,
+    required String text,
     bool email = false,
     String? emailSubject,
-  }) {
-    return _send(
-      const AudienceSelector.allUsers(),
-      text,
-      email: email,
-      emailSubject: emailSubject,
-    );
-  }
-
-  /// Send a free-text broadcast to the members of a single group.
-  ///
-  /// Identical to [sendText] but narrows the audience to the group's explicit
-  /// members via `AudienceSelector.group`.
-  Future<Broadcast> sendToGroup(
-    int groupId,
-    String text, {
-    bool email = false,
-    String? emailSubject,
-  }) {
-    return _send(
-      AudienceSelector.group(groupId),
-      text,
-      email: email,
-      emailSubject: emailSubject,
-    );
-  }
-
-  Future<Broadcast> _send(
-    AudienceSelector audienceSelector,
-    String text, {
-    required bool email,
-    required String? emailSubject,
   }) {
     return refetchIfWriteUncertain(() async {
       final client = await ref.read(secureClientProvider.future);
       final created = await client.broadcasts.createBroadcast(
-        audienceSelector: audienceSelector,
+        audienceSelector: audience,
         payload: <String, dynamic>{
           'v': 1,
           'type': 'broadcast.text',
           'data': <String, dynamic>{'text': text},
+          BroadcastScope.payloadKey: scope.toPayload(),
         },
         email: email,
         emailSubject: email ? emailSubject : null,
@@ -145,3 +122,19 @@ class ClBroadcastsMasterNotifier extends AsyncNotifier<Map<int, Broadcast>> {
     if (next != null) state = AsyncData(next);
   }
 }
+
+/// The broadcasts the Broadcast screen of a [BroadcastScope] lists
+/// ([BroadcastScope.lists]), newest first, revoked ones included
+/// (club_client#252). Derived from [clBroadcastsMasterProvider]: the
+/// server's list has no audience filter.
+final AutoDisposeProviderFamily<AsyncValue<List<Broadcast>>, BroadcastScope>
+clBroadcastsForScopeProvider = Provider.autoDispose
+    .family<AsyncValue<List<Broadcast>>, BroadcastScope>(
+      (ref, scope) => ref
+          .watch(clBroadcastsMasterProvider)
+          .whenData(
+            (map) =>
+                map.values.where(scope.lists).toList()
+                  ..sort((a, b) => b.sentAtUtc.compareTo(a.sentAtUtc)),
+          ),
+    );

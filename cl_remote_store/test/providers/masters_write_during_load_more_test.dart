@@ -205,7 +205,13 @@ void main() {
     final sub = _startLoad(c, clBroadcastsMasterProvider);
     await pumpEventQueue();
 
-    await c.read(clBroadcastsMasterProvider.notifier).sendText('hello');
+    await c
+        .read(clBroadcastsMasterProvider.notifier)
+        .send(
+          scope: const BroadcastScope.all(),
+          audience: const AudienceSelector.allUsers(),
+          text: 'hello',
+        );
 
     expect((await _landed(sub, broadcasts.gate)).keys, [5]);
   });

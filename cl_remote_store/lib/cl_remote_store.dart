@@ -7,6 +7,7 @@ library;
 
 export 'src/models/aggregated_my_event.dart';
 export 'src/models/audit_log_scope.dart';
+export 'src/models/broadcast_scope.dart';
 export 'src/models/contact_info.dart';
 export 'src/models/credit_statement.dart' show CreditStatement;
 export 'src/models/evaluation_item_search_query.dart'
@@ -25,6 +26,7 @@ export 'src/models/site_media_asset.dart' show SiteMediaAsset;
 export 'src/models/site_media_slot.dart' show SiteMediaSlot;
 export 'src/providers/attendances_master.dart';
 export 'src/providers/audit_log_master.dart';
+export 'src/providers/broadcast_audience.dart';
 export 'src/providers/broadcasts_master.dart';
 export 'src/providers/bundled_contact_info.dart'
     show bundledContactInfoProvider;

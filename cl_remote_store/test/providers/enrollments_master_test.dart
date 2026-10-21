@@ -226,6 +226,36 @@ void main() {
     },
   );
 
+  for (final action in ['assignBulk', 'inviteBulk']) {
+    test(
+      'Issue 238: $action for three members bumps creditsVersion once',
+      () async {
+        final fake = _FakeEnrollments();
+        final container = _makeContainer(fake);
+        addTearDown(container.dispose);
+        await container.read(clEnrollmentsMasterProvider(eventId).future);
+        final versions = <int>[];
+        final sub = container.listen(
+          clResourceVersionProvider.select((s) => s.creditsVersion),
+          (_, next) => versions.add(next),
+        );
+        addTearDown(sub.close);
+
+        final notifier = container.read(
+          clEnrollmentsMasterProvider(eventId).notifier,
+        );
+        const members = ['alice', 'bob', 'carol'];
+        if (action == 'assignBulk') {
+          await notifier.assignBulk(members);
+        } else {
+          await notifier.inviteBulk(members);
+        }
+
+        expect(versions, [1]);
+      },
+    );
+  }
+
   test(
     'Issue 536: clManualRefreshProvider bump re-fetches via build()',
     () async {

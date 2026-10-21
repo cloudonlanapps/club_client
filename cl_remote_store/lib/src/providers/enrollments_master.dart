@@ -207,24 +207,6 @@ class ClEnrollmentsMasterNotifier
     }, refetch: () => refetchAfterUncertainWrite(usernames));
   }
 
-  /// Approve multiple join requests.
-  Future<void> approveRequestsBulk(List<String> usernames) {
-    return refetchIfWriteUncertain(() async {
-      final client = await ref.read(secureClientProvider.future);
-      await client.enrollments.approveRequestsBulk(eventId, usernames);
-      await _afterWrite(usernames);
-    }, refetch: () => refetchAfterUncertainWrite(usernames));
-  }
-
-  /// Approve multiple withdrawal requests.
-  Future<void> approveWithdrawBulk(List<String> usernames) {
-    return refetchIfWriteUncertain(() async {
-      final client = await ref.read(secureClientProvider.future);
-      await client.enrollments.approveWithdrawBulk(eventId, usernames);
-      await _afterWrite(usernames);
-    }, refetch: () => refetchAfterUncertainWrite(usernames));
-  }
-
   // -- Cross-Invalidation -----------------------------------------------------
 
   /// After a write that succeeded: refresh each member's side, then re-read
@@ -234,7 +216,7 @@ class ClEnrollmentsMasterNotifier
   /// it lands in [state] as an [AsyncError] for the roster to reload, and
   /// the member side is refreshed before it (club_client#227).
   Future<void> _afterWrite(List<String> usernames) async {
-    usernames.forEach(crossInvalidateMember);
+    crossInvalidateMembers(usernames);
     state = await AsyncValue.guard(fetch);
   }
 
@@ -242,20 +224,25 @@ class ClEnrollmentsMasterNotifier
   /// this event's enrollments and each member's side.
   void refetchAfterUncertainWrite(List<String> usernames) {
     ref.invalidateSelf();
-    usernames.forEach(crossInvalidateMember);
+    crossInvalidateMembers(usernames);
   }
 
-  /// Invalidate member-side providers for a specific user, plus the
-  /// notification feeds (any enrollment mutation here can resolve an
-  /// enrollment_request / enrollment_opportunity pending action).
-  void crossInvalidateMember(String username) {
+  /// Invalidate the member-side providers of each of [usernames], the
+  /// event's enrollment records and the notification feeds (any enrollment
+  /// mutation here can resolve an enrollment_request /
+  /// enrollment_opportunity pending action), then bump `creditsVersion`
+  /// once for the whole action (club_client#238).
+  void crossInvalidateMembers(List<String> usernames) {
+    for (final username in usernames) {
+      ref
+        ..invalidate(
+          clMyEnrollmentsMasterProvider(
+            (username: username, eventId: eventId),
+          ),
+        )
+        ..invalidate(clMyEventsMasterProvider(username));
+    }
     ref
-      ..invalidate(
-        clMyEnrollmentsMasterProvider(
-          (username: username, eventId: eventId),
-        ),
-      )
-      ..invalidate(clMyEventsMasterProvider(username))
       ..invalidate(clEnrollmentRecordsMasterProvider(eventId))
       ..invalidate(clPendingActionsMasterProvider)
       ..invalidate(clNotificationsMasterProvider);

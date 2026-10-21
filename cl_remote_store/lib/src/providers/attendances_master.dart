@@ -137,23 +137,8 @@ class ClAttendancesMasterNotifier
       );
       ref.invalidateSelf();
       await future;
-      crossInvalidateMember(username);
+      crossInvalidateMembers([username]);
     }, refetch: () => refetchAfterUncertainWrite([username]));
-  }
-
-  /// Approve multiple leave requests.
-  Future<void> approveLeaveBulk(List<String> usernames) {
-    return refetchIfWriteUncertain(() async {
-      final client = await ref.read(secureClientProvider.future);
-      await client.attendance.approveLeaveBulk(
-        key.eventId,
-        usernames,
-        key.occurrenceTimeUtc,
-      );
-      ref.invalidateSelf();
-      await future;
-      usernames.forEach(crossInvalidateMember);
-    }, refetch: () => refetchAfterUncertainWrite(usernames));
   }
 
   /// Reject a leave request.
@@ -171,27 +156,8 @@ class ClAttendancesMasterNotifier
       );
       ref.invalidateSelf();
       await future;
-      crossInvalidateMember(username);
+      crossInvalidateMembers([username]);
     }, refetch: () => refetchAfterUncertainWrite([username]));
-  }
-
-  /// Reject multiple leave requests.
-  Future<void> rejectLeaveBulk(
-    List<String> usernames, {
-    String? reason,
-  }) {
-    return refetchIfWriteUncertain(() async {
-      final client = await ref.read(secureClientProvider.future);
-      await client.attendance.rejectLeaveBulk(
-        key.eventId,
-        usernames,
-        key.occurrenceTimeUtc,
-        reason: reason,
-      );
-      ref.invalidateSelf();
-      await future;
-      usernames.forEach(crossInvalidateMember);
-    }, refetch: () => refetchAfterUncertainWrite(usernames));
   }
 
   // -- Cross-Invalidation -----------------------------------------------------
@@ -204,19 +170,22 @@ class ClAttendancesMasterNotifier
       ..invalidateSelf()
       ..invalidate(clEnrollmentsMasterProvider(key.eventId))
       ..invalidate(clEnrollmentRecordsMasterProvider(key.eventId));
-    usernames.forEach(crossInvalidateMember);
-    bumpCreditsVersion(ref);
+    crossInvalidateMembers(usernames);
   }
 
-  void crossInvalidateMember(String username) {
-    ref
-      ..invalidate(
+  /// Invalidate the occurrence record of each of [usernames] and the
+  /// notification feeds, then bump `creditsVersion` once (club_client#238).
+  void crossInvalidateMembers(List<String> usernames) {
+    for (final username in usernames) {
+      ref.invalidate(
         clMyAttendancesMasterProvider((
           username: username,
           eventId: key.eventId,
           occurrenceTimeUtc: key.occurrenceTimeUtc,
         )),
-      )
+      );
+    }
+    ref
       // Approve/reject leave (or any future attendance correction)
       // resolves the matching attendance_correction pending action.
       ..invalidate(clPendingActionsMasterProvider)

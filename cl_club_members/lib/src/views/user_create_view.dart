@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cl_club_forms/cl_club_forms.dart'
     show UserForm, UserFormFields, UserFormState;
 import 'package:cl_club_members/src/models/user_form_helpers.dart';
+import 'package:cl_club_members/src/utils/temporary_password.dart';
 import 'package:cl_club_members/src/widgets/default_password_dialog.dart';
 import 'package:cl_club_members/src/widgets/user_create_actions.dart';
 import 'package:cl_club_members/src/widgets/user_create_card.dart';
@@ -58,6 +59,11 @@ class UserCreateViewState extends ConsumerState<UserCreateView> {
   /// Whether the creation is in flight.
   bool isSubmitting = false;
 
+  /// The password the user is created with when "Use default password" is
+  /// ticked: drawn once for this user, shown in [DefaultPasswordDialog] and
+  /// sent with the create (#221).
+  final String temporaryPassword = generateTemporaryPassword();
+
   /// Whether the form may be submitted: its username is confirmed
   /// available.
   bool canSubmit = false;
@@ -76,6 +82,7 @@ class UserCreateViewState extends ConsumerState<UserCreateView> {
         values: values,
         notifier: ref.read(clUsersMasterProvider.notifier),
         defaultCountryCode: ref.read(defaultCountryCodeProvider),
+        temporaryPassword: temporaryPassword,
       );
       success = true;
     } on ServerException catch (e) {
@@ -174,7 +181,8 @@ class UserCreateViewState extends ConsumerState<UserCreateView> {
                 onCheckUsernameAvailable: checkUsernameAvailable,
                 onShowDefaultPassword: () => showDialog<void>(
                   context: context,
-                  builder: (_) => const DefaultPasswordDialog(),
+                  builder: (_) =>
+                      DefaultPasswordDialog(password: temporaryPassword),
                 ),
                 onCanSubmitChanged: (value) {
                   if (canSubmit == value) return;

@@ -117,6 +117,7 @@ void main() {
             values: _createValues(phone: typed, emergencyContactPhone: typed),
             notifier: notifier,
             defaultCountryCode: code,
+            temporaryPassword: 'Tmp4Test9xyz',
           );
 
           expect(notifier.phone, '+${code}9876543210');
@@ -138,6 +139,7 @@ void main() {
         ),
         notifier: notifier,
         defaultCountryCode: '91',
+        temporaryPassword: 'Tmp4Test9xyz',
       );
 
       expect(notifier.phone, '+449876543210');
@@ -151,6 +153,7 @@ void main() {
         values: _createValues(phone: '9876543210'),
         notifier: notifier,
         defaultCountryCode: '91',
+        temporaryPassword: 'Tmp4Test9xyz',
       );
 
       expect(notifier.emergencyContact, isNull);

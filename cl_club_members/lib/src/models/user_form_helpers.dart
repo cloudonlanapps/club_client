@@ -10,11 +10,6 @@ import '../utils/member_write_messages.dart';
 import '../utils/profile_save_error_message.dart';
 import 'user_schema_fields.dart';
 
-/// Default password applied when an admin creates a user with the
-/// "Use default password" toggle on. Admins are expected to know this
-/// value out-of-band; it is not surfaced in the UI.
-const String defaultUserPassword = 'ChangeMe123';
-
 /// SDK ↔ form adapters for `UserForm` (which lives SDK-free in
 /// `cl_club_forms`).
 ///
@@ -107,17 +102,21 @@ class UserFormSubmit {
   /// The phone and the emergency contact's phone are stored in international
   /// format, completed with [defaultCountryCode] when typed without a
   /// country code (#31).
+  ///
+  /// With "Use default password" ticked the user is created with
+  /// [temporaryPassword], the one the admin was shown (#221).
   static Future<List<String>> create({
     required Map<String, dynamic> values,
     required ClUsersMasterNotifier notifier,
     required String defaultCountryCode,
+    required String temporaryPassword,
   }) async {
     await notifier.createUser(
       username: (values[UserFormFields.usernameId] as String).trim(),
       email: (values[UserFormFields.emailId] as String).trim(),
       passwordHash:
           (values[UserFormFields.useDefaultPasswordId] as bool? ?? true)
-          ? defaultUserPassword
+          ? temporaryPassword
           : values[UserFormFields.passwordId] as String,
       phone: PhoneNumber.toInternational(
         values[UserFormFields.phoneId] as String,

@@ -93,7 +93,8 @@ class PendingActionsPanelBody extends ConsumerWidget {
                     final n = visible[index];
                     return NotificationRow(
                       notification: n,
-                      onTap: () {
+                      // Read once opened, as from Notifications.
+                      onTap: () => markReadThenOpen(context, ref, n.id, () {
                         final link = resolveDeepLink(
                           n,
                           currentUsername: user.username,
@@ -103,7 +104,7 @@ class PendingActionsPanelBody extends ConsumerWidget {
                         } else {
                           nav.onSeeMorePendingActions();
                         }
-                      },
+                      }),
                     );
                   },
                 ),

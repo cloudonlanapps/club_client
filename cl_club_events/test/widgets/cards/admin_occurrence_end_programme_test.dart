@@ -126,4 +126,49 @@ void main() {
 
     expect(events.endDateCalls, ['extend(${localNoon(5).toUtc()}, null)']);
   });
+
+  testWidgets('Issue 182: End programme from here on a session later today '
+      'terminates at that session', (tester) async {
+    // A daily programme whose sessions start 45 minutes from now: today's
+    // is still inside the scheduling window.
+    final now = DateTime.now();
+    final today = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+      now.minute,
+    ).add(const Duration(minutes: 45));
+    final start = today.subtract(const Duration(days: 20)).toUtc();
+    final event = programmeFixture().copyWith(
+      startTimeUtc: start,
+      endTimeUtc: start.add(const Duration(hours: 1)),
+    );
+    final session = Occurrence(
+      eventId: 1,
+      originalStartTimeUtc: today.toUtc(),
+      actualStartTimeUtc: today.toUtc(),
+      actualEndTimeUtc: today.toUtc().add(const Duration(hours: 1)),
+      status: OccurrenceStatus.scheduled,
+      venueId: 7,
+    );
+    final events = await _openEndProgramme(tester, event, session);
+
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(ProgrammeEndDateForm),
+        matching: find.byType(EditableText),
+      ),
+      'Season over',
+    );
+    await tester.pump();
+    await tester.tap(find.widgetWithText(ShadButton, 'Save'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('The end date cannot be before today'),
+      findsNothing,
+    );
+    expect(events.endDateCalls, ['terminate(${today.toUtc()}, Season over)']);
+  });
 }

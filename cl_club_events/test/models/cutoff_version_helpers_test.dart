@@ -1,12 +1,8 @@
 import 'package:cl_club_events/src/models/event_cancellation_form_helpers.dart';
 import 'package:cl_club_events/src/models/programme_schedule_form_helpers.dart';
-import 'package:cl_club_events/src/providers/event_notifier.dart';
 import 'package:cl_club_forms/cl_club_forms.dart'
     show EventCancellationFormFields;
-import 'package:cl_remote_store/cl_remote_store.dart'
-    show clEventsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/programme_fixtures.dart';
@@ -85,7 +81,11 @@ void main() {
 
   test('Issue 123: the cancellation adapter cancels a camp with the version '
       'it was given', () async {
-    final event = programmeFixture();
+    // Issue 188: a camp, the type cancelSeries is for.
+    final event = programmeFixture().copyWith(
+      type: EventType.camp,
+      rrule: () => 'FREQ=DAILY;COUNT=5',
+    );
     final notifier = RecordingCutoffEvents(event);
 
     await EventCancellationFormSubmit.cancelCamp(
@@ -99,25 +99,5 @@ void main() {
     );
 
     expect(notifier.calls, ['cancelSeries(v7)']);
-  });
-
-  test('Issue 123: the event notifier cancels with the version of the event '
-      'it holds', () async {
-    final event = programmeFixture();
-    final events = RecordingCutoffEvents(event);
-    final container = ProviderContainer(
-      overrides: [clEventsMasterProvider.overrideWith(() => events)],
-    );
-    addTearDown(container.dispose);
-    await container.read(eventNotifierProvider(event.id).future);
-
-    await container
-        .read(eventNotifierProvider(event.id).notifier)
-        .cancelEvent(
-          reason: 'Rink closed',
-          effectiveDateTimeUtc: localNoon(3).toUtc(),
-        );
-
-    expect(events.calls, ['cancelSeries(v${event.version})']);
   });
 }

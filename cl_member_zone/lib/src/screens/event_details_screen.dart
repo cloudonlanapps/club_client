@@ -1,13 +1,12 @@
 import 'package:cl_club_events/cl_club_events.dart'
     show EventDetailsView, RemovedEventView;
 import 'package:cl_member_auth/cl_member_auth.dart'
-    show authStateProvider, userAllowedForEvents;
+    show RoleGate, userAllowedForEvents;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventDetailProvider, clEventsMasterProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ErrorTone, ErrorView, LoadingView;
+import 'package:ui_lib/ui_lib.dart' show ErrorView, LoadingView;
 
 import '../utils/master_errors.dart';
 
@@ -63,47 +62,42 @@ class EventDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authStateProvider).valueOrNull;
-    if (!userAllowedForEvents(user)) {
-      return ErrorView(
-        tone: ErrorTone.neutral,
-        icon: LucideIcons.shieldAlert,
-        title: 'Access Denied',
-        subtitle: 'You do not have permission to view this page.',
-        onHome: onHome,
-      );
-    }
-
-    final eventAsync = ref.watch(clEventDetailProvider(eventId));
-    return eventAsync.when(
-      skipLoadingOnReload: true,
-      loading: () => const LoadingView(),
-      error: (error, _) {
-        if (isMasterNotFoundError(error)) {
-          return RemovedEventView(
-            eventId: eventId,
-            sourceNotificationId: sourceNotificationId,
-            onDismissed: onDismissed,
-          );
-        }
-        return ErrorView(
-          title: 'Could not load event',
-          errorCode: '$error',
-          onHome: onHome,
-          onRetry: () => ref.invalidate(clEventsMasterProvider),
-        );
-      },
-      data: (event) {
-        return EventDetailsView(
-          currentUser: user!,
-          eventId: eventId,
-          onManageEnrolments: onManageEnrolments,
-          onMemberTap: onMemberTap,
-          onPublicProfileTap: onPublicProfileTap,
-          onBack: onBack,
-          onHistory: onHistory,
-          onDeleted: onDeleted,
-          onOpenMarketing: onOpenMarketing,
+    return RoleGate(
+      allow: userAllowedForEvents,
+      onHome: onHome,
+      builder: (user) {
+        final eventAsync = ref.watch(clEventDetailProvider(eventId));
+        return eventAsync.when(
+          skipLoadingOnReload: true,
+          loading: () => const LoadingView(),
+          error: (error, _) {
+            if (isMasterNotFoundError(error)) {
+              return RemovedEventView(
+                eventId: eventId,
+                sourceNotificationId: sourceNotificationId,
+                onDismissed: onDismissed,
+              );
+            }
+            return ErrorView(
+              title: 'Could not load event',
+              errorCode: '$error',
+              onHome: onHome,
+              onRetry: () => ref.invalidate(clEventsMasterProvider),
+            );
+          },
+          data: (event) {
+            return EventDetailsView(
+              currentUser: user,
+              eventId: eventId,
+              onManageEnrolments: onManageEnrolments,
+              onMemberTap: onMemberTap,
+              onPublicProfileTap: onPublicProfileTap,
+              onBack: onBack,
+              onHistory: onHistory,
+              onDeleted: onDeleted,
+              onOpenMarketing: onOpenMarketing,
+            );
+          },
         );
       },
     );

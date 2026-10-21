@@ -24,8 +24,9 @@ import 'splash_view.dart';
 /// Provides a responsive sidebar using [AppSidebar], a top bar with
 /// sign-out, and wraps content with [NetworkStatusWrapper].
 ///
-/// Navigation and theme-toggle are wired by the host (see
-/// `app/lib/router.dart`); the shell itself holds no hardcoded routes.
+/// Navigation, the sidebar's routes, the current location and the theme
+/// toggle are wired by the host (see `cl_club_app/lib/src/router.dart`);
+/// the shell itself holds no routes.
 class MemberZoneShell extends ConsumerStatefulWidget {
   const MemberZoneShell({
     required this.child,
@@ -36,6 +37,8 @@ class MemberZoneShell extends ConsumerStatefulWidget {
     required this.onNotifications,
     required this.onAfterSignOut,
     required this.onNavigate,
+    required this.routeFor,
+    required this.currentLocation,
     super.key,
   });
 
@@ -62,6 +65,13 @@ class MemberZoneShell extends ConsumerStatefulWidget {
 
   /// Navigates to a sidebar destination path. The host owns navigation.
   final ValueChanged<String> onNavigate;
+
+  /// The route of each sidebar entry, from the host's router.
+  final SidebarRoute routeFor;
+
+  /// The location the app is at, from the host's router; the sidebar
+  /// highlights the entry it falls under.
+  final String currentLocation;
 
   @override
   ConsumerState<MemberZoneShell> createState() => MemberZoneShellState();
@@ -184,7 +194,8 @@ class MemberZoneShellState extends ConsumerState<MemberZoneShell> {
               width: 240,
               child: AppSidebar(
                 currentUser: user,
-                pathPrefix: '/memberzone',
+                routeFor: widget.routeFor,
+                currentLocation: widget.currentLocation,
                 eventTypes: ref.watch(clubEventTypesProvider),
                 evaluations: evaluations,
                 unhandledInquiries: unhandledInquiries,
@@ -209,7 +220,8 @@ class MemberZoneShellState extends ConsumerState<MemberZoneShell> {
             children: [
               AppSidebar(
                 currentUser: user,
-                pathPrefix: '/memberzone',
+                routeFor: widget.routeFor,
+                currentLocation: widget.currentLocation,
                 eventTypes: ref.watch(clubEventTypesProvider),
                 evaluations: evaluations,
                 unhandledInquiries: unhandledInquiries,

@@ -1,9 +1,7 @@
 import 'package:cl_club_members/cl_club_members.dart';
-import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
+import 'package:cl_member_auth/cl_member_auth.dart' show RoleGate;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ErrorTone, ErrorView, LoadingView;
 
 /// Admin user management screen — thin wrapper around [UserListView].
 ///
@@ -30,29 +28,22 @@ class UsersScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentUser = ref.watch(authStateProvider).valueOrNull;
-    if (currentUser == null) {
-      return const LoadingView(message: 'Loading…');
-    }
-    if (!currentUser.isCoachOrAdmin) {
-      return ErrorView(
-        tone: ErrorTone.neutral,
-        icon: LucideIcons.shieldAlert,
-        title: 'Access Denied',
-        subtitle: 'You do not have permission to view this page.',
-        onHome: onHome,
-      );
-    }
-    return UserListView(
-      currentUser: currentUser,
-      onUserTap: (user) => onUserTap(user.username),
-      onReviewUser: (user) => onReviewUser(user.username),
-      onCreateUser: onCreateUser,
-      onBack: onBack,
-      onActNow: () {
-        final pending = ref.read(pendingUsersProvider).valueOrNull;
-        if (pending == null || pending.isEmpty) return;
-        onReviewUser(pending.first.username);
+    return RoleGate(
+      allow: RoleGate.coachOrAdmin,
+      onHome: onHome,
+      builder: (currentUser) {
+        return UserListView(
+          currentUser: currentUser,
+          onUserTap: (user) => onUserTap(user.username),
+          onReviewUser: (user) => onReviewUser(user.username),
+          onCreateUser: onCreateUser,
+          onBack: onBack,
+          onActNow: () {
+            final pending = ref.read(pendingUsersProvider).valueOrNull;
+            if (pending == null || pending.isEmpty) return;
+            onReviewUser(pending.first.username);
+          },
+        );
       },
     );
   }

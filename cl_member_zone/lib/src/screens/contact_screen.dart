@@ -2,7 +2,6 @@ import 'package:cl_club_branding/cl_club_branding.dart' show AppLogo;
 import 'package:cl_remote_store/cl_remote_store.dart' show contactInfoProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show TitleRow;
 
@@ -11,8 +10,14 @@ import '../widgets/contact_actions_card.dart';
 
 /// How to reach the club, from `contactInfoProvider`: the server's details
 /// once they arrive, the host's bundled ones until then (club_core#53).
+///
+/// Mounted at the member zone's contact route; the router supplies
+/// [onBack].
 class ContactScreen extends ConsumerWidget {
-  const ContactScreen({super.key});
+  const ContactScreen({this.onBack, super.key});
+
+  /// Leaves the page; `null` hides Back. Supplied by the router.
+  final VoidCallback? onBack;
 
   /// Below this width the sidebar, and the brand in it, is hidden, so the
   /// page shows the logo and club name itself.
@@ -28,7 +33,7 @@ class ContactScreen extends ConsumerWidget {
       children: [
         TitleRow(
           title: 'Contact Us',
-          onBack: context.canPop() ? () => context.pop() : null,
+          onBack: onBack,
         ),
         const Divider(height: 1),
         Expanded(

@@ -1,10 +1,8 @@
 import 'package:cl_club_events/cl_club_events.dart' show EventEnrolmentsView;
 import 'package:cl_member_auth/cl_member_auth.dart'
-    show authStateProvider, userAllowedForEvents;
+    show RoleGate, userAllowedForEvents;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ErrorTone, ErrorView;
 
 /// Enrolments management screen at `/memberzone/events/:eventId/enrollments`.
 class EventEnrolmentsScreen extends ConsumerWidget {
@@ -25,21 +23,17 @@ class EventEnrolmentsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authStateProvider).valueOrNull;
-    if (!userAllowedForEvents(user)) {
-      return ErrorView(
-        tone: ErrorTone.neutral,
-        icon: LucideIcons.shieldAlert,
-        title: 'Access Denied',
-        subtitle: 'You do not have permission to view this page.',
-        onHome: onHome,
-      );
-    }
-    return EventEnrolmentsView(
-      currentUser: user!,
-      eventId: eventId,
-      onBack: onBack,
-      onOpenReview: onOpenReview,
+    return RoleGate(
+      allow: userAllowedForEvents,
+      onHome: onHome,
+      builder: (user) {
+        return EventEnrolmentsView(
+          currentUser: user,
+          eventId: eventId,
+          onBack: onBack,
+          onOpenReview: onOpenReview,
+        );
+      },
     );
   }
 }

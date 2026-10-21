@@ -18,6 +18,7 @@ export 'src/screens/admin_user_review_screen.dart' show AdminUserReviewScreen;
 export 'src/screens/audit_log_screen.dart' show AuditLogScreen;
 export 'src/screens/broadcast.dart' show BroadcastScreen;
 export 'src/screens/club_identity_screen.dart' show ClubIdentityScreen;
+export 'src/screens/contact_screen.dart' show ContactScreen;
 export 'src/screens/credit_screen.dart' show CreditScreen;
 export 'src/screens/dashboard.dart' show DashboardScreen;
 export 'src/screens/event_details_screen.dart' show EventDetailsScreen;
@@ -69,3 +70,5 @@ export 'src/screens/venue_profile_screen.dart' show VenueProfileScreen;
 export 'src/screens/venues_screen.dart' show VenuesScreen;
 // Shell
 export 'src/widgets/member_zone_shell.dart' show MemberZoneShell;
+export 'src/widgets/sidebar/sidebar_destination.dart'
+    show SidebarDestination, SidebarRoute;

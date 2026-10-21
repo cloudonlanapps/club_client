@@ -1,11 +1,13 @@
 import 'package:flutter/widgets.dart';
 
+import 'sidebar_destination.dart';
+
 /// Navigation item definition.
 class NavItem {
   const NavItem({
     required this.icon,
     required this.label,
-    required this.path,
+    required this.destination,
     this.section,
     this.adminOnly = false,
     this.superAdminOnly = false,
@@ -15,7 +17,9 @@ class NavItem {
 
   final IconData icon;
   final String label;
-  final String path;
+
+  /// Where the entry goes; the host maps it to a route.
+  final SidebarDestination destination;
   final String? section;
   final bool adminOnly;
 

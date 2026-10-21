@@ -6,6 +6,7 @@ import 'package:cl_server_config/cl_server_config.dart'
     show networkStatusProvider, serverConfigProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:club_sdk_2/remote_store.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
@@ -37,6 +38,11 @@ class ClientNotifier extends AsyncNotifier<SecureClient> {
   /// signs out once.
   bool sessionEnded = false;
 
+  /// The store behind the current client; replaced, and the old one
+  /// disposed, on every rebuild (#190).
+  @visibleForTesting
+  SessionGuardStore? store;
+
   @override
   Future<SecureClient> build() async {
     sessionEnded = false;
@@ -60,7 +66,7 @@ class ClientNotifier extends AsyncNotifier<SecureClient> {
     final networkStatus = ref.read(networkStatusProvider.notifier);
     final httpClient = ref.read(apiHttpClientProvider);
 
-    final store = SessionGuardStore(
+    final store = this.store = SessionGuardStore(
       baseUrl: config.baseUrl,
       client: httpClient,
       onSessionRefused: () => endRefusedSession(storage),
@@ -70,6 +76,11 @@ class ClientNotifier extends AsyncNotifier<SecureClient> {
       onServerReachable: networkStatus.markOnline,
       onServerUnreachable: networkStatus.checkNow,
     );
+
+    // Frees the store when this client is replaced (login, logout, a new
+    // server config). A shared `apiHttpClientProvider` client stays open:
+    // the store only closes a client it made itself.
+    ref.onDispose(store.dispose);
 
     return createRemoteSecureClient(
       baseUrl: config.baseUrl,

@@ -1,9 +1,7 @@
 import 'package:cl_club_members/cl_club_members.dart';
-import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
+import 'package:cl_member_auth/cl_member_auth.dart' show RoleGate;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ErrorTone, ErrorView, LoadingView;
 
 /// Screen wrapper around [GroupJoinRequestsView] for
 /// `/memberzone/groups/:id/requests`.
@@ -24,23 +22,16 @@ class GroupJoinRequestsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentUser = ref.watch(authStateProvider).valueOrNull;
-    if (currentUser == null) {
-      return const LoadingView(message: 'Loading…');
-    }
-    if (!currentUser.isCoachOrAdmin) {
-      return ErrorView(
-        tone: ErrorTone.neutral,
-        icon: LucideIcons.shieldAlert,
-        title: 'Access Denied',
-        subtitle: 'You do not have permission to view this page.',
-        onHome: onHome,
-      );
-    }
-    return GroupJoinRequestsView(
-      currentUser: currentUser,
-      groupId: groupId,
-      onBack: onBack,
+    return RoleGate(
+      allow: RoleGate.coachOrAdmin,
+      onHome: onHome,
+      builder: (currentUser) {
+        return GroupJoinRequestsView(
+          currentUser: currentUser,
+          groupId: groupId,
+          onBack: onBack,
+        );
+      },
     );
   }
 }

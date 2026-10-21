@@ -20,7 +20,8 @@ export 'src/permissions/event_permissions.dart'
     show canManageEnrollments, canManageEvent, userAllowedForEvents;
 // Providers
 export 'src/providers/api_http_client.dart' show apiHttpClientProvider;
-export 'src/providers/auth.dart' show AuthNotifier, authStateProvider;
+export 'src/providers/auth.dart'
+    show AuthNotifier, SessionRestoreUnreachable, authStateProvider;
 export 'src/providers/client.dart' show ClientNotifier, clientProvider;
 export 'src/providers/credential_storage.dart'
     show CredentialStorage, credentialStorageProvider;
@@ -43,6 +44,8 @@ export 'src/widgets/auth_shell.dart' show AuthShell;
 export 'src/widgets/change_password_view.dart' show ChangePasswordView;
 export 'src/widgets/forgot_password_view.dart' show ForgotPasswordView;
 export 'src/widgets/login_view.dart' show LoginView;
+// Route-level role gate for screens, and the page it refuses with
+export 'src/widgets/role_gate.dart' show AccessDeniedView, RoleGate;
 export 'src/widgets/session_countdown.dart' show SessionCountdown;
 export 'src/widgets/signup_success_view.dart' show SignupSuccessView;
 export 'src/widgets/signup_view.dart' show SignupView;

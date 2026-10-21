@@ -15,8 +15,12 @@ import '../models/event_display_status.dart';
 /// - **Ended / Cancelled**: the cutoff (`untilTimeUtc`) has been reached —
 ///   ended for a programme, cancelled for a camp / one-off. A cutoff still
 ///   ahead does not change the status: the event keeps running until then.
+/// - **Ended**: the server says no live occurrence is left
+///   ([Event.hasEnded], club_server#53): it counts cancelled and postponed
+///   occurrences, which the event alone cannot show (club_client#191).
+///   Without it, a camp / one-off whose last occurrence (via rrule) is
+///   past.
 /// - **Coming Soon**: no schedule has started yet.
-/// - **Ended**: camp / one-off whose last occurrence (via rrule) is past.
 /// - **Ongoing**: everything else that's active.
 final FutureProviderFamily<EventDisplayStatus, int> eventDisplayStatusProvider =
     FutureProvider.family<EventDisplayStatus, int>((ref, eventId) async {
@@ -48,13 +52,18 @@ EventDisplayStatus computeDisplayStatus(
         : EventDisplayStatus.cancelled;
   }
 
+  // Ended: the server's answer when it gives one (club_client#191).
+  final serverHasEnded = event.hasEnded;
+  if (serverHasEnded == true) return EventDisplayStatus.ended;
+
   // Coming Soon: no schedule has started yet.
   if (isTimetableComingSoon(event, schedules, nowUtc)) {
     return EventDisplayStatus.comingSoon;
   }
 
-  // Ended: camp/oneoff whose last occurrence is past
-  if (event.type != EventType.programme) {
+  // Ended, from a server that does not say: camp/oneoff whose last
+  // occurrence is past.
+  if (serverHasEnded == null && event.type != EventType.programme) {
     final lastEnd = computeLastOccurrenceEnd(event);
     if (lastEnd != null && lastEnd.isBefore(nowUtc)) {
       return EventDisplayStatus.ended;

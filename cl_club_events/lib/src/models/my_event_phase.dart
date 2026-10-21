@@ -10,8 +10,8 @@ enum MyEventPhase {
   /// Running or still to start, a cutoff that is still ahead included.
   current,
 
-  /// Over: a programme whose cutoff has passed, a camp or one-off whose last
-  /// occurrence has.
+  /// Over: a programme whose cutoff has passed, or an event the server
+  /// says has no live occurrence left (club_client#191).
   past,
 
   /// A camp or one-off whose cutoff has passed: it was cancelled or dropped.

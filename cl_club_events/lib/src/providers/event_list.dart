@@ -50,10 +50,16 @@ class EventListNotifier
       events = events.where((e) => e.visibility == filter.visibility).toList();
     }
     if (!filter.includePast) {
-      // An event is past once its last session has ended (isPastEvent
-      // expands the rrule; endTimeUtc is only the first session's end).
+      // An event is past once no live session is left: the server's
+      // hasEnded (club_client#191), else once its last session has ended
+      // (isPastEvent expands the rrule; endTimeUtc is only the first
+      // session's end).
       events = events
-          .where((e) => e.status == EventStatus.active && !isPastEvent(e))
+          .where(
+            (e) =>
+                e.status == EventStatus.active &&
+                !(e.hasEnded ?? isPastEvent(e)),
+          )
           .toList();
     }
     if (filter.searchTerm != null && filter.searchTerm!.isNotEmpty) {

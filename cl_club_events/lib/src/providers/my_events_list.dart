@@ -36,12 +36,15 @@ class MyEventsListNotifier
 
     // Filter out past events unless includePast is set.
     if (!filter.includePast) {
-      // An event is past once its last session has ended (isPastEvent
-      // expands the rrule; endTimeUtc is only the first session's end).
+      // An event is past once no live session is left: the server's
+      // hasEnded (club_client#191), else once its last session has ended
+      // (isPastEvent expands the rrule; endTimeUtc is only the first
+      // session's end).
       results = results
           .where(
             (a) =>
-                a.event.status == EventStatus.active && !isPastEvent(a.event),
+                a.event.status == EventStatus.active &&
+                !(a.event.hasEnded ?? isPastEvent(a.event)),
           )
           .toList();
     }

@@ -1,11 +1,11 @@
 import 'package:cl_club_events/cl_club_events.dart' show MyEventsAttendanceView;
-import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
+import 'package:cl_member_auth/cl_member_auth.dart'
+    show AccessDeniedView, authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clUsersMasterProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ErrorTone, ErrorView, LoadingView;
+import 'package:ui_lib/ui_lib.dart' show LoadingView;
 
 import '../permissions/my_events_access.dart';
 
@@ -23,13 +23,7 @@ class MyEventsAttendanceScreen extends ConsumerWidget {
   final VoidCallback? onBack;
 
   Widget _accessDenied() {
-    return ErrorView(
-      tone: ErrorTone.neutral,
-      icon: LucideIcons.shieldAlert,
-      title: 'Access Denied',
-      subtitle: 'You do not have permission to view this page.',
-      onHome: onHome,
-    );
+    return AccessDeniedView(onHome: onHome);
   }
 
   @override

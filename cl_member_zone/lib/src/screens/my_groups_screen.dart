@@ -1,8 +1,8 @@
 import 'package:cl_club_members/cl_club_members.dart';
+import 'package:cl_member_auth/cl_member_auth.dart' show AccessDeniedView;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ErrorTone, ErrorView, LoadingView;
+import 'package:ui_lib/ui_lib.dart' show LoadingView;
 
 import '../permissions/my_groups_access.dart';
 
@@ -24,13 +24,7 @@ class MyGroupsScreen extends ConsumerWidget {
   final VoidCallback? onBack;
 
   Widget _accessDenied() {
-    return ErrorView(
-      tone: ErrorTone.neutral,
-      icon: LucideIcons.shieldAlert,
-      title: 'Access Denied',
-      subtitle: 'You do not have permission to view this page.',
-      onHome: onHome,
-    );
+    return AccessDeniedView(onHome: onHome);
   }
 
   @override

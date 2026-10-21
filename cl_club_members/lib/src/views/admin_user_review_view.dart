@@ -76,12 +76,9 @@ class AdminUserReviewViewState extends ConsumerState<AdminUserReviewView> {
   @override
   Widget build(BuildContext context) {
     if (!widget.currentUser.isAdmin) {
-      return ErrorView(
-        tone: ErrorTone.neutral,
-        icon: LucideIcons.shieldAlert,
-        title: 'Access Denied',
-        subtitle: 'You do not have permission to review users.',
+      return AccessDeniedView(
         onHome: widget.onBack,
+        message: 'You do not have permission to review users.',
       );
     }
 

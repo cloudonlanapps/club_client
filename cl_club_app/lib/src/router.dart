@@ -730,6 +730,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               final username = state.uri.queryParameters['username'] ?? '';
               return NoTransitionPage(
                 child: AdminUserReviewScreen(
+                  onHome: () => context.go('/'),
                   username: username,
                   onBack: () => popOrGo(context, '/memberzone/users'),
                 ),
@@ -740,6 +741,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/memberzone/users/new',
             pageBuilder: (context, state) => NoTransitionPage(
               child: UserCreateScreen(
+                onHome: () => context.go('/'),
                 onCreated: () => popOrGo(context, '/memberzone/users'),
                 onCancel: () => popOrGo(context, '/memberzone/users'),
               ),
@@ -751,6 +753,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               final targetUsername = state.pathParameters['targetUsername']!;
               return NoTransitionPage(
                 child: AdminUserProfileScreen(
+                  onHome: () => context.go('/'),
                   targetUsername: targetUsername,
                   onReview: () => GoRouter.of(
                     context,
@@ -792,6 +795,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/memberzone/venues',
             pageBuilder: (context, state) => NoTransitionPage(
               child: VenuesScreen(
+                onHome: () => context.go('/'),
                 onVenueTap: (venue) =>
                     GoRouter.of(context).push('/memberzone/venues/${venue.id}'),
                 onCreateVenue: () => context.push('/memberzone/venues/new'),
@@ -803,6 +807,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/memberzone/venues/new',
             pageBuilder: (context, state) => NoTransitionPage(
               child: VenueCreateScreen(
+                onHome: () => context.go('/'),
                 onCreated: () => popOrGo(context, '/memberzone/venues'),
                 onCancel: () => popOrGo(context, '/memberzone/venues'),
               ),
@@ -815,6 +820,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               if (id == null) return notFoundPage(context);
               return NoTransitionPage(
                 child: VenueProfileScreen(
+                  onHome: () => context.go('/'),
                   venueId: id,
                   onDeleted: () => context.go('/memberzone/venues'),
                   // Always show a back button (canPop() reads false inside the
@@ -844,6 +850,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/memberzone/groups/new',
             pageBuilder: (context, state) => NoTransitionPage(
               child: GroupCreateScreen(
+                onHome: () => context.go('/'),
                 onCreated: () => popOrGo(context, '/memberzone/groups'),
                 onCancel: () => popOrGo(context, '/memberzone/groups'),
               ),
@@ -860,6 +867,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   : int.tryParse(notifParam);
               return NoTransitionPage(
                 child: AdminGroupProfileScreen(
+                  onHome: () => context.go('/'),
                   groupId: id,
                   sourceNotificationId: sourceNotificationId,
                   onOpenRequests: () => GoRouter.of(
@@ -887,6 +895,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               if (id == null) return notFoundPage(context);
               return NoTransitionPage(
                 child: GroupMembersScreen(
+                  onHome: () => context.go('/'),
                   groupId: id,
                   onRemoved: () => popOrGo(context, '/memberzone/groups'),
                   // Always show a back button (canPop() reads false inside the

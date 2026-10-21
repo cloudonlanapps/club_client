@@ -1,10 +1,8 @@
 import 'package:cl_club_events/cl_club_events.dart' show EventsCampsNewView;
 import 'package:cl_member_auth/cl_member_auth.dart'
-    show authStateProvider, userAllowedForEvents;
+    show RoleGate, userAllowedForEvents;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ErrorTone, ErrorView;
 
 /// New-camp screen at `/memberzone/events/camps/new`.
 class EventsCampsNewScreen extends ConsumerWidget {
@@ -21,21 +19,18 @@ class EventsCampsNewScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authStateProvider).valueOrNull;
-    // Only coaches/admins may create events; members are denied the route.
-    if (!userAllowedForEvents(user)) {
-      return ErrorView(
-        tone: ErrorTone.neutral,
-        icon: LucideIcons.shieldAlert,
-        title: 'Access Denied',
-        subtitle: 'You do not have permission to create events.',
-        onHome: onHome,
-      );
-    }
-    return EventsCampsNewView(
-      currentUser: user!,
-      onCreated: onCreated,
-      onCancel: onCancel,
+    return RoleGate(
+      allow: userAllowedForEvents,
+      onHome: onHome,
+      deniedMessage: 'You do not have permission to create events.',
+      builder: (user) {
+        // Only coaches/admins may create events; members are denied the route.
+        return EventsCampsNewView(
+          currentUser: user,
+          onCreated: onCreated,
+          onCancel: onCancel,
+        );
+      },
     );
   }
 }

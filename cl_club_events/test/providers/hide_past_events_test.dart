@@ -20,6 +20,7 @@ Event _event(
   EventType type, {
   required DateTime start,
   required String rrule,
+  DateTime? untilTimeUtc,
 }) => Event(
   id: id,
   version: 1,
@@ -29,6 +30,7 @@ Event _event(
   visibility: Visibility.public,
   venueId: 1,
   rrule: rrule,
+  untilTimeUtc: untilTimeUtc,
   startTimeUtc: start,
   endTimeUtc: start.add(const Duration(hours: 1)),
   createdAtUtc: DateTime.utc(2026),
@@ -53,14 +55,15 @@ final Event _runningProgramme = _event(
       '${_rruleUntil(_now.add(const Duration(days: 60)))}',
 );
 
-/// A weekly programme whose last session was three weeks ago.
+/// A weekly programme whose last session was three weeks ago: it was
+/// stopped by a cutoff, as the server ends a programme (its rule carries no
+/// UNTIL, and a programme is never past by its rule alone).
 final Event _endedProgramme = _event(
   3,
   EventType.programme,
   start: _now.subtract(const Duration(days: 90)),
-  rrule:
-      'FREQ=WEEKLY;UNTIL='
-      '${_rruleUntil(_now.subtract(const Duration(days: 20)))}',
+  rrule: 'FREQ=WEEKLY',
+  untilTimeUtc: _now.subtract(const Duration(days: 20)),
 );
 
 final List<Event> _all = [_runningCamp, _runningProgramme, _endedProgramme];

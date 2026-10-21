@@ -84,12 +84,26 @@ List<AdminOccurrenceAction> adminOccurrenceActionsFor({
   final live =
       occurrence.status == OccurrenceStatus.scheduled ||
       occurrence.status == OccurrenceStatus.rescheduled;
-  return live
-      ? [
-          ...scheduledActionsFor(event),
-          AdminOccurrenceAction.manageRequests,
-        ]
-      : const [];
+  if (!live) return const [];
+  // Cancel entire series and End programme from here send the slot
+  // (`originalStartTimeUtc`), which the server checks against its time
+  // rules; on a rescheduled day it may be closer than the actual start
+  // (club_client#189). A super-admin may cancel a camp's series late (camp
+  // R5c); a programme's cutoff has no such bypass (`validate_cutoff`).
+  final slotInWindow = isInScheduleManagementWindow(
+    occurrence.originalStartTimeUtc,
+  );
+  return [
+    for (final action in scheduledActionsFor(event))
+      if (switch (action) {
+        AdminOccurrenceAction.cancelSeries =>
+          slotInWindow || actingUser.isSuperAdmin,
+        AdminOccurrenceAction.endProgramme => slotInWindow,
+        _ => true,
+      })
+        action,
+    AdminOccurrenceAction.manageRequests,
+  ];
 }
 
 /// Whether [occurrence] is at or after [event]'s cutoff, so cancelled with

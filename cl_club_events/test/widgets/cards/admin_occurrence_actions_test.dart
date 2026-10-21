@@ -700,4 +700,58 @@ void main() {
       );
     });
   });
+
+  group('Issue 189: a series action on a rescheduled day is offered by the '
+      'start it sends', () {
+    /// A day whose slot is 10 minutes away, moved to tomorrow.
+    Occurrence movedDay() {
+      final slot = DateTime.now().toUtc().add(const Duration(minutes: 10));
+      final moved = slot.add(const Duration(days: 1));
+      return Occurrence(
+        eventId: _eventId,
+        originalStartTimeUtc: slot,
+        actualStartTimeUtc: moved,
+        actualEndTimeUtc: moved.add(const Duration(hours: 1)),
+        status: OccurrenceStatus.rescheduled,
+        venueId: 1,
+      );
+    }
+
+    testWidgets('Issue 189: an admin is offered no Cancel entire series when '
+        'the original start is within 30 minutes', (tester) async {
+      expect(await _resolveLabels(tester, movedDay()), [
+        'Reschedule',
+        'Cancel this occurrence',
+        'Manage requests',
+      ]);
+    });
+
+    testWidgets('Issue 189: a super-admin is still offered Cancel entire '
+        'series there', (tester) async {
+      expect(
+        await _resolveLabels(tester, movedDay(), user: _superAdmin()),
+        contains('Cancel entire series'),
+      );
+    });
+
+    testWidgets('Issue 189: End programme from here is not offered when the '
+        'original start is within 30 minutes, to a super-admin either', (
+      tester,
+    ) async {
+      final programme = _camp(type: EventType.programme);
+      expect(
+        await _resolveLabels(tester, movedDay(), event: programme),
+        ['Reschedule', 'Cancel this occurrence', 'Manage requests'],
+      );
+      expect(
+        await _resolveLabels(
+          tester,
+          movedDay(),
+          event: programme,
+          user: _superAdmin(),
+        ),
+        isNot(contains('End programme from here')),
+      );
+    });
+  });
 }

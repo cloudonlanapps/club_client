@@ -19,6 +19,27 @@ void main() {
       ]);
     });
 
+    test('Issue 247: canMove answers as move does, for every row and '
+        'direction', () {
+      for (final pos in EvaluationLayoutOps.positions(sampleLayout)) {
+        for (final delta in const [-1, 1]) {
+          expect(
+            EvaluationLayoutOps.canMove(sampleLayout, pos, delta),
+            EvaluationLayoutOps.move(sampleLayout, pos, delta) != null,
+            reason: '$pos by $delta',
+          );
+        }
+      }
+      expect(
+        EvaluationLayoutOps.canMove(sampleLayout, const _P(entry: 0), -1),
+        isFalse,
+      );
+      expect(
+        EvaluationLayoutOps.canMove(sampleLayout, const _P(entry: 2), 1),
+        isFalse,
+      );
+    });
+
     test('Issue 173: an item moving down onto a section enters it', () {
       final moved = EvaluationLayoutOps.move(
         sampleLayout,

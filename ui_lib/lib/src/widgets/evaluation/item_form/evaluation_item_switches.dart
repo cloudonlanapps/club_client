@@ -31,10 +31,12 @@ class EvaluationItemSwitches extends StatelessWidget {
   Widget build(BuildContext context) {
     final commentArea =
         values[EvaluationItemFormFields.showCommentAreaId] == true;
-    final options = kind.hasCommentArea && commentArea
-        ? EvaluationAnswerRules.answerOptions(
-            EvaluationItemFormValues.toItem(values, kind: kind),
-          )
+    final item = EvaluationItemFormValues.toItem(values, kind: kind);
+    // A scale beyond the cap is refused by its field; nothing is built for
+    // it, so a mistyped bound cannot lay out thousands of checkboxes.
+    final options =
+        kind.hasCommentArea && commentArea && (item.scale?.isWithinCap ?? true)
+        ? EvaluationAnswerRules.answerOptions(item)
         : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

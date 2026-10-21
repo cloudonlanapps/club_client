@@ -75,4 +75,26 @@ void main() {
     await tester.pump();
     expect(prevCalled, false); // Disabled because offset is 0
   });
+
+  testWidgets(
+    "Issue 244: the 'Showing' text is the theme's muted foreground in dark "
+    'mode',
+    (tester) async {
+      final dark = ShadThemeData(
+        brightness: Brightness.dark,
+        colorScheme: const ShadSlateColorScheme.dark(),
+      );
+      await tester.pumpWidget(
+        ShadApp(
+          themeMode: ThemeMode.dark,
+          darkTheme: dark,
+          home: const Scaffold(
+            body: PaginationBar(total: 156, limit: 20, offset: 0),
+          ),
+        ),
+      );
+      final text = tester.widget<Text>(find.text('Showing 1–20 of 156'));
+      expect(text.style?.color, dark.colorScheme.mutedForeground);
+    },
+  );
 }

@@ -32,6 +32,29 @@ void main() {
       expect(EvaluationItemFormValidators.rateMax('10', '1'), isNull);
     });
 
+    test('Issue 242: a scale has at most 10 values', () {
+      expect(EvaluationItemFormValidators.rateMax('10', '1'), isNull);
+      expect(EvaluationItemFormValidators.rateMax('9', '0'), isNull);
+      expect(
+        EvaluationItemFormValidators.rateMax('11', '1'),
+        'A scale can have at most 10 values.',
+      );
+      expect(EvaluationItemFormValidators.rateMax('100000', '1'), isNotNull);
+      expect(EvaluationItemFormValidators.rateMax('5', '-5'), isNotNull);
+      expect(
+        EvaluationItemFormValidators.levels([
+          for (var i = 1; i <= 10; i++) 'L$i',
+        ]),
+        isNull,
+      );
+      expect(
+        EvaluationItemFormValidators.levels([
+          for (var i = 1; i <= 11; i++) 'L$i',
+        ]),
+        'A scale can have at most 10 values.',
+      );
+    });
+
     test('Issue 173: levels are non-empty, labelled and distinct', () {
       expect(EvaluationItemFormValidators.levels(null), isNotNull);
       expect(EvaluationItemFormValidators.levels(const []), isNotNull);

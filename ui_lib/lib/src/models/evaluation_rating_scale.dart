@@ -58,6 +58,10 @@ class EvaluationRatingScale {
   /// Default highest value of stars and ranges.
   static const int defaultMax = 5;
 
+  /// The most values a scale may have: a range's `max - min + 1`, or the
+  /// number of labelled levels.
+  static const int maxValues = 10;
+
   /// How the rating is given.
   final EvaluationRatingStyle style;
 
@@ -78,6 +82,13 @@ class EvaluationRatingScale {
 
   /// Highest value: the number of levels for levels.
   int get highest => isLevels ? levels.length : max;
+
+  /// Whether the scale has at least one and at most [maxValues] values, so
+  /// that [values] can be built and laid out.
+  bool get isWithinCap {
+    final count = highest - lowest + 1;
+    return count >= 1 && count <= maxValues;
+  }
 
   /// Every value the scale takes, lowest first.
   List<int> get values => [for (var v = lowest; v <= highest; v++) v];

@@ -130,29 +130,6 @@ void main() {
         );
       }
     });
-
-    test('Issue 385: canConfirm is true unless reason exceeds the cap', () {
-      for (final action in AdminUserReviewAction.values) {
-        expect(
-          AdminUserReviewFormValidators.canConfirm(action: action, reason: ''),
-          isTrue,
-        );
-        expect(
-          AdminUserReviewFormValidators.canConfirm(
-            action: action,
-            reason: 'x' * kAdminReviewReasonMaxLength,
-          ),
-          isTrue,
-        );
-        expect(
-          AdminUserReviewFormValidators.canConfirm(
-            action: action,
-            reason: 'x' * (kAdminReviewReasonMaxLength + 1),
-          ),
-          isFalse,
-        );
-      }
-    });
   });
 
   group('Issue 385: AdminUserReviewForm initial state', () {

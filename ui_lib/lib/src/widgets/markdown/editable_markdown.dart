@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import 'markdown_guide_dialog.dart';
 import 'themed_markdown.dart';
 
 /// Displays rendered markdown text. On tap, opens a centered editor popover
@@ -165,42 +166,14 @@ class MarkdownEditorDialogState extends State<MarkdownEditorDialog> {
   late TextEditingController controller;
   bool showPreview = false;
 
-  Future<void> showMarkdownHelp() async {
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => PointerInterceptor(
-        child: AlertDialog(
-          title: const Text('Markdown Guide'),
-          content: const SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                HelpRow(syntax: '**bold**', description: 'Bold text'),
-                HelpRow(syntax: '*italic*', description: 'Italic text'),
-                HelpRow(syntax: '# Heading', description: 'Heading'),
-                HelpRow(syntax: '- item', description: 'Bullet list'),
-                HelpRow(syntax: '1. item', description: 'Numbered list'),
-                HelpRow(syntax: '[text](url)', description: 'Link'),
-                HelpRow(syntax: '> quote', description: 'Block quote'),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Close'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Future<void> showMarkdownHelp() => showMarkdownGuide(context);
 
   @override
   void initState() {
     super.initState();
-    controller = TextEditingController(text: widget.initialValue);
+    controller = TextEditingController(text: widget.initialValue)
+      ..addListener(onTextChanged);
+    wasDirty = isDirty;
   }
 
   @override
@@ -210,6 +183,14 @@ class MarkdownEditorDialogState extends State<MarkdownEditorDialog> {
   }
 
   bool get isDirty => controller.text != widget.initialValue;
+
+  /// [isDirty] as of the last build, which decides whether the [PopScope]
+  /// lets a back gesture or Escape close the editor without asking.
+  late bool wasDirty;
+
+  void onTextChanged() {
+    if (isDirty != wasDirty) setState(() => wasDirty = isDirty);
+  }
 
   Future<void> handleCancel() async {
     if (!isDirty) {
@@ -258,158 +239,153 @@ class MarkdownEditorDialogState extends State<MarkdownEditorDialog> {
       MarkdownEditorDialog.maxDialogWidth,
     );
 
-    return PointerInterceptor(
-      child: Dialog(
-        insetPadding: EdgeInsets.symmetric(
-          horizontal: inset,
-          vertical: inset,
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: SizedBox(
-          key: const Key('markdownEditorDialogFrame'),
-          width: targetWidth,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: media.size.height - inset * 2,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 8, 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          widget.label,
-                          style: theme.textTheme.large,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: showMarkdownHelp,
-                        icon: const Icon(Icons.help_outline, size: 20),
-                        tooltip: 'Markdown help',
-                      ),
-                      IconButton(
-                        onPressed: () =>
-                            setState(() => showPreview = !showPreview),
-                        icon: Icon(
-                          showPreview ? LucideIcons.pencil : LucideIcons.eye,
-                          size: 20,
-                        ),
-                        tooltip: showPreview ? 'Edit' : 'Preview',
-                      ),
-                    ],
+    // Escape, Android back and browser back ask the same question as Cancel
+    // when there are changes (#241). The route itself ignores Escape because
+    // the barrier is not dismissible, so Escape is routed to maybePop here.
+    return PopScope(
+      canPop: !wasDirty,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(handleCancel());
+      },
+      child: Actions(
+        actions: <Type, Action<Intent>>{
+          DismissIntent: CallbackAction<DismissIntent>(
+            onInvoke: (_) => Navigator.of(context).maybePop(),
+          ),
+        },
+        // Holds focus inside the dialog so Escape reaches the action above
+        // before any field has been focused.
+        child: Focus(
+          autofocus: true,
+          child: PointerInterceptor(
+            child: Dialog(
+              insetPadding: EdgeInsets.symmetric(
+                horizontal: inset,
+                vertical: inset,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: SizedBox(
+                key: const Key('markdownEditorDialogFrame'),
+                width: targetWidth,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: media.size.height - inset * 2,
                   ),
-                ),
-                Divider(height: 1, color: theme.colorScheme.border),
-                Flexible(
-                  child: showPreview
-                      ? SingleChildScrollView(
-                          padding: const EdgeInsets.all(20),
-                          child: controller.text.isEmpty
-                              ? Text(
-                                  'Nothing to preview',
-                                  style: theme.textTheme.muted,
-                                )
-                              : ListenableBuilder(
-                                  listenable: controller,
-                                  builder: (context, _) => ThemedMarkdown(
-                                    data: controller.text,
-                                    textAlign: TextAlign.justify,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 8, 12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.label,
+                                style: theme.textTheme.large,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: showMarkdownHelp,
+                              icon: const Icon(Icons.help_outline, size: 20),
+                              tooltip: 'Markdown help',
+                            ),
+                            IconButton(
+                              onPressed: () =>
+                                  setState(() => showPreview = !showPreview),
+                              icon: Icon(
+                                showPreview
+                                    ? LucideIcons.pencil
+                                    : LucideIcons.eye,
+                                size: 20,
+                              ),
+                              tooltip: showPreview ? 'Edit' : 'Preview',
+                            ),
+                          ],
+                        ),
+                      ),
+                      Divider(height: 1, color: theme.colorScheme.border),
+                      Flexible(
+                        child: showPreview
+                            ? SingleChildScrollView(
+                                padding: const EdgeInsets.all(20),
+                                child: controller.text.isEmpty
+                                    ? Text(
+                                        'Nothing to preview',
+                                        style: theme.textTheme.muted,
+                                      )
+                                    : ListenableBuilder(
+                                        listenable: controller,
+                                        builder: (context, _) => ThemedMarkdown(
+                                          data: controller.text,
+                                          textAlign: TextAlign.justify,
+                                        ),
+                                      ),
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  16,
+                                  20,
+                                  8,
+                                ),
+                                child: TextField(
+                                  controller: controller,
+                                  maxLines: isNarrow ? 8 : 12,
+                                  minLines: isNarrow ? 6 : 8,
+                                  textAlignVertical: TextAlignVertical.top,
+                                  decoration: InputDecoration(
+                                    hintText: 'Write markdown here…',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide(
+                                        color: theme.colorScheme.border,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide(
+                                        color: theme.colorScheme.border,
+                                      ),
+                                    ),
+                                    contentPadding: const EdgeInsets.all(12),
                                   ),
                                 ),
-                        )
-                      : Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                          child: TextField(
-                            controller: controller,
-                            maxLines: isNarrow ? 8 : 12,
-                            minLines: isNarrow ? 6 : 8,
-                            textAlignVertical: TextAlignVertical.top,
-                            decoration: InputDecoration(
-                              hintText: 'Write markdown here…',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(
-                                  color: theme.colorScheme.border,
-                                ),
                               ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(
-                                  color: theme.colorScheme.border,
-                                ),
-                              ),
-                              contentPadding: const EdgeInsets.all(12),
-                            ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            top: BorderSide(color: theme.colorScheme.border),
                           ),
                         ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      top: BorderSide(color: theme.colorScheme.border),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      ShadButton.outline(
-                        onPressed: handleCancel,
-                        child: const Text('Cancel'),
-                      ),
-                      const SizedBox(width: 12),
-                      ShadButton(
-                        onPressed: handleSave,
-                        child: const Text('Save'),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            ShadButton.outline(
+                              onPressed: handleCancel,
+                              child: const Text('Cancel'),
+                            ),
+                            const SizedBox(width: 12),
+                            ShadButton(
+                              onPressed: handleSave,
+                              child: const Text('Save'),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class HelpRow extends StatelessWidget {
-  const HelpRow({
-    required this.syntax,
-    required this.description,
-    super.key,
-  });
-
-  final String syntax;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 140,
-            child: Text(
-              syntax,
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 13,
               ),
             ),
           ),
-          Text(description),
-        ],
+        ),
       ),
     );
   }

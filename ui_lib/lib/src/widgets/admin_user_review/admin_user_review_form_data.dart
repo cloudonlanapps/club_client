@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:ui_lib/src/widgets/admin_user_review/admin_user_review_form.dart'
     show AdminUserReviewForm;
-import 'package:ui_lib/ui_lib.dart' show AdminUserReviewForm;
 
 import '../identity_documents/identity_document_slot.dart';
 

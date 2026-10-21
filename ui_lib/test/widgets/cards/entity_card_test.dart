@@ -234,6 +234,31 @@ void main() {
   );
 
   testWidgets(
+    'Issue 240: at phone width, a disabled primary action shows its reason '
+    'and a disabled overflow action shows its reason in the menu',
+    (tester) async {
+      await pumpAtWidth(
+        tester,
+        360,
+        EntityCard(
+          image: EntityImage.placeholder(),
+          title: 'Member',
+          trailingActions: [
+            ActionItem(label: 'Assign', reason: (_) => const Text('0 credits')),
+            ActionItem(label: 'Trial', reason: (_) => const Text('No trial')),
+          ],
+        ),
+      );
+      expect(find.text('Assign'), findsOneWidget);
+      expect(find.text('0 credits'), findsOneWidget);
+
+      await tester.tap(find.byIcon(LucideIcons.ellipsisVertical));
+      await tester.pumpAndSettle();
+      expect(find.text('No trial'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'Issue 489: single typed action on mobile has no overflow menu',
     (tester) async {
       await pumpAtWidth(

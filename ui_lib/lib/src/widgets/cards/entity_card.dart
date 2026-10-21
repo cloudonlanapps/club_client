@@ -1,18 +1,10 @@
-import 'package:flutter/material.dart'
-    show
-        CircularProgressIndicator,
-        PopupMenuButton,
-        PopupMenuItem,
-        PopupMenuPosition;
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/src/constants/breakpoints.dart' show Breakpoints;
 import 'package:ui_lib/src/widgets/cards/entity_image.dart' show EntityImage;
-import 'package:ui_lib/ui_lib.dart' show EntityImage;
 
 import 'action_group.dart';
 import 'action_item.dart';
-import 'overflow_action.dart';
 
 const double kCardRadius = 8;
 const double kImageWidth = 64;
@@ -244,9 +236,10 @@ class EntityCard extends StatelessWidget {
 }
 
 /// Full-width row used as the mobile-stacked action area. Renders the
-/// primary action as an `InlineActionButton` and, when there are more
-/// actions, a trailing `⋮` button that lists them in a popup menu — the
-/// only place secondary actions appear on mobile.
+/// primary action as an `InlineActionButton`, preceded by its reason when
+/// it is disabled with one (as `ActionGroup` does on desktop), and, when
+/// there are more actions, the shared `OverflowActionMenu` that lists them —
+/// the only place secondary actions appear on mobile.
 class MobilePrimaryActionRow extends StatelessWidget {
   const MobilePrimaryActionRow({
     required this.primary,
@@ -261,82 +254,15 @@ class MobilePrimaryActionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
+        if (primary.showsReason) ...[
+          Flexible(child: primary.reason!(context)),
+          const SizedBox(width: 4),
+        ],
         Expanded(child: InlineActionButton(item: primary)),
         if (overflow.isNotEmpty) ...[
           const SizedBox(width: 4),
-          OverflowMenuButton(items: overflow),
+          OverflowActionMenu(items: overflow),
         ],
-      ],
-    );
-  }
-}
-
-/// Compact ⋮ button that opens a popup menu listing [items]. A near-clone
-/// of `OverflowActionMenu` from action_group.dart but sized for the mobile
-/// inline row.
-class OverflowMenuButton extends StatelessWidget {
-  const OverflowMenuButton({required this.items, super.key});
-
-  final List<ActionItem> items;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
-    return PopupMenuButton<int>(
-      icon: Icon(
-        LucideIcons.ellipsisVertical,
-        size: 18,
-        color: theme.colorScheme.mutedForeground,
-      ),
-      tooltip: 'More actions',
-      padding: EdgeInsets.zero,
-      position: PopupMenuPosition.under,
-      offset: const Offset(0, 4),
-      constraints: const BoxConstraints(minWidth: 160, maxWidth: 240),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: theme.colorScheme.border),
-      ),
-      color: theme.colorScheme.card,
-      onSelected: (i) => runOverflowAction(context, items[i]),
-      itemBuilder: (_) => [
-        for (var i = 0; i < items.length; i++)
-          PopupMenuItem<int>(
-            value: i,
-            height: 36,
-            enabled: items[i].isActionable,
-            child: Row(
-              children: [
-                if (items[i].icon != null) ...[
-                  Icon(
-                    items[i].icon,
-                    size: 14,
-                    color: items[i].destructive
-                        ? theme.colorScheme.destructive
-                        : theme.colorScheme.foreground,
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                Text(
-                  items[i].label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: items[i].destructive
-                        ? theme.colorScheme.destructive
-                        : theme.colorScheme.foreground,
-                  ),
-                ),
-                if (items[i].loading) ...[
-                  const SizedBox(width: 8),
-                  const SizedBox(
-                    width: 12,
-                    height: 12,
-                    child: CircularProgressIndicator(strokeWidth: 1.5),
-                  ),
-                ],
-              ],
-            ),
-          ),
       ],
     );
   }

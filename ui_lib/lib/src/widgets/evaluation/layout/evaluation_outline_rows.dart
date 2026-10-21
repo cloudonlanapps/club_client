@@ -60,7 +60,7 @@ class EvaluationOutlineRows extends StatelessWidget {
 
   /// The move callback for [pos] by [delta], or `null` when it cannot move.
   VoidCallback? mover(EvaluationLayoutPosition pos, int delta) =>
-      !enabled || EvaluationLayoutOps.move(layout, pos, delta) == null
+      !enabled || !EvaluationLayoutOps.canMove(layout, pos, delta)
       ? null
       : () => onMove(pos, delta);
 

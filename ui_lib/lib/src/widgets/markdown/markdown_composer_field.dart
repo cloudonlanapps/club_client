@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import 'editable_markdown.dart' show HelpRow;
+import 'markdown_guide_dialog.dart';
 import 'themed_markdown.dart';
 
 /// Inline markdown editor with a live **preview toggle** — the same look as
@@ -42,30 +42,7 @@ class MarkdownComposerField extends StatefulWidget {
 class MarkdownComposerFieldState extends State<MarkdownComposerField> {
   bool _showPreview = false;
 
-  Future<void> _showMarkdownHelp() async {
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => const AlertDialog(
-        title: Text('Markdown Guide'),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              HelpRow(syntax: '**bold**', description: 'Bold text'),
-              HelpRow(syntax: '*italic*', description: 'Italic text'),
-              HelpRow(syntax: '# Heading', description: 'Heading'),
-              HelpRow(syntax: '- item', description: 'Bullet list'),
-              HelpRow(syntax: '1. item', description: 'Numbered list'),
-              HelpRow(syntax: '[text](url)', description: 'Link'),
-              HelpRow(syntax: '> quote', description: 'Block quote'),
-            ],
-          ),
-        ),
-        actions: [_HelpCloseButton()],
-      ),
-    );
-  }
+  Future<void> _showMarkdownHelp() => showMarkdownGuide(context);
 
   @override
   Widget build(BuildContext context) {
@@ -144,20 +121,6 @@ class MarkdownComposerFieldState extends State<MarkdownComposerField> {
             ),
           ),
       ],
-    );
-  }
-}
-
-/// Close button for the markdown-help dialog. Pops only the help dialog it
-/// belongs to (the canonical `showDialog → Navigator.pop` idiom).
-class _HelpCloseButton extends StatelessWidget {
-  const _HelpCloseButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: () => Navigator.of(context).pop(),
-      child: const Text('Close'),
     );
   }
 }

@@ -3,7 +3,6 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/src/widgets/cards/entity_card.dart' show EntityCard;
 import 'package:ui_lib/src/widgets/credentialed_network_image.dart'
     show CredentialedNetworkImage;
-import 'package:ui_lib/ui_lib.dart' show EntityCard;
 
 /// Square image content for the leading slot of an [EntityCard].
 ///

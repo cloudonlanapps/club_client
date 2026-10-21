@@ -7,7 +7,6 @@ import 'package:flutter/material.dart'
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/src/widgets/cards/entity_card.dart' show EntityCard;
-import 'package:ui_lib/ui_lib.dart' show EntityCard;
 
 import '../action_button.dart';
 import 'action_item.dart';

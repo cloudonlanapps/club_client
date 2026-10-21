@@ -9,6 +9,11 @@ import 'identity_document_slot.dart';
 /// Each slot uses `InteractiveViewer(Image.network(...))` so the user can
 /// pinch / drag to zoom in on the ID. No Riverpod, no cl_gallery_viewer —
 /// identity documents are always images, never videos or PDFs.
+///
+/// A modal this widget opens and closes itself: it is pushed on the root
+/// navigator as a full-screen dialog, so it covers the whole app (a shell's
+/// chrome included) even when [context] sits inside a nested shell
+/// navigator, and its close button pops that same navigator.
 void showIdentityDocumentsPreview({
   required BuildContext context,
   required List<IdentityDocumentSlot> items,
@@ -16,7 +21,7 @@ void showIdentityDocumentsPreview({
   Map<String, String> httpHeaders = const {},
 }) {
   if (items.isEmpty) return;
-  Navigator.of(context).push(
+  Navigator.of(context, rootNavigator: true).push(
     MaterialPageRoute<void>(
       fullscreenDialog: true,
       builder: (_) => IdentityDocumentsPreviewPage(
@@ -77,6 +82,7 @@ class IdentityDocumentsPreviewPageState
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close),
+          // The navigator holding this page: the root one it was pushed on.
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(

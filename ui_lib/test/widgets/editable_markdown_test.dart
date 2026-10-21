@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/src/widgets/markdown/editable_markdown.dart';
@@ -142,5 +143,63 @@ void main() {
       400 - 2 * MarkdownEditorDialog.narrowInsetPadding,
       reason: 'narrow layouts use narrowInsetPadding, not the wide value',
     );
+  });
+
+  testWidgets(
+    'Issue 241: with edited text, Escape asks "Discard changes?" and keeps '
+    'the editor open',
+    (tester) async {
+      await openEditor(tester, surfaceSize: const Size(1280, 900));
+      await tester.enterText(find.byType(TextField), 'typed text');
+      await tester.pump();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Discard changes?'), findsOneWidget);
+      expect(find.byType(MarkdownEditorDialog), findsOneWidget);
+
+      await tester.tap(find.text('Keep editing'));
+      await tester.pumpAndSettle();
+      expect(find.byType(MarkdownEditorDialog), findsOneWidget);
+      expect(find.text('typed text'), findsOneWidget);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Discard'));
+      await tester.pumpAndSettle();
+      expect(find.byType(MarkdownEditorDialog), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'Issue 241: with edited text, system back asks "Discard changes?"',
+    (tester) async {
+      await openEditor(tester, surfaceSize: const Size(1280, 900));
+      await tester.enterText(find.byType(TextField), 'typed text');
+      await tester.pump();
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Discard changes?'), findsOneWidget);
+      expect(find.byType(MarkdownEditorDialog), findsOneWidget);
+    },
+  );
+
+  testWidgets('Issue 241: unedited, Escape closes the editor directly', (
+    tester,
+  ) async {
+    await openEditor(
+      tester,
+      surfaceSize: const Size(1280, 900),
+      initial: 'hello',
+    );
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Discard changes?'), findsNothing);
+    expect(find.byType(MarkdownEditorDialog), findsNothing);
   });
 }

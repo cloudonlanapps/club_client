@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:ui_lib/src/widgets/cards/action_group.dart' show ActionGroup;
-import 'package:ui_lib/ui_lib.dart' show ActionGroup;
 
 /// Single action entry handed to [ActionGroup].
 ///

@@ -156,6 +156,9 @@ abstract final class EvaluationStrings {
   static const String rangeOrder =
       'The highest value must be above the lowest.';
 
+  /// A scale with more than `EvaluationRatingScale.maxValues` values.
+  static const String scaleTooLong = 'A scale can have at most 10 values.';
+
   /// No levels.
   static const String levelsRequired = 'Add at least one level.';
 

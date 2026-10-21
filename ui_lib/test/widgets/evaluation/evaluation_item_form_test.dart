@@ -102,6 +102,31 @@ void main() {
       );
     });
 
+    testWidgets('Issue 242: a highest value of 100000 is refused on the '
+        'field and builds no coach-note checkboxes', (tester) async {
+      final key = await _pump(
+        tester,
+        const EvaluationItemValue(
+          kind: EvaluationItemKind.rating,
+          text: 'Edges',
+          showCommentArea: true,
+          scale: EvaluationRatingScale.range(min: 1, max: 10),
+        ),
+      );
+      expect(find.byType(ShadCheckbox), findsNWidgets(10));
+      await tester.enterText(
+        find.byWidgetPredicate(
+          (w) => w is EditableText && w.controller.text == '10',
+        ),
+        '100000',
+      );
+      await tester.pump();
+      expect(find.byType(ShadCheckbox), findsNothing);
+      expect(key.currentState!.validate(), isNull);
+      await tester.pump();
+      expect(find.text('A scale can have at most 10 values.'), findsOneWidget);
+    });
+
     testWidgets('Issue 173: choices return values derived from labels', (
       tester,
     ) async {

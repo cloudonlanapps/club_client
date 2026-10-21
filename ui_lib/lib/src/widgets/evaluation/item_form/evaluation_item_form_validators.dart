@@ -1,4 +1,5 @@
 import '../../../constants/evaluation_strings.dart';
+import '../../../models/evaluation_rating_scale.dart';
 import '../../../utils/evaluation_choice_values.dart';
 
 /// Static, SDK-free validators of `EvaluationItemForm`. Each returns the
@@ -16,18 +17,27 @@ abstract final class EvaluationItemFormValidators {
   static String? rateMin(String value) =>
       int.tryParse(value.trim()) == null ? EvaluationStrings.wholeNumber : null;
 
-  /// A scale's highest value: a whole number above [min].
+  /// A scale's highest value: a whole number above [min], with at most
+  /// [EvaluationRatingScale.maxValues] values from [min] to it.
   static String? rateMax(String value, String min) {
     final hi = int.tryParse(value.trim());
     if (hi == null) return EvaluationStrings.wholeNumber;
     final lo = int.tryParse(min.trim());
-    return lo != null && lo >= hi ? EvaluationStrings.rangeOrder : null;
+    if (lo == null) return null;
+    if (lo >= hi) return EvaluationStrings.rangeOrder;
+    return hi - lo + 1 > EvaluationRatingScale.maxValues
+        ? EvaluationStrings.scaleTooLong
+        : null;
   }
 
-  /// Labelled levels: at least one, each labelled, labels distinct.
+  /// Labelled levels: at least one and at most
+  /// [EvaluationRatingScale.maxValues], each labelled, labels distinct.
   static String? levels(List<String>? labels) {
     final list = labels ?? const <String>[];
     if (list.isEmpty) return EvaluationStrings.levelsRequired;
+    if (list.length > EvaluationRatingScale.maxValues) {
+      return EvaluationStrings.scaleTooLong;
+    }
     if (list.any((l) => l.trim().isEmpty)) {
       return EvaluationStrings.levelLabelRequired;
     }

@@ -2,6 +2,8 @@ import 'package:cl_member_zone/src/widgets/sidebar/app_sidebar.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'sidebar_test_routes.dart';
+
 AppSidebar _sidebar(UserRoles roles) => AppSidebar(
   currentUser: UserInfo(
     username: 'label_user',
@@ -10,6 +12,8 @@ AppSidebar _sidebar(UserRoles roles) => AppSidebar(
     isSuperAdmin: false,
     roles: roles,
   ),
+  routeFor: testSidebarRoute,
+  currentLocation: '/',
   onNavigate: (_) {},
 );
 

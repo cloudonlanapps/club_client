@@ -43,6 +43,7 @@ import 'package:cl_member_zone/cl_member_zone.dart'
         AuditLogScreen,
         BroadcastScreen,
         ClubIdentityScreen,
+        ContactScreen,
         CreditScreen,
         DashboardScreen,
         EventDetailsScreen,
@@ -86,9 +87,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ui_lib/ui_lib.dart' show StringExtensions;
 
+import 'member_zone_routes.dart';
 import 'providers/public_site_uri.dart';
 import 'review_routes.dart';
-import 'screens/contact_screen.dart';
 import 'utils/after_sign_out.dart';
 import 'utils/router_helpers.dart';
 
@@ -524,6 +525,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               onAfterSignOut: () =>
                   afterSignOut(context, ref.read(publicSiteUriProvider)),
               onNavigate: (path) => context.go(path),
+              routeFor: memberZoneSidebarRoute,
+              currentLocation: state.matchedLocation,
               child: child,
             );
           },
@@ -1256,8 +1259,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           ...reviewRoutes(),
           GoRoute(
             path: '/memberzone/contact',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ContactScreen(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ContactScreen(
+                onBack: context.canPop() ? () => context.pop() : null,
+              ),
             ),
           ),
         ],

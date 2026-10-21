@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import 'sidebar_test_routes.dart';
+
 UserInfo _user({
   bool admin = false,
   bool coach = false,
@@ -32,6 +34,8 @@ Widget _wrap(
           body: AppSidebar(
             currentUser: user,
             unhandledInquiries: unhandledInquiries,
+            routeFor: testSidebarRoute,
+            currentLocation: '/',
             onNavigate: onNavigate ?? (_) {},
           ),
         ),

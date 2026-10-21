@@ -1,12 +1,11 @@
-import 'package:cl_club_app/src/screens/contact_screen.dart';
 import 'package:cl_club_branding/cl_club_branding.dart' show appLogoUriProvider;
+import 'package:cl_member_zone/cl_member_zone.dart' show ContactScreen;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ContactInfo, contactInfoProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show LocalizedText;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 const _contact = ContactInfo(
@@ -19,7 +18,11 @@ const _contact = ContactInfo(
   postalCode: '411000',
 );
 
-Future<void> _pump(WidgetTester tester, {required Size size}) async {
+Future<void> _pump(
+  WidgetTester tester, {
+  required Size size,
+  VoidCallback? onBack,
+}) async {
   tester.view
     ..devicePixelRatio = 1
     ..physicalSize = size;
@@ -31,16 +34,8 @@ Future<void> _pump(WidgetTester tester, {required Size size}) async {
         // An unknown scheme renders the logo as an empty box, no image load.
         appLogoUriProvider.overrideWithValue(Uri.parse('none:logo')),
       ],
-      child: ShadApp.router(
-        routerConfig: GoRouter(
-          routes: [
-            GoRoute(
-              path: '/',
-              builder: (context, state) =>
-                  const Scaffold(body: ContactScreen()),
-            ),
-          ],
-        ),
+      child: ShadApp(
+        home: Scaffold(body: ContactScreen(onBack: onBack)),
       ),
     ),
   );
@@ -67,6 +62,22 @@ void main() {
       await _pump(tester, size: const Size(400, 1200));
 
       expect(find.text('Test Club'), findsOneWidget);
+    });
+  });
+
+  group('Issue 204: ContactScreen takes its navigation from the router', () {
+    testWidgets('Issue 204: Back calls onBack', (tester) async {
+      var back = 0;
+      await _pump(tester, size: const Size(1280, 900), onBack: () => back++);
+
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      expect(back, 1);
+    });
+
+    testWidgets('Issue 204: without onBack there is no Back', (tester) async {
+      await _pump(tester, size: const Size(1280, 900));
+
+      expect(find.byIcon(Icons.arrow_back), findsNothing);
     });
   });
 }

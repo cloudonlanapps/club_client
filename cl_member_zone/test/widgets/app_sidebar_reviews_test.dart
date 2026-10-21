@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import 'sidebar_test_routes.dart';
+
 UserInfo _user({bool admin = false, bool coach = false}) => UserInfo(
   username: 'sidebar_user',
   displayName: 'Side Bar',
@@ -32,6 +34,8 @@ Future<void> _pump(
           body: AppSidebar(
             currentUser: user,
             evaluations: evaluations,
+            routeFor: testSidebarRoute,
+            currentLocation: '/',
             onNavigate: onNavigate ?? (_) {},
           ),
         ),

@@ -1,20 +1,22 @@
 import 'package:cl_club_branding/cl_club_branding.dart' show AppLogo;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show AvatarCircleVariant;
 
 import 'nav_item.dart';
+import 'sidebar_destination.dart';
 import 'sidebar_item.dart';
 
 export 'nav_item.dart';
+export 'sidebar_destination.dart';
 
 class AppSidebar extends StatelessWidget {
   const AppSidebar({
     required this.currentUser,
     required this.onNavigate,
-    this.pathPrefix = '',
+    required this.routeFor,
+    required this.currentLocation,
     this.isCollapsed = false,
     this.onLogoTap,
     this.eventTypes = const {EventType.camp},
@@ -36,15 +38,21 @@ class AppSidebar extends StatelessWidget {
   /// under Club Management (club_core#174). Unknown counts as off.
   final bool evaluations;
 
-  final String pathPrefix;
   final bool isCollapsed;
 
-  /// Navigates to the given (already prefix-resolved) path. The host owns
+  /// The route of each entry, from the host's router.
+  final SidebarRoute routeFor;
+
+  /// The location the app is at, from the host's router; the entry it falls
+  /// under is highlighted.
+  final String currentLocation;
+
+  /// Navigates to an entry's route (from [routeFor]). The host owns
   /// navigation; the sidebar never calls the router directly.
   final ValueChanged<String> onNavigate;
 
   /// Optional callback fired when the brand header (logo + name text)
-  /// is tapped. Hooked up by the host to navigate to `/memberzone/contact`.
+  /// is tapped. Hooked up by the host to open the contact page.
   final VoidCallback? onLogoTap;
 
   bool get isAdmin => currentUser.roles.isAdmin || currentUser.isSuperAdmin;
@@ -66,65 +74,65 @@ class AppSidebar extends StatelessWidget {
     const NavItem(
       icon: LucideIcons.layoutDashboard,
       label: 'Dashboard',
-      path: '/',
+      destination: SidebarDestination.dashboard,
       section: 'Main',
     ),
-    NavItem(
+    const NavItem(
       icon: LucideIcons.calendarDays,
       label: 'Calendar',
-      path: '/my-events/${currentUser.username}/calendar',
+      destination: SidebarDestination.myCalendar,
       section: 'Main',
     ),
-    NavItem(
+    const NavItem(
       icon: LucideIcons.users,
       label: 'Groups',
-      path: '/my-groups/${currentUser.username}',
+      destination: SidebarDestination.myGroups,
       section: 'Main',
     ),
-    NavItem(
+    const NavItem(
       icon: LucideIcons.calendarHeart,
       label: 'Events',
-      path: '/my-events/${currentUser.username}',
+      destination: SidebarDestination.myEvents,
       section: 'Main',
     ),
-    NavItem(
+    const NavItem(
       icon: LucideIcons.clipboardCheck,
       label: 'Attendance',
-      path: '/my-events/${currentUser.username}/attendance',
+      destination: SidebarDestination.myAttendance,
       section: 'Main',
     ),
     if (evaluations)
       const NavItem(
         icon: LucideIcons.clipboardList,
         label: 'Reviews',
-        path: '/reviews/mine',
+        destination: SidebarDestination.myReviews,
         section: 'Main',
       ),
     const NavItem(
       icon: LucideIcons.calendar,
       label: 'Club Calendar',
-      path: '/events/calendar',
+      destination: SidebarDestination.clubCalendar,
       section: 'Club Management',
       coachOrAdmin: true,
     ),
     const NavItem(
       icon: LucideIcons.users,
       label: 'Members',
-      path: '/users',
+      destination: SidebarDestination.members,
       section: 'Club Management',
       coachOrAdmin: true,
     ),
     const NavItem(
       icon: LucideIcons.mapPin,
       label: 'Venues',
-      path: '/venues',
+      destination: SidebarDestination.venues,
       section: 'Club Management',
       coachOrAdmin: true,
     ),
     const NavItem(
       icon: LucideIcons.usersRound,
       label: 'Groups',
-      path: '/groups',
+      destination: SidebarDestination.groups,
       section: 'Club Management',
       coachOrAdmin: true,
     ),
@@ -132,7 +140,7 @@ class AppSidebar extends StatelessWidget {
       const NavItem(
         icon: LucideIcons.trophy,
         label: 'Programmes',
-        path: '/events/programmes',
+        destination: SidebarDestination.programmes,
         section: 'Club Management',
         coachOrAdmin: true,
       ),
@@ -140,7 +148,7 @@ class AppSidebar extends StatelessWidget {
       const NavItem(
         icon: LucideIcons.tent,
         label: 'Camps',
-        path: '/events/camps',
+        destination: SidebarDestination.camps,
         section: 'Club Management',
         coachOrAdmin: true,
       ),
@@ -148,7 +156,7 @@ class AppSidebar extends StatelessWidget {
       const NavItem(
         icon: LucideIcons.calendarCheck,
         label: 'One-off Events',
-        path: '/events/one-off',
+        destination: SidebarDestination.oneOff,
         section: 'Club Management',
         coachOrAdmin: true,
       ),
@@ -156,14 +164,14 @@ class AppSidebar extends StatelessWidget {
       const NavItem(
         icon: LucideIcons.clipboardPen,
         label: 'Reviews',
-        path: '/reviews',
+        destination: SidebarDestination.reviews,
         section: 'Club Management',
         coachOrAdmin: true,
       ),
     NavItem(
       icon: LucideIcons.inbox,
       label: 'Inquiries',
-      path: '/inquiries',
+      destination: SidebarDestination.inquiries,
       section: 'Admin',
       adminOnly: true,
       badgeCount: unhandledInquiries,
@@ -171,27 +179,27 @@ class AppSidebar extends StatelessWidget {
     const NavItem(
       icon: LucideIcons.image,
       label: 'Website media',
-      path: '/site-media',
+      destination: SidebarDestination.siteMedia,
       section: 'Admin',
       superAdminOnly: true,
     ),
     const NavItem(
       icon: LucideIcons.building,
       label: 'Club details',
-      path: '/club-details',
+      destination: SidebarDestination.clubDetails,
       section: 'Admin',
       superAdminOnly: true,
     ),
     const NavItem(
       icon: LucideIcons.user,
       label: 'Profile',
-      path: '/profile',
+      destination: SidebarDestination.profile,
       section: 'Account',
     ),
     const NavItem(
       icon: LucideIcons.messageCircle,
       label: 'Contact us',
-      path: '/contact',
+      destination: SidebarDestination.contact,
       section: 'Account',
     ),
   ];
@@ -208,7 +216,6 @@ class AppSidebar extends StatelessWidget {
           ),
         )
         .toList();
-    final currentLocation = GoRouterState.of(context).matchedLocation;
 
     return Container(
       width: isCollapsed ? 72 : 240,
@@ -313,13 +320,9 @@ class AppSidebar extends StatelessWidget {
     final widgets = <Widget>[];
     String? lastSection;
 
-    final allPaths = visibleItems
-        .map(
-          (i) => i.path == '/'
-              ? (pathPrefix.isEmpty ? '/' : pathPrefix)
-              : '$pathPrefix${i.path}',
-        )
-        .toList();
+    String routeOf(NavItem item) =>
+        routeFor(item.destination, currentUser.username);
+    final allPaths = visibleItems.map(routeOf).toList();
 
     for (final item in visibleItems) {
       if (item.section != null && item.section != lastSection) {
@@ -347,9 +350,7 @@ class AppSidebar extends StatelessWidget {
 
       final badge = item.badgeCount;
 
-      final effectivePath = item.path == '/'
-          ? (pathPrefix.isEmpty ? '/' : pathPrefix)
-          : '$pathPrefix${item.path}';
+      final effectivePath = routeOf(item);
 
       final isSelected = effectivePath == '/'
           ? currentLocation == '/'
@@ -371,7 +372,7 @@ class AppSidebar extends StatelessWidget {
           isSelected: isSelected,
           isCollapsed: isCollapsed,
           badgeCount: badge,
-          highlightBackground: item.path != '/',
+          highlightBackground: item.destination != SidebarDestination.dashboard,
           onTap: () {
             final scaffold = Scaffold.maybeOf(context);
             if (scaffold != null && scaffold.isDrawerOpen) {

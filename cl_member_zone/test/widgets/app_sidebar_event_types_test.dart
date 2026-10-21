@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import 'sidebar_test_routes.dart';
+
 const _coach = UserInfo(
   username: 'sidebar_coach',
   displayName: 'Side Bar',
@@ -24,6 +26,8 @@ Widget _wrap(Set<EventType> types) {
           body: AppSidebar(
             currentUser: _coach,
             eventTypes: types,
+            routeFor: testSidebarRoute,
+            currentLocation: '/',
             onNavigate: (_) {},
           ),
         ),

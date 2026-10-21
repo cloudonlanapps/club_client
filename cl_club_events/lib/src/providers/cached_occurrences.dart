@@ -5,7 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/cached_value.dart';
 import '../models/range_occurrences_key.dart';
 
-/// Cached wrapper for occurrences notifier.
+/// Cached wrapper for the staff occurrence feed ([clOccurrencesProvider]),
+/// which covers the event types the club runs.
 /// Preserves last good data during loading to prevent "flash of loading".
 final AutoDisposeStateNotifierProviderFamily<
   CachedOccurrencesNotifier,
@@ -33,28 +34,23 @@ class CachedOccurrencesNotifier
   final Ref ref;
   final RangeOccurrencesKey key;
 
-  ClOccurrencesNotifierKey get _occKey => (
-    startUtc: key.range.start,
-    endUtc: key.range.end,
+  ClOccurrencesKey get _occKey => (
+    from: key.range.start,
+    to: key.range.end,
   );
 
   void subscribe() {
     // Read initial state immediately
     ref
-      ..read(occurrencesNotifierProvider(_occKey)).when(
-        data: (map) =>
-            state = (data: map.values.toList(), error: null, isLoading: false),
+      ..read(clOccurrencesProvider(_occKey)).when(
+        data: (list) => state = (data: list, error: null, isLoading: false),
         loading: () => state = (data: null, error: null, isLoading: true),
         error: (e, _) => state = (data: null, error: e, isLoading: false),
       )
       // Listen for future changes
-      ..listen(occurrencesNotifierProvider(_occKey), (_, next) {
+      ..listen(clOccurrencesProvider(_occKey), (_, next) {
         next.when(
-          data: (map) => state = (
-            data: map.values.toList(),
-            error: null,
-            isLoading: false,
-          ),
+          data: (list) => state = (data: list, error: null, isLoading: false),
           loading: () =>
               state = (data: state.data, error: null, isLoading: true),
           error: (e, _) =>

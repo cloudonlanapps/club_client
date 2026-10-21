@@ -19,8 +19,9 @@ dateItemsNotifierProvider = AsyncNotifierProvider.autoDispose
     );
 
 /// AsyncNotifier that combines occurrences and events for a specific date.
-/// Watches both occurrencesNotifierProvider and eventNotifierProvider to build
-/// a reactive list of (Occurrence, Event) tuples for the given date.
+/// Watches both [clOccurrencesProvider] (the event types the club runs) and
+/// [eventNotifierProvider] to build a reactive list of (Occurrence, Event)
+/// tuples for the given date.
 class DateItemsNotifier
     extends
         AutoDisposeFamilyAsyncNotifier<List<SelectedOccurrence>, DateItemsKey> {
@@ -34,18 +35,16 @@ class DateItemsNotifier
 
   Future<List<SelectedOccurrence>> buildDateItems() async {
     final occKey = (
-      startUtc: key.range.start,
-      endUtc: key.range.end,
+      from: key.range.start,
+      to: key.range.end,
     );
 
     // Watch occurrences for the range
-    final occurrencesMap = await ref.watch(
-      occurrencesNotifierProvider(occKey).future,
-    );
+    final occurrences = await ref.watch(clOccurrencesProvider(occKey).future);
 
     // Filter to only occurrences on this specific date
     final dateOnly = DateUtils.dateOnly(key.date);
-    final dateOccurrences = occurrencesMap.values.where((occ) {
+    final dateOccurrences = occurrences.where((occ) {
       return DateUtils.dateOnly(occ.actualStartTimeUtc) == dateOnly;
     }).toList();
 

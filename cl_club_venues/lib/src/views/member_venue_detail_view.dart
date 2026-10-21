@@ -23,6 +23,7 @@ class MemberVenueDetailView extends ConsumerWidget {
     final venueAsync = ref.watch(clVenueDetailProvider(venueId));
 
     return venueAsync.when(
+      skipLoadingOnReload: true,
       loading: () => const LoadingView(),
       error: (error, _) => Center(
         child: Column(

@@ -63,6 +63,7 @@ class EventDetailsView extends ConsumerWidget {
     );
     final eventAsync = ref.watch(clEventDetailProvider(eventId));
     return eventAsync.when(
+      skipLoadingOnReload: true,
       loading: () => const LoadingView(),
       error: (e, _) => Center(child: Text('Failed to load event: $e')),
       data: (event) {

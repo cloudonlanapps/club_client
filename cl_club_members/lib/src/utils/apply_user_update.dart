@@ -1,7 +1,7 @@
 import 'package:cl_club_members/src/utils/profile_save_error_message.dart';
 import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show ClUsersMasterNotifier, clUserPrivateProvider, clUsersMasterProvider;
+    show ClUsersMasterNotifier, clUsersMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show ServerException;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,9 +24,7 @@ Future<bool> applyUserUpdate(
 }) async {
   try {
     await update(ref.read(clUsersMasterProvider.notifier));
-    ref
-      ..invalidate(clUserPrivateProvider(username))
-      ..invalidate(authStateProvider);
+    ref.invalidate(authStateProvider);
     if (!context.mounted) return true;
     ShadToaster.of(context).show(
       ShadToast(description: Text(successMessage)),

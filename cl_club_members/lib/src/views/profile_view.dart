@@ -2,7 +2,7 @@ import 'package:cl_club_members/src/views/user_profile_view.dart';
 import 'package:cl_member_auth/cl_member_auth.dart'
     show ChangePasswordView, authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clUserPrivateProvider, clUsersMasterProvider;
+    show clUsersMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -76,9 +76,7 @@ class ProfileView extends ConsumerWidget {
             bio: bio,
             achievements: achievements,
           );
-      ref
-        ..invalidate(clUserPrivateProvider(username))
-        ..invalidate(authStateProvider);
+      ref.invalidate(authStateProvider);
       if (!context.mounted) return;
       ShadToaster.of(context).show(
         const ShadToast(description: Text('Profile updated.')),

@@ -560,10 +560,14 @@ class AdminReviewPageState extends ConsumerState<AdminReviewPage> {
         : const AsyncValue<List<MediaLink>>.data([]);
     final usersAsync = ref.watch(clUsersMasterProvider);
 
-    if (privateAsync.isLoading ||
-        capsAsync.isLoading ||
-        docsAsync.isLoading ||
-        usersAsync.isLoading) {
+    // A reload keeps what is on screen; only a first load shows the
+    // spinner (club_client#229).
+    bool firstLoad(AsyncValue<Object?> value) =>
+        value.isLoading && !value.hasValue;
+    if (firstLoad(privateAsync) ||
+        firstLoad(capsAsync) ||
+        firstLoad(docsAsync) ||
+        firstLoad(usersAsync)) {
       return const LoadingView(message: 'Loading user…');
     }
     final error =

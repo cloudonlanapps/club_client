@@ -1,5 +1,5 @@
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clEventDetailProvider, clEventSchedulesProvider;
+    show clEventSchedulesProvider, clEventsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,8 +7,9 @@ import '../models/event_display_status.dart';
 
 /// Computes the [EventDisplayStatus] for an event.
 ///
-/// Watches [clEventDetailProvider] and [clEventSchedulesProvider] so it
-/// auto-updates when splits, terminations or cancellations occur.
+/// Watches the event's entry in [clEventsMasterProvider] and
+/// [clEventSchedulesProvider] so it auto-updates when splits, terminations
+/// or cancellations occur.
 ///
 /// Status logic (club_core#16):
 /// - **Ended / Cancelled**: the cutoff (`untilTimeUtc`) has been reached —
@@ -19,7 +20,12 @@ import '../models/event_display_status.dart';
 /// - **Ongoing**: everything else that's active.
 final FutureProviderFamily<EventDisplayStatus, int> eventDisplayStatusProvider =
     FutureProvider.family<EventDisplayStatus, int>((ref, eventId) async {
-      final event = await ref.watch(clEventDetailProvider(eventId).future);
+      final event = await ref.watch(
+        clEventsMasterProvider.selectAsync((events) => events[eventId]),
+      );
+      if (event == null) {
+        throw StateError('Event $eventId not found in master');
+      }
       final schedules = await ref.watch(
         clEventSchedulesProvider(eventId).future,
       );

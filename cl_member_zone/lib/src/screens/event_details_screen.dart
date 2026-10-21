@@ -3,7 +3,7 @@ import 'package:cl_club_events/cl_club_events.dart'
 import 'package:cl_member_auth/cl_member_auth.dart'
     show authStateProvider, userAllowedForEvents;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clEventDetailProvider;
+    show clEventDetailProvider, clEventsMasterProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -76,6 +76,7 @@ class EventDetailsScreen extends ConsumerWidget {
 
     final eventAsync = ref.watch(clEventDetailProvider(eventId));
     return eventAsync.when(
+      skipLoadingOnReload: true,
       loading: () => const LoadingView(),
       error: (error, _) {
         if (isMasterNotFoundError(error)) {
@@ -89,7 +90,7 @@ class EventDetailsScreen extends ConsumerWidget {
           title: 'Could not load event',
           errorCode: '$error',
           onHome: onHome,
-          onRetry: () => ref.invalidate(clEventDetailProvider(eventId)),
+          onRetry: () => ref.invalidate(clEventsMasterProvider),
         );
       },
       data: (event) {

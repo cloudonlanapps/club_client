@@ -81,6 +81,7 @@ class EventMarketingViewState extends ConsumerState<EventMarketingView> {
         ? ref.watch(clEventMarketingMasterProvider(widget.eventId))
         : null;
     return eventAsync.when(
+      skipLoadingOnReload: true,
       loading: () => const LoadingView(),
       error: (_, _) => const Center(child: Text('Could not load the event.')),
       data: (event) {

@@ -92,6 +92,7 @@ class UserProfileView extends ConsumerWidget {
     final evaluations = ref.watch(evaluationsProvider) ?? false;
 
     return detail.when(
+      skipLoadingOnReload: true,
       loading: () => const LoadingView(),
       error: (e, _) => Center(child: Text('Could not load user: $e')),
       data: (user) {

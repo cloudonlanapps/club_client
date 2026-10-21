@@ -4,14 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Single event detail, keyed by event ID.
 ///
-/// Derives from [clEventsMasterProvider] — selects a single event from
-/// the master map. Throws if the event is not in the master.
-final AutoDisposeFutureProviderFamily<Event, int> clEventDetailProvider =
-    FutureProvider.autoDispose.family<Event, int>((ref, eventId) async {
-      final events = await ref.watch(clEventsMasterProvider.future);
-      final event = events[eventId];
-      if (event == null) {
-        throw StateError('Event $eventId not found in master');
-      }
-      return event;
+/// A synchronous select of [clEventsMasterProvider]'s entry for the event:
+/// a write to the master (a section save, `replaceLocally`) arrives here as
+/// data, never as a reload, so a page built on it keeps its state while one
+/// section saves (club_client#229). The master's own loading and error pass
+/// through. An event absent from the master is a
+/// `StateError('Event X not found in master')`.
+final AutoDisposeProviderFamily<AsyncValue<Event>, int> clEventDetailProvider =
+    Provider.autoDispose.family<AsyncValue<Event>, int>((ref, eventId) {
+      final entry = ref.watch(
+        clEventsMasterProvider.select((s) => s.whenData((m) => m[eventId])),
+      );
+      return entry.whenData(
+        (event) =>
+            event ?? (throw StateError('Event $eventId not found in master')),
+      );
     });

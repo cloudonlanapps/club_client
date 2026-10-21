@@ -15,7 +15,10 @@ class ConfirmDialog extends StatefulWidget {
     this.destructive = false,
     this.requiresPassword = false,
     this.onVerifyPassword,
-  });
+  }) : assert(
+         !requiresPassword || onVerifyPassword != null,
+         'ConfirmDialog: requiresPassword needs onVerifyPassword.',
+       );
   final String title;
   final String message;
   final String confirmLabel;

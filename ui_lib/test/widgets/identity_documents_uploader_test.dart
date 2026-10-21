@@ -5,6 +5,8 @@ import 'package:ui_lib/src/constants/identity_documents.dart'
     show kIdentityDocumentMaxBytes;
 import 'package:ui_lib/src/widgets/identity_documents/identity_document_rejection_reason.dart'
     show IdentityDocumentRejectionReason;
+import 'package:ui_lib/src/widgets/identity_documents/identity_documents_strings.dart'
+    show IdentityDocumentsStrings;
 import 'package:ui_lib/src/widgets/identity_documents/identity_documents_upload_validators.dart'
     show IdentityDocumentsUploadValidators;
 import 'package:ui_lib/ui_lib.dart';
@@ -353,5 +355,26 @@ void main() {
         expect(tester.takeException(), isNull);
       },
     );
+  });
+
+  testWidgets('Issue 196: a picker that throws shows a message under the '
+      'cards', (tester) async {
+    await _setSurface(tester);
+    final host = _FakeHost();
+    await tester.pumpWidget(
+      _wrap(
+        IdentityDocumentsUploader(
+          picker: () async => throw Exception('zenity exited 2'),
+          onUpload: host.upload,
+          onDiscard: host.discard,
+        ),
+      ),
+    );
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(host.uploadCalls, 0);
+    expect(find.text(IdentityDocumentsStrings.pickFailed), findsOneWidget);
   });
 }

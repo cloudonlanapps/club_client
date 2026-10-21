@@ -8,6 +8,10 @@ abstract final class IdentityDocumentsStrings {
       'Only add a second image if your Aadhaar front and back '
       'are separate photos.';
 
+  /// Shown when the file picker itself fails to open.
+  static const String pickFailed =
+      "Couldn't open the file picker. Please try again.";
+
   /// Shown when an upload fails for a reason the host did not name.
   static const String uploadFailed =
       "Couldn't upload that file. Please try again.";

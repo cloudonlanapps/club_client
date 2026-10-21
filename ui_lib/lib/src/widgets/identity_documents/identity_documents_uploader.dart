@@ -103,7 +103,16 @@ class IdentityDocumentsUploaderState extends State<IdentityDocumentsUploader> {
 
   /// Picks a file and uploads it.
   Future<void> pickAndUpload() async {
-    final picked = await widget.picker();
+    final PickedImage? picked;
+    try {
+      picked = await widget.picker();
+    } on Object catch (_) {
+      // A platform failure of the picker (not a cancel, which is null).
+      if (mounted) {
+        setState(() => errorText = IdentityDocumentsStrings.pickFailed);
+      }
+      return;
+    }
     if (picked == null || !mounted) return;
     final result = IdentityDocumentsUploadValidators.acceptFile(
       mimeType: picked.mimeType,

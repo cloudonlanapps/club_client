@@ -138,8 +138,14 @@ class VenueListViewState extends ConsumerState<VenueListView> {
                     ),
                   Expanded(
                     child: RefreshIndicator(
-                      onRefresh: () =>
-                          Future(() => ref.invalidate(clVenuesMasterProvider)),
+                      onRefresh: () async {
+                        ref.invalidate(clVenuesMasterProvider);
+                        try {
+                          await ref.read(clVenuesMasterProvider.future);
+                        } on Object catch (_) {
+                          // The list shows the failed reload itself.
+                        }
+                      },
                       child: ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: filtered.length,

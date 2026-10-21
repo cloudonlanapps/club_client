@@ -46,8 +46,8 @@ class VenueCard extends ConsumerWidget {
       name: venue.name,
       address: venue.address,
       description: venue.description,
-      imageUrl: ref.watch(venueImageProvider(venueId)).value,
-      httpHeaders: ref.watch(imageAuthHeadersProvider).value ?? const {},
+      imageUrl: ref.watch(venueImageProvider(venueId)).valueOrNull,
+      httpHeaders: ref.watch(imageAuthHeadersProvider).valueOrNull ?? const {},
       badges: [
         if (venue.isDefault) VenueBadgeLabels.defaultVenue,
         if (venue.isFeatured) VenueBadgeLabels.featured,

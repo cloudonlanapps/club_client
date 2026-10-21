@@ -2,7 +2,6 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/src/constants/breakpoints.dart' show Breakpoints;
 import 'package:ui_lib/src/widgets/cards/entity_image.dart' show EntityImage;
-import 'package:ui_lib/ui_lib.dart' show EntityImage;
 
 import 'action_group.dart';
 import 'action_item.dart';

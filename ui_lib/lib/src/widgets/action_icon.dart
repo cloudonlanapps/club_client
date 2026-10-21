@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/src/widgets/action_button.dart' show ActionButton;
-import 'package:ui_lib/ui_lib.dart' show ActionButton;
 
 /// Standardized icon-only action button used across the app.
 ///

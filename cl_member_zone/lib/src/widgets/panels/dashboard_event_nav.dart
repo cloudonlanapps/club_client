@@ -1,5 +1,4 @@
 import 'package:cl_club_communication/cl_club_communication.dart';
-import 'package:cl_member_zone/cl_member_zone.dart' show DashboardScreen;
 import 'package:cl_member_zone/src/screens/dashboard.dart' show DashboardScreen;
 import 'package:flutter/widgets.dart';
 

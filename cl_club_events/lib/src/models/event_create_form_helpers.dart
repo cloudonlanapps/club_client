@@ -6,16 +6,14 @@ import 'package:cl_club_forms/cl_club_forms.dart'
         EventFormType,
         EventFormVisibility,
         OneOffScheduleData,
-        ProgrammeScheduleData,
-        SessionInput,
-        SessionSplitField;
+        ProgrammeScheduleData;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClEventsMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart';
 
-import '../utils/camp_rest_days.dart';
-import '../utils/camp_rrule_validator.dart';
 import '../utils/programme_schedule_sessions.dart';
+import '../utils/session_inputs.dart';
+import 'camp_schedule_form_helpers.dart';
 
 /// SDK ↔ `EventCreateForm` adapter (the form's single boundary).
 ///
@@ -87,32 +85,12 @@ class EventCreateFormSubmit {
           sessions: null,
         );
       case EventFormType.camp:
-        final data = schedule as CampScheduleData;
-        final start = DateTime(
-          data.startDate!.year,
-          data.startDate!.month,
-          data.startDate!.day,
-          data.sessionStartTime!.hour,
-          data.sessionStartTime!.minute,
-        );
-        final end = start.add(Duration(minutes: data.durationMinutes));
-        final combinedRrule = campRruleFor(
-          startTimeUtc: start.toUtc(),
-          startDate: data.startDate!,
-          trainingDays: data.trainingDays,
-          restDays: data.excludedDates,
-        );
-        final rruleError = CampRruleValidator.validate(combinedRrule);
-        if (rruleError != null) {
-          throw ArgumentError(rruleError);
-        }
+        final camp = assembleCampSchedule(schedule as CampScheduleData);
         return (
-          startTimeUtc: start.toUtc(),
-          endTimeUtc: end.toUtc(),
-          rrule: combinedRrule,
-          sessions: data.sessions.isNotEmpty
-              ? _toSessions(data.sessions)
-              : null,
+          startTimeUtc: camp.startUtc,
+          endTimeUtc: camp.endUtc,
+          rrule: camp.rrule,
+          sessions: camp.sessions.isNotEmpty ? camp.sessions : null,
         );
       case EventFormType.programme:
         final data = schedule as ProgrammeScheduleData;
@@ -129,19 +107,11 @@ class EventCreateFormSubmit {
           endTimeUtc: end.toUtc(),
           rrule: _programmeRrule(data, start),
           sessions: data.sessions.isNotEmpty
-              ? _toSessions(data.sessions)
+              ? eventSessionsFromSessionInputs(data.sessions)
               : null,
         );
     }
   }
-
-  static List<EventSession> _toSessions(List<SessionInput> inputs) => [
-    for (final s in inputs)
-      EventSession(
-        name: s.name,
-        periodMinutes: SessionSplitField.sessionMinutes(s),
-      ),
-  ];
 
   /// The weekly rule of a programme whose first session starts at the local
   /// [start]. The form speaks local weekdays; the rule names its days in

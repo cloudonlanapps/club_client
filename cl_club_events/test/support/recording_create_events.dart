@@ -8,7 +8,9 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 /// Records the schedule of the one `createEvent` call it expects.
 class RecordingCreateEvents extends ClEventsMasterNotifier {
   DateTime? startTimeUtc;
+  DateTime? endTimeUtc;
   String? rrule;
+  List<EventSession>? sessions;
 
   @override
   Future<Event> createEvent({
@@ -31,7 +33,9 @@ class RecordingCreateEvents extends ClEventsMasterNotifier {
     List<EventSession>? sessions,
   }) async {
     this.startTimeUtc = startTimeUtc;
+    this.endTimeUtc = endTimeUtc;
     this.rrule = rrule;
+    this.sessions = sessions;
     return Event(
       id: 1,
       title: title,

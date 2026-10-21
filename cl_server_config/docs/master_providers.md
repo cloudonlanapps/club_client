@@ -26,6 +26,8 @@ No other module calls the SDK directly.
 | `clVenuesMasterProvider` | `venues_master.dart` | `Map<int, Venue>` keyed by venueId | `createVenue`, `updateVenue`, `deleteVenue`, `restoreVenue`, `hardDeleteVenue` |
 | `clGroupsMasterProvider` | `groups_master.dart` | `Map<int, Group>` keyed by groupId | `createGroup`, `updateGroup`, `deleteGroup`, `restoreGroup`, `hardDeleteGroup`, `addMember`, `removeMember`, `addMembersBulk` |
 | `clEnrollmentsMasterProvider(eventId)` | `enrollments_master.dart` | Per-event `Map<String, EnrollmentStatus>` (family by `int` eventId) | `invite`, `inviteBulk`, `assign`, `assignBulk`, `assignTrial`, `approveRequest`, `rejectRequest`, `removeEnrollment`, `approveWithdraw`, `rejectWithdraw` |
+
+The enrolment masters (`clEnrollmentsMasterProvider`, `clEnrollmentRecordsMasterProvider`) reload only when their event appears or disappears, is archived, or its cutoff moves (`enrollmentEventInputs`), and `clEventSchedulesProvider` only when a schedule-bearing field of its event changes; other event saves (visibility, featured, description) leave them alone (club_client#230).
 | `clAttendancesMasterProvider(key)` | `attendances_master.dart` | Per-occurrence attendance (family by `AttendanceKey` = eventId + occurrenceTimeUtc) | `markAttendance`, `clearAttendance`, `approveLeave`, `rejectLeave` |
 | `clNotificationsMasterProvider` | `notifications_master.dart` | Paged list of in-app notifications | `loadMore`, `refresh`, `markRead`, `markAllRead`, `deleteNotification` |
 | `clPendingActionsMasterProvider` | `pending_actions_master.dart` | Paged list of pending-action notifications | `loadMore`, `refresh`, `dismissLocally` |

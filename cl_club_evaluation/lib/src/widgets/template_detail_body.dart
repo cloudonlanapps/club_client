@@ -28,7 +28,7 @@ import 'template_export_button.dart';
 
 /// The editable sections of a saved [template]: its name with **Rename**,
 /// **Duplicate**, **Export** and **Delete** (always shown, disabled while
-/// in use), and
+/// in use, as the template says or as the server has said), and
 /// its questions in the layout editor; see `TemplateDetailView`. While the
 /// layout is fixed (in use, or a write in flight), an item opens read-only
 /// and a section not at all. Beside it, or switched with it on a narrow
@@ -176,7 +176,7 @@ class TemplateDetailBodyState extends ConsumerState<TemplateDetailBody> {
             onSaveFile: widget.onSaveFile,
           ),
           ShadButton.outline(
-            onPressed: template.inUse ? null : delete,
+            onPressed: frozen ? null : delete,
             child: const Text(EvaluationViewStrings.delete),
           ),
         ],

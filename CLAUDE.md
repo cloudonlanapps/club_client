@@ -219,6 +219,10 @@ by a day across a clock change. That is known and accepted (review finding
 20, 2026-10-21): don't flag it in a review. A club in a daylight-saving time
 zone needs it changed first, to calendar-day steps (`DateTime(y, m, d + n)`).
 
+## Broadcast (club_client#252)
+
+One Broadcast screen for every audience, behind one route: `/memberzone/broadcast` with the audience as a filter (none = all members, `?group=<id>`, `?event=<id>`, `?member=<username>`; route strings built in cl_club_app `router_helpers.dart`). Admins open it from the Broadcast (message) icon: the dashboard quick action and `TitleRow.onBroadcast` on a group, an event and a member's profile. Every broadcast carries its screen in `payload.source` (`BroadcastScope`), and each screen's sent list shows only its own. Staff only and Choose members go out as a `users` audience the app builds; neither is offered on the one-to-one (member) screen. No other message composer: a new place that sends messages opens this screen with its filter.
+
 ## View naming
 
 Routes are defined in `cl_club_app/lib/src/router.dart` (`routerProvider`). Each route mounts a `Screen` (suffix `Screen`) from the package that owns its domain shell — `cl_member_auth/lib/src/screens/` for `/auth/**`, `cl_member_onboarding/lib/src/screens/` for `/onboarding/**`, `cl_member_zone/lib/src/screens/` for post-onboarding authenticated routes. The screen wraps a same-named view in the underlying feature package. **Use the exact view names from those directories — do not invent variants** (no "Admin Calendar", etc.).

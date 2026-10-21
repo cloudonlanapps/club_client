@@ -32,6 +32,16 @@ class SessionGuardStore extends RemoteStore {
   /// Called when a request is refused with one of [refusalCodes].
   final void Function() onSessionRefused;
 
+  /// Whether [dispose] has run.
+  bool get isDisposed => _disposed;
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
   /// Runs [request], reporting a refused session before rethrowing.
   Future<T> guard<T>(Future<T> Function() request) async {
     try {

@@ -58,6 +58,7 @@ class VenueProfileView extends ConsumerWidget {
     // Editing is admin-only. Affordances are hidden / disabled otherwise.
     final canEdit = ref.watch(authStateProvider).valueOrNull?.isAdmin ?? false;
     return detail.when(
+      skipLoadingOnReload: true,
       loading: () => const LoadingView(),
       error: (e, _) => Center(child: Text('Could not load venue: $e')),
       data: (venue) {

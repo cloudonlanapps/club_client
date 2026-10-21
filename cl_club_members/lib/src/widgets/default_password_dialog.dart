@@ -1,19 +1,18 @@
-import 'package:cl_club_members/src/models/user_form_helpers.dart'
-    show defaultUserPassword;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-/// Reveals the project-wide default password used when an admin creates
-/// a user with **Use default password** ticked.
+/// Reveals the temporary [password] a user is created with when the admin
+/// ticks **Use default password**: a random one per user (#221).
 ///
 /// Mirrors the layout of `AdminResetPasswordResultDialog` (Copy + OK
 /// actions, selectable bold/letter-spaced password text) so the two
 /// flows feel consistent.
 class DefaultPasswordDialog extends StatelessWidget {
-  const DefaultPasswordDialog({super.key});
+  const DefaultPasswordDialog({required this.password, super.key});
 
-  static const String _password = defaultUserPassword;
+  /// The password the user is created with.
+  final String password;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +31,7 @@ class DefaultPasswordDialog extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             SelectableText(
-              _password,
+              password,
               style: theme.textTheme.large.copyWith(
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
@@ -44,7 +43,7 @@ class DefaultPasswordDialog extends StatelessWidget {
       actions: [
         TextButton.icon(
           onPressed: () async {
-            await Clipboard.setData(const ClipboardData(text: _password));
+            await Clipboard.setData(ClipboardData(text: password));
             if (!context.mounted) return;
             ShadToaster.of(context).show(
               const ShadToast(description: Text('Copied to clipboard.')),

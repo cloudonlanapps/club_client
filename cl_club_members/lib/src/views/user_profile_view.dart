@@ -92,6 +92,7 @@ class UserProfileView extends ConsumerWidget {
     final evaluations = ref.watch(evaluationsProvider) ?? false;
 
     return detail.when(
+      skipLoadingOnReload: true,
       loading: () => const LoadingView(),
       error: (e, _) => Center(child: Text('Could not load user: $e')),
       data: (user) {
@@ -163,6 +164,7 @@ class UserProfileView extends ConsumerWidget {
                       ProfileAdminSections(
                         user: user,
                         isSuperAdmin: viewerIsSuperAdmin,
+                        viewerUsername: viewer?.username,
                         onRoleToggle: onRoleToggle,
                         onStatusAction: onStatusAction,
                         onAdminResetPassword: onAdminResetPassword,
@@ -176,6 +178,7 @@ class UserProfileView extends ConsumerWidget {
                         user: user,
                         isMobile: isMobile,
                         isSuperAdmin: viewerIsSuperAdmin,
+                        viewerUsername: viewer?.username,
                         onResetPassword: onResetPassword,
                         onAdminResetPassword: onAdminResetPassword,
                         onStatusAction: onStatusAction,

@@ -1,16 +1,14 @@
+import 'package:cl_club_members/src/utils/join_request_decisions.dart';
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         clGroupRequestsMasterProvider,
         clGroupsMasterProvider,
-        clUsersMasterProvider,
-        writeFailureMessage;
+        clUsersMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show TitleRow;
-
-import '../utils/member_write_messages.dart';
 
 /// Admin/coach triage view for join requests on a single group.
 ///
@@ -136,85 +134,24 @@ class GroupJoinRequestsViewState extends ConsumerState<GroupJoinRequestsView> {
     );
   }
 
-  Future<void> approve(int requestId) async {
-    setState(() => inFlight.add(requestId));
-    try {
-      await ref
-          .read(clGroupRequestsMasterProvider(widget.groupId).notifier)
-          .approve(requestId);
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        const ShadToast(description: Text('Request approved.')),
-      );
-    } on ServerException catch (e) {
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        ShadToast.destructive(
-          description: Text(_messageForApprove(e)),
-        ),
-      );
-    } on Object catch (e) {
-      if (!mounted) return;
-      toastWriteFailure(e, MemberWriteMessages.approveRequestFailed);
-    } finally {
-      if (mounted) setState(() => inFlight.remove(requestId));
-    }
-  }
+  Future<void> approve(int requestId) => approveJoinRequest(
+    context,
+    groupId: widget.groupId,
+    requestId: requestId,
+    onBusy: (busy) => setBusy(requestId, busy: busy),
+  );
 
-  Future<void> reject(int requestId) async {
-    final reason = await showShadDialog<String?>(
-      context: context,
-      builder: (_) => const RejectReasonDialog(),
-    );
-    if (reason == kRejectCancelled) return;
-    setState(() => inFlight.add(requestId));
-    try {
-      await ref
-          .read(clGroupRequestsMasterProvider(widget.groupId).notifier)
-          .reject(
-            requestId,
-            reason: (reason != null && reason.trim().isNotEmpty)
-                ? reason.trim()
-                : null,
-          );
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        const ShadToast(description: Text('Request rejected.')),
-      );
-    } on ServerException catch (e) {
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        ShadToast.destructive(
-          description: Text('Could not reject: ${e.message}'),
-        ),
-      );
-    } on Object catch (e) {
-      if (!mounted) return;
-      toastWriteFailure(e, MemberWriteMessages.rejectRequestFailed);
-    } finally {
-      if (mounted) setState(() => inFlight.remove(requestId));
-    }
-  }
+  Future<void> reject(int requestId) => rejectJoinRequest(
+    context,
+    groupId: widget.groupId,
+    requestId: requestId,
+    onBusy: (busy) => setBusy(requestId, busy: busy),
+  );
 
-  /// Toasts a failed write: [fallback], or that it is unconfirmed.
-  void toastWriteFailure(Object e, String fallback) {
-    ShadToaster.of(context).show(
-      ShadToast.destructive(
-        description: Text(writeFailureMessage(e, fallback: fallback)),
-      ),
-    );
-  }
-
-  String _messageForApprove(ServerException e) {
-    switch (e.code) {
-      case SdkErrorCode.notEligible:
-        return 'No longer eligible for this group.';
-      case SdkErrorCode.alreadyMember:
-        return 'User is already a member.';
-      default:
-        return 'Could not approve: ${e.message}';
-    }
-  }
+  /// Marks request [requestId] in flight, or no longer.
+  void setBusy(int requestId, {required bool busy}) => setState(
+    () => busy ? inFlight.add(requestId) : inFlight.remove(requestId),
+  );
 }
 
 /// Sentinel returned by [RejectReasonDialog] when the user cancels,

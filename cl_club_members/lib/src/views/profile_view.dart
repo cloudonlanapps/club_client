@@ -1,12 +1,10 @@
+import 'package:cl_club_members/src/utils/admin_user_profile_saves.dart'
+    show adminSaveUserField;
 import 'package:cl_club_members/src/views/user_profile_view.dart';
-import 'package:cl_member_auth/cl_member_auth.dart'
-    show ChangePasswordView, authStateProvider;
-import 'package:cl_remote_store/cl_remote_store.dart'
-    show clUserPrivateProvider, clUsersMasterProvider;
+import 'package:cl_member_auth/cl_member_auth.dart' show ChangePasswordView;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
 
 /// Self-profile view that delegates to [UserProfileView] for the
 /// supplied [currentUser].
@@ -38,8 +36,8 @@ class ProfileView extends ConsumerWidget {
       eventsSection: eventsSection,
       onBack: onBack,
       onBioSave: (bio) =>
-          _handleFieldSave(ref, context, username, bio: () => bio),
-      onAchievementsSave: (achievements) => _handleFieldSave(
+          adminSaveUserField(ref, context, username, bio: () => bio),
+      onAchievementsSave: (achievements) => adminSaveUserField(
         ref,
         context,
         username,
@@ -59,37 +57,5 @@ class ProfileView extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  Future<void> _handleFieldSave(
-    WidgetRef ref,
-    BuildContext context,
-    String username, {
-    String? Function()? bio,
-    String? Function()? achievements,
-  }) async {
-    try {
-      await ref
-          .read(clUsersMasterProvider.notifier)
-          .updateUser(
-            username,
-            bio: bio,
-            achievements: achievements,
-          );
-      ref
-        ..invalidate(clUserPrivateProvider(username))
-        ..invalidate(authStateProvider);
-      if (!context.mounted) return;
-      ShadToaster.of(context).show(
-        const ShadToast(description: Text('Profile updated.')),
-      );
-    } on Object catch (_) {
-      if (!context.mounted) return;
-      ShadToaster.of(context).show(
-        const ShadToast.destructive(
-          description: Text('Could not save.'),
-        ),
-      );
-    }
   }
 }

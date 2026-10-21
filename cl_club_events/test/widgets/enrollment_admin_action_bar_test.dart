@@ -2,6 +2,7 @@ import 'package:cl_club_events/src/widgets/buttons/enrollment_admin_action_bar.d
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventDetailProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' show AsyncData;
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/credit_scope.dart';
@@ -13,7 +14,7 @@ Future<void> _pump(
 }) async {
   await tester.pumpWidget(
     creditScope(
-      extra: [clEventDetailProvider.overrideWith((ref, id) async => on)],
+      extra: [clEventDetailProvider.overrideWith((ref, id) => AsyncData(on))],
       child: EnrollmentAdminActionBar(
         eventId: on.id,
         actingUser: actingUser ?? person('an_admin', admin: true),

@@ -1,16 +1,16 @@
 import 'dart:async';
 
+import 'package:cl_club_members/src/utils/sync_signed_in_user.dart';
 import 'package:cl_club_members/src/widgets/admin_reset_password_result_dialog.dart';
-import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clUserPrivateProvider, clUsersMasterProvider;
+    show clUsersMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-/// Saves [targetUsername]'s bio or achievements as an admin, and says so
-/// in a toast.
+/// Saves [targetUsername]'s bio or achievements, by an admin or by the
+/// member on their own profile, and says so in a toast.
 Future<void> adminSaveUserField(
   WidgetRef ref,
   BuildContext context,
@@ -19,16 +19,14 @@ Future<void> adminSaveUserField(
   String? Function()? achievements,
 }) async {
   try {
-    await ref
+    final updated = await ref
         .read(clUsersMasterProvider.notifier)
         .updateUser(
           targetUsername,
           bio: bio,
           achievements: achievements,
         );
-    ref
-      ..invalidate(clUserPrivateProvider(targetUsername))
-      ..invalidate(authStateProvider);
+    syncSignedInUser(ref, updated);
     if (!context.mounted) return;
     ShadToaster.of(context).show(
       const ShadToast(description: Text('Profile updated.')),
@@ -57,7 +55,6 @@ Future<void> adminToggleUserRole(
     } else {
       await notifier.removeRole(targetUsername, role.name);
     }
-    ref.invalidate(clUserPrivateProvider(targetUsername));
     if (!context.mounted) return;
     ShadToaster.of(context).show(
       ShadToast(
@@ -115,7 +112,6 @@ Future<void> adminApplyUserStatusAction(
       default:
         return;
     }
-    ref.invalidate(clUserPrivateProvider(targetUsername));
     if (!context.mounted) return;
     ShadToaster.of(context).show(
       ShadToast(description: Text(message)),

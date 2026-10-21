@@ -1,13 +1,12 @@
+import 'package:cl_club_members/src/utils/join_request_decisions.dart';
 import 'package:cl_club_members/src/views/group_join_requests_view.dart'
-    show JoinRequestRow, RejectReasonDialog, kRejectCancelled;
+    show JoinRequestRow;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clGroupRequestsMasterProvider, writeFailureMessage;
+    show clGroupRequestsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-
-import '../utils/member_write_messages.dart';
 
 /// Compact "Pending Requests" preview rendered above the group info card.
 ///
@@ -136,92 +135,21 @@ class GroupPendingRequestsCardState
     );
   }
 
-  Future<void> _approve(int requestId) async {
-    setState(() => _inFlight.add(requestId));
-    try {
-      await ref
-          .read(clGroupRequestsMasterProvider(widget.groupId).notifier)
-          .approve(requestId);
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        const ShadToast(description: Text('Request approved.')),
-      );
-    } on ServerException catch (e) {
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        ShadToast.destructive(
-          description: Text(_approveMessage(e)),
-        ),
-      );
-    } on Object catch (e) {
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        ShadToast.destructive(
-          description: Text(
-            writeFailureMessage(
-              e,
-              fallback: MemberWriteMessages.approveRequestFailed,
-            ),
-          ),
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _inFlight.remove(requestId));
-    }
-  }
+  Future<void> _approve(int requestId) => approveJoinRequest(
+    context,
+    groupId: widget.groupId,
+    requestId: requestId,
+    onBusy: (busy) => _setBusy(requestId, busy: busy),
+  );
 
-  Future<void> _reject(int requestId) async {
-    final reason = await showShadDialog<String?>(
-      context: context,
-      builder: (_) => const RejectReasonDialog(),
-    );
-    if (reason == kRejectCancelled) return;
-    setState(() => _inFlight.add(requestId));
-    try {
-      await ref
-          .read(clGroupRequestsMasterProvider(widget.groupId).notifier)
-          .reject(
-            requestId,
-            reason: (reason != null && reason.trim().isNotEmpty)
-                ? reason.trim()
-                : null,
-          );
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        const ShadToast(description: Text('Request rejected.')),
-      );
-    } on ServerException catch (e) {
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        ShadToast.destructive(
-          description: Text('Could not reject: ${e.message}'),
-        ),
-      );
-    } on Object catch (e) {
-      if (!mounted) return;
-      ShadToaster.of(context).show(
-        ShadToast.destructive(
-          description: Text(
-            writeFailureMessage(
-              e,
-              fallback: MemberWriteMessages.rejectRequestFailed,
-            ),
-          ),
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _inFlight.remove(requestId));
-    }
-  }
+  Future<void> _reject(int requestId) => rejectJoinRequest(
+    context,
+    groupId: widget.groupId,
+    requestId: requestId,
+    onBusy: (busy) => _setBusy(requestId, busy: busy),
+  );
 
-  String _approveMessage(ServerException e) {
-    switch (e.code) {
-      case SdkErrorCode.notEligible:
-        return 'No longer eligible for this group.';
-      case SdkErrorCode.alreadyMember:
-        return 'User is already a member.';
-      default:
-        return 'Could not approve: ${e.message}';
-    }
-  }
+  void _setBusy(int requestId, {required bool busy}) => setState(
+    () => busy ? _inFlight.add(requestId) : _inFlight.remove(requestId),
+  );
 }

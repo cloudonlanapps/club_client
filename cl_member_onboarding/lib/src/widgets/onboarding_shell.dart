@@ -86,8 +86,12 @@ class OnboardingShell extends ConsumerWidget {
             Container(
               constraints: const BoxConstraints(minHeight: 56),
               padding: const EdgeInsetsDirectional.only(start: 16, end: 4),
-              decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: ShadTheme.of(context).colorScheme.border,
+                  ),
+                ),
               ),
               child: Row(
                 children: [

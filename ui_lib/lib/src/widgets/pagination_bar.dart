@@ -26,7 +26,10 @@ class PaginationBar extends StatelessWidget {
       children: [
         Text(
           'Showing $start–$end of $total',
-          style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+          style: TextStyle(
+            fontSize: 14,
+            color: ShadTheme.of(context).colorScheme.mutedForeground,
+          ),
         ),
         Row(
           mainAxisSize: MainAxisSize.min,

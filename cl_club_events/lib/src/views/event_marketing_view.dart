@@ -1,4 +1,5 @@
-import 'package:cl_member_auth/cl_member_auth.dart' show canManageEvent;
+import 'package:cl_member_auth/cl_member_auth.dart'
+    show AccessDeniedView, canManageEvent;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         clEventDetailProvider,
@@ -8,9 +9,8 @@ import 'package:cl_remote_store/cl_remote_store.dart'
 import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'package:ui_lib/ui_lib.dart'
-    show EditorPreviewLayout, ErrorTone, ErrorView, LoadingView, TitleRow;
+    show EditorPreviewLayout, LoadingView, TitleRow;
 
 import '../models/event_marketing_sections.dart';
 import '../models/marketing_section.dart';
@@ -86,11 +86,8 @@ class EventMarketingViewState extends ConsumerState<EventMarketingView> {
       error: (_, _) => const Center(child: Text('Could not load the event.')),
       data: (event) {
         if (!canManageEvent(event, user)) {
-          return ErrorView(
-            tone: ErrorTone.neutral,
-            icon: LucideIcons.shieldAlert,
-            title: 'Access Denied',
-            subtitle:
+          return AccessDeniedView(
+            message:
                 "Only an admin or the event's organizer edits its marketing.",
             onHome: widget.onHome,
           );

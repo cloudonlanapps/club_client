@@ -622,7 +622,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/memberzone/my-groups/:targetUsername/:groupId',
             pageBuilder: (context, state) {
               final targetUsername = state.pathParameters['targetUsername']!;
-              final groupId = int.parse(state.pathParameters['groupId']!);
+              final groupId = intPathParam(state, 'groupId');
+              if (groupId == null) return notFoundPage(context);
               return NoTransitionPage(
                 child: MyGroupDetailsScreen(
                   targetUsername: targetUsername,
@@ -670,7 +671,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/memberzone/my-events/:targetUsername/:eventId',
             pageBuilder: (context, state) {
               final targetUsername = state.pathParameters['targetUsername']!;
-              final eventId = int.parse(state.pathParameters['eventId']!);
+              final eventId = intPathParam(state, 'eventId');
+              if (eventId == null) return notFoundPage(context);
               final notifParam = state.uri.queryParameters['notif'];
               final sourceNotificationId = notifParam == null
                   ? null
@@ -699,7 +701,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/memberzone/my-venues/:id',
             pageBuilder: (context, state) {
-              final id = int.parse(state.pathParameters['id']!);
+              final id = intPathParam(state, 'id');
+              if (id == null) return notFoundPage(context);
               return NoTransitionPage(
                 child: MyVenueDetailScreen(
                   venueId: id,
@@ -808,7 +811,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/memberzone/venues/:id',
             pageBuilder: (context, state) {
-              final id = int.parse(state.pathParameters['id']!);
+              final id = intPathParam(state, 'id');
+              if (id == null) return notFoundPage(context);
               return NoTransitionPage(
                 child: VenueProfileScreen(
                   venueId: id,
@@ -848,7 +852,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/memberzone/groups/:id',
             pageBuilder: (context, state) {
-              final id = int.parse(state.pathParameters['id']!);
+              final id = intPathParam(state, 'id');
+              if (id == null) return notFoundPage(context);
               final notifParam = state.uri.queryParameters['notif'];
               final sourceNotificationId = notifParam == null
                   ? null
@@ -878,7 +883,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/memberzone/groups/:id/members',
             pageBuilder: (context, state) {
-              final id = int.parse(state.pathParameters['id']!);
+              final id = intPathParam(state, 'id');
+              if (id == null) return notFoundPage(context);
               return NoTransitionPage(
                 child: GroupMembersScreen(
                   groupId: id,
@@ -894,7 +900,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/memberzone/groups/:id/requests',
             pageBuilder: (context, state) {
-              final id = int.parse(state.pathParameters['id']!);
+              final id = intPathParam(state, 'id');
+              if (id == null) return notFoundPage(context);
               return NoTransitionPage(
                 child: GroupJoinRequestsScreen(
                   groupId: id,
@@ -1002,7 +1009,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/memberzone/events/:eventId',
             pageBuilder: (context, state) {
-              final eventId = int.parse(state.pathParameters['eventId']!);
+              final eventId = intPathParam(state, 'eventId');
+              if (eventId == null) return notFoundPage(context);
               final notifParam = state.uri.queryParameters['notif'];
               final sourceNotificationId = notifParam == null
                   ? null
@@ -1027,8 +1035,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                   onDismissed: () => popOrGo(context, '/'),
                   // Always show a back button (canPop() reads false inside the
                   // shell pageBuilder even for pushed routes); pop when
-                  // poppable, else fall back to the camps list.
-                  onBack: () => popOrGo(context, '/memberzone/events/camps'),
+                  // poppable, else fall back to the dashboard, as Home does:
+                  // the event may be of any type.
+                  onBack: () => popOrGo(context, '/'),
                   onHistory: () => GoRouter.of(
                     context,
                   ).push('/memberzone/audit-log/event/$eventId'),
@@ -1090,7 +1099,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/memberzone/audit-log/event/:eventId',
             pageBuilder: (context, state) {
-              final eventId = int.parse(state.pathParameters['eventId']!);
+              final eventId = intPathParam(state, 'eventId');
+              if (eventId == null) return notFoundPage(context);
               return NoTransitionPage(
                 child: AuditLogScreen(
                   scope: AuditLogScope.event(eventId),
@@ -1104,7 +1114,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/memberzone/audit-log/group/:groupId',
             pageBuilder: (context, state) {
-              final groupId = int.parse(state.pathParameters['groupId']!);
+              final groupId = intPathParam(state, 'groupId');
+              if (groupId == null) return notFoundPage(context);
               return NoTransitionPage(
                 child: AuditLogScreen(
                   scope: AuditLogScope.group(groupId),
@@ -1118,7 +1129,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/memberzone/audit-log/venue/:venueId',
             pageBuilder: (context, state) {
-              final venueId = int.parse(state.pathParameters['venueId']!);
+              final venueId = intPathParam(state, 'venueId');
+              if (venueId == null) return notFoundPage(context);
               return NoTransitionPage(
                 child: AuditLogScreen(
                   scope: AuditLogScope.venue(venueId),
@@ -1146,7 +1158,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/memberzone/events/:eventId/enrollments',
             pageBuilder: (context, state) {
-              final eventId = int.parse(state.pathParameters['eventId']!);
+              final eventId = intPathParam(state, 'eventId');
+              if (eventId == null) return notFoundPage(context);
               return NoTransitionPage(
                 child: EventEnrolmentsScreen(
                   eventId: eventId,
@@ -1165,7 +1178,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/memberzone/events/:eventId/marketing',
             pageBuilder: (context, state) {
-              final eventId = int.parse(state.pathParameters['eventId']!);
+              final eventId = intPathParam(state, 'eventId');
+              if (eventId == null) return notFoundPage(context);
               return NoTransitionPage(
                 child: EventMarketingScreen(
                   eventId: eventId,
@@ -1181,10 +1195,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/memberzone/events/:eventId/:occurrenceTimeUtc/attendance',
             pageBuilder: (context, state) {
-              final eventId = int.parse(state.pathParameters['eventId']!);
-              final occurrenceTimeUtc = DateTime.parse(
+              final eventId = intPathParam(state, 'eventId');
+              if (eventId == null) return notFoundPage(context);
+              final occurrenceTimeUtc = DateTime.tryParse(
                 state.pathParameters['occurrenceTimeUtc']!,
               );
+              if (occurrenceTimeUtc == null) return notFoundPage(context);
               final notifParam = state.uri.queryParameters['notif'];
               final sourceNotificationId = notifParam == null
                   ? null

@@ -78,16 +78,33 @@ class InquiryViewState extends ConsumerState<InquiryView> {
   bool isSent = false;
 
   /// Fetched when the view appears, not when it is submitted: the server
-  /// measures how long the visitor had it open.
-  late final Future<String> token;
+  /// measures how long the visitor had it open. A fetch that failed is
+  /// started again by the Send that found it failed, for the next Send.
+  late Future<String> token;
 
-  @override
-  void initState() {
-    super.initState();
+  /// Starts fetching [token].
+  void fetchToken() {
     token = ref.read(clPublicInquiryProvider.notifier).formToken();
     // A failed token fetch must not surface as an unhandled error; the
     // submit path reports it, and only if someone actually submits.
     token.ignore();
+  }
+
+  /// The token, or a new fetch started and the failure rethrown when the
+  /// one in hand failed.
+  Future<String> readToken() async {
+    try {
+      return await token;
+    } on Object {
+      fetchToken();
+      rethrow;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchToken();
     // Likewise the club's country code (#31): asked for now, so the server
     // has answered by the time the phone is saved.
     ref.read(defaultCountryCodeProvider);
@@ -105,7 +122,7 @@ class InquiryViewState extends ConsumerState<InquiryView> {
         notifier: ref.read(clPublicInquiryProvider.notifier),
         defaultCountryCode: ref.read(defaultCountryCodeProvider),
         kind: widget.kind,
-        token: await token,
+        token: await readToken(),
         values: values,
       );
       if (!mounted) return;

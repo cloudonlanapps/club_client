@@ -266,7 +266,18 @@ class FakeEvaluations extends Fake implements EvaluationSource {
     int limit = 20,
   }) async {
     calls.add('listTemplates $offset');
-    return _page(templates.values.toList(), offset, limit);
+    final live = templates.values.where((t) => t.deletedAtUtc == null);
+    return _page(live.toList(), offset, limit);
+  }
+
+  @override
+  Future<PaginatedList<EvaluationTemplate>> listDeletedTemplates({
+    int offset = 0,
+    int limit = 20,
+  }) async {
+    calls.add('listDeletedTemplates $offset');
+    final deleted = templates.values.where((t) => t.deletedAtUtc != null);
+    return _page(deleted.toList(), offset, limit);
   }
 
   @override
@@ -345,13 +356,26 @@ class FakeEvaluations extends Fake implements EvaluationSource {
   @override
   Future<EvaluationTemplate> deleteTemplate(int id) async {
     calls.add('deleteTemplate $id');
-    return templates[id]!.copyWith(deletedAtUtc: () => fakeEvaluationTime);
+    return _putTemplate(
+      templates[id]!.copyWith(deletedAtUtc: () => fakeEvaluationTime),
+    );
   }
 
+  /// Restores like the server: a name a live template holds becomes the
+  /// first free `<name> -- Restored #N`.
   @override
   Future<EvaluationTemplate> restoreTemplate(int id) async {
     calls.add('restoreTemplate $id');
-    return _putTemplate(templates[id]!.copyWith(deletedAtUtc: () => null));
+    final t = templates[id]!;
+    final taken = {
+      for (final o in templates.values)
+        if (o.deletedAtUtc == null) o.name.trim().toLowerCase(),
+    };
+    var name = t.name;
+    for (var n = 1; taken.contains(name.trim().toLowerCase()); n++) {
+      name = '${t.name} -- Restored #$n';
+    }
+    return _putTemplate(t.copyWith(name: name, deletedAtUtc: () => null));
   }
 
   @override

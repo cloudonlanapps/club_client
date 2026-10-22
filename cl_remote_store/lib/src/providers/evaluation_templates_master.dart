@@ -18,8 +18,9 @@ import 'package:meta/meta.dart';
 ///
 /// Each write replaces the template locally with the one the server returns
 /// and bumps `evaluationsVersion`. A soft-deleted template stays in the map
-/// with `deletedAtUtc` set until the next load, so it can be restored;
-/// views filter on `deletedAtUtc == null`.
+/// with `deletedAtUtc` set until the next load; views filter on
+/// `deletedAtUtc == null`. The deleted ones are listed by
+/// `clDeletedEvaluationTemplatesProvider`, which refetches on the bump.
 final AsyncNotifierProvider<
   ClEvaluationTemplatesMasterNotifier,
   Map<int, EvaluationTemplate>
@@ -93,7 +94,10 @@ class ClEvaluationTemplatesMasterNotifier
   Future<EvaluationTemplate> deleteTemplate(int id) =>
       writeTemplate((source) => source.deleteTemplate(id));
 
-  /// Restores soft-deleted template [id].
+  /// Restores soft-deleted template [id] and returns it, live again. Any
+  /// staff member (evaluation R46). When a live template holds its name the
+  /// server renames it to the first free `<name> -- Restored #N`; the
+  /// returned template carries the name it was restored under.
   Future<EvaluationTemplate> restoreTemplate(int id) =>
       writeTemplate((source) => source.restoreTemplate(id));
 

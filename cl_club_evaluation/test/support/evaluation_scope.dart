@@ -19,12 +19,14 @@ import 'package:ui_lib/ui_lib.dart' show EvaluationLayoutEditor;
 final DateTime t0 = DateTime.utc(2026, 9);
 
 /// The template library, recording writes; [failWith] makes every write
-/// throw it.
+/// throw it. A restore puts the template back live, under its
+/// [restoredNames] entry when it has one (a taken name, club_client#277).
 class StubTemplates extends ClEvaluationTemplatesMasterNotifier {
-  StubTemplates(this.templates, {this.failWith});
+  StubTemplates(this.templates, {this.failWith, this.restoredNames = const {}});
 
   final Map<int, sdk.EvaluationTemplate> templates;
   final Exception? failWith;
+  final Map<int, String> restoredNames;
   final List<String> calls = [];
 
   /// The layout of the last template created.
@@ -53,8 +55,14 @@ class StubTemplates extends ClEvaluationTemplatesMasterNotifier {
       record('delete $id', id);
 
   @override
-  Future<sdk.EvaluationTemplate> restoreTemplate(int id) async =>
-      record('restore $id', id);
+  Future<sdk.EvaluationTemplate> restoreTemplate(int id) async {
+    final restored = record(
+      'restore $id',
+      id,
+    ).copyWith(name: restoredNames[id], deletedAtUtc: () => null);
+    replaceLocally(restored);
+    return restored;
+  }
 
   @override
   Future<sdk.EvaluationTemplate> renameTemplate(int id, String name) async =>
@@ -309,7 +317,8 @@ Future<Uint8List> fixedPdfReader(sdk.MediaRef media) async => fixedPdfBytes;
 
 /// A scope with evaluations [on], the masters stubbed, every username shown
 /// by its name in [users], private media read by [readBytes] and fetched
-/// with [authHeaders], and [child] in a shadcn app.
+/// with [authHeaders], [deletedTemplates] listed as deleted until the
+/// library holds them live, and [child] in a shadcn app.
 Widget evaluationScope({
   required Widget child,
   bool? on = true,
@@ -322,6 +331,7 @@ Widget evaluationScope({
   Map<int, sdk.Event> events = const {},
   Map<int, Map<String, sdk.EnrollmentStatus>> enrollments = const {},
   List<sdk.EvaluationTemplateItemHit> hits = const [],
+  List<sdk.EvaluationTemplate> deletedTemplates = const [],
   MediaBytesReader readBytes = fixedPdfReader,
   Map<String, String> authHeaders = const {},
 }) {
@@ -356,6 +366,14 @@ Widget evaluationScope({
         () => StubEnrollments(enrollments),
       ),
       clEvaluationItemSearchProvider.overrideWith((ref, query) async => hits),
+      clDeletedEvaluationTemplatesProvider.overrideWith((ref) async {
+        final library =
+            ref.watch(clEvaluationTemplatesMasterProvider).valueOrNull ??
+            const {};
+        bool live(sdk.EvaluationTemplate t) =>
+            library[t.id] != null && library[t.id]!.deletedAtUtc == null;
+        return deletedTemplates.where((t) => !live(t)).toList();
+      }),
       clMediaBytesReaderProvider.overrideWithValue(readBytes),
       imageAuthHeadersProvider.overrideWith((ref) async => authHeaders),
     ],

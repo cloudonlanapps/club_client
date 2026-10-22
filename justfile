@@ -10,6 +10,7 @@
 import 'justfile_unit_tests.just'
 import 'justfile_app_tests.just'
 import 'justfile_phone_tests.just'
+import 'justfile_android_tests.just'
 import 'justfile_generator.just'
 
 default:

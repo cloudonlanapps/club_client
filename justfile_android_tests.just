@@ -8,15 +8,16 @@
 # (ANDROID_HOME, default ~/Android/Sdk; scripts/dev-env.sh sets it up). The
 # stack's port is forwarded to the phone with `adb reverse`, so the app
 # reaches it as localhost. Each file builds, installs and runs the app on its
-# own. Logs and summary.txt go to .phone_test/runs/<time>-android/; the stack
-# is torn down unless keep is set. ANDROID_SERIAL picks the phone when more
+# own, laid out at the phone's own size (REAL_VIEWPORT=true, #264; real=""
+# for the forced desktop size). Logs and summary.txt go to
+# .phone_test/runs/<time>-android/; the stack is torn down unless keep is set. ANDROID_SERIAL picks the phone when more
 # than one device is attached.
 
 ANDROID_TEST_FILE_TIMEOUT := "900"
 
 # Internal: start a fresh stack from CONF and run each file matching TARGET
 # (a glob under the member app example) on the phone as the Android app.
-_android-test CONF TARGET keep="": _native-deploy
+_android-test CONF TARGET keep="" real="1": _native-deploy
     #!/usr/bin/env bash
     set -uo pipefail
     export PATH="{{PHONE_ANDROID_HOME}}/platform-tools:$PATH"
@@ -53,7 +54,7 @@ _android-test CONF TARGET keep="": _native-deploy
             timeout -k 30 {{ANDROID_TEST_FILE_TIMEOUT}} flutter test "$f" -d "$ANDROID_SERIAL" \
                 --dart-define=CLUB_API_BASE_URL=http://localhost:"$port"/v1 \
                 --dart-define=SUDO_USERNAME=sudo \
-                --dart-define=SUDO_PASSWORD=testboot >"$log" 2>&1
+                --dart-define=SUDO_PASSWORD=testboot {{ if real != "" { "--dart-define=REAL_VIEWPORT=true" } else { "" } }} >"$log" 2>&1
             rc=$?
             took=$(($(date +%s) - start))
             if [ $rc -eq 124 ] || [ $rc -eq 137 ]; then res=TIMEOUT
@@ -74,16 +75,16 @@ _android-test CONF TARGET keep="": _native-deploy
 #   just android-test app_test_server2.conf   # one conf
 # Run the member app's integration suite as the Android app on the phone, once per server conf.
 [group('app integration')]
-android-test CONF="" keep="":
+android-test CONF="" keep="" real="1":
     #!/usr/bin/env bash
     set -u
     fail=0
     for conf in {{ if CONF == "" { APP_TEST_CONFS } else { CONF } }}; do
-        just _android-test "$conf" "integration_test/workflow*_test.dart" "{{keep}}" || fail=1
+        just _android-test "$conf" "integration_test/workflow*_test.dart" "{{keep}}" "{{real}}" || fail=1
     done
     exit $fail
 
 #   just android-test-one app_test_server1.conf workflow1_password_reset_by_user_test.dart [keep=1]
 # Run one member app integration file as the Android app on the phone.
 [group('app integration')]
-android-test-one CONF FILE keep="": (_android-test (CONF) ("integration_test/" + FILE) keep)
+android-test-one CONF FILE keep="" real="1": (_android-test (CONF) ("integration_test/" + FILE) keep real)

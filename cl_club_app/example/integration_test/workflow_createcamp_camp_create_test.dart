@@ -31,6 +31,7 @@ import 'package:integration_test/integration_test.dart';
 import '_helpers/auth.dart';
 import '_helpers/events.dart';
 import '_helpers/pump.dart';
+import '_helpers/surface.dart';
 import '_helpers/users.dart';
 import '_helpers/venues.dart';
 
@@ -64,8 +65,7 @@ void main() {
     'admin and coach create a camp via the UI; the creator '
     'becomes the organizer',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 4000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 4000));
 
       await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
       await ensureLoggedOut(tester);

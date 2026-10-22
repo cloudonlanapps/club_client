@@ -34,6 +34,7 @@ import '_helpers/editors.dart';
 import '_helpers/events.dart' show waitForVenueId;
 import '_helpers/forms.dart';
 import '_helpers/pump.dart';
+import '_helpers/surface.dart';
 import '_helpers/venues.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
@@ -82,8 +83,7 @@ void main() {
     "an admin edits a camp's marketing on its Marketing page, with a live "
     'preview',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 4000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 4000));
 
       await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
       await ensureLoggedOut(tester);

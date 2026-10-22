@@ -29,6 +29,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show ActionButton;
 
+import 'actions.dart';
 import 'auth.dart';
 import 'forms.dart';
 import 'pump.dart';
@@ -52,7 +53,7 @@ Future<void> createUserViaUi(
   // Sub-flow start: go to the admin users list, then tap "+ Add user"
   // (the same path an admin uses in production).
   await go(tester, '/memberzone/users');
-  final addUserButton = find.widgetWithText(ActionButton, '+ Add user');
+  final addUserButton = findAction('+ Add user');
   await waitFor(
     tester,
     () => addUserButton.evaluate().isNotEmpty,

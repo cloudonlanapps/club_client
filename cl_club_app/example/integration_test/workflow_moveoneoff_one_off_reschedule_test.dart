@@ -48,6 +48,7 @@ import 'package:ui_lib/ui_lib.dart' show EntityCard;
 import '_helpers/auth.dart';
 import '_helpers/editors.dart';
 import '_helpers/pump.dart';
+import '_helpers/surface.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
   'CLUB_API_BASE_URL',
@@ -175,8 +176,7 @@ void main() {
     'Issue 37: an admin moves an upcoming one-off to another day, time and '
     'venue; a started one-off keeps its date and corrects its timetable',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 3000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 3000));
       await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
       await ensureLoggedOut(tester);
       await loginViaUi(tester, _kAdmin, _kPwd);

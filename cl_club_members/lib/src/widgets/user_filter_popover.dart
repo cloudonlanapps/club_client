@@ -189,6 +189,7 @@ class UserFilterPopoverState extends ConsumerState<UserFilterPopover> {
         child: isMobileWidth(context)
             ? ActionIcon(
                 icon: Icons.filter_list,
+                label: 'Filter',
                 onPressed: popoverController.toggle,
               )
             : ActionButton(

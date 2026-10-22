@@ -8,11 +8,18 @@ import 'package:ui_lib/src/widgets/action_button.dart' show ActionButton;
 /// optional color tinting, and a loading spinner.
 ///
 /// Pairs with [ActionButton] for icon-only contexts (e.g., approve/reject
-/// icons in compact list rows).
+/// icons in compact list rows, or the narrow-screen form of a header
+/// action).
+///
+/// [label] names the action: assistive technology announces it for the
+/// button, since the icon carries no words. Where an [ActionButton] stands
+/// in its place on a wide screen, pass that button's label, so the action
+/// has one name in both layouts.
 ///
 /// ```dart
 /// ActionIcon(
 ///   icon: Icons.check,
+///   label: 'Approve',
 ///   color: theme.colorScheme.primary,
 ///   onPressed: () => handleApprove(),
 ///   loading: isLoading,
@@ -21,6 +28,7 @@ import 'package:ui_lib/src/widgets/action_button.dart' show ActionButton;
 class ActionIcon extends StatelessWidget {
   const ActionIcon({
     required this.icon,
+    required this.label,
     this.onPressed,
     this.enabled = true,
     this.loading = false,
@@ -30,6 +38,9 @@ class ActionIcon extends StatelessWidget {
   });
 
   final IconData icon;
+
+  /// The action's name, announced in place of the icon.
+  final String label;
   final VoidCallback? onPressed;
   final bool enabled;
   final bool loading;
@@ -38,17 +49,20 @@ class ActionIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ShadButton.ghost(
-      size: ShadButtonSize.sm,
-      enabled: enabled && !loading,
-      onPressed: enabled && !loading ? onPressed : null,
-      child: loading
-          ? SizedBox(
-              width: size,
-              height: size,
-              child: const CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Icon(icon, color: color, size: size),
+    return Semantics(
+      label: label,
+      child: ShadButton.ghost(
+        size: ShadButtonSize.sm,
+        enabled: enabled && !loading,
+        onPressed: enabled && !loading ? onPressed : null,
+        child: loading
+            ? SizedBox(
+                width: size,
+                height: size,
+                child: const CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Icon(icon, color: color, size: size),
+      ),
     );
   }
 }

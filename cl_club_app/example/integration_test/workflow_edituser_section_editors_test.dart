@@ -31,6 +31,7 @@ import '_helpers/capabilities.dart';
 import '_helpers/editors.dart';
 import '_helpers/forms.dart';
 import '_helpers/pump.dart';
+import '_helpers/surface.dart';
 import '_helpers/users.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
@@ -72,8 +73,7 @@ void main() {
   testWidgets(
     'user profile section + markdown editors across roles + self',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 4000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 4000));
 
       await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
       await ensureLoggedOut(tester);

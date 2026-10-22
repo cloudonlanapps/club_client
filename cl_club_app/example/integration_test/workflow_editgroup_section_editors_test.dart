@@ -37,10 +37,12 @@ import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show ActionButton, ErrorView;
 
+import '_helpers/actions.dart';
 import '_helpers/auth.dart';
 import '_helpers/editors.dart';
 import '_helpers/forms.dart';
 import '_helpers/pump.dart';
+import '_helpers/surface.dart';
 import '_helpers/users.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
@@ -78,8 +80,7 @@ void main() {
   testWidgets(
     'group eligibility + markdown editors across admin/coach/member',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 4000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 4000));
 
       await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
       await ensureLoggedOut(tester);
@@ -241,13 +242,13 @@ Future<int> _waitForGroupId(WidgetTester tester, String name) async {
 
 Future<void> _createManualGroup(WidgetTester tester, String name) async {
   await go(tester, '/memberzone/groups');
-  final addBtn = find.widgetWithText(ActionButton, '+ Add group');
+  final addBtn = findAction('+ Add group');
   await waitFor(
     tester,
     () => addBtn.evaluate().isNotEmpty,
     description: '"+ Add group" button on the admin groups list',
   );
-  tester.widget<ActionButton>(addBtn).onPressed!.call();
+  pressAction(tester, addBtn);
   await settle(tester);
 
   await waitFor(

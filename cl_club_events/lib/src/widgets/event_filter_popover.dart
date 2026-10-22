@@ -173,6 +173,7 @@ class EventFilterPopoverState extends State<EventFilterPopover> {
         child: isMobileWidth(context)
             ? ActionIcon(
                 icon: Icons.filter_list,
+                label: 'Filter',
                 onPressed: popoverController.toggle,
               )
             : ActionButton(

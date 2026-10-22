@@ -13,12 +13,11 @@ import 'package:cl_club_forms/src/widgets/event_schedule/weekday_selector.dart'
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider, clVenuesMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show Event, EventType;
-import 'package:flutter/material.dart' show Icons;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton, ActionIcon;
 
+import 'actions.dart';
 import 'auth.dart';
 import 'forms.dart';
 import 'pump.dart';
@@ -55,25 +54,13 @@ Future<void> createEventViaUi(
 }) async {
   final ui = _eventTypeUi(type);
   await go(tester, ui.path);
+  final create = findAction(ui.create);
   await waitFor(
     tester,
-    () =>
-        find.widgetWithText(ActionButton, ui.create).evaluate().isNotEmpty ||
-        find
-            .byWidgetPredicate((w) => w is ActionIcon && w.icon == Icons.add)
-            .evaluate()
-            .isNotEmpty,
+    () => create.evaluate().isNotEmpty,
     description: 'create affordance on ${ui.path}',
   );
-  final wideButton = find.widgetWithText(ActionButton, ui.create);
-  if (wideButton.evaluate().isNotEmpty) {
-    tester.widget<ActionButton>(wideButton).onPressed!.call();
-  } else {
-    final narrowIcon = find.byWidgetPredicate(
-      (w) => w is ActionIcon && w.icon == Icons.add,
-    );
-    tester.widget<ActionIcon>(narrowIcon).onPressed!.call();
-  }
+  pressAction(tester, create);
   await settle(tester);
 
   await waitFor(

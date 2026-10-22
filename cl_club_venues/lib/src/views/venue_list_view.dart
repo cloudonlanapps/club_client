@@ -91,6 +91,7 @@ class VenueListViewState extends ConsumerState<VenueListView> {
                   if (isMobile)
                     ActionIcon(
                       icon: Icons.add,
+                      label: '+ New Venue',
                       onPressed: widget.onCreateVenue,
                     )
                   else

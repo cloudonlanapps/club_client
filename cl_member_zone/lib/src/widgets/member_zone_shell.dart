@@ -124,6 +124,7 @@ class MemberZoneShellState extends ConsumerState<MemberZoneShell> {
                     if (isMobile)
                       IconButton(
                         icon: const Icon(LucideIcons.menu, size: 20),
+                        tooltip: 'Open menu',
                         onPressed: () => scaffoldKey.currentState?.openDrawer(),
                       ),
                     const Spacer(),

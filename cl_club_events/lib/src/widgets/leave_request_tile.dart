@@ -85,6 +85,7 @@ class LeaveRequestTile extends StatelessWidget {
           if (canManageAttendance(event, actingUser)) ...[
             ActionIcon(
               icon: Icons.close,
+              label: 'Reject',
               enabled: !isProcessing,
               onPressed: onReject,
               color: theme.colorScheme.destructive,
@@ -92,6 +93,7 @@ class LeaveRequestTile extends StatelessWidget {
             const SizedBox(width: 4),
             ActionIcon(
               icon: Icons.check,
+              label: 'Approve',
               enabled: !isProcessing,
               onPressed: onApprove,
               color: theme.colorScheme.primary,

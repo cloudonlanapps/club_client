@@ -61,6 +61,7 @@ import '_helpers/attendance.dart';
 import '_helpers/auth.dart';
 import '_helpers/capabilities.dart';
 import '_helpers/pump.dart';
+import '_helpers/surface.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
   'CLUB_API_BASE_URL',
@@ -199,8 +200,7 @@ void main() {
     'Issue 129: attendance on a later programme session and leave on the '
     'one after send real occurrence times',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 3000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 3000));
       await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
       await ensureLoggedOut(tester);
 
@@ -254,8 +254,7 @@ void main() {
     "Issue 137: staff see the member's leave reason on the register and "
     'decide the request',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 3000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 3000));
       await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
       await ensureLoggedOut(tester);
 

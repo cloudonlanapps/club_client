@@ -70,9 +70,11 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
     show ActionButton, PickedImage, SectionEditButton;
 
+import '_helpers/actions.dart';
 import '_helpers/auth.dart' show attemptLoginExpectFailure, loginViaUi;
 import '_helpers/capabilities.dart';
 import '_helpers/pump.dart' show pumpApp;
+import '_helpers/surface.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
   'CLUB_API_BASE_URL',
@@ -157,8 +159,7 @@ void main() {
       // never lands, the form fails validation, and Save never submits). Give
       // the test surface enough height that the whole form fits — the
       // documented alternative to per-field scrolling for long forms.
-      await tester.binding.setSurfaceSize(const Size(1600, 4000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 4000));
 
       await pumpApp(
         tester,
@@ -1060,7 +1061,7 @@ Future<void> _createMemberViaUi(
   required String lastName,
 }) async {
   await _go(tester, '/memberzone/users');
-  final addUserButton = find.widgetWithText(ActionButton, '+ Add user');
+  final addUserButton = findAction('+ Add user');
   await _waitFor(
     tester,
     () => addUserButton.evaluate().isNotEmpty,

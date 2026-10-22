@@ -44,6 +44,7 @@ import '_helpers/auth.dart';
 import '_helpers/forms.dart';
 import '_helpers/photos.dart';
 import '_helpers/pump.dart';
+import '_helpers/surface.dart';
 import '_helpers/users.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
@@ -131,8 +132,7 @@ void main() {
     'its visibility is read and changed and the photo is cleared, each on '
     'that file',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 4000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 4000));
 
       // Server-side reads, to assert what the app wrote.
       final sudoSdk = await _sdkClient(_kSudoUsername, _kSudoPassword);

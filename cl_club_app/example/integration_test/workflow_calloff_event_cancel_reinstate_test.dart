@@ -38,6 +38,7 @@ import '_helpers/auth.dart';
 import '_helpers/events.dart';
 import '_helpers/forms.dart';
 import '_helpers/pump.dart';
+import '_helpers/surface.dart';
 import '_helpers/venues.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
@@ -91,8 +92,7 @@ void main() {
     'a camp is cancelled and the cancellation undone, and a one-off is '
     'called off and reinstated, from Event Management',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 4000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 4000));
 
       await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
       await ensureLoggedOut(tester);

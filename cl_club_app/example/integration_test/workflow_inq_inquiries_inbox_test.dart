@@ -23,8 +23,6 @@ import 'package:cl_club_admin/src/widgets/inquiry_detail.dart'
     show InquiryDetail;
 import 'package:cl_club_communication/src/views/notifications_list_view.dart'
     show NotificationsListView;
-import 'package:cl_member_zone/src/widgets/sidebar/sidebar_item.dart'
-    show SidebarItem;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         clNotificationsMasterProvider,
@@ -39,6 +37,7 @@ import 'package:ui_lib/ui_lib.dart' show ConfirmDialog;
 
 import '_helpers/auth.dart';
 import '_helpers/forms.dart';
+import '_helpers/navigation.dart';
 import '_helpers/pump.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
@@ -71,10 +70,8 @@ Finder _row(String name) => find.ancestor(
   ),
 );
 
-Finder _sidebarInquiries() => find.widgetWithText(SidebarItem, 'Inquiries');
-
-int _sidebarCount(WidgetTester tester) =>
-    tester.widget<SidebarItem>(_sidebarInquiries().first).badgeCount ?? 0;
+Future<int> _sidebarCount(WidgetTester tester) =>
+    sidebarBadge(tester, 'Inquiries');
 
 Future<void> _openDetail(WidgetTester tester, String name) async {
   await tester.tap(find.text(name));
@@ -199,9 +196,7 @@ void main() {
       );
 
       // --- The sidebar entry and its count. -------------------------------
-      expect(_sidebarInquiries(), findsWidgets);
-      tester.widget<SidebarItem>(_sidebarInquiries().first).onTap();
-      await settle(tester);
+      await openSidebarEntry(tester, 'Inquiries');
       // The inbox loaded with the shell; Refresh picks up the new rows.
       await tester.tap(find.widgetWithText(ShadButton, 'Refresh'));
       await settle(tester);
@@ -216,7 +211,7 @@ void main() {
         clUnhandledInquiryCountProvider,
       );
       expect(openBefore, greaterThanOrEqualTo(2));
-      expect(_sidebarCount(tester), openBefore);
+      expect(await _sidebarCount(tester), openBefore);
 
       // --- Filter by kind. ------------------------------------------------
       await tester.tap(
@@ -270,7 +265,7 @@ void main() {
         container(tester).read(clUnhandledInquiryCountProvider),
         openBefore - 1,
       );
-      expect(_sidebarCount(tester), openBefore - 1);
+      expect(await _sidebarCount(tester), openBefore - 1);
 
       // --- It sits under Handled, stamped with the admin. -----------------
       await tester.tap(

@@ -48,6 +48,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '_helpers/auth.dart';
 import '_helpers/pump.dart';
+import '_helpers/surface.dart';
 import '_helpers/users.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
@@ -190,8 +191,7 @@ void main() {
     "profile's Events section each add their own event and take it away "
     "again, on the member's own profile and on an admin's view of it",
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 4000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 4000));
 
       await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
       await ensureLoggedOut(tester);

@@ -20,6 +20,28 @@
   and Manage requests, with no series action and no Reschedule (#178).
 - The review template library's Import button shows an import icon, not an
   upload one (#179).
+- On a phone's browser, starting to scroll a form no longer closes the
+  keyboard; only a tap outside the field does (#159).
+- Sign up and Create user no longer ask you to check the username first; a
+  username already taken is refused when you save, on the username field,
+  with everything you typed kept (#161).
+- Pages with open editors or a search box keep their content, typed text and
+  scroll position while their data reloads, instead of flashing a loading
+  spinner (#162).
+- A dropped connection shows a banner over the page instead of replacing it,
+  so what was typed is kept; the banner appears only after a second failed
+  check (#163).
+- Emptying an evaluation answer that has evidence no longer asks mid-typing;
+  the question comes when you leave the field or finalize, and Cancel keeps
+  anything newly typed (#164).
+- The markdown editor dialog fits above a phone's keyboard: its text box
+  scrolls inside, and on a phone held sideways the dialog scrolls instead of
+  overflowing (#166).
+- On a phone with the keyboard up, the Broadcast screen scrolls so the email
+  options and Send stay reachable instead of overflowing (#168).
+- On a phone's browser the sign-in forms no longer open the keyboard by
+  themselves, and the page fills the screen again once the keyboard closes
+  (#160).
 
 ## 1.0.0
 

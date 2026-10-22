@@ -56,6 +56,7 @@ Views (`LoginView`, `SignupView`, `ForgotPasswordView`, `ChangePasswordView`) re
 | `serverConfigProvider` | `Provider<ServerConfig>` | Re-exported from `cl_server_config`. Must be overridden in `ProviderScope` with API base URL |
 | `authStateProvider` | `AsyncNotifierProvider<AuthNotifier, UserPrivate?>` | Central auth state. `null` = logged out, `UserPrivate` = logged in, `AsyncError` = status blocker |
 | `clientProvider` | `AsyncNotifierProvider<ClientNotifier, SecureClient>` | Authenticated SDK client, auto-configured from stored session |
+| `sessionClientProvider` | `FutureProvider<SecureClient>` | The client for requests that need a signed-in member: `clientProvider`'s while someone is signed in, otherwise a future that never completes, so nothing that needs the session is sent while signed out. The host gives it to `secureClientProvider` (club_client#272) |
 | `tokenStorageProvider` | `Provider<TokenStorage>` | SharedPreferences-backed session persistence |
 
 ### Widgets and types
@@ -71,7 +72,7 @@ Views (`LoginView`, `SignupView`, `ForgotPasswordView`, `ChangePasswordView`) re
 | Method | Purpose |
 |--------|---------|
 | `login(username, password)` | Authenticate, store session, fetch user profile, check status |
-| `logout()` | Server logout (fire-and-forget), clear local session |
+| `logout()` | Signs out locally first (state null, the client's session closed so no token refresh), then server logout (errors ignored), then clears the local session (club_client#272) |
 | `changePassword(currentPassword, newPassword)` | Change password for logged-in user |
 | `resetPassword(email)` | Request a self-service password reset; server emails a new password if the address matches a member (uniform response, no existence disclosure) |
 | `deleteSelf()` | Soft-delete account then logout |

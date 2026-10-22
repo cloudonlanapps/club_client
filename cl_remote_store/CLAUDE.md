@@ -6,7 +6,14 @@ Full provider inventory: [`../cl_server_config/docs/master_providers.md`](../cl_
 
 `secureClientProvider` (`lib/src/providers/client.dart`) — the authenticated SDK
 client every master provider reads — is **defined here** and overridden by the
-host app with the authenticated client from `cl_member_auth`.
+host app with the authenticated client from `cl_member_auth`: the app gives it
+`sessionClientProvider`, which waits while no one is signed in, so no master
+sends a request after signing out (club_client#272).
+
+`tokenFreeClientProvider` (`lib/src/providers/token_free_client.dart`) is the
+client for reads the server answers without a session (`GET /capabilities`):
+by default `secureClientProvider`, falling back to the sessionless client when
+no `secureClientProvider` is given; the app points it at `clientProvider`.
 
 `currentUserProvider` (`lib/src/providers/current_user.dart`) — the logged-in
 user, used by master providers to adjust fetch strategy by role — is likewise

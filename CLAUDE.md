@@ -234,8 +234,8 @@ Routes are defined in `cl_club_app/lib/src/router.dart` (`routerProvider`). Each
 - The API base URL is provided via `serverConfigProvider` / `ServerConfig`. The host app **must** override `serverConfigProvider` in its `ProviderScope`.
 - **Do not** hardcode API URLs in any module. If a module needs the base URL, it must depend on `cl_server_config` and use `apiBaseUrlProvider` or `serverConfigProvider`.
 - **Do not** create duplicate base URL providers, network status providers, or network failure widgets in any other module. These all come from `cl_server_config`.
-- Network status detection (`networkStatusProvider`) is **reactive** — no background polling. Data providers call `checkNow()` when a fetch fails and `markOnline()` when one succeeds.
-- Network failure UI (`NetworkStatusWrapper`, `NetworkFailureScreen`) is provided by `cl_server_config`. Shell scaffolds wrap their content with `NetworkStatusWrapper`.
+- Network status detection (`networkStatusProvider`) is **reactive** — no background polling. Data providers call `checkNow()` when a fetch fails and `markOnline()` when one succeeds. While online, one failed health check is confirmed by a second, a second later, before the status changes: a single follow-up, not polling (#163).
+- Network failure UI (`NetworkStatusWrapper`, `NetworkFailureBanner`, `NetworkFailureScreen`) is provided by `cl_server_config`. Shell scaffolds wrap their content with `NetworkStatusWrapper`, which keeps the page mounted and shows `NetworkFailureBanner` over it, so what was typed survives a dropped connection (#163). `NetworkFailureScreen` is for a view with nothing to show until the server answers (the login view's session restore).
 
 ## Authentication Rules
 
@@ -286,6 +286,10 @@ All SDK access is concentrated in two modules:
 - **No other module** should call SDK functions directly. Widgets call mutation methods on the relevant master notifier, never the SDK client.
 
 Full master-provider inventory: [`cl_server_config/docs/master_providers.md`](cl_server_config/docs/master_providers.md).
+
+## Loading states
+
+**A view shows its loading state only before its first data.** A reload (a section save, the Refresh button, an autosave's refetch, a change to the signed-in user) updates the page in place and never swaps it for `LoadingView` / a spinner: that unmounts every open editor, closes the keyboard, loses typed text and resets the scroll (club_client#162). With `AsyncValue.when`, pass `skipLoadingOnReload: true`; when testing the value by hand, use `value.isLoading && !value.hasValue`, never `value.isLoading` alone. Screen-level gates that wait on a provider follow the same rule. A test for it reloads the provider through a dependency (bump `clManualRefreshProvider`, or change the signed-in user), since `when` already skips the loading state of a plain `ref.invalidate`.
 
 ## View Permission Guidelines
 
@@ -523,6 +527,8 @@ own isolated server.
 24. **A dialog that saves while it is open stays open until the save ends.** Its host wraps the `ShadDialog` in `SavingDialogScope(saving: …)` and passes `closeIcon: SavingDialogCloseIcon(saving: …)` (both `ui_lib`), with the same in-flight flag that turns its form and buttons off. While the save is in flight nothing closes the dialog: not its buttons, its close X, a tap outside, Escape or system back; so what the server refuses is still seen where rule 20 puts it. The dialog closes itself with `Navigator.pop` once the save ends. A dialog that only returns a value, and whose caller saves after it has closed, needs neither (club_client#113).
 
 25. **Every reason-only cancel goes through `EventCancellationDialog`** (cl_club_events) hosting `EventCancellationForm` (cl_club_forms): a camp or series cutoff, a one-off's Call off, Cancel this occurrence and Cancel entire series from a session. The dialog is worded for the action that opened it (title, description, confirm label, how it can be undone); no second reason dialog (club_client#213).
+
+26. **No autofocus in a phone's browser.** A form's first field takes the cursor as its page opens only where `FormAutofocus.allowed` (`cl_club_forms`) says so: everywhere except a browser on Android or iOS, where a field focused before the phone shows a keyboard is one of the focus hops behind a blank band left when the keyboard closes (#160). Pass `autofocus: FormAutofocus.allowed`, never `autofocus: true`.
 
 ## Section-wise Editors (shared inline pattern)
 

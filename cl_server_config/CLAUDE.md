@@ -33,12 +33,14 @@ lib/
     extensions/
       date_time_format.dart     # DateTimeFormat
     models/
+      network_failure_copy.dart # NetworkFailureCopy (words shared by banner and screen)
       server_config.dart        # ServerConfig (base URL)
     providers/
       config.dart               # serverConfigProvider, apiBaseUrlProvider
       network_status.dart       # networkStatusProvider, NetworkStatus(Notifier)
     widgets/
-      network_failure_screen.dart
+      network_failure_banner.dart  # over a mounted page (#163)
+      network_failure_screen.dart  # session restore only
       network_status_wrapper.dart
 ```
 

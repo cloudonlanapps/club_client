@@ -98,9 +98,8 @@ String renderManifest({
   return '${const JsonEncoder.withIndent('    ').convert(manifest)}\n';
 }
 
-/// The web icons, keyed by their path under `web/`, resized from the brand's
-/// square source image (at least 512 px).
-Map<String, Uint8List> renderIcons(Uint8List source) {
+/// The brand's `icon_1024.png`, checked: readable, square, at least 512 px.
+img.Image decodeBrandIcon(Uint8List source) {
   final image = img.decodeImage(source);
   if (image == null) {
     throw const GeneratorException('icon_1024.png is not a readable image');
@@ -111,6 +110,13 @@ Map<String, Uint8List> renderIcons(Uint8List source) {
       'got ${image.width}x${image.height}',
     );
   }
+  return image;
+}
+
+/// The web icons, keyed by their path under `web/`, resized from the brand's
+/// square source image (at least 512 px).
+Map<String, Uint8List> renderIcons(Uint8List source) {
+  final image = decodeBrandIcon(source);
   Uint8List sized(int size) => img.encodePng(
     img.copyResize(
       image,

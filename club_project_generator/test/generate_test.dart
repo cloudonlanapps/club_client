@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:club_project_generator/club_project_generator.dart';
+import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -22,6 +23,9 @@ void main() {
     String? brand,
     String? appUrl,
     String? websiteUrl,
+    String apiUrl = 'http://203.0.113.10:8201/v1',
+    String? androidId,
+    String? androidName,
   }) async {
     final out = p.join(tmp.path, target.name);
     await generate(
@@ -30,9 +34,11 @@ void main() {
         target: target,
         brand: brand ?? exampleBrand,
         out: out,
-        apiUrl: 'http://203.0.113.10:8201/v1',
+        apiUrl: apiUrl,
         appUrl: appUrl,
         websiteUrl: websiteUrl,
+        androidId: androidId,
+        androidName: androidName,
         check: false,
       ),
     );
@@ -57,7 +63,12 @@ void main() {
     ]) {
       expect(File(p.join(out, f)).existsSync(), isTrue, reason: f);
     }
-    for (final skipped in ['integration_test', 'test_driver', 'linux']) {
+    for (final skipped in [
+      'integration_test',
+      'test_driver',
+      'linux',
+      'android',
+    ]) {
       expect(Directory(p.join(out, skipped)).existsSync(), isFalse);
     }
     expect(
@@ -254,6 +265,112 @@ void main() {
       for (final route in routes) {
         expect(router, contains("path: '$route',"), reason: route);
       }
+    });
+  });
+
+  group('Issue 280: Android', () {
+    String read(String out, String path) =>
+        File(p.join(out, 'android', path)).readAsStringSync();
+    const manifest = 'app/src/main/AndroidManifest.xml';
+
+    test(
+      'the app carries android/ with the given id, name and icons',
+      () async {
+        final out = await run(
+          Target.app,
+          androidId: 'org.example.club',
+          androidName: 'Example',
+        );
+        expect(
+          read(out, 'app/build.gradle.kts'),
+          allOf(
+            contains('applicationId = "org.example.club"'),
+            isNot(contains('applicationId = "com.example.')),
+          ),
+        );
+        expect(read(out, manifest), contains('android:label="Example"'));
+        for (final MapEntry(key: density, value: size) in {
+          'mdpi': 48,
+          'hdpi': 72,
+          'xhdpi': 96,
+          'xxhdpi': 144,
+          'xxxhdpi': 192,
+        }.entries) {
+          final file = File(
+            p.join(
+              out,
+              'android/app/src/main/res/mipmap-$density/ic_launcher.png',
+            ),
+          );
+          final icon = img.decodePng(file.readAsBytesSync())!;
+          expect([icon.width, icon.height], [size, size], reason: density);
+        }
+        for (final local in ['local.properties', '.gradle', 'build']) {
+          expect(
+            FileSystemEntity.typeSync(p.join(out, 'android', local)),
+            FileSystemEntityType.notFound,
+            reason: local,
+          );
+        }
+      },
+    );
+
+    test("the name defaults to club.json's shortName", () async {
+      final out = await run(Target.app, androidId: 'org.example.club');
+      expect(read(out, manifest), contains('android:label="EXC"'));
+    });
+
+    test('the name is escaped for XML', () async {
+      final out = await run(
+        Target.app,
+        androidId: 'org.example.club',
+        androidName: 'Puck & "Stick"',
+      );
+      expect(
+        read(out, manifest),
+        contains('android:label="Puck &amp; &quot;Stick&quot;"'),
+      );
+    });
+
+    test('cleartext only for a plain-http API', () async {
+      final plain = await run(Target.app, androidId: 'org.example.club');
+      expect(
+        read(plain, manifest),
+        contains('android:usesCleartextTraffic="true"'),
+      );
+      Directory(plain).deleteSync(recursive: true);
+      final secure = await run(
+        Target.app,
+        androidId: 'org.example.club',
+        apiUrl: 'https://api.example.org/v1',
+      );
+      expect(read(secure, manifest), isNot(contains('usesCleartextTraffic')));
+    });
+
+    test('refuses an id that is not an application id', () async {
+      for (final id in [
+        'club',
+        'org.example.',
+        '1org.example',
+        'org.ex-ample',
+      ]) {
+        expect(
+          () => run(Target.app, androidId: id),
+          throwsA(isA<GeneratorException>()),
+          reason: id,
+        );
+      }
+    });
+
+    test('refuses an Android id for the website', () async {
+      expect(
+        () => run(
+          Target.website,
+          androidId: 'org.example.club',
+          websiteUrl: 'https://example.org',
+        ),
+        throwsA(isA<GeneratorException>()),
+      );
     });
   });
 

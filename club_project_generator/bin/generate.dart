@@ -9,8 +9,10 @@ Generates a club's Flutter web project from club_core's templates.
 
   dart run bin/generate.dart --target app|website --brand <dir> --out <dir>
       --api-url <url> [--app-url <url>] [--website-url <url>]
+      [--android-id <id> [--android-name <name>]]
 
-URLs are whole http(s) URLs, used as given.''';
+URLs are whole http(s) URLs, used as given. --android-id (app target only)
+adds android/ with that application id, so `flutter build apk` builds it.''';
 
 Future<void> main(List<String> args) async {
   final parser = ArgParser()
@@ -24,6 +26,14 @@ Future<void> main(List<String> args) async {
       help:
           "the website's URL: the app's link to it, and the base of the "
           "website's robots.txt and sitemap.xml",
+    )
+    ..addOption(
+      'android-id',
+      help: 'the Android application id; adds android/ (app target only)',
+    )
+    ..addOption(
+      'android-name',
+      help: "the app's name on the phone (default: club.json's shortName)",
     )
     ..addOption(
       'club-core',
@@ -53,6 +63,8 @@ Future<void> main(List<String> args) async {
         apiUrl: a.option('api-url')!,
         appUrl: a.option('app-url'),
         websiteUrl: a.option('website-url'),
+        androidId: a.option('android-id'),
+        androidName: a.option('android-name'),
         check: a.flag('check'),
       ),
       log: stdout.writeln,

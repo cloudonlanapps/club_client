@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
 
+import 'android_files.dart';
 import 'club_json.dart';
 import 'pubspec_paths.dart';
 import 'pubspec_version.dart';
@@ -57,8 +59,11 @@ class GenerateOptions {
     required String apiUrl,
     String? appUrl,
     String? websiteUrl,
+    String? androidId,
+    this.androidName,
     this.check = true,
   }) : apiUrl = checkUrl('--api-url', apiUrl),
+       androidId = androidId == null ? null : checkAndroidId(androidId),
        appUrl = appUrl == null ? null : checkUrl('--app-url', appUrl),
        websiteUrl = websiteUrl == null
            ? null
@@ -83,6 +88,15 @@ class GenerateOptions {
   /// `robots.txt` and `sitemap.xml` say its pages are.
   final String? websiteUrl;
 
+  /// The Android application id. When set, the app is generated with the
+  /// template's `android/` carrying this id, so `flutter build apk` builds it
+  /// (#280). App target only.
+  final String? androidId;
+
+  /// The app's name on the phone; club.json's `shortName` when not given,
+  /// as on a web home screen.
+  final String? androidName;
+
   /// Run `flutter pub get` and the template's brand-file test on the result.
   final bool check;
 }
@@ -94,6 +108,9 @@ Future<void> generate(GenerateOptions o, {void Function(String)? log}) async {
   final template = p.join(o.clubCore, o.target.templatePath);
   if (!File(p.join(template, 'pubspec.yaml')).existsSync()) {
     throw GeneratorException('no template at $template');
+  }
+  if (o.androidId != null && o.target != Target.app) {
+    throw const GeneratorException('--android-id is for the app target only');
   }
   _checkBrand(o);
   _checkOut(o.out);
@@ -180,6 +197,19 @@ Future<void> generate(GenerateOptions o, {void Function(String)? log}) async {
     );
   }
 
+  final androidId = o.androidId;
+  if (androidId != null) {
+    say('==> android/');
+    _writeAndroid(
+      template: template,
+      out: o.out,
+      id: androidId,
+      name: o.androidName ?? names.shortName,
+      cleartext: o.apiUrl.startsWith('http://'),
+      icon: File(p.join(o.brand, 'icon_1024.png')).readAsBytesSync(),
+    );
+  }
+
   if (!o.check) return;
   say('==> flutter pub get');
   await _flutter(['pub', 'get'], o.out);
@@ -197,6 +227,38 @@ Future<String> generatorRoot() async {
     throw const GeneratorException('cannot locate club_project_generator');
   }
   return p.dirname(p.dirname(p.fromUri(lib)));
+}
+
+/// Copies the template's `android/` (without build output or local files)
+/// and writes the brand's application id, name and launcher icons into it.
+void _writeAndroid({
+  required String template,
+  required String out,
+  required String id,
+  required String name,
+  required bool cleartext,
+  required Uint8List icon,
+}) {
+  final from = Directory(p.join(template, 'android'));
+  if (!from.existsSync()) {
+    throw GeneratorException('the template has no android/ at ${from.path}');
+  }
+  final to = p.join(out, 'android');
+  _copyTree(from, Directory(to), copies: copiesAndroidEntry);
+
+  final gradle = File(p.join(to, 'app/build.gradle.kts'));
+  gradle.writeAsStringSync(withApplicationId(gradle.readAsStringSync(), id));
+  final manifest = File(p.join(to, 'app/src/main/AndroidManifest.xml'));
+  manifest.writeAsStringSync(
+    withAndroidLabel(manifest.readAsStringSync(), name, cleartext: cleartext),
+  );
+  for (final MapEntry(key: path, value: bytes) in renderAndroidIcons(
+    icon,
+  ).entries) {
+    File(p.join(to, path))
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(bytes);
+  }
 }
 
 void _checkBrand(GenerateOptions o) {
@@ -241,14 +303,21 @@ void _checkOut(String out) {
   }
 }
 
-void _copyTree(Directory from, Directory to) {
+/// Copies [from] into [to], leaving out every entry, at any depth, whose name
+/// [copies] refuses (by default the template entries in [_skipped]).
+void _copyTree(
+  Directory from,
+  Directory to, {
+  bool Function(String name)? copies,
+}) {
+  final keep = copies ?? (name) => !_skipped.contains(name);
   to.createSync(recursive: true);
   for (final entity in from.listSync()) {
     final name = p.basename(entity.path);
-    if (_skipped.contains(name)) continue;
+    if (!keep(name)) continue;
     final dest = p.join(to.path, name);
     if (entity is Directory) {
-      _copyTree(entity, Directory(dest));
+      _copyTree(entity, Directory(dest), copies: copies);
     } else if (entity is File) {
       entity.copySync(dest);
     }

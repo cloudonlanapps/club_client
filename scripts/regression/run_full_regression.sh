@@ -180,7 +180,14 @@ else
     [ "${PIPESTATUS[0]}" -eq 0 ] || { note "ERROR: git worktree add failed"; exit 1; }
     created_wt=1
 fi
-echo "commit: $(git -C "$WT" log -1 --format='%h %s (%cd)' --date=short)" >>"$OUT/meta.txt"
+{
+    echo "commit: $(git -C "$WT" log -1 --format='%h %s (%cd)' --date=short)"
+    echo "commit id: $(git -C "$WT" rev-parse HEAD)"
+    # Before pub get, so these are the tested tree's own changes.
+    dirty=$(git -C "$WT" status --porcelain --untracked-files=normal)
+    if [ -z "$dirty" ]; then echo "local changes: none"
+    else echo "local changes: $(printf '%s\n' "$dirty" | wc -l) file(s): $(printf '%s\n' "$dirty" | awk '{print $2}' | head -20 | tr '\n' ' ')"; fi
+} >>"$OUT/meta.txt"
 note "flutter pub get in every package"
 pubfail=0
 while IFS= read -r p; do

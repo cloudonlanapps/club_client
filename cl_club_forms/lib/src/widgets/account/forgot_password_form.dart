@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../form/form_autofocus.dart';
 import '../form/form_body.dart';
 import '../form/form_contract.dart';
 import '../form/labeled_form_row.dart';
@@ -53,7 +54,7 @@ class ForgotPasswordFormState extends State<ForgotPasswordForm>
             field: ShadInputFormField(
               id: ForgotPasswordFormFields.emailId,
               placeholder: const Text('you@example.com'),
-              autofocus: true,
+              autofocus: FormAutofocus.allowed,
               keyboardType: TextInputType.emailAddress,
               autocorrect: false,
               enableSuggestions: false,

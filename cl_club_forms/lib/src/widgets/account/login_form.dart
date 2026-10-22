@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../form/form_autofocus.dart';
 import '../form/form_body.dart';
 import '../form/form_contract.dart';
 import '../form/labeled_form_row.dart';
@@ -53,7 +54,7 @@ class LoginFormState extends State<LoginForm> with FormContract<LoginForm> {
             field: ShadInputFormField(
               id: LoginFormFields.usernameId,
               placeholder: const Text('your-username'),
-              autofocus: true,
+              autofocus: FormAutofocus.allowed,
               keyboardType: TextInputType.text,
               autocorrect: false,
               enableSuggestions: false,

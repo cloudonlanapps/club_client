@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../form/form_autofocus.dart';
 import '../form/labeled_form_row.dart';
 import 'user_form_fields.dart';
 import 'user_form_strings.dart';
@@ -30,7 +31,7 @@ class UserUsernameField extends StatelessWidget {
         id: UserFormFields.usernameId,
         placeholder: const Text(UserFormStrings.usernamePlaceholder),
         description: const Text(UserFormStrings.usernameHint),
-        autofocus: true,
+        autofocus: FormAutofocus.allowed,
         keyboardType: TextInputType.text,
         autocorrect: false,
         enableSuggestions: false,

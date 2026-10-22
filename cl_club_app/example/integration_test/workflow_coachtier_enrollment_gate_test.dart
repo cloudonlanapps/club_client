@@ -46,6 +46,7 @@ import '_helpers/attendance.dart';
 import '_helpers/auth.dart';
 import '_helpers/enrollments.dart';
 import '_helpers/pump.dart';
+import '_helpers/surface.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
   'CLUB_API_BASE_URL',
@@ -158,8 +159,7 @@ void main() {
     'Issue 136: an assigned coach takes attendance and reads enrollments '
     'without enrollment actions; a coach not on the event gets neither',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 3000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 3000));
       await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
       await ensureLoggedOut(tester);
 

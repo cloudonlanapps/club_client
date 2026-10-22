@@ -52,6 +52,7 @@ import 'package:ui_lib/ui_lib.dart' show CredentialedNetworkImage, PickedImage;
 import '_helpers/auth.dart';
 import '_helpers/forms.dart';
 import '_helpers/pump.dart';
+import '_helpers/surface.dart';
 import '_helpers/users.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
@@ -488,8 +489,7 @@ void main() {
     "an admin changes a member's photo; the member makes it public, private "
     'again, then replaces it',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 4000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 4000));
 
       // Server-side reads, to assert what the UI wrote: who owns the file,
       // its access roles, and who may download it.

@@ -40,6 +40,7 @@ import 'package:ui_lib/ui_lib.dart' show ActionGroup;
 
 import '_helpers/auth.dart';
 import '_helpers/pump.dart';
+import '_helpers/surface.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
   'CLUB_API_BASE_URL',
@@ -145,8 +146,7 @@ void main() {
     'Issue 146: only the organizer is offered Reschedule and Cancel on an '
     'occurrence; its coaches are not',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 3000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 3000));
       await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
       await ensureLoggedOut(tester);
 

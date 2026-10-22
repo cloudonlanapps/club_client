@@ -51,6 +51,7 @@ import 'package:ui_lib/ui_lib.dart' show EntityCard;
 import '_helpers/auth.dart';
 import '_helpers/editors.dart';
 import '_helpers/pump.dart';
+import '_helpers/surface.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
   'CLUB_API_BASE_URL',
@@ -166,8 +167,7 @@ void main() {
     'Issue 85: an admin corrects the timetable of a started camp and of a '
     'started programme, and no date moves',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 3000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 3000));
       await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
       await ensureLoggedOut(tester);
       await loginViaUi(tester, _kAdmin, _kPwd);

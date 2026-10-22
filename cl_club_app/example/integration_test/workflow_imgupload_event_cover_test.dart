@@ -37,6 +37,7 @@ import 'package:ui_lib/ui_lib.dart'
 import '_helpers/auth.dart';
 import '_helpers/forms.dart';
 import '_helpers/pump.dart';
+import '_helpers/surface.dart';
 import '_helpers/users.dart';
 import '_helpers/venues.dart';
 
@@ -401,8 +402,7 @@ void main() {
   testWidgets(
     'admin uploads an event cover end-to-end via the pencil',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 4000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 4000));
 
       await pumpApp(
         tester,

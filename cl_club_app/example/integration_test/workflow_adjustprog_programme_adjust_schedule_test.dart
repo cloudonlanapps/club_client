@@ -48,6 +48,7 @@ import 'package:ui_lib/ui_lib.dart' show EntityCard;
 import '_helpers/auth.dart';
 import '_helpers/forms.dart';
 import '_helpers/pump.dart';
+import '_helpers/surface.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
   'CLUB_API_BASE_URL',
@@ -147,8 +148,7 @@ void main() {
     "Issue 38: an admin adjusts a programme's days, time and venue from a "
     'chosen upcoming session; earlier sessions keep the present schedule',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 3000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 3000));
       await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
       await ensureLoggedOut(tester);
       await loginViaUi(tester, _kAdmin, _kPwd);

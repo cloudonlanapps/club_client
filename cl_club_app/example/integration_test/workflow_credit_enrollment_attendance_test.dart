@@ -90,6 +90,7 @@ import '_helpers/credit.dart';
 import '_helpers/enrollments.dart';
 import '_helpers/forms.dart';
 import '_helpers/pump.dart';
+import '_helpers/surface.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
   'CLUB_API_BASE_URL',
@@ -203,8 +204,7 @@ void main() {
       if (skipUnless(enabled: caps.creditSystem, feature: 'credit system')) {
         return;
       }
-      await tester.binding.setSurfaceSize(const Size(1600, 3000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await useTestSurface(tester, const Size(1600, 3000));
       await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
       await ensureLoggedOut(tester);
 
@@ -602,8 +602,7 @@ void main() {
     tester,
   ) async {
     if (skipIf(enabled: caps.creditSystem, feature: 'credit system')) return;
-    await tester.binding.setSurfaceSize(const Size(1600, 3000));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await useTestSurface(tester, const Size(1600, 3000));
     await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
     await ensureLoggedOut(tester);
 

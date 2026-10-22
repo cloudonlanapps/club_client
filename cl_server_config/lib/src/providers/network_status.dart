@@ -24,10 +24,11 @@ enum NetworkStatus {
 /// Uses a **reactive** approach — no background polling. Status starts as
 /// [NetworkStatus.online] and only changes when:
 /// - A data provider calls [NetworkStatusNotifier.checkNow] after a fetch
-///   fails.
+///   fails, and the health check fails twice in a row (one confirming check,
+///   not polling).
 /// - A data provider calls [NetworkStatusNotifier.markOnline] after a fetch
 ///   succeeds.
-/// - The user taps "Try Again" on the network failure screen.
+/// - The user taps "Try Again" on the network failure banner or screen.
 final networkStatusProvider =
     StateNotifierProvider<NetworkStatusNotifier, NetworkStatus>((ref) {
       return NetworkStatusNotifier(ref);
@@ -40,12 +41,20 @@ final networkStatusProvider =
 class NetworkStatusNotifier extends StateNotifier<NetworkStatus> {
   NetworkStatusNotifier(this.ref) : super(NetworkStatus.online);
 
+  /// How long one health check may take before it counts as failed.
+  static const Duration healthTimeout = Duration(seconds: 5);
+
+  /// How long after a first failed health check the confirming one runs.
+  static const Duration confirmDelay = Duration(seconds: 1);
+
   final Ref ref;
   bool _isChecking = false;
+  Timer? _confirmTimer;
 
   /// Force an immediate health check against the server.
   ///
-  /// Call this when an API error is encountered. The result updates [state].
+  /// Call this when an API error is encountered. The result updates [state];
+  /// while online, only after a second failed check (club_client#163).
   void checkNow() {
     unawaited(_checkHealth());
   }
@@ -60,51 +69,73 @@ class NetworkStatusNotifier extends StateNotifier<NetworkStatus> {
     }
   }
 
-  /// Performs a health check via direct HTTP GET to the `/health` endpoint.
+  /// Runs the health check behind [checkNow].
+  ///
+  /// While the status is [NetworkStatus.online], one failed check is not
+  /// enough: on a patchy connection a single request fails or stalls in
+  /// ordinary use. After [confirmDelay] the check runs once more, and only
+  /// a second failure changes the status (club_client#163). Once the status
+  /// is a failure, each check sets it directly.
   Future<void> _checkHealth() async {
     if (_isChecking) return;
     _isChecking = true;
 
+    try {
+      var result = await _probe();
+      if (!mounted) return;
+      if (result != NetworkStatus.online && state == NetworkStatus.online) {
+        await _waitToConfirm();
+        result = await _probe();
+        // The provider may have been disposed while the request was in
+        // flight.
+        if (!mounted) return;
+      }
+      if (state != result) state = result;
+    } finally {
+      _isChecking = false;
+    }
+  }
+
+  /// Completes after [confirmDelay]. Disposing the notifier cancels the
+  /// wait, and the check it holds never resumes.
+  Future<void> _waitToConfirm() {
+    final waited = Completer<void>();
+    _confirmTimer = Timer(confirmDelay, waited.complete);
+    return waited.future;
+  }
+
+  @override
+  void dispose() {
+    _confirmTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Asks the server's `/health` endpoint once and returns the status its
+  /// answer means.
+  Future<NetworkStatus> _probe() async {
     try {
       final baseUrl = ref.read(apiBaseUrlProvider);
       final healthUrl = _buildHealthUrl(baseUrl);
 
       final response = await http
           .get(Uri.parse(healthUrl))
-          .timeout(const Duration(seconds: 5));
-      // The provider may have been disposed while the request was in flight.
-      if (!mounted) return;
+          .timeout(healthTimeout);
 
-      if (response.statusCode == 200) {
-        if (state != NetworkStatus.online) {
-          state = NetworkStatus.online;
-        }
-      } else {
-        if (kDebugMode) {
-          print(
-            '[NetworkStatus] Health check failed: '
-            'server returned ${response.statusCode}',
-          );
-        }
-        if (state != NetworkStatus.serverUnavailable) {
-          state = NetworkStatus.serverUnavailable;
-        }
+      if (response.statusCode == HttpStatus.ok) return NetworkStatus.online;
+      if (kDebugMode) {
+        print(
+          '[NetworkStatus] Health check failed: '
+          'server returned ${response.statusCode}',
+        );
       }
+      return NetworkStatus.serverUnavailable;
     } on Object catch (e) {
-      if (!mounted) return;
       if (kDebugMode) {
         print('[NetworkStatus] Health check error: $e');
       }
-
-      final newState = _isNetworkError(e)
+      return _isNetworkError(e)
           ? NetworkStatus.offline
           : NetworkStatus.serverUnavailable;
-
-      if (state != newState) {
-        state = newState;
-      }
-    } finally {
-      _isChecking = false;
     }
   }
 

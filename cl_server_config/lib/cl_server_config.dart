@@ -18,5 +18,6 @@ export 'src/providers/network_status.dart'
     show NetworkStatus, NetworkStatusNotifier, networkStatusProvider;
 
 // Widgets
+export 'src/widgets/network_failure_banner.dart' show NetworkFailureBanner;
 export 'src/widgets/network_failure_screen.dart' show NetworkFailureScreen;
 export 'src/widgets/network_status_wrapper.dart' show NetworkStatusWrapper;

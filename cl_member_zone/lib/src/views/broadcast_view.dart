@@ -15,6 +15,7 @@ import 'package:ui_lib/ui_lib.dart'
         showUserSelectionDialog;
 
 import '../theme/layout_constants.dart';
+import '../widgets/panels/shared/broadcast_layout.dart';
 import '../widgets/panels/shared/broadcast_sent_sliver.dart';
 
 /// Shown when revoking a broadcast fails.
@@ -260,70 +261,58 @@ class _BroadcastViewState extends ConsumerState<BroadcastView> {
         ),
         const Divider(height: 1),
         Expanded(
-          // One scroll view for the composer and the sent list: with the
-          // keyboard up on a phone the composer alone can be taller than the
-          // space left, and the list then gives up its room (#168).
-          child: CustomScrollView(
-            slivers: [
-              SliverPadding(
-                padding: LayoutConstants.contentPadding.copyWith(bottom: 0),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: BroadcastLayout(
+            composerPadding: LayoutConstants.contentPadding.copyWith(bottom: 0),
+            sentListPadding: LayoutConstants.contentPadding.copyWith(top: 0),
+            composer: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_scope.canNarrow) ...[
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      if (_scope.canNarrow) ...[
-                        Wrap(
-                          spacing: 16,
-                          runSpacing: 8,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            ShadSwitch(
-                              key: const ValueKey('broadcast-staff-only'),
-                              value: _staffOnly,
-                              label: const Text('Staff only'),
-                              onChanged: (v) => setState(() {
-                                _staffOnly = v;
-                                if (v) _chosen = const [];
-                              }),
-                            ),
-                            ShadButton.outline(
-                              size: ShadButtonSize.sm,
-                              leading: const Icon(LucideIcons.users, size: 14),
-                              onPressed: _chooseMembers,
-                              child: const Text('Choose members'),
-                            ),
-                            if (_chosen.isNotEmpty)
-                              ShadButton.ghost(
-                                size: ShadButtonSize.sm,
-                                onPressed: () =>
-                                    setState(() => _chosen = const []),
-                                child: const Text('Clear'),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _recipientsLabel(staff),
-                          style: theme.textTheme.muted,
-                        ),
-                        LayoutConstants.itemGap,
-                      ],
-                      BroadcastComposer(
-                        placeholder: _scope.kind == BroadcastScopeKind.all
-                            ? 'Type a message to send to everyone…'
-                            : 'Type a message…',
-                        onSend: _send,
+                      ShadSwitch(
+                        key: const ValueKey('broadcast-staff-only'),
+                        value: _staffOnly,
+                        label: const Text('Staff only'),
+                        onChanged: (v) => setState(() {
+                          _staffOnly = v;
+                          if (v) _chosen = const [];
+                        }),
                       ),
-                      const SizedBox(height: 20),
+                      ShadButton.outline(
+                        size: ShadButtonSize.sm,
+                        leading: const Icon(LucideIcons.users, size: 14),
+                        onPressed: _chooseMembers,
+                        child: const Text('Choose members'),
+                      ),
+                      if (_chosen.isNotEmpty)
+                        ShadButton.ghost(
+                          size: ShadButtonSize.sm,
+                          onPressed: () => setState(() => _chosen = const []),
+                          child: const Text('Clear'),
+                        ),
                     ],
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _recipientsLabel(staff),
+                    style: theme.textTheme.muted,
+                  ),
+                  LayoutConstants.itemGap,
+                ],
+                BroadcastComposer(
+                  placeholder: _scope.kind == BroadcastScopeKind.all
+                      ? 'Type a message to send to everyone…'
+                      : 'Type a message…',
+                  onSend: _send,
                 ),
-              ),
-              SliverPadding(
-                padding: LayoutConstants.contentPadding.copyWith(top: 0),
-                sliver: BroadcastSentSliver(sent: sent, onRevoke: _revoke),
-              ),
-            ],
+                const SizedBox(height: 20),
+              ],
+            ),
+            sentList: BroadcastSentSliver(sent: sent, onRevoke: _revoke),
           ),
         ),
       ],

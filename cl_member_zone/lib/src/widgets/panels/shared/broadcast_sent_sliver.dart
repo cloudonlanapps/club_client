@@ -2,16 +2,16 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'broadcast_layout.dart' show BroadcastLayout;
 import 'broadcast_row.dart';
 
-/// The broadcasts a Broadcast screen has sent, as a sliver, so the screen
-/// scrolls the composer and the list together (club_client#168): with the
-/// keyboard up on a phone the composer can take the whole height, and the
-/// list then gives up its space instead of overflowing.
+/// The broadcasts a Broadcast screen has sent, as a sliver: the part of the
+/// screen that scrolls below the fixed composer ([BroadcastLayout],
+/// club_client#269).
 ///
 /// Revoked broadcasts are left out. While [sent] loads, fails or holds
-/// nothing, the sliver fills the space left below the composer with a
-/// centred spinner or message.
+/// nothing, the sliver fills the space below the composer with a centred
+/// spinner or message.
 class BroadcastSentSliver extends StatelessWidget {
   const BroadcastSentSliver({
     required this.sent,

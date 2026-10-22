@@ -130,6 +130,7 @@ class GroupListViewState extends ConsumerState<GroupListView> {
                   if (isMobile)
                     ActionIcon(
                       icon: Icons.group_add,
+                      label: '+ Add group',
                       onPressed: widget.onCreateGroup,
                     )
                   else

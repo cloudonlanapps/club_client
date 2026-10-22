@@ -187,12 +187,14 @@ class ManageRequestsDialogState extends ConsumerState<ManageRequestsDialog> {
                             ActionIcon(
                               key: ValueKey('reject-request-$userName'),
                               icon: Icons.close,
+                              label: 'Reject',
                               loading: true,
                             )
                           else
                             ActionIcon(
                               key: ValueKey('reject-request-$userName'),
                               icon: Icons.close,
+                              label: 'Reject',
                               color: theme.colorScheme.destructive,
                               enabled: !_isBusy(userName),
                               onPressed: () => _reject(userName),
@@ -206,12 +208,14 @@ class ManageRequestsDialogState extends ConsumerState<ManageRequestsDialog> {
                             ActionIcon(
                               key: ValueKey('approve-request-$userName'),
                               icon: Icons.check,
+                              label: 'Approve',
                               loading: true,
                             )
                           else
                             ActionIcon(
                               key: ValueKey('approve-request-$userName'),
                               icon: Icons.check,
+                              label: 'Approve',
                               color: theme.colorScheme.primary,
                               enabled:
                                   !_isBusy(userName) &&

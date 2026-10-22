@@ -70,6 +70,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
     show ActionButton, PickedImage, SectionEditButton;
 
+import '_helpers/actions.dart';
 import '_helpers/auth.dart' show attemptLoginExpectFailure, loginViaUi;
 import '_helpers/capabilities.dart';
 import '_helpers/pump.dart' show pumpApp;
@@ -1060,7 +1061,7 @@ Future<void> _createMemberViaUi(
   required String lastName,
 }) async {
   await _go(tester, '/memberzone/users');
-  final addUserButton = find.widgetWithText(ActionButton, '+ Add user');
+  final addUserButton = findAction('+ Add user');
   await _waitFor(
     tester,
     () => addUserButton.evaluate().isNotEmpty,

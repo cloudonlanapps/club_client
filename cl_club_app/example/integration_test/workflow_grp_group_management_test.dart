@@ -54,6 +54,7 @@ import 'package:ui_lib/ui_lib.dart'
         SectionEditButton,
         UserSelectionDialogContent;
 
+import '_helpers/actions.dart';
 import '_helpers/audit_log.dart';
 import '_helpers/auth.dart';
 import '_helpers/forms.dart';
@@ -795,14 +796,14 @@ Future<void> _createGroupViaUi(
   required bool semiAuto,
 }) async {
   await go(tester, '/memberzone/groups');
-  final addBtn = find.widgetWithText(ActionButton, '+ Add group');
+  final addBtn = findAction('+ Add group');
   await waitFor(
     tester,
     () => addBtn.evaluate().isNotEmpty,
     description: '"+ Add group" button on the admin groups list',
   );
   // Calling onPressed directly avoids hit-test misses on narrow viewports.
-  tester.widget<ActionButton>(addBtn).onPressed!.call();
+  pressAction(tester, addBtn);
   await settle(tester);
 
   await waitFor(

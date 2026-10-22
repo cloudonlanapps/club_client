@@ -136,6 +136,7 @@ class UserListViewState extends ConsumerState<UserListView> {
                   if (isMobile)
                     ActionIcon(
                       icon: Icons.person_add,
+                      label: '+ Add user',
                       enabled: isAdmin,
                       onPressed: widget.onCreateUser,
                     )

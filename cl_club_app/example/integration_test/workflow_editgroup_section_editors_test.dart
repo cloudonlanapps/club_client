@@ -37,6 +37,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show ActionButton, ErrorView;
 
+import '_helpers/actions.dart';
 import '_helpers/auth.dart';
 import '_helpers/editors.dart';
 import '_helpers/forms.dart';
@@ -241,13 +242,13 @@ Future<int> _waitForGroupId(WidgetTester tester, String name) async {
 
 Future<void> _createManualGroup(WidgetTester tester, String name) async {
   await go(tester, '/memberzone/groups');
-  final addBtn = find.widgetWithText(ActionButton, '+ Add group');
+  final addBtn = findAction('+ Add group');
   await waitFor(
     tester,
     () => addBtn.evaluate().isNotEmpty,
     description: '"+ Add group" button on the admin groups list',
   );
-  tester.widget<ActionButton>(addBtn).onPressed!.call();
+  pressAction(tester, addBtn);
   await settle(tester);
 
   await waitFor(

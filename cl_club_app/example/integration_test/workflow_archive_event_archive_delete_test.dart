@@ -35,6 +35,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
     show ActionButton, EntityCard, SectionEditButton;
 
+import '_helpers/actions.dart';
 import '_helpers/auth.dart';
 import '_helpers/events.dart';
 import '_helpers/forms.dart';
@@ -290,7 +291,7 @@ Event? _event(WidgetTester tester, int eventId) =>
 Finder _campCard() =>
     find.byWidgetPredicate((w) => w is EntityCard && w.title == _kCamp);
 
-Finder _filterButton() => find.widgetWithText(ActionButton, 'Filter');
+Finder _filterButton() => findAction('Filter');
 
 /// A button of the Event Management card, by its label.
 Finder _managementButton(String label) => find.descendant(
@@ -356,7 +357,7 @@ Future<void> _openFilter(WidgetTester tester) async {
     () => _filterButton().evaluate().isNotEmpty,
     description: 'the Filter button of the camps list',
   );
-  tester.widget<ActionButton>(_filterButton()).onPressed!.call();
+  pressAction(tester, _filterButton());
   await settle(tester);
   expect(find.text('Include past'), findsOneWidget);
 }
@@ -369,6 +370,6 @@ Future<void> _showArchived(WidgetTester tester) async {
   final toggle = find.byType(ShadSwitch).last;
   tester.widget<ShadSwitch>(toggle).onChanged!(true);
   await settle(tester);
-  tester.widget<ActionButton>(_filterButton()).onPressed!.call();
+  pressAction(tester, _filterButton());
   await settle(tester);
 }

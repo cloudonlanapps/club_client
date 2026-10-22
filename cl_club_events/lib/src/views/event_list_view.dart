@@ -140,6 +140,7 @@ class EventListViewState extends ConsumerState<EventListView> {
                     if (isMobile)
                       ActionIcon(
                         icon: Icons.add,
+                        label: createLabel,
                         onPressed: widget.onCreateNew,
                       )
                     else

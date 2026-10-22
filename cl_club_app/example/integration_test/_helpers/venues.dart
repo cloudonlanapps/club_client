@@ -15,11 +15,10 @@
 // `GoError: There is nothing to pop`. Walking through the list mirrors
 // what a real admin does anyway.
 
-import 'package:flutter/material.dart' show Icons;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton, ActionIcon;
 
+import 'actions.dart';
 import 'auth.dart';
 import 'forms.dart';
 import 'pump.dart';
@@ -35,34 +34,18 @@ Future<void> createVenueViaUi(
   String? description,
   String? mapUri,
 }) async {
-  // Sub-flow start: navigate to the admin venues list, then tap the
-  // "create venue" affordance. The list renders an ActionIcon (+) on
-  // narrow widths (< 600 logical px) and an ActionButton labelled
-  // "+ New Venue" on wider layouts — we accept either and invoke its
-  // onPressed directly to bypass narrow-viewport hit-test issues.
+  // Sub-flow start: navigate to the admin venues list, then press
+  // "+ New Venue" (a button on a wide screen, an icon on a narrow one),
+  // calling its onPressed directly to bypass narrow-viewport hit-test
+  // issues.
   await go(tester, '/memberzone/venues');
+  final create = findAction('+ New Venue');
   await waitFor(
     tester,
-    () =>
-        find
-            .widgetWithText(ActionButton, '+ New Venue')
-            .evaluate()
-            .isNotEmpty ||
-        find
-            .byWidgetPredicate((w) => w is ActionIcon && w.icon == Icons.add)
-            .evaluate()
-            .isNotEmpty,
+    () => create.evaluate().isNotEmpty,
     description: 'create-venue affordance on the admin venues list',
   );
-  final wideButton = find.widgetWithText(ActionButton, '+ New Venue');
-  if (wideButton.evaluate().isNotEmpty) {
-    tester.widget<ActionButton>(wideButton).onPressed!.call();
-  } else {
-    final narrowIcon = find.byWidgetPredicate(
-      (w) => w is ActionIcon && w.icon == Icons.add,
-    );
-    tester.widget<ActionIcon>(narrowIcon).onPressed!.call();
-  }
+  pressAction(tester, create);
   await settle(tester);
 
   await waitFor(

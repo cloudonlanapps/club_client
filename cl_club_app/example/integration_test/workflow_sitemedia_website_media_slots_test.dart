@@ -19,8 +19,6 @@
 //   just app-test-one app_test_server1.conf \
 //       workflow_sitemedia_website_media_slots_test.dart
 
-import 'package:cl_member_zone/src/widgets/sidebar/sidebar_item.dart'
-    show SidebarItem;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show imagePickerProvider, secureClientProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show Media, SecureClient;
@@ -32,6 +30,7 @@ import 'package:ui_lib/ui_lib.dart' show PickedImage;
 
 import '_helpers/auth.dart';
 import '_helpers/forms.dart';
+import '_helpers/navigation.dart';
 import '_helpers/pump.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
@@ -141,10 +140,7 @@ void main() {
       ]);
 
       // --- Open the screen from the sidebar's Admin section. --------------
-      final entry = find.widgetWithText(SidebarItem, 'Website media');
-      expect(entry, findsWidgets);
-      tester.widget<SidebarItem>(entry.first).onTap();
-      await settle(tester);
+      await openSidebarEntry(tester, 'Website media');
       await waitFor(
         tester,
         () => _slot('logo').evaluate().isNotEmpty,

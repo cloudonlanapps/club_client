@@ -29,8 +29,6 @@
 //   just app-test-one app_test_server1.conf \
 //       workflow_clubinfo_contact_block_test.dart
 
-import 'package:cl_member_zone/src/widgets/sidebar/sidebar_item.dart'
-    show SidebarItem;
 import 'package:cl_remote_store/cl_remote_store.dart' show secureClientProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show SecureClient;
 import 'package:flutter/material.dart';
@@ -41,6 +39,7 @@ import 'package:ui_lib/ui_lib.dart' show SectionEditButton;
 
 import '_helpers/auth.dart';
 import '_helpers/forms.dart';
+import '_helpers/navigation.dart';
 import '_helpers/pump.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
@@ -153,10 +152,7 @@ Future<void> _save(
 
 /// Opens the sidebar entry [label], as a tap on it would.
 Future<void> _openFromSidebar(WidgetTester tester, String label) async {
-  final entry = find.widgetWithText(SidebarItem, label);
-  expect(entry, findsWidgets, reason: label);
-  tester.widget<SidebarItem>(entry.first).onTap();
-  await settle(tester);
+  await openSidebarEntry(tester, label);
 }
 
 /// Opens Contact us and waits for [text] on it.

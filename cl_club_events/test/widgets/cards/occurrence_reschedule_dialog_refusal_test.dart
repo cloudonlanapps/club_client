@@ -47,6 +47,7 @@ class _FailingEvents extends ClEventsMasterNotifier {
     DateTime? newStartTimeUtc,
     int? newDurationMinutes,
     int? newVenueId,
+    bool acceptConflicts = false,
   }) async => throw failure;
 }
 

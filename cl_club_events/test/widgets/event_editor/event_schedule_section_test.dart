@@ -70,6 +70,7 @@ class _RecordingEvents extends ClEventsMasterNotifier {
     bool? isFeatured,
     List<String>? Function()? galleryUris,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async {
     calls.add('update(v$version, ${sessions?.call()?.length})');
     if (error != null) throw error!;

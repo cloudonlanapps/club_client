@@ -120,8 +120,11 @@ class _RecordingEvents extends ClEventsMasterNotifier {
   }) async => record('drop($eventId, v$version, $reason)');
 
   @override
-  Future<Event> reinstate(int eventId, {required int version}) async =>
-      record('reinstate($eventId, v$version)');
+  Future<Event> reinstate(
+    int eventId, {
+    required int version,
+    bool acceptConflicts = false,
+  }) async => record('reinstate($eventId, v$version)');
 }
 
 Future<_RecordingEvents> _pump(

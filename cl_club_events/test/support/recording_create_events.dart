@@ -31,6 +31,7 @@ class RecordingCreateEvents extends ClEventsMasterNotifier {
     bool isFeatured = false,
     List<String>? galleryUris,
     List<EventSession>? sessions,
+    bool acceptConflicts = false,
   }) async {
     this.startTimeUtc = startTimeUtc;
     this.endTimeUtc = endTimeUtc;

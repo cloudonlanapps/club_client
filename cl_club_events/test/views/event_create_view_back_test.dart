@@ -46,6 +46,7 @@ class _Events extends ClEventsMasterNotifier {
     bool isFeatured = false,
     List<String>? galleryUris,
     List<EventSession>? sessions,
+    bool acceptConflicts = false,
   }) async {
     host.sent++;
     await hold?.future;

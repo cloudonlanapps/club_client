@@ -58,6 +58,7 @@ class RecordingEditEvents extends ClEventsMasterNotifier {
     bool? isFeatured,
     List<String>? Function()? galleryUris,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async => record(updateVerb, {
     'title': title,
     'description': description,
@@ -101,6 +102,7 @@ class RecordingEditEvents extends ClEventsMasterNotifier {
     DateTime? endTimeUtc,
     String? rrule,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async => record(splitVerb, {
     'effectiveDateTimeUtc': effectiveDateTimeUtc,
     'version': version,

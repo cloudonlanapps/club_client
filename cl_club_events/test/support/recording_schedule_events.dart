@@ -81,6 +81,7 @@ class RecordingScheduleEvents extends ClEventsMasterNotifier {
     int? venueId,
     List<EventSession>? Function()? sessions,
     bool resetOverrides = false,
+    bool acceptConflicts = false,
   }) async {
     reschedules.add(
       RescheduleCall(
@@ -109,6 +110,7 @@ class RecordingScheduleEvents extends ClEventsMasterNotifier {
     DateTime? endTimeUtc,
     String? rrule,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async {
     futureUpdates.add(
       FutureUpdateCall(
@@ -177,6 +179,7 @@ class RecordingScheduleEvents extends ClEventsMasterNotifier {
     bool? isFeatured,
     List<String>? Function()? galleryUris,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async {
     corrections.add('update(v$version, ${sessions?.call()?.length})');
     if (error != null) throw error!;

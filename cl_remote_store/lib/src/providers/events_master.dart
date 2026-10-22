@@ -5,6 +5,7 @@ import 'package:cl_remote_store/src/providers/events_master_basic_marketing.dart
 import 'package:cl_remote_store/src/providers/events_master_end_date.dart';
 import 'package:cl_remote_store/src/providers/events_master_lifecycle.dart';
 import 'package:cl_remote_store/src/providers/events_master_occurrences.dart';
+import 'package:cl_remote_store/src/providers/events_master_programme.dart';
 import 'package:cl_remote_store/src/providers/manual_refresh.dart';
 import 'package:cl_remote_store/src/providers/resource_version.dart';
 import 'package:cl_remote_store/src/utils/fetch_all_pages.dart';
@@ -35,7 +36,8 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
         ClEventsOccurrenceMutations,
         ClEventsLifecycleMutations,
         ClEventsEndDateMutations,
-        ClEventsBasicMarketingMutations {
+        ClEventsBasicMarketingMutations,
+        ClEventsProgrammeMutations {
   final _writes = WritesDuringLoad<int, Event>();
 
   @override
@@ -99,6 +101,10 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
   // -- Event CRUD -------------------------------------------------------------
 
   /// Create a new event.
+  ///
+  /// A clash with another event's venue, organizer or coach is refused with
+  /// [ScheduleConflictException] and nothing is written; the same call with
+  /// [acceptConflicts] `true` creates it anyway (club_server#72).
   Future<Event> createEvent({
     required String title,
     required String description,
@@ -117,6 +123,7 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
     bool isFeatured = false,
     List<String>? galleryUris,
     List<EventSession>? sessions,
+    bool acceptConflicts = false,
   }) {
     return refetchIfWriteUncertain(() async {
       final client = await ref.read(secureClientProvider.future);
@@ -138,6 +145,7 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
         isFeatured: isFeatured,
         galleryUris: galleryUris,
         sessions: sessions,
+        acceptConflicts: acceptConflicts,
       );
 
       replaceLocally(created);
@@ -171,6 +179,11 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
   ///
   /// A stale [version] reloads the event before it is rethrown
   /// ([reloadOnStale]).
+  ///
+  /// A change of [organizerName] or [coachNames] that clashes with another
+  /// event's venue, organizer or coach is refused with
+  /// [ScheduleConflictException] and nothing is written; the same call with
+  /// [acceptConflicts] `true` writes it anyway (club_server#72).
   Future<Event> updateEvent(
     int eventId, {
     int? version,
@@ -186,6 +199,7 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
     bool? isFeatured,
     List<String>? Function()? galleryUris,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) {
     return refetchIfWriteUncertain(() async {
       final client = await ref.read(secureClientProvider.future);
@@ -207,6 +221,7 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
           isFeatured: isFeatured,
           galleryUris: galleryUris,
           sessions: sessions,
+          acceptConflicts: acceptConflicts,
         ),
       );
 
@@ -244,6 +259,10 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
   /// [version] is the event version the caller loaded (club_core#68). A stale
   /// one is refused with [StaleVersionException]; the event and its
   /// occurrences are then reloaded before it is rethrown.
+  ///
+  /// A clash with another event's venue, organizer or coach is refused with
+  /// [ScheduleConflictException] and nothing moves; the same call with
+  /// [acceptConflicts] `true` moves it anyway (club_server#72).
   Future<Event> rescheduleEvent(
     int eventId, {
     int? version,
@@ -253,6 +272,7 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
     int? venueId,
     List<EventSession>? Function()? sessions,
     bool resetOverrides = false,
+    bool acceptConflicts = false,
   }) {
     return refetchIfWriteUncertain(() async {
       final client = await ref.read(secureClientProvider.future);
@@ -268,104 +288,13 @@ class ClEventsMasterNotifier extends AsyncNotifier<Map<int, Event>>
           venueId: venueId,
           sessions: sessions,
           resetOverrides: resetOverrides,
+          acceptConflicts: acceptConflicts,
         ),
       );
 
       replaceLocally(updated);
       bumpOccurrencesVersion();
       return updated;
-    }, refetch: refetchAfterUncertainWrite);
-  }
-
-  /// Correct a programme's identity, eligibility and presentation for its
-  /// whole life (club_core#16). Staffing moves through
-  /// [updateEventForAllFuture].
-  ///
-  /// [sessions] corrects one schedule's timetable in place, at any time and
-  /// with no split (club_core#85): the schedule [scheduleId] names, or the
-  /// latest when it is omitted. A stale [version] reloads the event before
-  /// it is rethrown ([reloadOnStale]).
-  Future<Event> correctionOnEvent(
-    int eventId, {
-    int? version,
-    String? title,
-    String? description,
-    Visibility? visibility,
-    List<Gender> Function()? genders,
-    Age? Function()? minAge,
-    Age? Function()? maxAge,
-    bool? strictAge,
-    bool? isFeatured,
-    List<String>? Function()? galleryUris,
-    List<EventSession>? Function()? sessions,
-    int? scheduleId,
-  }) {
-    return refetchIfWriteUncertain(() async {
-      final client = await ref.read(secureClientProvider.future);
-      final sent = await currentVersionOf(eventId, version);
-      final updated = await reloadOnStale(
-        eventId,
-        () => client.events.correctionOnEvent(
-          eventId,
-          version: sent,
-          title: title,
-          description: description,
-          visibility: visibility,
-          genders: genders,
-          minAge: minAge,
-          maxAge: maxAge,
-          strictAge: strictAge,
-          isFeatured: isFeatured,
-          galleryUris: galleryUris,
-          sessions: sessions,
-          scheduleId: scheduleId,
-        ),
-      );
-
-      replaceLocally(updated);
-      if (sessions != null) bumpOccurrencesVersion();
-      return updated;
-    }, refetch: refetchAfterUncertainWrite);
-  }
-
-  /// Split a programme's timetable at [effectiveDateTimeUtc]
-  /// (club_core#16): the same event returns with its new current schedule.
-  /// A stale [version] reloads the event before it is rethrown
-  /// ([reloadOnStale]).
-  Future<Event> updateEventForAllFuture(
-    int eventId, {
-    required DateTime effectiveDateTimeUtc,
-    int? version,
-    int? venueId,
-    String? organizerName,
-    List<String>? Function()? coachNames,
-    DateTime? startTimeUtc,
-    DateTime? endTimeUtc,
-    String? rrule,
-    List<EventSession>? Function()? sessions,
-  }) {
-    return refetchIfWriteUncertain(() async {
-      final client = await ref.read(secureClientProvider.future);
-      final sent = await currentVersionOf(eventId, version);
-      final newEvent = await reloadOnStale(
-        eventId,
-        () => client.events.updateEventForAllFuture(
-          eventId,
-          version: sent,
-          effectiveDateTimeUtc: effectiveDateTimeUtc,
-          venueId: venueId,
-          organizerName: organizerName,
-          coachNames: coachNames,
-          startTimeUtc: startTimeUtc,
-          endTimeUtc: endTimeUtc,
-          rrule: rrule,
-          sessions: sessions,
-        ),
-      );
-
-      replaceLocally(newEvent);
-      bumpOccurrencesVersion();
-      return newEvent;
     }, refetch: refetchAfterUncertainWrite);
   }
 

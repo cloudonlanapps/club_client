@@ -31,6 +31,10 @@ mixin ClEventsOccurrenceMutations on AsyncNotifier<Map<int, Event>> {
   /// A day is described by its start and duration; the server derives the end
   /// from start + [newDurationMinutes] (1–1440). At least one of
   /// [newStartTimeUtc], [newDurationMinutes], [newVenueId] must be supplied.
+  ///
+  /// A clash with another event's venue, organizer or coach is refused with
+  /// [ScheduleConflictException] and nothing moves; the same call with
+  /// [acceptConflicts] `true` moves it anyway (club_server#72).
   Future<void> rescheduleOccurrence(
     int eventId,
     DateTime occurrenceTimeUtc, {
@@ -38,6 +42,7 @@ mixin ClEventsOccurrenceMutations on AsyncNotifier<Map<int, Event>> {
     DateTime? newStartTimeUtc,
     int? newDurationMinutes,
     int? newVenueId,
+    bool acceptConflicts = false,
   }) async {
     final client = await ref.read(secureClientProvider.future);
     await _changeOccurrence(
@@ -48,6 +53,7 @@ mixin ClEventsOccurrenceMutations on AsyncNotifier<Map<int, Event>> {
         newStartTimeUtc: newStartTimeUtc,
         newDurationMinutes: newDurationMinutes,
         newVenueId: newVenueId,
+        acceptConflicts: acceptConflicts,
       ),
     );
   }

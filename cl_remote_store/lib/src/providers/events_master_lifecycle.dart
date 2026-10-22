@@ -99,9 +99,21 @@ mixin ClEventsLifecycleMutations on AsyncNotifier<Map<int, Event>> {
 
   /// Reinstate a called-off one-off (`POST …/reinstate`, club_client#40),
   /// restoring its occurrence. [version] is the occurrence's, as for [drop].
-  Future<Event> reinstate(int eventId, {required int version}) {
+  ///
+  /// A clash with another event's venue, organizer or coach is refused with
+  /// [ScheduleConflictException] and nothing is written; the same call with
+  /// [acceptConflicts] `true` reinstates it anyway (club_server#72).
+  Future<Event> reinstate(
+    int eventId, {
+    required int version,
+    bool acceptConflicts = false,
+  }) {
     return changeOneOffOccurrence(
-      (client) => client.events.reinstate(eventId, version: version),
+      (client) => client.events.reinstate(
+        eventId,
+        version: version,
+        acceptConflicts: acceptConflicts,
+      ),
     );
   }
 

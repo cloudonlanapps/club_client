@@ -44,6 +44,7 @@ class _RecordingEvents extends ClEventsMasterNotifier {
     bool isFeatured = false,
     List<String>? galleryUris,
     List<EventSession>? sessions,
+    bool acceptConflicts = false,
   }) async {
     final refusal = error;
     if (refusal != null) throw refusal;

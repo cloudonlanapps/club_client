@@ -74,6 +74,7 @@ class HeldEvents extends ClEventsMasterNotifier {
     DateTime? endTimeUtc,
     String? rrule,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) => answer('adjust');
 
   @override
@@ -99,6 +100,7 @@ class HeldEvents extends ClEventsMasterNotifier {
     DateTime? newStartTimeUtc,
     int? newDurationMinutes,
     int? newVenueId,
+    bool acceptConflicts = false,
   }) => answer('reschedule');
 }
 

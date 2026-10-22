@@ -53,6 +53,7 @@ class _RecordingNotifier extends ClEventsMasterNotifier {
     bool isFeatured = false,
     List<String>? galleryUris,
     List<EventSession>? sessions,
+    bool acceptConflicts = false,
   }) async {
     this.sessions = sessions;
     return Event(

@@ -20,6 +20,7 @@ import 'package:cl_member_auth/cl_member_auth.dart'
         authStateProvider,
         clientProvider,
         credentialStorageProvider,
+        sessionClientProvider,
         tokenStorageProvider;
 import 'package:cl_member_auth/src/providers/credential_storage.dart'
     show SavedCredential;
@@ -28,7 +29,8 @@ import 'package:cl_remote_store/cl_remote_store.dart'
         bundledContactInfoProvider,
         clubEventTypesProvider,
         currentUserProvider,
-        secureClientProvider;
+        secureClientProvider,
+        tokenFreeClientProvider;
 import 'package:cl_server_config/cl_server_config.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -63,6 +65,9 @@ Future<void> pumpApp(
           ServerConfig(baseUrl: apiBaseUrl),
         ),
         secureClientProvider.overrideWith(
+          (ref) => ref.watch(sessionClientProvider.future),
+        ),
+        tokenFreeClientProvider.overrideWith(
           (ref) => ref.watch(clientProvider.future),
         ),
         currentUserProvider.overrideWith(

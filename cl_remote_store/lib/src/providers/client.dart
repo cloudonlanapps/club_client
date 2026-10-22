@@ -7,12 +7,19 @@ import '../models/secure_client_not_provided.dart';
 ///
 /// The host app **must** override this in its `ProviderScope` so that
 /// data-fetching providers (coach list, organizer list, venue list) can
-/// obtain the SDK client.
+/// obtain the SDK client. The app gives it cl_member_auth's
+/// `sessionClientProvider`, which waits while no one is signed in, so no
+/// provider sends a request that needs the session after signing out
+/// (club_client#272); the capabilities, which need none, are read through
+/// `tokenFreeClientProvider` and the app's own client.
 ///
 /// ```dart
 /// ProviderScope(
 ///   overrides: [
 ///     secureClientProvider.overrideWith(
+///       (ref) => ref.watch(sessionClientProvider.future),
+///     ),
+///     tokenFreeClientProvider.overrideWith(
 ///       (ref) => ref.watch(clientProvider.future),
 ///     ),
 ///   ],

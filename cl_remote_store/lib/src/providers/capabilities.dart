@@ -1,28 +1,18 @@
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/secure_client_not_provided.dart';
-import 'client.dart';
-import 'sessionless_client.dart';
+import 'token_free_client.dart';
 
 /// What the server reports it can do (`GET /v1/capabilities`).
 ///
 /// The server answers it before login too (club_server#443), so the signup
-/// screens can read it. It is deploy configuration and does not change while
-/// the app runs; it is re-read only when the client is rebuilt (login,
-/// logout). A failed read is an error to retry, never a guess (#84).
-///
-/// A host that gave no `secureClientProvider` (the website, which holds no
-/// session) reads it through [clSessionlessClientProvider] instead: the
-/// route needs no token (#31). A session client that fails is an error as
-/// before, never replaced by the sessionless one.
+/// screens can read it: it goes through [tokenFreeClientProvider], which
+/// serves a signed-out member and the website alike (#31, club_client#272).
+/// It is deploy configuration and does not change while the app runs; it is
+/// re-read only when that client is rebuilt (login, logout). A failed read
+/// is an error to retry, never a guess (#84).
 final capabilitiesProvider = FutureProvider<Capabilities>((ref) async {
-  SecureClient client;
-  try {
-    client = await ref.watch(secureClientProvider.future);
-  } on SecureClientNotProvided {
-    client = await ref.watch(clSessionlessClientProvider.future);
-  }
+  final client = await ref.watch(tokenFreeClientProvider.future);
   return client.capabilities.getCapabilities();
 });
 

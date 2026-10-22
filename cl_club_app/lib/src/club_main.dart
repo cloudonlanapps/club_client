@@ -5,13 +5,14 @@ import 'package:cl_club_branding/cl_club_branding.dart'
         appLogoUriProvider,
         initialThemeModeProvider;
 import 'package:cl_member_auth/cl_member_auth.dart'
-    show authStateProvider, clientProvider;
+    show authStateProvider, clientProvider, sessionClientProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         bundledContactInfoProvider,
         clubEventTypesProvider,
         currentUserProvider,
-        secureClientProvider;
+        secureClientProvider,
+        tokenFreeClientProvider;
 import 'package:cl_server_config/cl_server_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -71,7 +72,12 @@ Future<void> clubMain({List<Override> extraOverrides = const []}) async {
             configured: config.websiteUrl,
           ),
         ),
+        // Requests that need a session wait while no one is signed in
+        // (club_client#272); the capabilities are read regardless.
         secureClientProvider.overrideWith(
+          (ref) => ref.watch(sessionClientProvider.future),
+        ),
+        tokenFreeClientProvider.overrideWith(
           (ref) => ref.watch(clientProvider.future),
         ),
         currentUserProvider.overrideWith(

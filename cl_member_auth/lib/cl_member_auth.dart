@@ -25,6 +25,7 @@ export 'src/providers/client.dart' show ClientNotifier, clientProvider;
 export 'src/providers/credential_storage.dart'
     show CredentialStorage, credentialStorageProvider;
 export 'src/providers/image_auth_headers.dart' show imageAuthHeadersProvider;
+export 'src/providers/session_client.dart' show sessionClientProvider;
 export 'src/providers/token_expiry.dart' show tokenExpiryProvider;
 export 'src/providers/token_storage.dart'
     show TokenStorage, tokenStorageProvider;

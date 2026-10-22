@@ -5,7 +5,8 @@ import 'package:cl_club_website/cl_club_website.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show darkCustomColors, lightCustomColors;
+import 'package:ui_lib/ui_lib.dart'
+    show ScrollSafeTapOutside, darkCustomColors, lightCustomColors;
 
 import '../providers/page_meta.dart';
 import 'router.dart';
@@ -64,22 +65,24 @@ class App extends ConsumerWidget {
 
     return WebsiteShellConfig(
       navbarBuilder: (context) => const PublicNavbar(),
-      child: ShadApp.router(
-        routerConfig: router,
-        title: pageMeta?.title ?? ref.watch(siteConfigProvider).fullName,
-        themeMode: themeMode,
-        // Every page waits for the site's copy (siteStringsProvider) and
-        // reads it from the scope this puts above the navigator.
-        builder: (context, child) => SiteStringsGate(child: child!),
-        theme: ShadThemeData(
-          brightness: Brightness.light,
-          colorScheme: lightColorScheme,
-          ghostButtonTheme: neutralGhostButton(lightColorScheme),
-        ),
-        darkTheme: ShadThemeData(
-          brightness: Brightness.dark,
-          colorScheme: darkColorScheme,
-          ghostButtonTheme: neutralGhostButton(darkColorScheme),
+      child: ScrollSafeTapOutside(
+        child: ShadApp.router(
+          routerConfig: router,
+          title: pageMeta?.title ?? ref.watch(siteConfigProvider).fullName,
+          themeMode: themeMode,
+          // Every page waits for the site's copy (siteStringsProvider) and
+          // reads it from the scope this puts above the navigator.
+          builder: (context, child) => SiteStringsGate(child: child!),
+          theme: ShadThemeData(
+            brightness: Brightness.light,
+            colorScheme: lightColorScheme,
+            ghostButtonTheme: neutralGhostButton(lightColorScheme),
+          ),
+          darkTheme: ShadThemeData(
+            brightness: Brightness.dark,
+            colorScheme: darkColorScheme,
+            ghostButtonTheme: neutralGhostButton(darkColorScheme),
+          ),
         ),
       ),
     );

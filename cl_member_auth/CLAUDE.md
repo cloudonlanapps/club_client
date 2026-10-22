@@ -76,6 +76,7 @@ Views (`LoginView`, `SignupView`, `ForgotPasswordView`, `ChangePasswordView`) re
 | `resetPassword(email)` | Request a self-service password reset; server emails a new password if the address matches a member (uniform response, no existence disclosure) |
 | `deleteSelf()` | Soft-delete account then logout |
 | `restoreFromStoredSession()` | Called on app startup to resume session |
+| `retryRestore()` | Runs the restore again after a `SessionRestoreUnreachable`; the failure screen's Try Again (club_client#257) |
 | `checkStatus(user)` | Throws `AccountPendingException`, `AccountBlockedException`, or `UserNotFoundException` for non-active users |
 
 ### Role Getters on AuthNotifier
@@ -225,7 +226,9 @@ restoreFromStoredSession()
          +--> Network failure or 5xx --> keep token and saved credentials,
                 fail with SessionRestoreUnreachable (the login view shows the
                 network-failure screen); restore runs again when
-                networkStatusProvider goes back online (club_client#192)
+                networkStatusProvider goes back online (club_client#192),
+                or when the member taps Try Again (retryRestore,
+                club_client#257)
 ```
 
 ## Status Handling

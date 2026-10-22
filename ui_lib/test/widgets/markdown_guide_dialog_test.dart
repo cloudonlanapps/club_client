@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/src/widgets/markdown/editable_markdown.dart';
 import 'package:ui_lib/src/widgets/markdown/markdown_composer_field.dart';
+import 'package:ui_lib/src/widgets/markdown/markdown_editor_dialog.dart';
 import 'package:ui_lib/src/widgets/markdown/markdown_guide_dialog.dart';
 
 Future<void> openGuideAndClose(WidgetTester tester) async {

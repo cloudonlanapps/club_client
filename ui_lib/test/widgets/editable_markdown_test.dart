@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/src/widgets/markdown/editable_markdown.dart';
+import 'package:ui_lib/src/widgets/markdown/markdown_editor_dialog.dart';
 
 Future<void> openEditor(
   WidgetTester tester, {
@@ -202,4 +202,85 @@ void main() {
     expect(find.text('Discard changes?'), findsNothing);
     expect(find.byType(MarkdownEditorDialog), findsNothing);
   });
+
+  testWidgets(
+    'Issue 166: portrait phone with the keyboard up, the editor fits above '
+    'the keyboard and scrolls inside',
+    (tester) => expectEditorUsableAboveKeyboard(
+      tester,
+      screen: const Size(360, 640),
+      keyboard: 280,
+    ),
+  );
+
+  testWidgets(
+    'Issue 166: landscape phone with the keyboard up, the editor does not '
+    'overflow and keeps a usable text box',
+    (tester) => expectEditorUsableAboveKeyboard(
+      tester,
+      screen: const Size(640, 360),
+      keyboard: 180,
+    ),
+  );
+}
+
+/// Four lines of text plus the field's padding.
+const double usableEditorHeight = 96;
+
+/// Opens the editor on [screen], raises a keyboard of [keyboard] logical
+/// pixels the way a mobile browser does (the size stays, the bottom inset
+/// grows), types past the box's height, and checks that nothing overflows,
+/// the text box keeps a usable height and the line being typed is in view.
+Future<void> expectEditorUsableAboveKeyboard(
+  WidgetTester tester, {
+  required Size screen,
+  required double keyboard,
+}) async {
+  await openEditor(tester, surfaceSize: screen);
+
+  await tester.tap(find.byType(TextField));
+  tester.view.viewInsets = FakeViewPadding(bottom: keyboard);
+  addTearDown(tester.view.resetViewInsets);
+  await tester.pumpAndSettle();
+
+  final lines = List.generate(30, (i) => 'line ${i + 1}').join('\n');
+  await tester.enterText(find.byType(TextField), lines);
+  await tester.pumpAndSettle();
+
+  expect(tester.takeException(), isNull, reason: 'no overflow');
+
+  final frame = tester.getRect(
+    find.byKey(const Key('markdownEditorDialogFrame')),
+  );
+  expect(
+    frame.bottom,
+    lessThanOrEqualTo(screen.height - keyboard),
+    reason: 'the dialog sits above the keyboard',
+  );
+
+  final field = tester.getRect(find.byType(TextField));
+  expect(
+    field.height,
+    greaterThanOrEqualTo(usableEditorHeight),
+    reason: 'the text box keeps a usable height',
+  );
+
+  final editable = tester
+      .state<EditableTextState>(find.byType(EditableText))
+      .renderEditable;
+  final caret = MatrixUtils.transformRect(
+    editable.getTransformTo(null),
+    editable.getLocalRectForCaret(TextPosition(offset: lines.length)),
+  );
+  final visible = frame.intersect(field);
+  expect(
+    caret.top,
+    greaterThanOrEqualTo(visible.top),
+    reason: 'the line being typed is in view',
+  );
+  expect(
+    caret.bottom,
+    lessThanOrEqualTo(visible.bottom),
+    reason: 'the line being typed is in view',
+  );
 }

@@ -54,6 +54,8 @@ export 'src/providers/credit_entries_master.dart'
 export 'src/providers/credit_usable_for_event.dart'
     show ClCreditUsableKey, clCreditUsableForEventProvider;
 export 'src/providers/current_user.dart' show currentUserProvider;
+export 'src/providers/deleted_evaluation_templates.dart'
+    show clDeletedEvaluationTemplatesProvider;
 export 'src/providers/eligible_users.dart';
 export 'src/providers/eligible_users_for_event.dart';
 export 'src/providers/enrollment_records_master.dart';

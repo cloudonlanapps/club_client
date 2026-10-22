@@ -4,13 +4,16 @@ import 'package:ui_lib/ui_lib.dart' show EvaluationAnswerValue;
 
 /// Writes each answer of a draft once it settles: a change waits [delay]
 /// for the next, and only the last is written. Writes run one at a time,
-/// in order.
+/// in order. A settled answer that [holdWhileTyping] keeps back waits,
+/// unwritten, while its field has the focus ([focusChanged]): it is written
+/// once the focus leaves, or by [flush].
 class EvaluationAutosave {
   /// Autosave through [write], reporting failures to [onError].
   EvaluationAutosave({
     required this.delay,
     required this.write,
     required this.onError,
+    this.holdWhileTyping,
   });
 
   /// How long an answer must stay unchanged.
@@ -21,6 +24,14 @@ class EvaluationAutosave {
 
   /// Told of a failed write.
   final void Function(Object error) onError;
+
+  /// Whether a settled answer waits while its field has the focus — e.g.
+  /// one that would ask a question mid-typing.
+  final bool Function(int itemId, EvaluationAnswerValue answer)?
+  holdWhileTyping;
+
+  /// The ids of the items whose field has the focus.
+  final Set<int> typingIn = {};
 
   /// The waits running, by item id.
   final Map<int, Timer> timers = {};
@@ -35,7 +46,31 @@ class EvaluationAutosave {
   void schedule(int itemId, EvaluationAnswerValue answer) {
     pending[itemId] = answer;
     timers.remove(itemId)?.cancel();
-    timers[itemId] = Timer(delay, () => send(itemId));
+    timers[itemId] = Timer(delay, () => settle(itemId));
+  }
+
+  /// The answer to [itemId] has settled: written, unless held while typing.
+  void settle(int itemId) {
+    timers.remove(itemId);
+    final answer = pending[itemId];
+    if (answer == null) return;
+    final held =
+        typingIn.contains(itemId) &&
+        (holdWhileTyping?.call(itemId, answer) ?? false);
+    if (!held) unawaited(send(itemId));
+  }
+
+  /// Notes the focus entering or leaving the field of [itemId]; leaving
+  /// writes the answer held there, while one still settling waits its turn.
+  void focusChanged(int itemId, {required bool hasFocus}) {
+    if (hasFocus) {
+      typingIn.add(itemId);
+      return;
+    }
+    typingIn.remove(itemId);
+    if (!timers.containsKey(itemId) && pending.containsKey(itemId)) {
+      unawaited(send(itemId));
+    }
   }
 
   /// Queues the pending answer to [itemId], if any.

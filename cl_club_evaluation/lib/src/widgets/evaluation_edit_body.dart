@@ -1,28 +1,22 @@
 import 'dart:typed_data';
 
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show ClEvaluationsMasterNotifier, clEvaluationsMasterProvider;
+    show clEvaluationsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show EvaluationStaffView, EvaluationStatus, EvaluationTemplate;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ui_lib/ui_lib.dart'
-    show
-        EvaluationAnswerValue,
-        EvaluationFillBody,
-        EvaluationFillBodyState,
-        EvaluationItemValue,
-        EvaluationLayoutEntry;
+    show EvaluationFillBody, EvaluationFillBodyState, EvaluationLayoutEntry;
 
 import '../constants/evaluation_view_sizes.dart';
 import '../constants/evaluation_view_strings.dart';
 import '../models/evaluation_answer_adapter.dart';
-import '../models/evaluation_answer_submit.dart';
 import '../models/evaluation_layout_adapter.dart';
+import '../utils/evaluation_answer_writer.dart';
 import '../utils/evaluation_autosave.dart';
 import '../utils/evaluation_error_toast.dart';
 import '../utils/evaluation_names.dart';
-import 'evaluation_clear_answer_prompt.dart';
 import 'evaluation_edit_top_bar.dart';
 import 'evaluation_evidence_slot.dart';
 import 'evaluation_head_card.dart';
@@ -72,8 +66,8 @@ class EvaluationEditBodyState extends ConsumerState<EvaluationEditBody> {
   final GlobalKey<EvaluationFillBodyState> fillKey =
       GlobalKey<EvaluationFillBodyState>();
 
-  /// The evaluations master, kept for writes that outlive the view.
-  late final ClEvaluationsMasterNotifier notifier;
+  /// Writes each answer to the evaluation as last read or written.
+  late final EvaluationAnswerWriter writer;
 
   /// Writes each answer once it settles.
   late final EvaluationAutosave autosave;
@@ -81,19 +75,20 @@ class EvaluationEditBodyState extends ConsumerState<EvaluationEditBody> {
   /// The template's items and sections, as the fill form takes them.
   late List<EvaluationLayoutEntry> layout;
 
-  /// The template's items by id.
-  late Map<int, EvaluationItemValue> items;
-
-  /// The evaluation as last read or written, for the next answer write.
-  late EvaluationStaffView latest = widget.evaluation;
-
   @override
   void initState() {
     super.initState();
-    notifier = ref.read(clEvaluationsMasterProvider.notifier);
+    writer = EvaluationAnswerWriter(
+      notifier: ref.read(clEvaluationsMasterProvider.notifier),
+      latest: widget.evaluation,
+      context: () => mounted ? context : null,
+      fill: () => fillKey.currentState,
+    );
     autosave = EvaluationAutosave(
       delay: EvaluationViewSizes.autosaveDelay,
-      write: write,
+      write: writer.write,
+      // Clearing an answer with evidence asks, so never mid-typing.
+      holdWhileTyping: writer.clearsEvidence,
       onError: (e) => showEvaluationErrorToast(
         mounted ? context : null,
         e,
@@ -106,7 +101,7 @@ class EvaluationEditBodyState extends ConsumerState<EvaluationEditBody> {
   @override
   void didUpdateWidget(EvaluationEditBody oldWidget) {
     super.didUpdateWidget(oldWidget);
-    latest = widget.evaluation;
+    writer.latest = widget.evaluation;
     if (oldWidget.template != widget.template) readTemplate();
   }
 
@@ -120,31 +115,9 @@ class EvaluationEditBodyState extends ConsumerState<EvaluationEditBody> {
   void readTemplate() {
     final t = widget.template;
     layout = EvaluationLayoutAdapter.fromTemplate(t.layout, t.items);
-    items = {
+    writer.items = {
       for (final i in EvaluationLayoutEntry.flatten(layout)) ?i.id: i,
     };
-  }
-
-  /// Writes [answer] to item [itemId] of the evaluation as it stands now;
-  /// clearing an answer that has evidence is confirmed first.
-  Future<void> write(int itemId, EvaluationAnswerValue answer) async {
-    final item = items[itemId];
-    if (item == null) return;
-    final go = await confirmClearAnswer(
-      mounted ? context : null,
-      fill: fillKey.currentState,
-      evaluation: latest,
-      item: item,
-      answer: answer,
-    );
-    if (!go) return;
-    final written = await EvaluationAnswerSubmit.save(
-      evaluation: latest,
-      item: item,
-      answer: answer,
-      notifier: notifier,
-    );
-    if (written != null) latest = written;
   }
 
   /// Writes pending answers, then checks the form for saving; `true` when
@@ -179,6 +152,7 @@ class EvaluationEditBodyState extends ConsumerState<EvaluationEditBody> {
           readOnly: !draft,
           validateOnOpen: draft && e.answers.isNotEmpty,
           onAnswerChanged: autosave.schedule,
+          onAnswerFocusChanged: autosave.focusChanged,
           evidenceBuilder: (itemId) => EvaluationEvidenceSlot(
             evaluationId: e.id,
             itemId: itemId,

@@ -15,8 +15,9 @@ import '../models/evaluation_answer_submit.dart';
 /// Whether [answer] to [item] of [evaluation] may be written. Only a write
 /// that clears a saved answer with evidence — which the server detaches
 /// with it — needs a yes: asked in a dialog over [context]; on cancel the
-/// saved answer goes back into [fill]. With no [context] (the editor has
-/// closed) such a write is skipped.
+/// saved answer goes back into [fill], unless something new was typed there
+/// meanwhile. With no [context] (the editor has closed) such a write is
+/// skipped.
 Future<bool> confirmClearAnswer(
   BuildContext? context, {
   required EvaluationFillBodyState? fill,
@@ -39,7 +40,7 @@ Future<bool> confirmClearAnswer(
     confirmLabel: EvaluationViewStrings.clear,
     destructive: true,
   );
-  if (!clear) {
+  if (!clear && (fill?.answers[item.id!] ?? answer) == answer) {
     final saved = evaluation.answerFor(item.id!);
     fill?.formKey.currentState?.setFieldValue<EvaluationAnswerValue>(
       EvaluationFillFields.idFor(item.id!),

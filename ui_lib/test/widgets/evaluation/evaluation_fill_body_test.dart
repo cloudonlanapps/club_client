@@ -7,6 +7,7 @@ import 'evaluation_test_helpers.dart';
 class _Host {
   final changes = <(int, EvaluationAnswerValue)>[];
   final evidenceFor = <int>[];
+  final focus = <(int, bool)>[];
   final key = GlobalKey<EvaluationFillBodyState>();
 
   Future<void> pump(
@@ -25,6 +26,8 @@ class _Host {
           readOnly: readOnly,
           validateOnOpen: validateOnOpen,
           onAnswerChanged: (id, answer) => changes.add((id, answer)),
+          onAnswerFocusChanged: (id, {required hasFocus}) =>
+              focus.add((id, hasFocus)),
           evidenceBuilder: (id) {
             evidenceFor.add(id);
             return Text('evidence $id');
@@ -150,5 +153,22 @@ void main() {
       await tester.pump();
       expect(find.text('Complete this answer.'), findsOneWidget);
     });
+  });
+  testWidgets('Issue 164: reports the focus entering and leaving an answer', (
+    tester,
+  ) async {
+    final host = _Host();
+    await host.pump(tester);
+    final inputs = find.byType(EditableText);
+    // The rating's coach note, then the Q & A.
+    await tester.showKeyboard(inputs.at(0));
+    await tester.pump();
+    expect(host.focus, [(1, true)]);
+    await tester.showKeyboard(inputs.at(1));
+    await tester.pump();
+    expect(host.focus, unorderedEquals([(1, true), (1, false), (3, true)]));
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pump();
+    expect(host.focus.last, (3, false));
   });
 }

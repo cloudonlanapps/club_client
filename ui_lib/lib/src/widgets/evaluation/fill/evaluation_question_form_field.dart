@@ -9,7 +9,8 @@ import 'evaluation_question_fill.dart';
 
 /// One question as a field of the fill form: it holds the answer and, when
 /// the form validates, checks a required answer and a coach note the answer
-/// requires, showing the error under the question.
+/// requires, showing the error under the question. Its focus callback is
+/// told when the focus enters or leaves the answer.
 class EvaluationQuestionFormField
     extends ShadFormBuilderField<EvaluationAnswerValue> {
   /// Fills [item] (which must have an id).
@@ -18,6 +19,7 @@ class EvaluationQuestionFormField
     required ValueChanged<EvaluationAnswerValue> onAnswerChanged,
     Widget? evidence,
     bool enabled = true,
+    ValueChanged<bool>? onFocusChange,
     super.key,
   }) : super(
          id: EvaluationFillFields.idFor(item.id!),
@@ -30,6 +32,7 @@ class EvaluationQuestionFormField
            answer: state.value ?? const EvaluationAnswerValue(),
            evidence: evidence,
            enabled: enabled,
+           onFocusChange: onFocusChange,
            onChanged: (answer) {
              state.didChange(answer);
              onAnswerChanged(answer);

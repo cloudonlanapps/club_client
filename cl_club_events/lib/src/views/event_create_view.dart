@@ -9,7 +9,7 @@ import 'package:cl_club_forms/cl_club_forms.dart'
         EventVenueOption;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider, clVenuesProvider;
-import 'package:club_sdk_2/club_sdk_2.dart' show Venue;
+import 'package:club_sdk_2/club_sdk_2.dart' show Event, Venue;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -17,15 +17,17 @@ import 'package:ui_lib/ui_lib.dart' show DiscardChangesPrompt, TitleRow;
 
 import '../models/event_create_form_helpers.dart';
 import '../utils/event_create_error.dart';
+import '../utils/save_confirming_schedule_clash.dart';
 
 /// Scaffold-free event creation view for a given [eventType].
 ///
 /// Owns the chrome (title row, Create/Cancel buttons, discard prompt), the
 /// in-flight state and the SDK call; the [EventCreateForm] it hosts stays
-/// pure-UI. Create validates the form and runs the create; a refusal the
-/// server makes about a field goes back on that field, any other failure is
-/// a toast. Navigation is delegated via [onCreated] and [onCancel]
-/// callbacks.
+/// pure-UI. Create validates the form and runs the create; a clash with
+/// another event asks whether to create it anyway
+/// ([saveConfirmingScheduleClash]), a refusal the server makes about a field
+/// goes back on that field, any other failure is a toast. Navigation is
+/// delegated via [onCreated] and [onCancel] callbacks.
 class EventCreateView extends ConsumerStatefulWidget {
   const EventCreateView({
     required this.eventType,
@@ -54,7 +56,8 @@ class EventCreateViewState extends ConsumerState<EventCreateView> {
       'Could not create ${label.toLowerCase()}. Please try again.';
 
   /// Validates the form and creates the event; a refusal about a field
-  /// shows on that field.
+  /// shows on that field. A clash the organizer does not accept leaves the
+  /// form as it was.
   Future<void> create() async {
     final form = eventFormKey.currentState;
     if (form == null || isSubmitting) return;
@@ -62,14 +65,23 @@ class EventCreateViewState extends ConsumerState<EventCreateView> {
     if (values == null) return;
     setState(() => isSubmitting = true);
     try {
-      final created = await EventCreateFormSubmit.create(
-        type: widget.eventType,
-        values: values,
-        notifier: ref.read(clEventsMasterProvider.notifier),
+      final notifier = ref.read(clEventsMasterProvider.notifier);
+      Event? created;
+      final saved = await saveConfirmingScheduleClash(
+        context,
+        ({required acceptConflicts}) async {
+          created = await EventCreateFormSubmit.create(
+            type: widget.eventType,
+            values: values,
+            notifier: notifier,
+            acceptConflicts: acceptConflicts,
+          );
+        },
       );
-      if (!mounted) return;
+      final title = created?.title;
+      if (!saved || title == null || !mounted) return;
       ShadToaster.of(context).show(
-        ShadToast(description: Text('$label "${created.title}" created.')),
+        ShadToast(description: Text('$label "$title" created.')),
       );
       widget.onCreated();
     } on Object catch (e) {

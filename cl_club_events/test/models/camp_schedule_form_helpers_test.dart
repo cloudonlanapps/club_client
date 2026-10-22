@@ -65,6 +65,7 @@ class _FakeCampNotifier extends ClEventsMasterNotifier {
     int? venueId,
     List<EventSession>? Function()? sessions,
     bool resetOverrides = false,
+    bool acceptConflicts = false,
   }) async {
     final supplied = sessions == null ? _omitted : sessions();
     final desc = sessions == null
@@ -124,6 +125,7 @@ class _FakeCampNotifier extends ClEventsMasterNotifier {
     bool? isFeatured,
     List<String>? Function()? galleryUris,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async {
     final supplied = sessions?.call();
     final desc = supplied == null ? 'null' : 'list(${supplied.length})';

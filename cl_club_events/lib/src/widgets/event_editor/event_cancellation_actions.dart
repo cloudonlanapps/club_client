@@ -14,6 +14,7 @@ import '../../models/event_cancellation_messages.dart';
 import '../../models/event_management_action.dart';
 import '../../utils/event_cancellation_error.dart';
 import '../../utils/one_off_time_rules.dart';
+import '../../utils/save_confirming_schedule_clash.dart';
 import 'event_cancellation_dialog.dart';
 
 /// Resolves the Event Management actions that call an event off and take
@@ -81,11 +82,19 @@ class EventCancellationActionsState
 
   /// Asks [question] under [title]; on yes runs [change] and toasts [done],
   /// or a readable refusal ([failed] when there is no better one).
+  ///
+  /// A [change] the server refuses as a schedule clash (a reinstate) asks
+  /// whether to save it anyway and runs it again with `acceptConflicts`
+  /// ([saveConfirmingScheduleClash]); Cancel changes nothing.
   Future<void> handleTakeBack({
     required String title,
     required String question,
     required String confirmLabel,
-    required Future<void> Function(ClEventsMasterNotifier notifier) change,
+    required Future<void> Function(
+      ClEventsMasterNotifier notifier, {
+      required bool acceptConflicts,
+    })
+    change,
     required String done,
     required String failed,
   }) async {
@@ -100,8 +109,13 @@ class EventCancellationActionsState
     final toaster = ShadToaster.of(context);
     setState(() => isRunning = true);
     try {
-      await change(ref.read(clEventsMasterProvider.notifier));
-      toaster.show(ShadToast(description: Text(done)));
+      final notifier = ref.read(clEventsMasterProvider.notifier);
+      final saved = await saveConfirmingScheduleClash(
+        context,
+        ({required acceptConflicts}) =>
+            change(notifier, acceptConflicts: acceptConflicts),
+      );
+      if (saved) toaster.show(ShadToast(description: Text(done)));
     } on Object catch (e, st) {
       toaster.show(
         ShadToast.destructive(
@@ -129,7 +143,8 @@ class EventCancellationActionsState
           title: EventCancellationMessages.undoCancelTitle,
           question: EventCancellationMessages.undoCancelConfirm(event.title),
           confirmLabel: EventCancellationMessages.undoCancel,
-          change: (notifier) =>
+          // Undoing a camp's cancel is not checked for clashes.
+          change: (notifier, {required acceptConflicts}) =>
               notifier.undoCancelSeries(event.id, version: event.version),
           done: EventCancellationMessages.cancelUndone,
           failed: EventCancellationMessages.undoCancelFailed,
@@ -155,8 +170,12 @@ class EventCancellationActionsState
             title: EventCancellationMessages.reinstateTitle,
             question: EventCancellationMessages.reinstateConfirm(event.title),
             confirmLabel: EventCancellationMessages.reinstate,
-            change: (notifier) =>
-                notifier.reinstate(event.id, version: occurrence.version),
+            change: (notifier, {required acceptConflicts}) =>
+                notifier.reinstate(
+                  event.id,
+                  version: occurrence.version,
+                  acceptConflicts: acceptConflicts,
+                ),
             done: EventCancellationMessages.reinstated,
             failed: EventCancellationMessages.reinstateFailed,
           ),

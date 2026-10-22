@@ -16,6 +16,7 @@ import '../../../utils/event_write_error_message.dart';
 import '../../../utils/programme_end_date.dart';
 import '../../../utils/programme_end_date_messages.dart';
 import '../../../utils/read_programme_schedules.dart';
+import '../../../utils/save_confirming_schedule_clash.dart';
 import '../../event_editor/event_cancellation_dialog.dart';
 import '../../event_editor/programme_end_date_dialog.dart';
 import 'manage_requests_dialog.dart';
@@ -275,8 +276,7 @@ class AdminOccurrenceActionsState
     done: EventCancellationMessages.calledOff,
   );
 
-  /// Reinstates the called-off one-off [event] after the event page's
-  /// confirmation, with its messages (club_client#183).
+  /// Reinstates the one-off [event] once confirmed (club_client#183, #278).
   Future<void> _reinstate(Event event) async {
     final confirmed = await ConfirmDialog.show(
       context,
@@ -288,9 +288,16 @@ class AdminOccurrenceActionsState
     if (!confirmed || !mounted) return;
     final toaster = ShadToaster.of(context);
     try {
-      await ref
-          .read(clEventsMasterProvider.notifier)
-          .reinstate(event.id, version: widget.occurrence.version);
+      final notifier = ref.read(clEventsMasterProvider.notifier);
+      final saved = await saveConfirmingScheduleClash(
+        context,
+        ({required acceptConflicts}) => notifier.reinstate(
+          event.id,
+          version: widget.occurrence.version,
+          acceptConflicts: acceptConflicts,
+        ),
+      );
+      if (!saved) return;
       toaster.show(
         const ShadToast(
           description: Text(EventCancellationMessages.reinstated),

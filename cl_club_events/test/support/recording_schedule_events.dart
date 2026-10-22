@@ -12,6 +12,7 @@ class RescheduleCall {
     required this.venueId,
     required this.sessionsSent,
     required this.sessions,
+    this.acceptConflicts = false,
   });
 
   final int? version;
@@ -25,6 +26,9 @@ class RescheduleCall {
 
   /// What the getter returned (`null` clears the timetable).
   final List<EventSession>? sessions;
+
+  /// Whether the call accepted a schedule clash (club_client#278).
+  final bool acceptConflicts;
 }
 
 /// One `updateEventForAllFuture` call.
@@ -38,6 +42,7 @@ class FutureUpdateCall {
     required this.venueId,
     required this.sessionsSent,
     required this.sessions,
+    this.acceptConflicts = false,
   });
 
   final int? version;
@@ -48,6 +53,9 @@ class FutureUpdateCall {
   final int? venueId;
   final bool sessionsSent;
   final List<EventSession>? sessions;
+
+  /// Whether the call accepted a schedule clash (club_client#278).
+  final bool acceptConflicts;
 }
 
 /// An events master that records the schedule changes sent to it, or
@@ -68,6 +76,18 @@ class RecordingScheduleEvents extends ClEventsMasterNotifier {
   /// When set, every change throws this instead of applying.
   Exception? error;
 
+  /// When set, a reschedule or split that does not accept a clash throws
+  /// this instead of applying (club_client#278).
+  ScheduleConflictException? clash;
+
+  /// Throws [clash] for a schedule write that did not accept it, else
+  /// [error] when set.
+  void refuse({required bool acceptConflicts}) {
+    final refusal = clash;
+    if (refusal != null && !acceptConflicts) throw refusal;
+    if (error != null) throw error!;
+  }
+
   @override
   Future<Map<int, Event>> build() async => {event.id: event};
 
@@ -81,6 +101,7 @@ class RecordingScheduleEvents extends ClEventsMasterNotifier {
     int? venueId,
     List<EventSession>? Function()? sessions,
     bool resetOverrides = false,
+    bool acceptConflicts = false,
   }) async {
     reschedules.add(
       RescheduleCall(
@@ -91,9 +112,10 @@ class RecordingScheduleEvents extends ClEventsMasterNotifier {
         venueId: venueId,
         sessionsSent: sessions != null,
         sessions: sessions?.call(),
+        acceptConflicts: acceptConflicts,
       ),
     );
-    if (error != null) throw error!;
+    refuse(acceptConflicts: acceptConflicts);
     return event;
   }
 
@@ -109,6 +131,7 @@ class RecordingScheduleEvents extends ClEventsMasterNotifier {
     DateTime? endTimeUtc,
     String? rrule,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async {
     futureUpdates.add(
       FutureUpdateCall(
@@ -120,9 +143,10 @@ class RecordingScheduleEvents extends ClEventsMasterNotifier {
         venueId: venueId,
         sessionsSent: sessions != null,
         sessions: sessions?.call(),
+        acceptConflicts: acceptConflicts,
       ),
     );
-    if (error != null) throw error!;
+    refuse(acceptConflicts: acceptConflicts);
     return event;
   }
 
@@ -177,6 +201,7 @@ class RecordingScheduleEvents extends ClEventsMasterNotifier {
     bool? isFeatured,
     List<String>? Function()? galleryUris,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async {
     corrections.add('update(v$version, ${sessions?.call()?.length})');
     if (error != null) throw error!;

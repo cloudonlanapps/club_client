@@ -109,10 +109,15 @@ class OccurrenceRescheduleFormSubmit {
   /// `RESCHEDULE_LEAD_TIME_VIOLATED`, `VENUE_NOT_FOUND`,
   /// `CANCELLED_OCCURRENCE`, `NOTHING_TO_RESCHEDULE`) and on a stale version
   /// (`StaleVersionException`); the caller surfaces a friendly message.
+  ///
+  /// [acceptConflicts] `true` saves a schedule that clashes with another
+  /// event's venue, organizer or coach; without it the server refuses the
+  /// clash with `ScheduleConflictException` (club_server#72).
   static Future<void> updateSchedule({
     required Occurrence occurrence,
     required Map<String, dynamic> values,
     required ClEventsMasterNotifier notifier,
+    bool acceptConflicts = false,
   }) async {
     final schedule =
         values[OccurrenceRescheduleFormFields.scheduleId] as OneOffScheduleData;
@@ -148,6 +153,7 @@ class OccurrenceRescheduleFormSubmit {
       newStartTimeUtc: startChanged ? newStartUtc : null,
       newDurationMinutes: durationChanged ? schedule.durationMinutes : null,
       newVenueId: venueChanged ? venueId : null,
+      acceptConflicts: acceptConflicts,
     );
   }
 }

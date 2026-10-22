@@ -40,10 +40,15 @@ class EventCreateFormSubmit {
   /// Create an event from the form's flat [values]. Only the minimal fields
   /// flow through here — title, visibility, venue and the schedule; the rest
   /// (eligibility, organizer/coaches, gallery, …) are edited after creation.
+  ///
+  /// [acceptConflicts] `true` saves a schedule that clashes with another
+  /// event's venue, organizer or coach; without it the server refuses the
+  /// clash with `ScheduleConflictException` (club_server#72).
   static Future<Event> create({
     required EventFormType type,
     required Map<String, dynamic> values,
     required ClEventsMasterNotifier notifier,
+    bool acceptConflicts = false,
   }) {
     final title = (values[EventCreateFormFields.titleId] as String).trim();
     final visibility = _toVisibility(
@@ -63,6 +68,7 @@ class EventCreateFormSubmit {
       endTimeUtc: assembled.endTimeUtc,
       rrule: assembled.rrule,
       sessions: assembled.sessions,
+      acceptConflicts: acceptConflicts,
     );
   }
 

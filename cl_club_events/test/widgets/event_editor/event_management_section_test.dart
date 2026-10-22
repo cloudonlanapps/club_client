@@ -89,6 +89,7 @@ class _RecordingEvents extends ClEventsMasterNotifier {
     bool? isFeatured,
     List<String>? Function()? galleryUris,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async {
     record('rename($eventId, $title)');
     return event;

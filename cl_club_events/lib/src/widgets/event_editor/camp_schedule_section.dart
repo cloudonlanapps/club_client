@@ -16,6 +16,7 @@ import 'package:ui_lib/ui_lib.dart' show EditableSectionCard;
 import '../../models/camp_schedule_form_helpers.dart';
 import '../../models/event_schema_fields.dart';
 import '../../models/stale_version_message.dart';
+import '../../utils/save_confirming_schedule_clash.dart';
 import '../../utils/time_formatter.dart' show formatTimeRange;
 import '../events_preview/cl_event_schedule.dart' show ClEventScheduleBody;
 import 'schedule_note.dart';
@@ -24,8 +25,9 @@ import 'schedule_note.dart';
 ///
 /// Read mode reuses [ClEventScheduleBody]; edit mode hosts the SDK-free
 /// [CampScheduleForm] (the same editor the create flow uses) and commits via
-/// [CampScheduleFormSubmit.updateSchedule]. The edit pencil shows only when the
-/// viewer is an admin and the camp may still be rescheduled
+/// [CampScheduleFormSubmit.updateSchedule]; a clash asks whether to move it
+/// anyway ([saveConfirmingScheduleClash]). The edit pencil shows only when
+/// the viewer is an admin and the camp may still be rescheduled
 /// ([canRescheduleCamp]). Mirrors `EventEligibilityCard`.
 class CampScheduleSection extends ConsumerStatefulWidget {
   const CampScheduleSection({
@@ -137,12 +139,19 @@ class CampScheduleSectionState extends ConsumerState<CampScheduleSection> {
     required bool resetOverrides,
   }) async {
     try {
-      await CampScheduleFormSubmit.updateSchedule(
-        event: widget.event,
-        data: data,
-        notifier: ref.read(clEventsMasterProvider.notifier),
-        resetOverrides: resetOverrides,
+      final notifier = ref.read(clEventsMasterProvider.notifier);
+      // A clash asks whether to move it anyway; Cancel keeps the editor.
+      final saved = await saveConfirmingScheduleClash(
+        context,
+        ({required acceptConflicts}) => CampScheduleFormSubmit.updateSchedule(
+          event: widget.event,
+          data: data,
+          notifier: notifier,
+          resetOverrides: resetOverrides,
+          acceptConflicts: acceptConflicts,
+        ),
       );
+      if (!saved) return false;
       if (!mounted) return true;
       ShadToaster.of(context).show(
         const ShadToast(description: Text('Schedule updated.')),

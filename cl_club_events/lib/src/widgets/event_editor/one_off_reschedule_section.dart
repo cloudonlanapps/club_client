@@ -16,6 +16,7 @@ import 'package:ui_lib/ui_lib.dart' show EditableSectionCard;
 import '../../models/event_schema_fields.dart';
 import '../../models/one_off_schedule_form_helpers.dart';
 import '../../models/stale_version_message.dart';
+import '../../utils/save_confirming_schedule_clash.dart';
 import '../../utils/schedule_save_error.dart';
 import '../events_preview/cl_event_schedule.dart' show ClEventScheduleBody;
 
@@ -55,13 +56,21 @@ class OneOffRescheduleSectionState
 
   /// Sends the move. True closes the editor; a refusal about a field shows
   /// on that field, the postpone-only rule inline, and both keep it open.
+  /// A clash asks whether to move it anyway; Cancel keeps the editor open
+  /// ([saveConfirmingScheduleClash]).
   Future<bool> commit(Map<String, dynamic> values) async {
     try {
-      await OneOffScheduleFormSubmit.updateSchedule(
-        event: widget.event,
-        value: oneOffScheduleValueOf(values),
-        notifier: ref.read(clEventsMasterProvider.notifier),
+      final notifier = ref.read(clEventsMasterProvider.notifier);
+      final saved = await saveConfirmingScheduleClash(
+        context,
+        ({required acceptConflicts}) => OneOffScheduleFormSubmit.updateSchedule(
+          event: widget.event,
+          value: oneOffScheduleValueOf(values),
+          notifier: notifier,
+          acceptConflicts: acceptConflicts,
+        ),
       );
+      if (!saved) return false;
       showToast(
         const ShadToast(description: Text(oneOffScheduleUpdatedMessage)),
       );

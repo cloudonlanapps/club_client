@@ -123,7 +123,11 @@ class _StaticCampNotifier extends ClEventsMasterNotifier {
   }
 
   @override
-  Future<Event> reinstate(int eventId, {required int version}) async {
+  Future<Event> reinstate(
+    int eventId, {
+    required int version,
+    bool acceptConflicts = false,
+  }) async {
     calls.add('reinstate(v$version)');
     return _events[eventId]!;
   }

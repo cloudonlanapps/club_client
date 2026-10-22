@@ -10,6 +10,7 @@ import 'package:ui_lib/ui_lib.dart'
 import '../../../models/event_schema_fields.dart';
 import '../../../models/occurrence_reschedule_form_helpers.dart';
 import '../../../utils/event_write_error_message.dart';
+import '../../../utils/save_confirming_schedule_clash.dart';
 
 /// Dialog to reschedule a single camp [occurrence] (start / duration / venue).
 ///
@@ -19,7 +20,9 @@ import '../../../utils/event_write_error_message.dart';
 /// master notifier, mapping the server's reschedule guards to friendly
 /// messages: on the field a guard is about (a start in the past, a venue
 /// that is gone), else inline under the form. A failure that is not about
-/// the move is a toast. Pops `true` when a reschedule was applied.
+/// the move is a toast. A clash asks whether to move it anyway, and Cancel
+/// keeps the form ([saveConfirmingScheduleClash]). Pops `true` when a
+/// reschedule was applied.
 class OccurrenceRescheduleDialog extends ConsumerStatefulWidget {
   const OccurrenceRescheduleDialog({required this.occurrence, super.key});
 
@@ -46,12 +49,23 @@ class OccurrenceRescheduleDialogState
 
     setState(() => _submitting = true);
     try {
-      await OccurrenceRescheduleFormSubmit.updateSchedule(
-        occurrence: widget.occurrence,
-        values: values,
-        notifier: ref.read(clEventsMasterProvider.notifier),
+      final notifier = ref.read(clEventsMasterProvider.notifier);
+      final saved = await saveConfirmingScheduleClash(
+        context,
+        ({required acceptConflicts}) =>
+            OccurrenceRescheduleFormSubmit.updateSchedule(
+              occurrence: widget.occurrence,
+              values: values,
+              notifier: notifier,
+              acceptConflicts: acceptConflicts,
+            ),
       );
       if (!mounted) return;
+      if (!saved) {
+        // A clash not accepted: back to the form as it was.
+        setState(() => _submitting = false);
+        return;
+      }
       Navigator.of(context).pop(true);
     } on StaleVersionException catch (e) {
       // The session changed under the admin and the camp master has reloaded

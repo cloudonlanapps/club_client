@@ -77,6 +77,7 @@ class _RecordingEvents extends ClEventsMasterNotifier {
     bool? isFeatured,
     List<String>? Function()? galleryUris,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async {
     sent.add(
       _Sent(

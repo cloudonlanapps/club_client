@@ -53,6 +53,12 @@
   templates), and any coach or admin can restore one. A template whose name
   another template now holds comes back renamed "<name> -- Restored #1",
   and the message says the new name (#277).
+- A schedule or staff save that clashes with another event no longer just
+  fails: a dialog lists the clashing events under venue, organizer and
+  coach, with the clashing dates and times. Save anyway saves it; Cancel goes
+  back to the form as it was. This covers creating a programme, camp or
+  one-off, Adjust Schedule, editing the organizer or coaches, moving a camp
+  or a one-off, reinstating a one-off and rescheduling a session (#278).
 
 ## 1.0.0
 

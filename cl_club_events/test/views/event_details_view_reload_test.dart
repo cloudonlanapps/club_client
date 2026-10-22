@@ -43,6 +43,7 @@ class _SavingEvents extends ClEventsMasterNotifier {
     bool? isFeatured,
     List<String>? Function()? galleryUris,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async {
     final current = state.requireValue[eventId]!;
     final updated = current.copyWith(

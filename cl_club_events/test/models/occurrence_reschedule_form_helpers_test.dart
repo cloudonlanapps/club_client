@@ -46,6 +46,7 @@ class _FakeCampNotifier extends ClEventsMasterNotifier {
     DateTime? newStartTimeUtc,
     int? newDurationMinutes,
     int? newVenueId,
+    bool acceptConflicts = false,
   }) async {
     calls++;
     this.eventId = eventId;

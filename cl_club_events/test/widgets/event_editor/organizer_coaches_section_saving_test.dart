@@ -54,6 +54,7 @@ class _HeldEvents extends ClEventsMasterNotifier {
     bool? isFeatured,
     List<String>? Function()? galleryUris,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async {
     await answer.future;
     throw const ServerException(

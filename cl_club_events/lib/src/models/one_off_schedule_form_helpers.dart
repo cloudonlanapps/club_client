@@ -105,10 +105,15 @@ class OneOffScheduleFormSubmit {
   /// server's guards (`EVENT_ALREADY_STARTED`, `POSTPONE_ONLY`,
   /// `RESCHEDULE_LEAD_TIME_VIOLATED`, `BEYOND_SCHEDULING_HORIZON`,
   /// `INVALID_SESSIONS_TOTAL`, `OCCURRENCE_OVERRIDES_PRESENT`, …).
+  ///
+  /// [acceptConflicts] `true` saves a schedule that clashes with another
+  /// event's venue, organizer or coach; without it the server refuses the
+  /// clash with `ScheduleConflictException` (club_server#72).
   static Future<Event> updateSchedule({
     required Event event,
     required OneOffScheduleValue value,
     required ClEventsMasterNotifier notifier,
+    bool acceptConflicts = false,
   }) async {
     final schedule = value.schedule;
     final start = DateTime(
@@ -140,6 +145,7 @@ class OneOffScheduleFormSubmit {
       sessions: sessionsChanged
           ? () => sessions.isEmpty ? null : sessions
           : null,
+      acceptConflicts: acceptConflicts,
     );
   }
 }

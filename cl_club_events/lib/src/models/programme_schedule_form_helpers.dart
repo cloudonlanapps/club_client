@@ -125,13 +125,15 @@ class ProgrammeScheduleFormSubmit {
   ///
   /// Throws `StaleVersionException` when the event changed since it was
   /// loaded (the master reloads it first), and `ServerException` on the
-  /// server's guards: a clash with another programme (`TIME_CONFLICT`),
-  /// `EFFECTIVE_TIME_NOT_SESSION_BOUNDARY`, `CUTOFF_TOO_SOON`,
-  /// `INVALID_SESSIONS_TOTAL`, ….
+  /// server's guards: a clash with another event's venue, organizer or
+  /// coach (`ScheduleConflictException`, unless [acceptConflicts] is `true`;
+  /// club_server#72), `EFFECTIVE_TIME_NOT_SESSION_BOUNDARY`,
+  /// `CUTOFF_TOO_SOON`, `INVALID_SESSIONS_TOTAL`, ….
   static Future<Event> adjustSchedule({
     required Event event,
     required ProgrammeScheduleAdjustValue value,
     required ClEventsMasterNotifier notifier,
+    bool acceptConflicts = false,
   }) async {
     final next = value.schedule;
     final from = value.from!.toUtc();
@@ -184,6 +186,7 @@ class ProgrammeScheduleFormSubmit {
       sessions: sessionsChanged
           ? () => sessions.isEmpty ? null : sessions
           : null,
+      acceptConflicts: acceptConflicts,
     );
   }
 

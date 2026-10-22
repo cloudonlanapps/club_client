@@ -51,6 +51,7 @@ class _RecordingNotifier extends ClEventsMasterNotifier {
     bool? isFeatured,
     List<String>? Function()? galleryUris,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async {
     calls.add('update(v$version, ${_describe(sessions)})');
     return returnEvent;

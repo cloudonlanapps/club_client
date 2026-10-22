@@ -370,6 +370,7 @@ class _RecordingNotifier extends ClEventsMasterNotifier {
     bool? isFeatured,
     List<String>? Function()? galleryUris,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async {
     updates.add(_Sent(genders, minAge, maxAge, strictAge: strictAge));
     return returnEvent;

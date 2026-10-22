@@ -15,6 +15,7 @@ import 'package:ui_lib/ui_lib.dart'
 import '../../models/programme_schedule_form_helpers.dart';
 import '../../models/stale_version_message.dart';
 import '../../utils/programme_end_date.dart';
+import '../../utils/save_confirming_schedule_clash.dart';
 import '../../utils/schedule_save_error.dart';
 
 /// Shown when a programme's schedule has been adjusted.
@@ -31,9 +32,11 @@ const String programmeScheduleAdjustFailedMessage =
 ///
 /// Saving with no term changed closes it and sends nothing. A refusal the
 /// admin can act on stays in the dialog: on the field it is about (a From
-/// session no longer valid, a venue that is gone) or, for a clash with
-/// another programme, as an inline message. A stale version
-/// closes it on the reloaded programme and says who changed it.
+/// session no longer valid, a venue that is gone) or as an inline message.
+/// A clash with another event's venue, organizer or coach asks whether to
+/// save anyway, and Cancel keeps the terms ([saveConfirmingScheduleClash]).
+/// A stale version closes it on the reloaded programme and says who changed
+/// it.
 class ProgrammeAdjustScheduleDialog extends ConsumerStatefulWidget {
   const ProgrammeAdjustScheduleDialog({
     required this.event,
@@ -78,11 +81,22 @@ class ProgrammeAdjustScheduleDialogState
     final toaster = ShadToaster.of(context);
     setState(() => saving = true);
     try {
-      await ProgrammeScheduleFormSubmit.adjustSchedule(
-        event: widget.event,
-        value: programmeScheduleAdjustValueOf(values),
-        notifier: ref.read(clEventsMasterProvider.notifier),
+      final notifier = ref.read(clEventsMasterProvider.notifier);
+      final saved = await saveConfirmingScheduleClash(
+        context,
+        ({required acceptConflicts}) =>
+            ProgrammeScheduleFormSubmit.adjustSchedule(
+              event: widget.event,
+              value: programmeScheduleAdjustValueOf(values),
+              notifier: notifier,
+              acceptConflicts: acceptConflicts,
+            ),
       );
+      if (!saved) {
+        // A clash not accepted: back to the terms as they were.
+        if (mounted) setState(() => saving = false);
+        return;
+      }
       navigator.pop();
       toaster.show(
         const ShadToast(description: Text(programmeScheduleAdjustedMessage)),

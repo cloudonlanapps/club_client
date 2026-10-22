@@ -80,7 +80,11 @@ class EvaluationEditView extends ConsumerWidget {
     }
     final evaluation = evaluations.valueOrNull?[evaluationId];
     final template = templates.valueOrNull?[evaluation?.templateId];
-    if (evaluations.hasError || templates.hasError) {
+    // A failed reload keeps the page and what is being typed; the network
+    // banner reports the failure (club_client#268). Only a load that never
+    // produced data shows the message.
+    if ((evaluations.hasError && !evaluations.hasValue) ||
+        (templates.hasError && !templates.hasValue)) {
       return EvaluationMessage(
         message: EvaluationViewStrings.loadFailed,
         onBack: onBack,

@@ -68,6 +68,7 @@ class _FakeEvents extends Fake implements EventSource {
     List<String>? Function()? highlights,
     List<String>? Function()? includes,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async {
     updateVersions.add(version);
     if (updateError != null) throw updateError!;

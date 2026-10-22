@@ -75,6 +75,7 @@ class _FakeEvents extends Fake implements EventSource {
     List<String>? highlights,
     List<String>? includes,
     List<EventSession>? sessions,
+    bool acceptConflicts = false,
   }) async {
     created = (minAge: minAge, maxAge: maxAge, strictAge: strictAge);
     return stored.copyWith(
@@ -106,6 +107,7 @@ class _FakeEvents extends Fake implements EventSource {
     List<String>? Function()? highlights,
     List<String>? Function()? includes,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async {
     updates.add(_Band(minAge, maxAge, strictAge: strictAge));
     return stored.copyWith(

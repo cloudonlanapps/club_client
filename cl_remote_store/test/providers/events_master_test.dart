@@ -80,6 +80,7 @@ class _FakeEvents extends Fake implements EventSource {
     int? venueId,
     List<EventSession>? Function()? sessions,
     bool resetOverrides = false,
+    bool acceptConflicts = false,
   }) async {
     rescheduleVersions.add(version);
     if (rescheduleError != null) throw rescheduleError!;
@@ -106,6 +107,7 @@ class _FakeOccurrences extends Fake implements OccurrenceSource {
     DateTime? newStartTimeUtc,
     int? newDurationMinutes,
     int? newVenueId,
+    bool acceptConflicts = false,
   }) async {
     calls.add('reschedule(v$version)');
     if (error != null) throw error!;

@@ -10,7 +10,6 @@ Future<GlobalKey<SignupFormState>> _pump(
   WidgetTester tester, {
   String? username,
   Map<String, dynamic>? initialValues,
-  ValueChanged<bool>? onCanSubmitChanged,
 }) async {
   await tester.binding.setSurfaceSize(const Size(1024, 2400));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -24,8 +23,6 @@ Future<GlobalKey<SignupFormState>> _pump(
             key: key,
             username: username,
             initialValues: initialValues,
-            onCheckUsernameAvailable: (_) async => true,
-            onCanSubmitChanged: onCanSubmitChanged,
           ),
         ),
       ),
@@ -35,17 +32,13 @@ Future<GlobalKey<SignupFormState>> _pump(
   return key;
 }
 
-/// Fills everything a signing-up form asks for, the username confirmed
-/// available.
+/// Fills everything a signing-up form asks for.
 Future<void> _fillSignup(
   WidgetTester tester,
   GlobalKey<SignupFormState> key, {
   String confirmPassword = 'secret-password',
 }) async {
   await tester.enterText(_field(UserFormFields.usernameId), 'robin');
-  await tester.pumpAndSettle();
-  await tester.tap(find.text('Check availability'));
-  await tester.pumpAndSettle();
   await tester.enterText(
     _field(UserFormFields.passwordId),
     'secret-password',
@@ -81,18 +74,6 @@ void main() {
       expect(find.text('Middle name'), findsOneWidget);
     });
 
-    testWidgets('Issue 53: signing up, canSubmit turns true once the '
-        'username is confirmed available', (tester) async {
-      final reported = <bool>[];
-      final key = await _pump(tester, onCanSubmitChanged: reported.add);
-      expect(reported, [false]);
-
-      await _fillSignup(tester, key);
-
-      expect(reported, [false, true]);
-      expect(key.currentState!.canSubmit, isTrue);
-    });
-
     testWidgets('Issue 53: validate returns the assembled signup values', (
       tester,
     ) async {
@@ -124,20 +105,35 @@ void main() {
       expect(find.text('Passwords do not match'), findsOneWidget);
     });
 
-    testWidgets('Issue 53: an unchecked username is refused inline', (
-      tester,
-    ) async {
+    testWidgets('Issue 161: a username typed is taken as it is, with no '
+        'availability check', (tester) async {
       final key = await _pump(tester);
       await _fillSignup(tester, key);
       await tester.enterText(_field(UserFormFields.usernameId), 'robin2');
       await tester.pumpAndSettle();
 
-      expect(key.currentState!.canSubmit, isFalse);
-      expect(key.currentState!.validate(), isNull);
+      expect(find.text('Check availability'), findsNothing);
+      final values = key.currentState!.validate();
+      expect(values?[UserFormFields.usernameId], 'robin2');
+    });
+
+    testWidgets('Issue 161: a username the server refuses as taken shows on '
+        'the username field', (tester) async {
+      final key = await _pump(tester);
+      await _fillSignup(tester, key);
+
+      key.currentState!.showErrors(
+        fieldErrors: {
+          UserFormFields.usernameId: 'That username is already taken.',
+        },
+      );
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Run the availability check before creating the account.'),
+        find.descendant(
+          of: _field(UserFormFields.usernameId),
+          matching: find.text('That username is already taken.'),
+        ),
         findsOneWidget,
       );
     });
@@ -165,7 +161,6 @@ void main() {
 
     testWidgets('Issue 53: reapplying, the username is fixed, no password '
         'is asked and the values carry neither', (tester) async {
-      final reported = <bool>[];
       final key = await _pump(
         tester,
         username: 'robin',
@@ -176,10 +171,8 @@ void main() {
           UserFormFields.genderId: SignupGender.other,
           UserFormFields.dateOfBirthUtcId: DateTime.utc(2010, 3, 4),
         },
-        onCanSubmitChanged: reported.add,
       );
 
-      expect(reported, [true]);
       expect(find.text('robin'), findsOneWidget);
       expect(_field(UserFormFields.usernameId), findsNothing);
       expect(_field(UserFormFields.passwordId), findsNothing);

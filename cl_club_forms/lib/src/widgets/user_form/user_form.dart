@@ -4,7 +4,6 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../constants/form_spacing.dart';
 import '../form/form_body.dart';
 import '../form/form_contract.dart';
-import '../signup/username_confirmation.dart';
 import 'user_contact_fields.dart';
 import 'user_default_password_field.dart';
 import 'user_form_assembly.dart';
@@ -20,33 +19,28 @@ import 'user_username_field.dart';
 /// keyed by [UserFormFields] ids; the host adapts to the SDK (see
 /// `cl_club_members` `user_form_helpers.dart`).
 ///
-/// It asks for a username with its availability check, the password (or
+/// It asks for a username, the password (or
 /// the default one), names, gender, date of birth, phone, email and the
 /// roles the viewer may grant. An existing user is edited section by
 /// section (`UserPersonalDetailsForm`, `UserContactForm`,
 /// `UserAddressForm`).
 ///
 /// The host drives it through a `GlobalKey<UserFormState>` — `validate()`,
-/// `isDirty`, `showErrors()` ([FormContract]) — and keeps its save action
-/// off until [onCanSubmitChanged] reports true.
+/// `isDirty`, `showErrors()` ([FormContract]) — and puts a username the
+/// server finds taken back on its field.
 class UserForm extends StatefulWidget {
   const UserForm({
-    required this.onCheckUsernameAvailable,
     required this.defaultCountryCode,
     this.initialValues,
     this.onShowDefaultPassword,
     this.enabled = true,
     this.canAssignAdmin = false,
     this.canAssignCoach = false,
-    this.onCanSubmitChanged,
     super.key,
   });
 
   /// Pre-fill values keyed by field id; null means an empty form.
   final Map<String, dynamic>? initialValues;
-
-  /// Resolves to true when the username is free.
-  final Future<bool> Function(String username) onCheckUsernameAvailable;
 
   /// The club's country calling code (digits only, as the server reports
   /// it: `91`); a phone typed without a country code is checked as a
@@ -65,23 +59,16 @@ class UserForm extends StatefulWidget {
   /// Whether the coach tick shows (admin or super admin).
   final bool canAssignCoach;
 
-  /// Hears whether the form may be submitted (`UsernameConfirmation`).
-  final ValueChanged<bool>? onCanSubmitChanged;
-
   @override
   State<UserForm> createState() => UserFormState();
 }
 
 /// State of [UserForm]. Its values are the form's fields as typed, keyed by
 /// [UserFormFields] ids; the host's adapter trims and assembles them.
-class UserFormState extends State<UserForm>
-    with FormContract<UserForm>, UsernameConfirmation<UserForm> {
+class UserFormState extends State<UserForm> with FormContract<UserForm> {
   /// Whether a created account gets the default password; off shows the
   /// password fields.
   bool useDefaultPassword = true;
-
-  @override
-  bool get asksForUsername => true;
 
   /// Follows the default-password tick: ticked, the password fields go and
   /// what was typed into them is cleared.
@@ -92,18 +79,13 @@ class UserFormState extends State<UserForm>
   }
 
   @override
-  ValueChanged<bool>? get canSubmitListener => widget.onCanSubmitChanged;
-
-  @override
   String? crossFieldError(Map<String, dynamic> values) {
-    final problem =
-        usernameProblem() ??
-        (!useDefaultPassword
-            ? UserFormValidators.passwordsMatch(
-                values[UserFormFields.passwordId] as String?,
-                values[UserFormFields.confirmPasswordId] as String?,
-              )
-            : null);
+    final problem = useDefaultPassword
+        ? null
+        : UserFormValidators.passwordsMatch(
+            values[UserFormFields.passwordId] as String?,
+            values[UserFormFields.confirmPasswordId] as String?,
+          );
     return problem ??
         UserFormValidators.atLeastOneName(
           values[UserFormFields.firstNameId] as String?,
@@ -130,11 +112,7 @@ class UserFormState extends State<UserForm>
             children: [
               FormBody(
                 children: [
-                  UserUsernameField(
-                    enabled: enabled,
-                    onAvailabilityChanged: onAvailabilityChanged,
-                    checkAvailability: widget.onCheckUsernameAvailable,
-                  ),
+                  UserUsernameField(enabled: enabled),
                   UserDefaultPasswordField(
                     value: useDefaultPassword,
                     enabled: enabled,

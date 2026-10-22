@@ -208,8 +208,6 @@ export 'src/widgets/rename/rename_form_fields.dart' show RenameFormFields;
 // Signup form (pure UI, no SDK / no Riverpod)
 export 'src/widgets/signup/signup_form.dart' show SignupForm, SignupFormState;
 export 'src/widgets/signup/signup_gender.dart' show SignupGender;
-export 'src/widgets/signup/username_availability_field.dart'
-    show UsernameAvailabilityField;
 // User form + section editors (pure UI, no SDK / no Riverpod)
 export 'src/widgets/user_form/form_address.dart' show FormAddress;
 export 'src/widgets/user_form/user_address_form.dart'

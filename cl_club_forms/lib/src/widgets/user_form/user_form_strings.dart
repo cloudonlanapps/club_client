@@ -6,6 +6,9 @@ abstract final class UserFormStrings {
   /// Hint in the empty username field.
   static const String usernamePlaceholder = 'unique-username';
 
+  /// Under the username field: the characters it takes.
+  static const String usernameHint = 'Lowercase letters, digits, and _ only';
+
   /// Label of the password field.
   static const String password = 'Password';
 

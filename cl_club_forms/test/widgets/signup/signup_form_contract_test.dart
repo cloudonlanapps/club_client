@@ -1,8 +1,7 @@
-// Issue 61, SignupForm. Every point applies. The in-form action is the
-// username field's "Check availability"; the form has no other button.
+// Issue 61, SignupForm. Every point applies. The form has no button.
 // The username's own rules beyond "required" and "at least 3" cannot be
 // broken by typing (the field drops what they refuse): they are covered in
-// user_form_validators_test.dart and username_availability_field_test.dart.
+// user_form_validators_test.dart and user_username_field_test.dart.
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:cl_club_forms/src/widgets/user_form/user_form_validators.dart';
 import 'package:flutter/material.dart';
@@ -40,8 +39,6 @@ Future<SignupFormState> _pump(
   String? username,
   Map<String, dynamic>? initialValues,
   bool enabled = true,
-  bool available = true,
-  ValueChanged<bool>? onCanSubmitChanged,
   Size size = kFormSurface,
 }) async {
   final key = GlobalKey<SignupFormState>();
@@ -53,17 +50,15 @@ Future<SignupFormState> _pump(
       username: username,
       initialValues: initialValues,
       enabled: enabled,
-      onCheckUsernameAvailable: (_) async => available,
-      onCanSubmitChanged: onCanSubmitChanged,
     ),
     size: size,
   );
   return key.currentState!;
 }
 
-/// Fills a signing-up form with valid values, the username confirmed.
+/// Fills a signing-up form with valid values.
 Future<void> _fill(WidgetTester tester, SignupFormState state) async {
-  await checkUsername(tester, _username, 'robin');
+  await enterField(tester, _username, 'robin');
   await enterField(tester, _password, 'secret-password');
   await enterField(tester, _confirm, 'secret-password');
   await enterField(tester, _first, 'Robin');
@@ -94,7 +89,7 @@ void main() {
       ]);
       expect(fieldIds(tester), UserFormFields.signupIds);
       expectLabelsAreRows(tester);
-      expectNoHostChrome(tester, allowedButtonTexts: {'Check availability'});
+      expectNoHostChrome(tester);
     });
 
     testWidgets('Issue 61: reapplying, the username is a read-only row and '
@@ -121,7 +116,6 @@ void main() {
         _email,
       ]);
       expect(find.text('robin'), findsOneWidget);
-      expect(checkAvailabilityButton, findsNothing);
       expectLabelsAreRows(tester);
       expectNoHostChrome(tester);
     });
@@ -247,7 +241,7 @@ void main() {
         expectMessageOn(c.id, c.message);
 
         // Where putting the field right needs nothing else (no new
-        // availability check, no second password), the form is valid again.
+        // second password), the form is valid again.
         if (c.fixed != null) {
           await put(c.fixed);
           expect(state.validate(), isNotNull);
@@ -290,7 +284,7 @@ void main() {
     });
 
     testWidgets('Issue 61: reapplying, a missing name is refused inline and '
-        'no password or availability rule applies', (tester) async {
+        'no password rule applies', (tester) async {
       final state = await _pump(
         tester,
         username: 'robin',
@@ -308,10 +302,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(_noName), findsNothing);
       expect(find.text(UserFormValidators.passwordsDiffer), findsNothing);
-      expect(
-        find.text(UserFormValidators.availabilityCheckRequired),
-        findsNothing,
-      );
     });
 
     testWidgets('Issue 61: passwords that differ are refused inline and '
@@ -328,57 +318,6 @@ void main() {
       expect(state.validate(), isNotNull);
       await tester.pumpAndSettle();
       expect(find.text(UserFormValidators.passwordsDiffer), findsNothing);
-    });
-
-    testWidgets('Issue 61: a username found taken keeps the form refused '
-        'inline', (tester) async {
-      final reported = <bool>[];
-      final state = await _pump(
-        tester,
-        available: false,
-        onCanSubmitChanged: reported.add,
-      );
-      await _fill(tester, state);
-
-      expect(find.text('Already taken'), findsOneWidget);
-      expect(state.canSubmit, isFalse);
-      expect(reported, [false]);
-      expect(state.validate(), isNull);
-      await tester.pumpAndSettle();
-      expectInlineMessage(UserFormValidators.availabilityCheckRequired);
-    });
-
-    testWidgets('Issue 61: the availability refusal goes as soon as the '
-        'username is checked, and the form is then valid', (tester) async {
-      final state = await _pump(tester);
-      await _fill(tester, state);
-      await enterField(tester, _username, 'robin2');
-      expect(state.validate(), isNull);
-      await tester.pumpAndSettle();
-      expectInlineMessage(UserFormValidators.availabilityCheckRequired);
-
-      await tester.tap(checkAvailabilityButton);
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text(UserFormValidators.availabilityCheckRequired),
-        findsNothing,
-      );
-      expect(state.validate()![_username], 'robin2');
-    });
-
-    testWidgets('Issue 61: canSubmit is told false, true once the username '
-        'is confirmed, and false again when it is edited', (tester) async {
-      final reported = <bool>[];
-      final state = await _pump(tester, onCanSubmitChanged: reported.add);
-      expect(reported, [false]);
-
-      await checkUsername(tester, _username, 'robin');
-      expect(reported, [false, true]);
-
-      await enterField(tester, _username, 'robin2');
-      expect(reported, [false, true, false]);
-      expect(state.canSubmit, isFalse);
     });
 
     testWidgets('Issue 61: a missing name is reported before the username '
@@ -625,7 +564,7 @@ void main() {
     });
 
     testWidgets('Issue 61: signing up, it fits a phone, empty and with '
-        'every message and the check row showing', (tester) async {
+        'every message showing', (tester) async {
       final state = await _pump(tester, size: kPhoneSurface);
       expect(tester.takeException(), isNull);
 
@@ -636,8 +575,7 @@ void main() {
       expect(find.text('Date of birth is required'), findsOneWidget);
       expect(tester.takeException(), isNull);
 
-      await checkUsername(tester, _username, 'a_long_username_on_a_phone');
-      expect(find.text('Available'), findsOneWidget);
+      await enterField(tester, _username, 'a_long_username_on_a_phone');
       expect(state.validate(), isNull);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);

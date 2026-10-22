@@ -18,7 +18,6 @@ Future<GlobalKey<UserFormState>> _pumpCreate(WidgetTester tester) async {
             defaultCountryCode: '91',
             key: key,
             canAssignCoach: true,
-            onCheckUsernameAvailable: (_) async => true,
           ),
         ),
       ),
@@ -54,25 +53,12 @@ void main() {
       expect(key.currentState!.isDirty, isTrue);
     });
 
-    testWidgets('Issue 53: creating, an unchecked username is refused inline '
-        'and the values come once it is confirmed', (tester) async {
+    testWidgets('Issue 161: creating, the values come with the username as '
+        'typed, with no availability check', (tester) async {
       final key = await _pumpCreate(tester);
       await _fill(tester, key);
 
-      expect(key.currentState!.validate(), isNull);
-      await tester.pumpAndSettle();
-      expect(
-        find.text('Run the availability check before creating the account.'),
-        findsOneWidget,
-      );
-
-      await tester.tap(find.text('Check availability'));
-      await tester.pumpAndSettle();
-      expect(
-        find.text('Run the availability check before creating the account.'),
-        findsNothing,
-      );
-
+      expect(find.text('Check availability'), findsNothing);
       final values = key.currentState!.validate();
       expect(values, isNotNull);
       expect(values![UserFormFields.usernameId], 'robin');
@@ -86,8 +72,6 @@ void main() {
     ) async {
       final key = await _pumpCreate(tester);
       await _fill(tester, key);
-      await tester.tap(find.text('Check availability'));
-      await tester.pumpAndSettle();
       await tester.enterText(_field(UserFormFields.firstNameId), '');
 
       expect(key.currentState!.validate(), isNull);

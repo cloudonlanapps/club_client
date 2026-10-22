@@ -10,7 +10,6 @@ import '../constants/auth_view_sizes.dart';
 import '../constants/auth_view_strings.dart';
 import '../models/signup_form_helpers.dart';
 import '../providers/client.dart';
-import '../providers/username_availability.dart';
 
 /// Self-service signup view.
 ///
@@ -41,26 +40,13 @@ class SignupView extends ConsumerStatefulWidget {
   ConsumerState<SignupView> createState() => SignupViewState();
 }
 
-/// State of [SignupView]: holds the form's key, the in-flight flag and
-/// whether the form may be submitted.
+/// State of [SignupView]: holds the form's key and the in-flight flag.
 class SignupViewState extends ConsumerState<SignupView> {
   /// Key of the signup form.
   final formKey = GlobalKey<SignupFormState>();
 
   /// Whether a registration is in flight.
   bool isSubmitting = false;
-
-  /// Whether the form may be submitted: its username is confirmed
-  /// available.
-  bool canSubmit = false;
-
-  /// Whether [username] is free to register.
-  Future<bool> checkUsernameAvailable(String username) async {
-    final result = await ref.read(
-      usernameAvailabilityProvider(username).future,
-    );
-    return result == UsernameAvailability.available;
-  }
 
   /// The Create account action: validates the form and registers.
   Future<void> submit() async {
@@ -123,14 +109,10 @@ class SignupViewState extends ConsumerState<SignupView> {
                 key: formKey,
                 defaultCountryCode: ref.watch(defaultCountryCodeProvider),
                 enabled: !isSubmitting,
-                onCheckUsernameAvailable: checkUsernameAvailable,
-                onCanSubmitChanged: (value) {
-                  if (canSubmit != value) setState(() => canSubmit = value);
-                },
               ),
               const SizedBox(height: AuthViewSizes.sectionGap),
               ShadButton(
-                onPressed: canSubmit && !isSubmitting ? submit : null,
+                onPressed: isSubmitting ? null : submit,
                 child: Text(
                   isSubmitting
                       ? AuthViewStrings.submitting

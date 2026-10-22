@@ -48,11 +48,9 @@ final Finder showButton = find.widgetWithText(ShadButton, 'Show');
 Future<UserFormState> pumpCreate(
   WidgetTester tester, {
   bool enabled = true,
-  bool available = true,
   bool canAssignAdmin = false,
   bool canAssignCoach = false,
   VoidCallback? onShowDefaultPassword,
-  ValueChanged<bool>? onCanSubmitChanged,
   Map<String, dynamic>? initialValues,
   Size size = kFormSurface,
 }) async {
@@ -67,18 +65,15 @@ Future<UserFormState> pumpCreate(
       canAssignAdmin: canAssignAdmin,
       canAssignCoach: canAssignCoach,
       onShowDefaultPassword: onShowDefaultPassword,
-      onCheckUsernameAvailable: (_) async => available,
-      onCanSubmitChanged: onCanSubmitChanged,
     ),
     size: size,
   );
   return key.currentState!;
 }
 
-/// Fills a creating form with valid values, the username confirmed and the
-/// default password kept.
+/// Fills a creating form with valid values, the default password kept.
 Future<void> fillCreate(WidgetTester tester, UserFormState state) async {
-  await checkUsername(tester, _username, 'robin');
+  await enterField(tester, _username, 'robin');
   await enterField(tester, _first, 'Robin');
   await enterField(tester, _phone, '9876543210');
   await enterField(tester, _email, 'robin@example.test');

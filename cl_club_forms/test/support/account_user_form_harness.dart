@@ -114,28 +114,6 @@ Future<void> pickOption(WidgetTester tester, String id, String option) async {
   await tester.pumpAndSettle();
 }
 
-/// The **Check availability** action of the username field.
-final Finder checkAvailabilityButton = find.widgetWithText(
-  ShadButton,
-  'Check availability',
-);
-
-/// Whether the **Check availability** action responds.
-bool checkAvailabilityIsOn(WidgetTester tester) =>
-    tester.widget<ShadButton>(checkAvailabilityButton).onPressed != null;
-
-/// Types [username] into the username field with [id] and runs its
-/// availability check to the end.
-Future<void> checkUsername(
-  WidgetTester tester,
-  String id,
-  String username,
-) async {
-  await enterField(tester, id, username);
-  await tester.tap(checkAvailabilityButton);
-  await tester.pumpAndSettle();
-}
-
 /// Mounts [cluster], a group of fields that sits in a form, inside a bare
 /// `ShadForm` seeded with [initial], and gives that form's state.
 Future<ShadFormState> pumpCluster(

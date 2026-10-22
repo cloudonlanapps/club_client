@@ -8,9 +8,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// Structural guard for #411.
 ///
 /// The full submission path through `SignupForm` requires filling DOB,
-/// gender, password, and a captcha-style availability check — too much
-/// scaffolding for a focused regression. Instead, lock in the two
-/// invariants the issue actually demanded by reading the source file:
+/// gender and password — too much scaffolding for a focused regression.
+/// Instead, lock in the two invariants the issue actually demanded by
+/// reading the source file:
 ///
 ///   1. `signup_view.dart` no longer calls `authStateProvider.notifier.login`
 ///      (auto-login removed).

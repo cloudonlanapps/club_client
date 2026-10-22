@@ -1005,31 +1005,10 @@ Future<void> _signupViaUi(
   );
 
   await _enterTextById(tester, 'username', username);
-  // Pump so the username controller listener fires and rebuilds the row
-  // that owns the "Check availability" button (it is gated on
-  // username.isNotEmpty).
-  await _settle(tester);
-
-  // The signup form gates the Create-account button on a successful
-  // username-availability check (signup_view.canSubmit). Tap "Check
-  // availability" and wait for the "Available" message before proceeding —
-  // otherwise the submit button stays disabled.
-  _invokeShadButton(
-    tester,
-    find.widgetWithText(ShadButton, 'Check availability'),
-    reason: '"Check availability" button',
-  );
-  await _settle(tester);
-  await _waitFor(
-    tester,
-    () => find.text('Available').evaluate().isNotEmpty,
-    description: 'username "$username" to be reported available',
-  );
-
   await _enterTextById(tester, 'email', email);
   await _enterTextById(tester, 'password', password);
   // SignupForm requires a matching confirmPassword; without it the form
-  // never validates and the Create-account button stays disabled.
+  // never validates and Create account refuses it.
   await _enterTextById(tester, 'confirmPassword', password);
   await _enterTextById(tester, 'firstName', firstName);
   await _enterTextById(tester, 'lastName', lastName);
@@ -1102,22 +1081,6 @@ Future<void> _createMemberViaUi(
   );
 
   await _enterTextById(tester, 'username', username);
-
-  // The Create user button is gated on `canSubmit` (matches SignupView).
-  // Run the username availability check before attempting submit.
-  final checkButton = find.widgetWithText(ShadButton, 'Check availability');
-  await _waitFor(
-    tester,
-    () => checkButton.evaluate().isNotEmpty,
-    description: '"Check availability" button to appear',
-  );
-  _invokeShadButton(tester, checkButton, reason: '"Check availability" button');
-  await _settle(tester);
-  await _waitFor(
-    tester,
-    () => find.text('Available').evaluate().isNotEmpty,
-    description: 'username availability to report "Available"',
-  );
 
   // The Add User form defaults `useDefaultPassword=true`, which hides the
   // password + confirmPassword fields. Invoke the checkbox's onChanged

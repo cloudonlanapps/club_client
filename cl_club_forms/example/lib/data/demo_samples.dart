@@ -32,9 +32,6 @@ abstract final class DemoSamples {
   /// Id of the venue the samples are held at.
   static const int venueId = 1;
 
-  /// A username the fake availability check reports as taken starts so.
-  static const String takenPrefix = 'taken';
-
   /// The country calling code of the club in the samples. The sample
   /// phones carry their own: they are numbers set aside for made-up use.
   static const String countryCode = '91';

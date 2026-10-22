@@ -3,7 +3,6 @@ import 'package:cl_club_forms/cl_club_forms.dart';
 import '../models/form_demo_entry.dart';
 import '../models/form_demo_group.dart';
 import 'demo_samples.dart';
-import 'fake_host_calls.dart';
 
 /// The forms of a member's record.
 abstract final class UserEntries {
@@ -19,7 +18,6 @@ abstract final class UserEntries {
         defaultCountryCode: DemoSamples.countryCode,
         canAssignAdmin: true,
         canAssignCoach: true,
-        onCheckUsernameAvailable: FakeHostCalls.usernameAvailable,
         onShowDefaultPassword: () {},
       ),
     ),

@@ -4,11 +4,7 @@ import 'package:cl_club_forms/cl_club_forms.dart'
     show SignupGender, UserForm, UserFormFields, UserFormState;
 import 'package:cl_club_members/src/views/user_create_view.dart';
 import 'package:cl_member_auth/cl_member_auth.dart'
-    show
-        AuthNotifier,
-        UsernameAvailability,
-        authStateProvider,
-        usernameAvailabilityProvider;
+    show AuthNotifier, authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         ClUsersMasterNotifier,
@@ -91,12 +87,9 @@ Future<void> _systemBack(WidgetTester tester) async {
 Finder _input(String id) =>
     find.byWidgetPredicate((w) => w is ShadInputFormField && w.id == id);
 
-/// Fills the form, the username confirmed available, and taps Create user.
+/// Fills the form and taps Create user.
 Future<void> _fillAndCreate(WidgetTester tester) async {
   await tester.enterText(_input(UserFormFields.usernameId), 'robin');
-  await tester.pumpAndSettle();
-  await tester.tap(find.text('Check availability'));
-  await tester.pumpAndSettle();
   await tester.enterText(_input(UserFormFields.firstNameId), 'Robin');
   await tester.enterText(_input(UserFormFields.phoneId), '9876543210');
   await tester.enterText(_input(UserFormFields.emailId), 'robin@example.test');
@@ -127,9 +120,6 @@ Future<_Host> _push(WidgetTester tester, {Completer<void>? hold}) async {
       overrides: [
         authStateProvider.overrideWith(_Admin.new),
         clUsersMasterProvider.overrideWith(() => _Users(host, hold)),
-        usernameAvailabilityProvider.overrideWith(
-          (ref, username) async => UsernameAvailability.available,
-        ),
         defaultCountryCodeProvider.overrideWithValue('91'),
       ],
       child: ShadApp(
@@ -231,17 +221,10 @@ void main() {
     );
 
     testWidgets('Issue 98: Create user: system back asks once anything was '
-        'typed, though the username is not confirmed', (tester) async {
+        'typed', (tester) async {
       final host = await _push(tester);
       await tester.enterText(_input(UserFormFields.usernameId), 'robin');
       await tester.pumpAndSettle();
-      expect(
-        tester
-            .widget<ShadButton>(find.widgetWithText(ShadButton, 'Create user'))
-            .onPressed,
-        isNull,
-        reason: 'the username is not confirmed',
-      );
 
       await _systemBack(tester);
 

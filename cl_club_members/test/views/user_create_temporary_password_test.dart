@@ -3,11 +3,7 @@ import 'package:cl_club_forms/cl_club_forms.dart'
 import 'package:cl_club_members/src/views/user_create_view.dart';
 import 'package:cl_club_members/src/widgets/default_password_dialog.dart';
 import 'package:cl_member_auth/cl_member_auth.dart'
-    show
-        AuthNotifier,
-        UsernameAvailability,
-        authStateProvider,
-        usernameAvailabilityProvider;
+    show AuthNotifier, authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         ClUsersMasterNotifier,
@@ -86,9 +82,6 @@ Future<String> _createWithDefaultPassword(
       overrides: [
         authStateProvider.overrideWith(_Admin.new),
         clUsersMasterProvider.overrideWith(() => _Users(sent)),
-        usernameAvailabilityProvider.overrideWith(
-          (ref, username) async => UsernameAvailability.available,
-        ),
         defaultCountryCodeProvider.overrideWithValue('91'),
       ],
       child: ShadApp(
@@ -116,9 +109,6 @@ Future<String> _createWithDefaultPassword(
   await tester.pumpAndSettle();
 
   await tester.enterText(_field(UserFormFields.usernameId), username);
-  await tester.pumpAndSettle();
-  await tester.tap(find.text('Check availability'));
-  await tester.pumpAndSettle();
   await tester.enterText(_field(UserFormFields.firstNameId), 'Robin');
   await tester.enterText(_field(UserFormFields.phoneId), '9876543210');
   await tester.enterText(

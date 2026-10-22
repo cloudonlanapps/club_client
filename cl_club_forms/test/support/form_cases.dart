@@ -72,7 +72,6 @@ final List<FormCase> formCases = [
     build: ({required enabled}) => SignupForm(
       enabled: enabled,
       defaultCountryCode: _countryCode,
-      onCheckUsernameAvailable: (_) async => true,
     ),
     typed: true,
   ),
@@ -81,7 +80,6 @@ final List<FormCase> formCases = [
     build: ({required enabled}) => UserForm(
       enabled: enabled,
       defaultCountryCode: _countryCode,
-      onCheckUsernameAvailable: (_) async => true,
     ),
     typed: true,
   ),

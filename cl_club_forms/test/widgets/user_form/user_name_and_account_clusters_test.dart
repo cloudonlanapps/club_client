@@ -247,23 +247,8 @@ void main() {
   });
 
   group('Issue 61: UserUsernameField', () {
-    Future<List<(String, String?)>> pump(
-      WidgetTester tester, {
-      bool enabled = true,
-      bool available = true,
-    }) async {
-      final reports = <(String, String?)>[];
-      await pumpCluster(
-        tester,
-        UserUsernameField(
-          enabled: enabled,
-          onAvailabilityChanged: (username, confirmed) =>
-              reports.add((username, confirmed)),
-          checkAvailability: (_) async => available,
-        ),
-      );
-      return reports;
-    }
+    Future<void> pump(WidgetTester tester, {bool enabled = true}) =>
+        pumpCluster(tester, UserUsernameField(enabled: enabled));
 
     testWidgets('Issue 61: it is one required row with its hint, focused '
         'when the form opens', (tester) async {
@@ -276,28 +261,10 @@ void main() {
       expectLabelsAreRows(tester);
     });
 
-    testWidgets('Issue 61: it passes a confirmed username on, and a taken '
-        'one as unconfirmed', (tester) async {
-      final reports = await pump(tester);
-      await checkUsername(tester, _username, 'robin');
-      expect(reports.last, ('robin', 'robin'));
-
-      await tester.pumpWidget(const SizedBox.shrink());
-      final refused = await pump(tester, available: false);
-      await checkUsername(tester, _username, 'robin');
-      expect(refused.last, ('robin', null));
-    });
-
     testWidgets('Issue 61: it holds the username to the username rules', (
       tester,
     ) async {
-      final form = await pumpCluster(
-        tester,
-        UserUsernameField(
-          onAvailabilityChanged: (_, _) {},
-          checkAvailability: (_) async => true,
-        ),
-      );
+      final form = await pumpCluster(tester, const UserUsernameField());
 
       expect(form.saveAndValidate(), isFalse);
       await tester.pumpAndSettle();

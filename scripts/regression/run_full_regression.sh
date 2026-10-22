@@ -22,7 +22,9 @@
 #   INTERVAL=15          seconds between metric samples
 #   SUITE_TIMEOUT=43200  seconds before one suite is stopped (12 h)
 #   RETRY_FAILED=1  RETRY_MAX=25
-#   KEEP_WORKTREE=0      1 keeps the worktree afterwards (it is removed by default)
+#   KEEP_WORKTREE=0      1 keeps the worktree the run made (it is removed by default)
+#   WORKTREE=<path>      test this existing worktree as it stands, instead of
+#                        making one at REF; a worktree given this way is never removed
 #   ANDROID_SERIAL       the phone, when more than one device is attached
 #   ONLY_FILE / ONLY_CONF   a smoke run: the integration suites run only this
 #                        file (integration_test/<name>), against ONLY_CONF
@@ -79,6 +81,7 @@ RESTORE="$OUT/restore_settings.sh"
 echo "#!/usr/bin/env bash" >"$RESTORE"; chmod +x "$RESTORE"
 sampler_pid=""
 finished=0
+created_wt=0
 cleanup() {
     status "finishing"
     echo cleanup >"$OUT/phase"
@@ -88,7 +91,7 @@ cleanup() {
     bash "$RESTORE" >>"$OUT/run.log" 2>&1
     note "writing reports"
     python3 -I "$HERE/report.py" report "$OUT" >>"$OUT/run.log" 2>&1 || note "ERROR: report.py failed (see run.log)"
-    if [ "$KEEP_WORKTREE" != 1 ] && [ -d "$WT" ]; then
+    if [ "$created_wt" = 1 ] && [ "$KEEP_WORKTREE" != 1 ] && [ -d "$WT" ]; then
         note "removing worktree $WT"
         git -C "$SRC_REPO" worktree remove --force "$WT" >>"$OUT/run.log" 2>&1 || note "WARN: could not remove $WT"
     fi
@@ -169,9 +172,13 @@ sampler_pid=$!
 setup_start=$(date +%s)
 note "fetching and creating worktree $WT at $REF"
 git -C "$SRC_REPO" fetch --quiet origin 2>&1 | stamp >>"$OUT/run.log"
-if [ ! -d "$WT" ]; then
+if [ -d "$WT" ]; then
+    # A worktree given with WORKTREE= is tested as it stands and never removed.
+    note "using the existing worktree $WT as it is (REF is not applied; it is kept afterwards)"
+else
     git -C "$SRC_REPO" worktree add --detach "$WT" "$REF" 2>&1 | stamp >>"$OUT/run.log"
     [ "${PIPESTATUS[0]}" -eq 0 ] || { note "ERROR: git worktree add failed"; exit 1; }
+    created_wt=1
 fi
 echo "commit: $(git -C "$WT" log -1 --format='%h %s (%cd)' --date=short)" >>"$OUT/meta.txt"
 note "flutter pub get in every package"

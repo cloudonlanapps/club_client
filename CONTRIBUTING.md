@@ -73,6 +73,8 @@ removed at close, not replaced (there is no `status:done`).
 | `status:in-progress` | `status:blocked` | Waiting on an external dependency or decision |
 | `status:in-progress` | `status:needs-info` | Waiting on the reporter or user for an answer |
 | `status:blocked` / `status:needs-info` | `status:in-progress` | Unblocked; work resumed |
+| any open `status:*` | `status:deferred` | Parked for an unknown future; the issue stays **open** |
+| `status:deferred` | `status:triage` / `status:ready` | Picked up again |
 | any `status:*` | (removed) | The PR merges and closes the issue, or the issue is closed by hand |
 
 Change a status by removing the old label and adding the new one in one call:
@@ -81,6 +83,11 @@ Change a status by removing the old label and adding the new one in one call:
 gh issue edit N --remove-label "status:ready" --add-label "status:in-progress"
 gh issue edit N --remove-label "status:in-progress"   # after the merge closes N
 ```
+
+**Deferring is not closing.** `status:deferred` parks an issue nobody plans to
+work on yet. It stays open, keeps its history, and is listed with
+`gh issue list --label status:deferred`. Leave a comment saying why it was
+deferred. Close it only when it is done, or when it is dropped on purpose.
 
 **Kind — optional.** `bug`, `enhancement`, `documentation` and the other
 GitHub defaults say what kind of change an issue is. Use them when they help;

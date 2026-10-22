@@ -16,6 +16,7 @@ import '../../models/event_staff_form_helpers.dart';
 import '../../models/programme_schedule_form_helpers.dart'
     show programmeAdjustFromOptions;
 import '../../utils/event_save_error.dart';
+import '../../utils/save_confirming_schedule_clash.dart';
 import 'event_staff_pickers.dart';
 import 'organizer_coaches_read.dart';
 
@@ -27,8 +28,11 @@ import 'organizer_coaches_read.dart';
 /// has opted in (`isPublicProfile`); others render as plain text. The editor
 /// stages changes and the card's Save commits them in a single call: an
 /// update of a camp or a one-off, and for a programme a split from the
-/// upcoming session the editor asks for (club_client#118). Coach display
-/// names + public ids are resolved from `clUsersMasterProvider`.
+/// upcoming session the editor asks for (club_client#118). A clash with
+/// another event's venue, organizer or coach asks whether to save anyway
+/// ([saveConfirmingScheduleClash]); Cancel keeps the editor open with the
+/// staged staff. Coach display names + public ids are resolved from
+/// `clUsersMasterProvider`.
 class OrganizerCoachesSection extends ConsumerStatefulWidget {
   const OrganizerCoachesSection({
     required this.event,
@@ -53,11 +57,17 @@ class OrganizerCoachesSectionState
 
   Future<bool> save(Map<String, dynamic> values) async {
     try {
-      await EventFormSubmit.updateOrganizer(
-        event: widget.event,
-        values: values,
-        notifier: ref.read(clEventsMasterProvider.notifier),
+      final notifier = ref.read(clEventsMasterProvider.notifier);
+      final saved = await saveConfirmingScheduleClash(
+        context,
+        ({required acceptConflicts}) => EventFormSubmit.updateOrganizer(
+          event: widget.event,
+          values: values,
+          notifier: notifier,
+          acceptConflicts: acceptConflicts,
+        ),
       );
+      if (!saved) return false;
       if (!mounted) return true;
       ShadToaster.of(context).show(
         const ShadToast(description: Text('Organizer & coaches updated.')),

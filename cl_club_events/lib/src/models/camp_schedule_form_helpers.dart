@@ -164,11 +164,17 @@ class CampScheduleFormSubmit {
   /// (`EVENT_ALREADY_STARTED`, `OCCURRENCE_OVERRIDES_PRESENT`,
   /// `INVALID_SESSIONS_TOTAL`, `STALE_VERSION`, …); the caller surfaces a friendly message /
   /// override-reset confirmation.
+  ///
+  /// [acceptConflicts] `true` moves a window that clashes with another
+  /// event's venue, organizer or coach; without it the server refuses the
+  /// clash with `ScheduleConflictException` (club_server#72). A timetable
+  /// correction is not checked for clashes, so it is not sent there.
   static Future<Event> updateSchedule({
     required Event event,
     required CampScheduleData data,
     required ClEventsMasterNotifier notifier,
     bool resetOverrides = false,
+    bool acceptConflicts = false,
   }) async {
     final next = assembleCampSchedule(data);
     final current = event.sessions ?? const <EventSession>[];
@@ -201,6 +207,7 @@ class CampScheduleFormSubmit {
       rrule: next.rrule,
       sessions: () => newSessions.isEmpty ? null : newSessions,
       resetOverrides: resetOverrides,
+      acceptConflicts: acceptConflicts,
     );
   }
 }

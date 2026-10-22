@@ -51,6 +51,7 @@ EventCreateRefusal? eventCreateRefusal(
       );
     case SdkErrorCode.conflict:
     case SdkErrorCode.timeConflict:
+    case SdkErrorCode.scheduleConflict:
       return (
         fieldErrors: const {},
         formError: eventSaveErrorMessage(error, fallback: fallback),

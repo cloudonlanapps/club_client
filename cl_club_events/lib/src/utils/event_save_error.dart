@@ -28,7 +28,9 @@ String eventSaveErrorMessage(
   }
   if (error is ServerException) {
     return switch (error.code) {
-      SdkErrorCode.conflict || SdkErrorCode.timeConflict =>
+      SdkErrorCode.conflict ||
+      SdkErrorCode.timeConflict ||
+      SdkErrorCode.scheduleConflict =>
         'That clashes with another booking of the organizer, a coach or '
             'the venue.',
       SdkErrorCode.insufficientPermission =>

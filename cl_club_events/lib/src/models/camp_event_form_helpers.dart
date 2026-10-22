@@ -232,6 +232,7 @@ class EventFormSubmit {
         );
       case SdkErrorCode.conflict:
       case SdkErrorCode.timeConflict:
+      case SdkErrorCode.scheduleConflict:
         return (fieldErrors: const {}, formError: staffClashMessage);
       default:
         return schemaRefusal(error, EventSchemaFields.staff);
@@ -260,10 +261,15 @@ class EventFormSubmit {
   /// what changed between the organizer and the coaches. Sessions before it
   /// keep the present staff. Returns [event] untouched, with no call, when
   /// neither changed.
+  ///
+  /// [acceptConflicts] `true` saves a schedule that clashes with another
+  /// event's venue, organizer or coach; without it the server refuses the
+  /// clash with `ScheduleConflictException` (club_server#72).
   static Future<Event> updateOrganizer({
     required Event event,
     required Map<String, dynamic> values,
     required ClEventsMasterNotifier notifier,
+    bool acceptConflicts = false,
   }) async {
     final coaches =
         (values[EventFormFields.coachNamesId] as List<String>?) ?? const [];
@@ -274,6 +280,7 @@ class EventFormSubmit {
         event.id,
         organizerName: organizer,
         coachNames: () => coaches,
+        acceptConflicts: acceptConflicts,
       );
     }
     final organizerChanged = organizer != (event.organizerName?.trim() ?? '');
@@ -289,6 +296,7 @@ class EventFormSubmit {
       version: event.version,
       organizerName: organizerChanged ? organizer : null,
       coachNames: coachesChanged ? () => coaches : null,
+      acceptConflicts: acceptConflicts,
     );
   }
 

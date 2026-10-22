@@ -142,7 +142,8 @@ if command -v gsettings >/dev/null; then
     for kv in "org.gnome.desktop.session idle-delay uint32 0" \
               "org.gnome.desktop.screensaver lock-enabled false" \
               "org.gnome.desktop.screensaver idle-activation-enabled false" \
-              "org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type 'nothing'"; do
+              "org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type 'nothing'" \
+              "org.gnome.settings-daemon.plugins.power sleep-inactive-battery-type 'nothing'"; do
         set -- $kv
         schema=$1 key=$2; shift 2; val="${*: -1}"
         old=$(gsettings get "$schema" "$key" 2>/dev/null) || continue

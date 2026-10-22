@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Run integration test files as a web build in Chrome on an Android phone.
+# `just phone-test` / `just phone-test-one` (justfile_phone_tests.just) set
+# everything below up and call this script; run it directly only by hand.
 #
 #   scripts/phone_web_test.sh <server_port> <out_dir> <example_dir>:<file> ...
 #

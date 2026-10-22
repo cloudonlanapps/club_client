@@ -80,6 +80,7 @@ just generate app <brand> <out> --api-url <url> [--website-url <url>]
 just generate website <brand> <out> --api-url <url> [--app-url <url>] [--website-url <url>]
 just generator-test               # the generator's own tests
 just generator-build-example      # both targets from example_brand, built for the web
+just generator-build-example-android   # the app from example_brand, built as an APK
 ```
 
 Rules:
@@ -87,6 +88,12 @@ Rules:
 - **URLs are input, never derived.** `--api-url`, `--app-url` and
   `--website-url` are whole http(s) URLs written into `club.json` as given; the
   generator assumes no host or prefix.
+- **Android is opt-in, for the app (#280).** `--android-id <id>` copies the
+  template's `android/` (no build output or local files) and writes that
+  application id, the name (`--android-name`, default club.json's
+  `shortName`) and launcher icons from `icon_1024.png`. Cleartext HTTP is
+  allowed only when `--api-url` is `http://`. The template's own id stays the
+  neutral `com.example.cl_club_app_example`.
 - **`robots.txt` and `sitemap.xml` need the website's own URL.** Given
   `--website-url`, the website target writes both under `web/`: the sitemap
   lists the fixed public pages and the listing of each event type in

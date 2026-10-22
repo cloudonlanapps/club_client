@@ -26,7 +26,8 @@ final authStateProvider = AsyncNotifierProvider<AuthNotifier, UserPrivate?>(
 /// The stored session could not be restored because the server could not
 /// be reached; [error] is what the request failed with. The token and the
 /// saved credentials are kept, and the restore runs again once the network
-/// monitor sees the server back (#192).
+/// monitor sees the server back (#192), or when the member taps Try Again
+/// ([AuthNotifier.retryRestore], club_client#257).
 class SessionRestoreUnreachable implements Exception {
   const SessionRestoreUnreachable(this.error);
 
@@ -60,6 +61,16 @@ class AuthNotifier extends AsyncNotifier<UserPrivate?> {
       }
     });
     return restoreFromStoredSession();
+  }
+
+  /// Runs the stored-session restore again when the last one could not
+  /// reach the server ([SessionRestoreUnreachable]); otherwise does
+  /// nothing. The failure screen's Try Again calls it: when the server's
+  /// health check answers while its API fails, the network status never
+  /// leaves online, so the automatic retry in [build] never fires
+  /// (club_client#257).
+  void retryRestore() {
+    if (state.error is SessionRestoreUnreachable) ref.invalidateSelf();
   }
 
   /// Signs in again from what this device stored: the session token, else

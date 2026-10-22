@@ -6,19 +6,26 @@ import '../providers/network_status.dart';
 
 /// Screen displayed when network is unavailable or server is unreachable.
 ///
-/// Shows a status icon, message, and retry button. An optional [footer]
-/// widget can be provided for shell-specific messaging (e.g. a contact hint).
+/// Shows a status icon, message, and retry button. Try Again asks the
+/// network monitor to check the server and then runs [onRetry], for a
+/// screen whose own request failed while the server still answers its
+/// health check (club_client#257). An optional [footer] widget can be
+/// provided for shell-specific messaging (e.g. a contact hint).
 class NetworkFailureScreen extends ConsumerWidget {
   const NetworkFailureScreen({
     required this.status,
     super.key,
     this.footer,
+    this.onRetry,
   });
 
   final NetworkStatus status;
 
   /// Optional widget shown below the retry button.
   final Widget? footer;
+
+  /// Runs when Try Again is tapped, after the network check starts.
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,6 +72,7 @@ class NetworkFailureScreen extends ConsumerWidget {
               ShadButton(
                 onPressed: () {
                   ref.read(networkStatusProvider.notifier).checkNow();
+                  onRetry?.call();
                 },
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,

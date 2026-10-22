@@ -250,6 +250,55 @@ void main() {
   });
 
   test(
+    'Issue 257: Try Again restores the session while the API failed and the '
+    'network status did not change',
+    () async {
+      final server = _Server()
+        ..offline = false
+        ..failStatus = 502;
+      final tokens = _Tokens()..session = _validSession();
+      final credentials = _Credentials()..saved = _saved();
+      final container = _container(server, tokens, credentials);
+      expect(
+        await _unreachableError(container),
+        isA<SessionRestoreUnreachable>(),
+      );
+
+      // The API answers again; nothing tells the network monitor.
+      server.failStatus = null;
+      container.read(authStateProvider.notifier).retryRestore();
+      await _until(
+        () => container.read(authStateProvider).valueOrNull != null,
+      );
+
+      expect(
+        container.read(authStateProvider).valueOrNull?.username,
+        'session_member',
+      );
+      expect(tokens.session?.accessToken, 'access');
+    },
+    timeout: _timeout,
+  );
+
+  test(
+    'Issue 257: retryRestore does nothing once the session is restored',
+    () async {
+      final server = _Server()..offline = false;
+      final tokens = _Tokens()..session = _validSession();
+      final credentials = _Credentials()..saved = _saved();
+      final container = _container(server, tokens, credentials);
+      final user = await container.read(authStateProvider.future);
+      expect(user?.username, 'session_member');
+
+      container.read(authStateProvider.notifier).retryRestore();
+
+      expect(container.read(authStateProvider).isLoading, isFalse);
+      expect(container.read(authStateProvider).valueOrNull, same(user));
+    },
+    timeout: _timeout,
+  );
+
+  test(
     'Issue 192: restore from saved credentials reports a blocked account',
     () async {
       final server = _Server()
@@ -310,9 +359,41 @@ void main() {
     },
     timeout: _timeout,
   );
+  testWidgets(
+    'Issue 257: Try Again on the login view runs the restore again',
+    (tester) async {
+      _UnreachableAuth.retries = 0;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [authStateProvider.overrideWith(_UnreachableAuth.new)],
+          child: ShadApp(
+            home: Scaffold(
+              body: LoginView(
+                onLoginSuccess: () {},
+                onNavigateToForgotPassword: () {},
+                onNavigateToSignup: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.text('Try Again'));
+      await tester.pump();
+
+      expect(_UnreachableAuth.retries, 1);
+    },
+    timeout: _timeout,
+  );
 }
 
 class _UnreachableAuth extends AuthNotifier {
+  static int retries = 0;
+
+  @override
+  void retryRestore() => retries++;
+
   @override
   Future<UserPrivate?> build() => Future.error(
     SessionRestoreUnreachable(http.ClientException('offline')),

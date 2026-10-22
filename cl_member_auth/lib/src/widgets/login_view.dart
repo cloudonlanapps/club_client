@@ -190,13 +190,14 @@ class LoginViewState extends ConsumerState<LoginView> {
             error: (error, _) {
               // The stored session could not be checked: say the server
               // cannot be reached; the restore runs again once it is back
-              // (#192).
+              // (#192), or when the member taps Try Again (club_client#257).
               if (error is SessionRestoreUnreachable) {
                 final status = ref.watch(networkStatusProvider);
                 return NetworkFailureScreen(
                   status: status == NetworkStatus.online
                       ? NetworkStatus.serverUnavailable
                       : status,
+                  onRetry: ref.read(authStateProvider.notifier).retryRestore,
                 );
               }
               final code = error is SdkException ? error.code : null;

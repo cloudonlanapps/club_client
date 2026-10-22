@@ -146,18 +146,13 @@ class ClUsersMasterNotifier extends AsyncNotifier<Map<String, UserInfo>> {
     }, refetch: ref.invalidateSelf);
   }
 
-  /// Soft-delete a user.
+  /// Soft-delete a user. The server answers with the user as deleted, which
+  /// replaces their row, so an admin still sees them, ready to Restore
+  /// (club_client#236).
   Future<void> deleteUser(String username) {
     return refetchIfWriteUncertain(() async {
       final client = await ref.read(secureClientProvider.future);
-      await client.users.deleteUser(username);
-
-      try {
-        final refreshed = await client.users.getUserInfo(username);
-        replaceLocally(refreshed);
-      } on Exception catch (_) {
-        removeLocally(username);
-      }
+      replaceLocally(await client.users.deleteUser(username));
     }, refetch: ref.invalidateSelf);
   }
 

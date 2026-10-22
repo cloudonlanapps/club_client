@@ -50,6 +50,7 @@ class MyEventDetailsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final accessAsync = ref.watch(myEventsAccessProvider(targetUsername));
     return accessAsync.when(
+      skipLoadingOnReload: true,
       loading: () => const LoadingView(),
       error: (_, _) => _accessDenied(),
       data: (allowed) {
@@ -60,6 +61,7 @@ class MyEventDetailsScreen extends ConsumerWidget {
         final detailKey = (username: targetUsername, eventId: eventId);
         final eventAsync = ref.watch(clMyEventDetailProvider(detailKey));
         return eventAsync.when(
+          skipLoadingOnReload: true,
           loading: () => const LoadingView(),
           error: (error, _) {
             if (error is ServerException && error.statusCode == 404) {

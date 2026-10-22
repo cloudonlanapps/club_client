@@ -162,7 +162,9 @@ class TemplateCreateViewState extends ConsumerState<TemplateCreateView> {
     final templates = copyOf == null
         ? null
         : ref.watch(clEvaluationTemplatesMasterProvider);
-    if (templates != null && templates.isLoading) {
+    // Only the first load shows the spinner: a reload keeps the editor and
+    // what is being typed (club_client#162).
+    if (templates != null && templates.isLoading && !templates.hasValue) {
       return const Center(child: ShadProgress());
     }
     final source = templates?.valueOrNull?[copyOf];

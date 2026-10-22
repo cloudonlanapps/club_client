@@ -83,7 +83,9 @@ class AdminUserReviewViewState extends ConsumerState<AdminUserReviewView> {
     }
 
     final usersAsync = ref.watch(clUsersMasterProvider);
-    if (usersAsync.isLoading) {
+    // Only the first load shows the spinner; a reload keeps the page
+    // (club_client#162).
+    if (usersAsync.isLoading && !usersAsync.hasValue) {
       return const LoadingView(message: 'Loading users…');
     }
     if (usersAsync.hasError) {

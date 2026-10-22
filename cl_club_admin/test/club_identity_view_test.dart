@@ -1,8 +1,9 @@
 import 'package:cl_club_admin/cl_club_admin.dart';
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clClubIdentityMasterProvider;
+    show clClubIdentityMasterProvider, clManualRefreshProvider;
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show EditableSectionCard, SectionEditButton;
@@ -424,5 +425,48 @@ void main() {
       expect(find.textContaining('socket closed'), findsNothing);
       expect(_input('shortName'), findsOneWidget);
     });
+
+    testWidgets('Issue 162: a refresh that reloads the club details keeps '
+        'an open editor and what was typed in it', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1100, 5000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        adminScope(
+          overrides: [
+            clClubIdentityMasterProvider.overrideWith(
+              () => RefreshingClubIdentity(_stored),
+            ),
+          ],
+          child: ClubIdentityView(currentUser: adminViewer(superAdmin: true)),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await _edit(tester, _club);
+      await _enter(tester, 'name', 'Other Club');
+      ProviderScope.containerOf(
+        tester.element(find.byType(ClubIdentityView)),
+      ).read(clManualRefreshProvider.notifier).state++;
+      await tester.pump();
+      expect(find.text('Loading club details…'), findsNothing);
+
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<EditableText>(_input('name')).controller.text,
+        'Other Club',
+      );
+    });
   });
+}
+
+/// The stored identity, reloaded by the Refresh button as the real master
+/// is.
+class RefreshingClubIdentity extends StubClubIdentity {
+  RefreshingClubIdentity(super.saved);
+
+  @override
+  Future<ClubIdentity> build() async {
+    ref.watch(clManualRefreshProvider);
+    return saved;
+  }
 }

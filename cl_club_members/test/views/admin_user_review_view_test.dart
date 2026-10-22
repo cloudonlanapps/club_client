@@ -762,4 +762,39 @@ void main() {
       await tester.pumpAndSettle();
     },
   );
+
+  testWidgets(
+    'Issue 162: a reload of the users keeps the page and the search box '
+    'being typed in',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final alpha = _pending('alpha');
+      await tester.pumpWidget(
+        _wrap(
+          usersStub: _StubUsersMasterNotifier({alpha.username: alpha}),
+          username: alpha.username,
+          privates: {alpha.username: _pendingPrivate(alpha.username)},
+        ),
+      );
+      await tester.pumpAndSettle();
+      final search = find.byType(EditableText).first;
+      await tester.tap(search);
+      await tester.enterText(search, 'al');
+      await tester.pump();
+
+      ProviderScope.containerOf(
+        tester.element(find.byType(AdminUserReviewView)),
+      ).invalidate(clUsersMasterProvider);
+      await tester.pump();
+      expect(find.text('Loading users…'), findsNothing);
+
+      await tester.pumpAndSettle();
+      final field = tester.widget<EditableText>(
+        find.byType(EditableText).first,
+      );
+      expect(field.controller.text, 'al');
+      expect(field.focusNode.hasFocus, isTrue);
+    },
+  );
 }

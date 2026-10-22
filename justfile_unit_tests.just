@@ -1,7 +1,8 @@
 # Unit / widget tests — no live server, no device target.
 #
-# These run on the host VM and cover every package's test/ dir (widget tests
-# use provider overrides for fake clients). The SDK's own tests live with it in
+# These run on the host VM and cover every package's test/ dir, the examples'
+# and the project generator's (widget tests use provider overrides for fake
+# clients). The SDK's own tests live with it in
 # cloudonlanapps/club_sdk; app integration is in the per-target app files.
 
 # Run all tests in a single package, e.g. `just unit-test cl_club_members`.
@@ -23,12 +24,18 @@ unit-test-all:
           cl_club_members cl_club_website \
           cl_club_venues cl_member_auth cl_member_onboarding cl_member_zone \
           cl_remote_store cl_server_config ui_lib \
-          cl_club_app/example cl_club_website/example)
+          cl_club_app/example cl_club_forms/example cl_club_website/example \
+          club_project_generator)
     declare -A status
     for pkg in "${pkgs[@]}"; do
         log="/tmp/${pkg//\//_}-test.log"
         echo "==> $pkg (log: $log)"
-        (cd "$pkg" && flutter test -j 1) >"$log" 2>&1
+        # The generator is a Dart package: its tests run with dart test.
+        if [ "$pkg" = club_project_generator ]; then
+            just generator-test >"$log" 2>&1
+        else
+            (cd "$pkg" && flutter test -j 1) >"$log" 2>&1
+        fi
         if [ $? -eq 0 ]; then status[$pkg]=PASS; else status[$pkg]=FAIL; fi
     done
     echo

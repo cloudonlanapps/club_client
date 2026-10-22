@@ -185,15 +185,24 @@ class AuthNotifier extends AsyncNotifier<UserPrivate?> {
     }
   }
 
+  /// Signs the member out: here first, then on the server, then clears
+  /// what this device stored.
+  ///
+  /// The state turns `null` before anything is awaited, so every provider
+  /// that reads the session client (`sessionClientProvider`) stops before
+  /// the client is replaced, and a request refused on the way out tries no
+  /// token refresh: once the member signs out, the server sees the logout
+  /// and nothing else that needs the session (club_client#272).
   Future<void> logout() async {
     final client = await ref.read(clientProvider.future);
+    ref.read(clientProvider.notifier).closeSession();
+    state = const AsyncData(null);
     try {
       await client.auth.logout();
     } on Object catch (_) {
       // Even if the server call fails, clear local state.
     }
     await _clearAll();
-    state = const AsyncData(null);
   }
 
   /// Performs a full login flow: authenticate, persist the session token,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -227,6 +228,31 @@ void main() {
         throwsStateError,
       );
       expect(sessionless.calls, 0);
+    });
+  });
+
+  group('Issue 272: capabilities while no one is signed in', () {
+    test('Issue 272: read through the token-free client while the session '
+        'client waits', () async {
+      final source = _FakeCapabilities(
+        const Capabilities(creditSystem: false, defaultCountryCode: '44'),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          secureClientProvider.overrideWith(
+            (ref) => Completer<SecureClient>().future,
+          ),
+          tokenFreeClientProvider.overrideWith(
+            (ref) async => fakeSecureClient(capabilities: source),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(capabilitiesProvider.future);
+
+      expect(container.read(defaultCountryCodeProvider), '44');
+      expect(source.calls, 1);
     });
   });
 }

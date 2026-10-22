@@ -164,6 +164,7 @@ export 'src/providers/site_media_master.dart'
         clMediaLibraryProvider,
         clSiteMediaMasterProvider,
         isPublicMedia;
+export 'src/providers/token_free_client.dart' show tokenFreeClientProvider;
 export 'src/providers/usable_credit_accounts.dart'
     show ClUsableCreditAccountsNotifier, clUsableCreditAccountsProvider;
 export 'src/providers/user_avatar.dart'

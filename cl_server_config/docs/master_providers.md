@@ -108,8 +108,9 @@ them too; club_core#53). Each read goes through `readPublic`
 on failure.
 
 `GET /capabilities` needs no token either but is not under `/public`.
-`capabilitiesProvider` serves it to both hosts: through `secureClientProvider`
-in an app, and, where the host gave none (the website; the provider then
+`capabilitiesProvider` serves it to both hosts through `tokenFreeClientProvider`
+(club_client#272): `clientProvider` in an app, so it is still read after
+signing out, while `secureClientProvider` waits for a session; and, where the host gave none (the website; the provider then
 throws `SecureClientNotProvided`), through `clSessionlessClientProvider`
 (`sessionless_client.dart`, internal: a logged-out SDK client built from
 `apiBaseUrlProvider`, which holds no session and sends nothing until asked;

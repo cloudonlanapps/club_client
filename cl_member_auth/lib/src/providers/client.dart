@@ -34,8 +34,9 @@ final clientProvider = AsyncNotifierProvider<ClientNotifier, SecureClient>(
 );
 
 class ClientNotifier extends AsyncNotifier<SecureClient> {
-  /// Set once this client has ended a refused session, so a burst of 401s
-  /// signs out once.
+  /// Set once this client's session is over — the server refused it, or
+  /// the member is signing out ([closeSession]) — so a burst of 401s signs
+  /// out once and none of them tries a token refresh.
   bool sessionEnded = false;
 
   /// The store behind the current client; replaced, and the old one
@@ -106,7 +107,11 @@ class ClientNotifier extends AsyncNotifier<SecureClient> {
     TokenStorage storage,
     http.Client? httpClient,
   ) async {
+    // A session that is over is not renewed: a request refused while the
+    // member signs out must not bring it back (club_client#272).
+    if (sessionEnded) return null;
     final session = await storage.read();
+    if (sessionEnded) return null;
     final refreshTkn = session?.refreshToken;
     if (refreshTkn == null) {
       if (session != null) await endSession(storage);
@@ -146,6 +151,12 @@ class ClientNotifier extends AsyncNotifier<SecureClient> {
       return null;
     }
   }
+
+  /// Marks this client's session as over because the member is signing
+  /// out: from now on a 401 tries no token refresh and ends nothing, since
+  /// the sign-out clears the session itself (club_client#272). The next
+  /// rebuild, which the sign-out causes, starts a fresh session.
+  void closeSession() => sessionEnded = true;
 
   /// Ends the session when the server refuses it outright — the member has
   /// left, been blocked or been deleted (club_core#157) — but only while

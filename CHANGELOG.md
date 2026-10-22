@@ -42,6 +42,13 @@
 - On a phone's browser the sign-in forms no longer open the keyboard by
   themselves, and the page fills the screen again once the keyboard closes
   (#160).
+- A failed reload keeps the evaluation page and what was typed; "couldn't
+  load" shows only when there is no data at all (#268).
+- The Broadcast screen keeps its composer fixed at the top while the sent
+  list scrolls, and hides the list while the phone keyboard is open so Send
+  can be reached by scrolling (#269).
+- After signing out, the app no longer calls the server with the dropped
+  token: open pages stop fetching and no token refresh is tried (#272).
 
 ## 1.0.0
 

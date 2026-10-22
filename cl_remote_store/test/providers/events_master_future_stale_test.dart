@@ -59,6 +59,7 @@ class _FakeEvents extends Fake implements EventSource {
     DateTime? endTimeUtc,
     String? rrule,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async {
     splitVersions.add(version);
     if (splitError != null) throw splitError!;

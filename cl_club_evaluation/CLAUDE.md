@@ -37,9 +37,10 @@ Views take `required UserPrivate currentUser` and callbacks, never routes,
 never watch `authStateProvider`, and assert the screen's gate (coach; coach
 or admin for the template views; or the member themselves). Templates are
 not admin-only: any coach or admin creates, edits, duplicates and deletes
-them (an admin's only evaluation role is templates). Restore is not
-offered in the UI yet: a deleted template leaves the library; it can be
-restored through the API/CLI (tracked separately). PDFs leave
+them (an admin's only evaluation role is templates). A deleted template
+leaves the library; **Show deleted templates** in the library lists the
+deleted ones (`clDeletedEvaluationTemplatesProvider`), each with **Restore**
+for any staff member (R46, club_client#277). PDFs leave
 the package only as bytes (`onOpenPdfBytes`); the app decides how to show
 them. Template files likewise: the app picks and saves them
 (`onPickTemplateFile`, `onSaveTemplateFile`).
@@ -55,7 +56,9 @@ download shows a toast. Never open them by URL.
 
 ```
 lib/src/
-  constants/  EvaluationViewStrings (all copy), EvaluationViewSizes.
+  constants/  EvaluationViewStrings (all copy), TemplateRestoreStrings
+              (the deleted view and Restore), TemplateFileStrings,
+              EvaluationViewSizes.
               Refusal codes are the SDK's `SdkErrorCode`.
   models/     Adapters, one per form (form rules 7, 18):
               EvaluationItemAdapter (SDK item variants ↔ EvaluationItemValue;
@@ -83,12 +86,14 @@ lib/src/
                 template call), EvaluationAutosave (answers written once
                 settled, in order), EvaluationLifecycle, EvaluationErrorMessage,
                 showEvaluationErrorToast, EvaluationNames,
-                EvaluationTemplateActions (delete with prompt and toasts),
+                EvaluationTemplateActions (delete with prompt and toasts;
+                restore, naming a renamed restore),
                 StartReviewChoices (also `eventsFor`, the Review Period
                 editor's events), EvaluationAnswerWriter (the edit body's
                 answer writes), the gallery mapper.
   views/      The seven views above.
-  widgets/    Rows, dialogs (item, rename, section title, existing question,
+  widgets/    Rows (the deleted templates' list and row with Restore),
+              dialogs (item, rename, section title, existing question,
               transfer, start, clear-answer prompt), the editor's body and
               its cards (top bar with Back and download, head card with
               status stamp, Review Period card / section / rows, Review
@@ -145,9 +150,12 @@ lib/src/
   pre-filled; the copies are new, unlinked questions. A taken name
   (`TEMPLATE_NAME_TAKEN`) shows inline in the designer and the rename
   dialog; `DUPLICATE_EVALUATION` inline in the start dialog and the Review
-  Period editor. Template Delete is always shown, disabled while in use. Restore
-  is not offered in the UI yet: a deleted template leaves the library; it
-  can be restored through the API/CLI (tracked separately).
+  Period editor. Template Delete is always shown, disabled while in use.
+- **Restore never fails on a taken name** (club_client#277): the server
+  restores the template renamed `<name> -- Restored #N`, and the toast
+  names the name it came back under (`TemplateRestoreStrings.restoredAs`).
+  A deleted template does not open; its row's only action is Restore.
+  `NOTHING_TO_RESTORE` (someone restored it first) says so.
 - **Outline rows have no delete.** An item or section is deleted from its
   dialog, asked first; the item dialog also asks before dropping changes
   (Cancel, Escape, back) and ignores taps outside. A frozen template opens

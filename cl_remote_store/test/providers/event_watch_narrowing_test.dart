@@ -65,6 +65,7 @@ class _FakeEvents extends Fake implements EventSource {
     List<String>? Function()? highlights,
     List<String>? Function()? includes,
     List<EventSession>? Function()? sessions,
+    bool acceptConflicts = false,
   }) async {
     final current = store[eventId]!;
     // The server answers with fresh lists, as a real response does.

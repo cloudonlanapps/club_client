@@ -45,8 +45,11 @@ class _FakeEvents extends Fake implements EventSource {
   }) async => answer('drop($eventId, v$version, $reason)');
 
   @override
-  Future<Event> reinstate(int eventId, {required int version}) async =>
-      answer('reinstate($eventId, v$version)');
+  Future<Event> reinstate(
+    int eventId, {
+    required int version,
+    bool acceptConflicts = false,
+  }) async => answer('reinstate($eventId, v$version)');
 }
 
 Event _oneOff() => Event(

@@ -1,6 +1,7 @@
 import 'package:club_sdk_2/club_sdk_2.dart' show SdkErrorCode, ServerException;
 
 import '../constants/evaluation_view_strings.dart';
+import '../constants/template_restore_strings.dart';
 
 /// What a failed evaluation write says to the person (Section-wise Editors
 /// rule 5): a fixed message per refusal, never the raw exception. A copy
@@ -35,6 +36,7 @@ abstract final class EvaluationErrorMessage {
         EvaluationViewStrings.duplicateEvaluation,
       SdkErrorCode.periodInFuture => EvaluationViewStrings.periodInFuture,
       SdkErrorCode.eventNotFound => EvaluationViewStrings.eventNotFound,
+      SdkErrorCode.nothingToRestore => TemplateRestoreStrings.nothingToRestore,
       _ => null,
     };
   }

@@ -49,6 +49,10 @@
   can be reached by scrolling (#269).
 - After signing out, the app no longer calls the server with the dropped
   token: open pages stop fetching and no token refresh is tried (#272).
+- The review template library lists deleted templates (Show deleted
+  templates), and any coach or admin can restore one. A template whose name
+  another template now holds comes back renamed "<name> -- Restored #1",
+  and the message says the new name (#277).
 
 ## 1.0.0
 

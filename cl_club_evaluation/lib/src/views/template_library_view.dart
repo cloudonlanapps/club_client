@@ -9,6 +9,8 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../constants/evaluation_view_sizes.dart';
 import '../constants/evaluation_view_strings.dart';
+import '../constants/template_restore_strings.dart';
+import '../widgets/deleted_template_list.dart';
 import '../widgets/evaluation_heading.dart';
 import '../widgets/evaluation_message.dart';
 import '../widgets/evaluation_page.dart';
@@ -20,10 +22,12 @@ import '../widgets/template_library_row.dart';
 /// by name, each opening on tap, with **Duplicate** and **Delete** (disabled
 /// while in use); **Import**, which opens the designer pre-filled from a
 /// template file (club_client#27); and **Add template**. A deleted
-/// template leaves the library; Restore is not offered in the UI yet.
+/// template leaves the library: **Show deleted templates** switches the
+/// list to the deleted ones, each with **Restore** for any staff member
+/// (club_client#277).
 ///
 /// Renders nothing unless the server runs evaluations.
-class TemplateLibraryView extends ConsumerWidget {
+class TemplateLibraryView extends ConsumerStatefulWidget {
   /// The library, for [currentUser], a coach or an admin.
   const TemplateLibraryView({
     required this.currentUser,
@@ -57,7 +61,18 @@ class TemplateLibraryView extends ConsumerWidget {
   final ValueChanged<Map<String, dynamic>> onImportTemplate;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TemplateLibraryView> createState() =>
+      TemplateLibraryViewState();
+}
+
+/// Holds whether the library shows the deleted templates.
+class TemplateLibraryViewState extends ConsumerState<TemplateLibraryView> {
+  /// Whether the list shows the deleted templates instead of the live ones.
+  bool showDeleted = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUser = widget.currentUser;
     assert(
       currentUser.roles.isCoach || currentUser.isAdmin,
       'TemplateLibraryView called for ${currentUser.username}, who is '
@@ -75,40 +90,50 @@ class TemplateLibraryView extends ConsumerWidget {
         return EvaluationPage(
           children: [
             EvaluationHeading(
-              text: EvaluationViewStrings.templates,
+              text: showDeleted
+                  ? TemplateRestoreStrings.deletedTemplates
+                  : EvaluationViewStrings.templates,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 spacing: EvaluationViewSizes.smallGap,
                 children: [
                   TemplateImportButton(
-                    onPickFile: onPickTemplateFile,
-                    onImported: onImportTemplate,
+                    onPickFile: widget.onPickTemplateFile,
+                    onImported: widget.onImportTemplate,
                   ),
                   ShadButton(
-                    onPressed: onCreateTemplate,
+                    onPressed: widget.onCreateTemplate,
                     leading: const Icon(LucideIcons.plus),
                     child: const Text(EvaluationViewStrings.addTemplate),
                   ),
                 ],
               ),
             ),
-            if (live.isEmpty)
+            ShadSwitch(
+              value: showDeleted,
+              onChanged: (value) => setState(() => showDeleted = value),
+              label: const Text(TemplateRestoreStrings.showDeleted),
+            ),
+            if (showDeleted)
+              const DeletedTemplateList()
+            else if (live.isEmpty)
               Text(
                 EvaluationViewStrings.noTemplates,
                 style: ShadTheme.of(context).textTheme.muted,
+              )
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: EvaluationViewSizes.rowGap,
+                children: [
+                  for (final t in live)
+                    TemplateLibraryRow(
+                      template: t,
+                      onOpen: () => widget.onOpenTemplate(t.id),
+                      onDuplicate: () => widget.onDuplicateTemplate(t.id),
+                    ),
+                ],
               ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: EvaluationViewSizes.rowGap,
-              children: [
-                for (final t in live)
-                  TemplateLibraryRow(
-                    template: t,
-                    onOpen: () => onOpenTemplate(t.id),
-                    onDuplicate: () => onDuplicateTemplate(t.id),
-                  ),
-              ],
-            ),
           ],
         );
       },

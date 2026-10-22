@@ -10,9 +10,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 /// Registers nothing: answers every registration with [refusal], or accepts
-/// it when there is none.
+/// it when there is none, after [latency] as a server would, so the form is
+/// drawn turned off while it waits.
 class _Auth extends Fake implements AuthSource {
   _Auth(this.refusal);
+
+  static const Duration latency = Duration(milliseconds: 50);
 
   final Exception? refusal;
   final registered = <String>[];
@@ -29,6 +32,7 @@ class _Auth extends Fake implements AuthSource {
     String? middleName,
     String? lastName,
   }) async {
+    await Future<void>.delayed(latency);
     final refusal = this.refusal;
     if (refusal != null) throw refusal;
     registered.add(username);
@@ -90,9 +94,6 @@ Future<_Auth> _pump(
     ProviderScope(
       overrides: [
         clientProvider.overrideWith(() => _ClientNotifier(_Client(auth))),
-        usernameAvailabilityProvider.overrideWith(
-          (ref, username) async => UsernameAvailability.available,
-        ),
         identityVerificationProvider.overrideWithValue(
           identityDocumentsRequired,
         ),
@@ -114,13 +115,12 @@ Future<_Auth> _pump(
   return auth;
 }
 
-/// Fills the form, the username confirmed available, and taps Create
-/// account.
-Future<void> _fillAndSubmit(WidgetTester tester) async {
-  await tester.enterText(_field(UserFormFields.usernameId), 'robin');
-  await tester.pumpAndSettle();
-  await tester.tap(find.text('Check availability'));
-  await tester.pumpAndSettle();
+/// Fills the form with [username] and taps Create account.
+Future<void> _fillAndSubmit(
+  WidgetTester tester, {
+  String username = 'robin',
+}) async {
+  await tester.enterText(_field(UserFormFields.usernameId), username);
   await tester.enterText(_field(UserFormFields.passwordId), 'secret-password');
   await tester.enterText(
     _field(UserFormFields.confirmPasswordId),
@@ -139,6 +139,8 @@ Future<void> _fillAndSubmit(WidgetTester tester) async {
       });
   await tester.pumpAndSettle();
   await tester.tap(_createAccount());
+  // The frame drawn while the registration is in flight: the form is off.
+  await tester.pump();
   await tester.pumpAndSettle();
 }
 
@@ -168,19 +170,80 @@ void main() {
   });
 
   group('Issue 53: SignupView owns the title, the buttons and the save', () {
-    testWidgets('Issue 53: Create account stays off until the username is '
-        'confirmed available', (tester) async {
+    testWidgets('Issue 161: Create account is on before a username is '
+        'typed, with no availability check beside the field', (tester) async {
       await _pump(tester);
 
       expect(find.text('Create an account'), findsOneWidget);
-      expect(tester.widget<ShadButton>(_createAccount()).onPressed, isNull);
+      expect(tester.widget<ShadButton>(_createAccount()).onPressed, isNotNull);
 
       await tester.enterText(_field(UserFormFields.usernameId), 'robin');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Check availability'));
-      await tester.pumpAndSettle();
 
+      expect(find.text('Check availability'), findsNothing);
       expect(tester.widget<ShadButton>(_createAccount()).onPressed, isNotNull);
+    });
+
+    testWidgets('Issue 161: a username the server refuses as taken shows on '
+        'the username field, with the focus there and what was typed kept', (
+      tester,
+    ) async {
+      var succeeded = 0;
+      final auth = await _pump(
+        tester,
+        refusal: const ServerException(
+          statusCode: 409,
+          code: SdkErrorCode.duplicateUsername,
+          message: 'raw server text',
+        ),
+        onSignupSuccess: () => succeeded++,
+      );
+
+      await _fillAndSubmit(tester);
+
+      expect(succeeded, 0);
+      expect(auth.registered, isEmpty);
+      expect(
+        find.descendant(
+          of: _field(UserFormFields.usernameId),
+          matching: find.text('That username is already taken.'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('raw server text'), findsNothing);
+      final usernameInput = tester.widget<EditableText>(
+        find.descendant(
+          of: _field(UserFormFields.usernameId),
+          matching: find.byType(EditableText),
+        ),
+      );
+      expect(usernameInput.focusNode.hasFocus, isTrue);
+      expect(usernameInput.controller.text, 'robin');
+      final emailInput = tester.widget<EditableText>(
+        find.descendant(
+          of: _field(UserFormFields.emailId),
+          matching: find.byType(EditableText),
+        ),
+      );
+      expect(emailInput.controller.text, 'robin@example.test');
+    });
+
+    testWidgets('Issue 161: a badly formed username is refused on its field '
+        'before any request', (tester) async {
+      var succeeded = 0;
+      final auth = await _pump(tester, onSignupSuccess: () => succeeded++);
+
+      await _fillAndSubmit(tester, username: 'ro');
+
+      expect(succeeded, 0);
+      expect(auth.registered, isEmpty);
+      expect(
+        find.descendant(
+          of: _field(UserFormFields.usernameId),
+          matching: find.text('At least 3 characters'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('Issue 53: a valid form registers and reports success', (

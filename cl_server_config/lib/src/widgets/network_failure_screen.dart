@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../models/network_failure_copy.dart';
 import '../providers/network_status.dart';
+import 'network_failure_banner.dart';
 
-/// Screen displayed when network is unavailable or server is unreachable.
+/// Screen displayed when network is unavailable or server is unreachable,
+/// for a view that has nothing of its own to show until the server answers
+/// (the login view's session restore). A mounted page shows a
+/// [NetworkFailureBanner] over it instead, through `NetworkStatusWrapper`
+/// (club_client#163).
 ///
 /// Shows a status icon, message, and retry button. Try Again asks the
 /// network monitor to check the server and then runs [onRetry], for a
@@ -55,16 +61,13 @@ class NetworkFailureScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                isOffline ? 'No Internet Connection' : 'Server Unavailable',
+                NetworkFailureCopy.title(status),
                 style: theme.textTheme.h3,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(
-                isOffline
-                    ? 'Please check your internet connection and try again.'
-                    : 'Our servers are temporarily unavailable. '
-                          'Please try again in a moment.',
+                NetworkFailureCopy.message(status),
                 style: theme.textTheme.muted,
                 textAlign: TextAlign.center,
               ),
@@ -79,7 +82,7 @@ class NetworkFailureScreen extends ConsumerWidget {
                   children: [
                     Icon(LucideIcons.refreshCw, size: 16),
                     SizedBox(width: 8),
-                    Text('Try Again'),
+                    Text(NetworkFailureCopy.retryLabel),
                   ],
                 ),
               ),

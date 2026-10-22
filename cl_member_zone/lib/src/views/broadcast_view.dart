@@ -15,7 +15,7 @@ import 'package:ui_lib/ui_lib.dart'
         showUserSelectionDialog;
 
 import '../theme/layout_constants.dart';
-import '../widgets/panels/shared/broadcast_row.dart';
+import '../widgets/panels/shared/broadcast_sent_sliver.dart';
 
 /// Shown when revoking a broadcast fails.
 const String revokeFailedMessage =
@@ -260,94 +260,70 @@ class _BroadcastViewState extends ConsumerState<BroadcastView> {
         ),
         const Divider(height: 1),
         Expanded(
-          child: Padding(
-            padding: LayoutConstants.contentPadding,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (_scope.canNarrow) ...[
-                  Wrap(
-                    spacing: 16,
-                    runSpacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
+          // One scroll view for the composer and the sent list: with the
+          // keyboard up on a phone the composer alone can be taller than the
+          // space left, and the list then gives up its room (#168).
+          child: CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: LayoutConstants.contentPadding.copyWith(bottom: 0),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      ShadSwitch(
-                        key: const ValueKey('broadcast-staff-only'),
-                        value: _staffOnly,
-                        label: const Text('Staff only'),
-                        onChanged: (v) => setState(() {
-                          _staffOnly = v;
-                          if (v) _chosen = const [];
-                        }),
-                      ),
-                      ShadButton.outline(
-                        size: ShadButtonSize.sm,
-                        leading: const Icon(LucideIcons.users, size: 14),
-                        onPressed: _chooseMembers,
-                        child: const Text('Choose members'),
-                      ),
-                      if (_chosen.isNotEmpty)
-                        ShadButton.ghost(
-                          size: ShadButtonSize.sm,
-                          onPressed: () => setState(() => _chosen = const []),
-                          child: const Text('Clear'),
+                      if (_scope.canNarrow) ...[
+                        Wrap(
+                          spacing: 16,
+                          runSpacing: 8,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            ShadSwitch(
+                              key: const ValueKey('broadcast-staff-only'),
+                              value: _staffOnly,
+                              label: const Text('Staff only'),
+                              onChanged: (v) => setState(() {
+                                _staffOnly = v;
+                                if (v) _chosen = const [];
+                              }),
+                            ),
+                            ShadButton.outline(
+                              size: ShadButtonSize.sm,
+                              leading: const Icon(LucideIcons.users, size: 14),
+                              onPressed: _chooseMembers,
+                              child: const Text('Choose members'),
+                            ),
+                            if (_chosen.isNotEmpty)
+                              ShadButton.ghost(
+                                size: ShadButtonSize.sm,
+                                onPressed: () =>
+                                    setState(() => _chosen = const []),
+                                child: const Text('Clear'),
+                              ),
+                          ],
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _recipientsLabel(staff),
+                          style: theme.textTheme.muted,
+                        ),
+                        LayoutConstants.itemGap,
+                      ],
+                      BroadcastComposer(
+                        placeholder: _scope.kind == BroadcastScopeKind.all
+                            ? 'Type a message to send to everyone…'
+                            : 'Type a message…',
+                        onSend: _send,
+                      ),
+                      const SizedBox(height: 20),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(_recipientsLabel(staff), style: theme.textTheme.muted),
-                  LayoutConstants.itemGap,
-                ],
-                BroadcastComposer(
-                  placeholder: _scope.kind == BroadcastScopeKind.all
-                      ? 'Type a message to send to everyone…'
-                      : 'Type a message…',
-                  onSend: _send,
                 ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: sent.when(
-                    loading: () => const Center(
-                      child: SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
-                    error: (e, _) => Center(
-                      child: Text(
-                        'Could not load broadcasts: $e',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ),
-                    data: (all) {
-                      final active = all
-                          .where((b) => b.status != BroadcastStatus.revoked)
-                          .toList();
-                      if (active.isEmpty) {
-                        return const Center(
-                          child: Text(
-                            'No broadcasts yet',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        );
-                      }
-                      return ListView.separated(
-                        itemCount: active.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (context, index) {
-                          final b = active[index];
-                          return BroadcastRow(
-                            broadcast: b,
-                            onRevoke: () => _revoke(b.id),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
+              ),
+              SliverPadding(
+                padding: LayoutConstants.contentPadding.copyWith(top: 0),
+                sliver: BroadcastSentSliver(sent: sent, onRevoke: _revoke),
+              ),
+            ],
           ),
         ),
       ],

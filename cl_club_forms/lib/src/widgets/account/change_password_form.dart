@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../form/form_autofocus.dart';
 import '../form/form_body.dart';
 import '../form/form_contract.dart';
 import '../form/labeled_form_row.dart';
@@ -61,7 +62,7 @@ class ChangePasswordFormState extends State<ChangePasswordForm>
             required: true,
             field: ShadInputFormField(
               id: ChangePasswordFormFields.currentId,
-              autofocus: true,
+              autofocus: FormAutofocus.allowed,
               obscureText: true,
               keyboardType: TextInputType.visiblePassword,
               autocorrect: false,

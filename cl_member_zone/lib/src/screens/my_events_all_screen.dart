@@ -30,6 +30,7 @@ class MyEventsAllScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final accessAsync = ref.watch(myEventsAccessProvider(targetUsername));
     return accessAsync.when(
+      skipLoadingOnReload: true,
       loading: () => const LoadingView(),
       error: (_, _) => _accessDenied(),
       data: (allowed) {

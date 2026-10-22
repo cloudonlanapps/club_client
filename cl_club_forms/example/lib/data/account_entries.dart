@@ -3,7 +3,6 @@ import 'package:cl_club_forms/cl_club_forms.dart';
 import '../models/form_demo_entry.dart';
 import '../models/form_demo_group.dart';
 import 'demo_samples.dart';
-import 'fake_host_calls.dart';
 
 /// The account forms: signing in, passwords and signing up.
 abstract final class AccountEntries {
@@ -38,7 +37,6 @@ abstract final class AccountEntries {
       builder: (key) => SignupForm(
         key: key,
         defaultCountryCode: DemoSamples.countryCode,
-        onCheckUsernameAvailable: FakeHostCalls.usernameAvailable,
       ),
     ),
     FormDemoEntry(

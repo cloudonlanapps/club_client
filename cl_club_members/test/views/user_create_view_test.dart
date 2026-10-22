@@ -2,11 +2,7 @@ import 'package:cl_club_forms/cl_club_forms.dart'
     show SignupGender, UserForm, UserFormFields, UserFormState;
 import 'package:cl_club_members/src/views/user_create_view.dart';
 import 'package:cl_member_auth/cl_member_auth.dart'
-    show
-        AuthNotifier,
-        UsernameAvailability,
-        authStateProvider,
-        usernameAvailabilityProvider;
+    show AuthNotifier, authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         ClUsersMasterNotifier,
@@ -32,9 +28,12 @@ class _StubAuthNotifier extends AuthNotifier {
 }
 
 /// Creates nothing: answers every creation with [refusal], or records the
-/// username when there is none.
+/// username when there is none, after [latency] as a server would, so the
+/// form is drawn turned off while it waits.
 class _Users extends ClUsersMasterNotifier {
   _Users(this.refusal);
+
+  static const Duration latency = Duration(milliseconds: 50);
 
   final ServerException? refusal;
   final created = <String>[];
@@ -59,6 +58,7 @@ class _Users extends ClUsersMasterNotifier {
     String? medicalNotes,
     Address? address,
   }) async {
+    await Future<void>.delayed(latency);
     final refusal = this.refusal;
     if (refusal != null) throw refusal;
     created.add(username);
@@ -102,9 +102,6 @@ Future<_Users> _pump(
       overrides: [
         authStateProvider.overrideWith(_StubAuthNotifier.new),
         clUsersMasterProvider.overrideWith(() => users),
-        usernameAvailabilityProvider.overrideWith(
-          (ref, username) async => UsernameAvailability.available,
-        ),
         defaultCountryCodeProvider.overrideWithValue(countryCode),
       ],
       child: ShadApp(
@@ -123,12 +120,9 @@ Future<_Users> _pump(
   return users;
 }
 
-/// Fills the form, the username confirmed available, and taps Create user.
+/// Fills the form and taps Create user.
 Future<void> _fillAndSubmit(WidgetTester tester) async {
   await tester.enterText(_field(UserFormFields.usernameId), 'robin');
-  await tester.pumpAndSettle();
-  await tester.tap(find.text('Check availability'));
-  await tester.pumpAndSettle();
   await tester.enterText(_field(UserFormFields.firstNameId), 'Robin');
   await tester.enterText(_field(UserFormFields.phoneId), '9876543210');
   await tester.enterText(_field(UserFormFields.emailId), 'robin@example.test');
@@ -142,25 +136,62 @@ Future<void> _fillAndSubmit(WidgetTester tester) async {
       });
   await tester.pumpAndSettle();
   await tester.tap(_createUser());
+  // The frame drawn while the creation is in flight: the form is off.
+  await tester.pump();
   await tester.pumpAndSettle();
 }
 
 void main() {
   group('Issue 53: UserCreateView owns the title, the buttons and the '
       'save', () {
-    testWidgets('Issue 53: the view shows the form heading, and Create user '
-        'stays off until the username is confirmed available', (tester) async {
+    testWidgets('Issue 161: the view shows the form heading, and Create '
+        'user is on with no availability check beside the username', (
+      tester,
+    ) async {
       await _pump(tester);
 
       expect(find.text('Creating new profile'), findsOneWidget);
-      expect(tester.widget<ShadButton>(_createUser()).onPressed, isNull);
+      expect(tester.widget<ShadButton>(_createUser()).onPressed, isNotNull);
 
       await tester.enterText(_field(UserFormFields.usernameId), 'robin');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Check availability'));
-      await tester.pumpAndSettle();
 
+      expect(find.text('Check availability'), findsNothing);
       expect(tester.widget<ShadButton>(_createUser()).onPressed, isNotNull);
+    });
+
+    testWidgets('Issue 161: a username the server refuses as taken keeps the '
+        'form open, the focus on the username and what was typed', (
+      tester,
+    ) async {
+      var created = 0;
+      final users = await _pump(
+        tester,
+        refusalCode: SdkErrorCode.duplicateUsername,
+        onCreated: () => created++,
+      );
+
+      await _fillAndSubmit(tester);
+
+      expect(created, 0);
+      expect(users.created, isEmpty);
+      expect(find.byType(UserForm), findsOneWidget);
+      EditableText input(String id) => tester.widget<EditableText>(
+        find.descendant(of: _field(id), matching: find.byType(EditableText)),
+      );
+      expect(
+        find.descendant(
+          of: _field(UserFormFields.usernameId),
+          matching: find.text('That username is already taken.'),
+        ),
+        findsOneWidget,
+      );
+      expect(input(UserFormFields.usernameId).focusNode.hasFocus, isTrue);
+      expect(input(UserFormFields.usernameId).controller.text, 'robin');
+      expect(
+        input(UserFormFields.emailId).controller.text,
+        'robin@example.test',
+      );
     });
 
     testWidgets('Issue 53: a valid form creates the user', (tester) async {

@@ -74,6 +74,7 @@ class ClubIdentityViewState extends ConsumerState<ClubIdentityView> {
         ),
         Expanded(
           child: saved.when(
+            skipLoadingOnReload: true,
             loading: () => const LoadingView(message: 'Loading club details…'),
             error: (_, _) =>
                 const Center(child: Text("Couldn't load the club details.")),

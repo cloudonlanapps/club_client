@@ -224,11 +224,7 @@ void main() {
     });
   });
 
-  test('Issue 61: the availability message is the one the hosts read', () {
-    expect(
-      UserFormValidators.availabilityCheckRequired,
-      'Run the availability check before creating the account.',
-    );
+  test('Issue 61: the confirm-password message is the one the hosts read', () {
     expect(
       UserFormValidators.confirmPasswordRequired,
       'Please confirm the password',

@@ -42,6 +42,7 @@ class GroupMembersViewState extends ConsumerState<GroupMembersView> {
     final masterAsync = ref.watch(clGroupsMasterProvider);
 
     return masterAsync.when(
+      skipLoadingOnReload: true,
       loading: () => const LoadingView(),
       error: (e, _) => Center(child: Text('Could not load group: $e')),
       data: (groups) {

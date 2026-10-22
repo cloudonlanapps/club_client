@@ -2,7 +2,8 @@ import 'package:cl_club_branding/cl_club_branding.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show darkCustomColors, lightCustomColors;
+import 'package:ui_lib/ui_lib.dart'
+    show ScrollSafeTapOutside, darkCustomColors, lightCustomColors;
 
 import 'club_main.dart' show clubConfigProvider;
 import 'router.dart';
@@ -32,19 +33,21 @@ class App extends ConsumerWidget {
       customColors: darkCustomColors,
     );
 
-    return ShadApp.router(
-      routerConfig: router,
-      title: branding.fullName,
-      themeMode: themeMode,
-      theme: ShadThemeData(
-        brightness: Brightness.light,
-        colorScheme: lightColorScheme,
-        ghostButtonTheme: neutralGhostButton(lightColorScheme),
-      ),
-      darkTheme: ShadThemeData(
-        brightness: Brightness.dark,
-        colorScheme: darkColorScheme,
-        ghostButtonTheme: neutralGhostButton(darkColorScheme),
+    return ScrollSafeTapOutside(
+      child: ShadApp.router(
+        routerConfig: router,
+        title: branding.fullName,
+        themeMode: themeMode,
+        theme: ShadThemeData(
+          brightness: Brightness.light,
+          colorScheme: lightColorScheme,
+          ghostButtonTheme: neutralGhostButton(lightColorScheme),
+        ),
+        darkTheme: ShadThemeData(
+          brightness: Brightness.dark,
+          colorScheme: darkColorScheme,
+          ghostButtonTheme: neutralGhostButton(darkColorScheme),
+        ),
       ),
     );
   }

@@ -5,7 +5,6 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 class UserCreateActions extends StatelessWidget {
   const UserCreateActions({
     required this.isSubmitting,
-    required this.canSubmit,
     required this.onCancel,
     required this.onSubmit,
     super.key,
@@ -26,9 +25,6 @@ class UserCreateActions extends StatelessWidget {
   /// Whether the creation is in flight; turns both actions off.
   final bool isSubmitting;
 
-  /// Whether the form may be submitted; off keeps Create user disabled.
-  final bool canSubmit;
-
   /// Leaves the view, asking first when the form holds changes.
   final VoidCallback onCancel;
 
@@ -46,7 +42,7 @@ class UserCreateActions extends StatelessWidget {
           child: const Text(cancelLabel),
         ),
         ShadButton(
-          onPressed: isSubmitting || !canSubmit ? null : onSubmit,
+          onPressed: isSubmitting ? null : onSubmit,
           child: Text(isSubmitting ? submittingLabel : submitLabel),
         ),
       ],

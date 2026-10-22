@@ -29,6 +29,9 @@ import 'evaluation_question_form_field.dart';
 /// the member will not see); an editable one shows them normally. The run
 /// of Q & A items closing the layout shows last, outside any section, in
 /// one untitled card. Every item in [layout] must carry its id.
+///
+/// [onAnswerFocusChanged] tells the host when the focus enters or leaves an
+/// answer, so it can hold back a write it would ask about while typing.
 class EvaluationFillBody extends StatefulWidget {
   /// Fills [layout], seeded with [initialAnswers] keyed by item id.
   const EvaluationFillBody({
@@ -36,6 +39,7 @@ class EvaluationFillBody extends StatefulWidget {
     required this.initialAnswers,
     required this.onAnswerChanged,
     this.evidenceBuilder,
+    this.onAnswerFocusChanged,
     this.readOnly = false,
     this.validateOnOpen = false,
     super.key,
@@ -49,6 +53,11 @@ class EvaluationFillBody extends StatefulWidget {
 
   /// Called with the item's id and its whole answer after each change.
   final void Function(int itemId, EvaluationAnswerValue answer) onAnswerChanged;
+
+  /// Called with the item's id when the focus enters (`true`) or leaves
+  /// (`false`) its answer.
+  final void Function(int itemId, {required bool hasFocus})?
+  onAnswerFocusChanged;
 
   /// Builds the evidence slot of an item that allows evidence.
   final Widget Function(int itemId)? evidenceBuilder;
@@ -170,6 +179,11 @@ class EvaluationFillBodyState extends State<EvaluationFillBody> {
                       : null,
                   onAnswerChanged: (answer) =>
                       widget.onAnswerChanged(item.id!, answer),
+                  onFocusChange: (hasFocus) =>
+                      widget.onAnswerFocusChanged?.call(
+                        item.id!,
+                        hasFocus: hasFocus,
+                      ),
                 )
               : EvaluationMarkdownText(data: item.text),
         ),

@@ -36,8 +36,6 @@ void main() {
         'date of birth, and returns them', (tester) async {
       final state = await pumpCreate(tester);
 
-      expect(state.asksForUsername, isTrue);
-      expect(state.canSubmit, isFalse);
       expect(
         fieldIds(tester),
         containsAll([

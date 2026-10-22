@@ -17,10 +17,6 @@ class UserFormValidators {
   /// Shown when the two passwords differ.
   static const String passwordsDiffer = 'Passwords do not match';
 
-  /// Shown when a new account's username was not checked for availability.
-  static const String availabilityCheckRequired =
-      'Run the availability check before creating the account.';
-
   static String? username(String value) {
     final t = value.trim();
     if (t.isEmpty) return 'Username is required';

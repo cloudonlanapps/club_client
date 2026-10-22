@@ -1,28 +1,23 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../form/form_autofocus.dart';
 import '../form/labeled_form_row.dart';
-import '../signup/username_availability_field.dart';
+import 'user_form_fields.dart';
 import 'user_form_strings.dart';
 import 'user_form_validators.dart';
 
-/// The username of a new account with its availability check, shared by
-/// the forms that create one. The embedding form's state mixes in
-/// `UsernameConfirmation` and passes its `onAvailabilityChanged`.
+/// The username of a new account, shared by the forms that create one.
+///
+/// A plain input with its format rule ([UserFormValidators.username]); a
+/// username the server finds taken is refused on save and put back on this
+/// field by the host (`showErrors`), like any other refused field.
 class UserUsernameField extends StatelessWidget {
-  const UserUsernameField({
-    required this.onAvailabilityChanged,
-    required this.checkAvailability,
-    this.enabled = true,
-    super.key,
-  });
+  const UserUsernameField({this.enabled = true, super.key});
 
-  /// Hears the username as typed and, after a successful check, the same
-  /// username as confirmed.
-  final void Function(String username, String? confirmedUsername)
-  onAvailabilityChanged;
-
-  /// Resolves to true when the username is free.
-  final Future<bool> Function(String username) checkAvailability;
+  /// The characters a username may hold, filtered as they are typed.
+  static final RegExp allowedCharacters = RegExp('[a-z0-9_]');
 
   /// Whether the field responds.
   final bool enabled;
@@ -32,13 +27,20 @@ class UserUsernameField extends StatelessWidget {
     return LabeledFormRow(
       label: UserFormStrings.username,
       required: true,
-      field: UsernameAvailabilityField(
+      field: ShadInputFormField(
+        id: UserFormFields.usernameId,
         placeholder: const Text(UserFormStrings.usernamePlaceholder),
-        autofocus: true,
+        description: const Text(UserFormStrings.usernameHint),
+        autofocus: FormAutofocus.allowed,
+        keyboardType: TextInputType.text,
+        autocorrect: false,
+        enableSuggestions: false,
+        textInputAction: TextInputAction.next,
         enabled: enabled,
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(allowedCharacters),
+        ],
         validator: UserFormValidators.username,
-        onAvailabilityChanged: onAvailabilityChanged,
-        checkAvailability: checkAvailability,
       ),
     );
   }

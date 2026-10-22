@@ -74,22 +74,6 @@ Future<void> createUserViaUi(
 
   await enterTextById(tester, 'username', username);
 
-  // The admin Create user button is gated by the username-availability
-  // check (matches SignupView's contract). Run the check before submit.
-  final checkButton = find.widgetWithText(ShadButton, 'Check availability');
-  await waitFor(
-    tester,
-    () => checkButton.evaluate().isNotEmpty,
-    description: '"Check availability" button to appear',
-  );
-  await tester.tap(checkButton);
-  await settle(tester);
-  await waitFor(
-    tester,
-    () => find.text('Available').evaluate().isNotEmpty,
-    description: 'username availability check to report "Available"',
-  );
-
   // The Add User form defaults `useDefaultPassword=true`, which hides the
   // password + confirmPassword fields. Invoke the checkbox's onChanged
   // directly (tapping the small hit-target is unreliable in widget tests).

@@ -54,9 +54,6 @@ void main() {
 
     test('Issue 53: no field labels itself, and no gap is a number', () {
       for (final file in _sources()) {
-        // The username field's own hint and check row are parts of one
-        // composite field, not rows of a form.
-        if (file.path.endsWith('username_availability_field.dart')) continue;
         final source = file.readAsStringSync();
         expect(
           source,

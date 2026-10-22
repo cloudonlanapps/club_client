@@ -85,7 +85,8 @@ lib/src/
                 showEvaluationErrorToast, EvaluationNames,
                 EvaluationTemplateActions (delete with prompt and toasts),
                 StartReviewChoices (also `eventsFor`, the Review Period
-                editor's events), the gallery mapper.
+                editor's events), EvaluationAnswerWriter (the edit body's
+                answer writes), the gallery mapper.
   views/      The seven views above.
   widgets/    Rows, dialogs (item, rename, section title, existing question,
               transfer, start, clear-answer prompt), the editor's body and
@@ -161,8 +162,10 @@ lib/src/
   item. Removal is `detachEvidence`; the owner's listing is
   `clEvaluationMediaProvider`. No SDK call is made here.
 - **Clearing an answer that has evidence asks first**
-  (`confirmClearAnswer`), since the server detaches the evidence with it;
-  on cancel the saved answer goes back into the form and nothing is
+  (`confirmClearAnswer`), since the server detaches the evidence with it.
+  It never asks while the coach is typing: the write waits until the field
+  loses focus or Finalize flushes it (#164). On cancel the saved answer
+  goes back into the form only if nothing new was typed, and nothing is
   written.
 - **Toasts name the section; errors never show the raw exception**
   (`EvaluationErrorMessage`). `ORIGIN_MISMATCH` shows the server's message.

@@ -7,8 +7,7 @@ library;
 // Pure-UI signup primitives live in cl_club_forms; re-export for callers
 // that want to embed the form themselves (rare — most use SignupView
 // below).
-export 'package:cl_club_forms/cl_club_forms.dart'
-    show SignupForm, SignupGender, UsernameAvailabilityField;
+export 'package:cl_club_forms/cl_club_forms.dart' show SignupForm, SignupGender;
 // Re-export server config so consumers can access it via cl_member_auth
 export 'package:cl_server_config/cl_server_config.dart'
     show ServerConfig, serverConfigProvider;
@@ -29,8 +28,6 @@ export 'src/providers/image_auth_headers.dart' show imageAuthHeadersProvider;
 export 'src/providers/token_expiry.dart' show tokenExpiryProvider;
 export 'src/providers/token_storage.dart'
     show TokenStorage, tokenStorageProvider;
-export 'src/providers/username_availability.dart'
-    show UsernameAvailability, usernameAvailabilityProvider;
 // Screens (mounted by the host router; each wraps the same-named view)
 export 'src/screens/forgot_password_screen.dart' show ForgotPasswordScreen;
 export 'src/screens/login_screen.dart' show LoginScreen;

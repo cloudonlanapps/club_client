@@ -55,6 +55,10 @@ SDK mutation methods (including DELETE operations) return the updated entity whe
 
 Status mutations update local state first, call the server, then reconcile. On failure, revert to pre-mutation state. CRUD mutations (create, update, delete) call the server first, then update local state with the server response.
 
+## Reloads keep the value
+
+Master providers keep their previous value while they reload (Riverpod's `AsyncLoading` with the previous value). Consumers rely on that: a view shows its spinner only before the first data (`skipLoadingOnReload: true` / `isLoading && !hasValue`), never on a reload (club_client#162; root CLAUDE.md "Loading states").
+
 ## Auth Sync
 
 When a mutation returns the signed-in user (a profile save on your own account), the calling widget hands the returned `UserPrivate` to `authStateProvider.notifier.setUser` (`syncSignedInUser` in cl_club_members does this, checking the username). A save on anyone else changes nothing about the session. Never `ref.invalidate(authStateProvider)` after a save: that re-runs the session restore (storage, `/me`, status check) (club_client#231). The master notifier does not cross into the auth module.

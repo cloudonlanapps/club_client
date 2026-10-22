@@ -15,14 +15,12 @@ import '../user_form/user_name_fields.dart';
 import '../user_form/user_password_fields.dart';
 import '../user_form/user_username_field.dart';
 import 'signup_gender.dart';
-import 'username_confirmation.dart';
 
 /// Pure-UI registration form (no SDK / no Riverpod), in one of two modes
 /// decided by [username]:
 ///
-/// - `username == null`, signing up: an editable username with its
-///   availability check ([onCheckUsernameAvailable]), a password and its
-///   confirmation.
+/// - `username == null`, signing up: an editable username, a password and
+///   its confirmation.
 /// - `username != null`, reapplying: that username read-only, no password.
 ///
 /// Names, gender, date of birth, phone and email are edited in both.
@@ -31,22 +29,16 @@ import 'username_confirmation.dart';
 ///
 /// The form owns no title, buttons or links: the host drives it through a
 /// `GlobalKey<SignupFormState>` — `validate()` from its submit action,
-/// `showErrors()` with what the server refuses ([FormContract]). While
-/// signing up the host keeps its submit action off until
-/// [onCanSubmitChanged] reports true.
+/// `showErrors()` with what the server refuses ([FormContract]), a taken
+/// username among it.
 class SignupForm extends StatefulWidget {
   const SignupForm({
     required this.defaultCountryCode,
     this.username,
     this.initialValues,
-    this.onCheckUsernameAvailable,
-    this.onCanSubmitChanged,
     this.enabled = true,
     super.key,
-  }) : assert(
-         username != null || onCheckUsernameAvailable != null,
-         'a signing-up SignupForm requires onCheckUsernameAvailable',
-       );
+  });
 
   /// Years before today the date-of-birth picker offers.
   static const int dateOfBirthYearsBefore = 100;
@@ -66,14 +58,6 @@ class SignupForm extends StatefulWidget {
   /// Pre-fill values keyed by field id; null means an empty form.
   final Map<String, dynamic>? initialValues;
 
-  /// Resolves to true when the username is free. Required while signing up;
-  /// never called when reapplying.
-  final Future<bool> Function(String username)? onCheckUsernameAvailable;
-
-  /// Hears whether the form may be submitted: always when reapplying, and
-  /// while signing up once the typed username is confirmed available.
-  final ValueChanged<bool>? onCanSubmitChanged;
-
   /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
 
@@ -86,13 +70,10 @@ class SignupForm extends StatefulWidget {
 /// and `phoneId` trimmed; `firstNameId`, `middleNameId` and `lastNameId`
 /// trimmed, null when empty; `dateOfBirthUtcId` floored to UTC midnight;
 /// `genderId` as a [SignupGender].
-class SignupFormState extends State<SignupForm>
-    with FormContract<SignupForm>, UsernameConfirmation<SignupForm> {
-  @override
+class SignupFormState extends State<SignupForm> with FormContract<SignupForm> {
+  /// Whether this form asks for a username: signing up does, reapplying
+  /// shows the member's own.
   bool get asksForUsername => widget.username == null;
-
-  @override
-  ValueChanged<bool>? get canSubmitListener => widget.onCanSubmitChanged;
 
   @override
   String? crossFieldError(Map<String, dynamic> values) {
@@ -101,11 +82,10 @@ class SignupFormState extends State<SignupForm>
       values[UserFormFields.lastNameId] as String?,
     );
     if (nameProblem != null || !asksForUsername) return nameProblem;
-    return usernameProblem() ??
-        UserFormValidators.passwordsMatch(
-          values[UserFormFields.passwordId] as String?,
-          values[UserFormFields.confirmPasswordId] as String?,
-        );
+    return UserFormValidators.passwordsMatch(
+      values[UserFormFields.passwordId] as String?,
+      values[UserFormFields.confirmPasswordId] as String?,
+    );
   }
 
   @override
@@ -145,11 +125,7 @@ class SignupFormState extends State<SignupForm>
           if (username != null)
             ReadOnlyField(label: UserFormStrings.username, value: username)
           else ...[
-            UserUsernameField(
-              enabled: enabled,
-              onAvailabilityChanged: onAvailabilityChanged,
-              checkAvailability: widget.onCheckUsernameAvailable!,
-            ),
+            UserUsernameField(enabled: enabled),
             UserPasswordFields(enabled: enabled),
           ],
           UserNameFields(enabled: enabled, pairMinWidth: UserFieldPair.always),

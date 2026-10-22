@@ -1,6 +1,6 @@
 // Issue 61, UserForm, which creates a user.
-// Every point applies. The in-form actions are the username field's
-// "Check availability" and "Show" beside the default-password tick.
+// Every point applies. The in-form action is "Show" beside the
+// default-password tick.
 // The form's values are its fields as typed: nothing is trimmed here (the
 // host's adapter does), so "trimmed" is tested as "comes back as typed".
 import 'package:cl_club_forms/cl_club_forms.dart';
@@ -41,7 +41,7 @@ void main() {
       expect(find.text('Address'), findsNothing);
       expect(find.text('Show name publicly'), findsNothing);
       expectLabelsAreRows(tester);
-      expectNoHostChrome(tester, allowedButtonTexts: {'Check availability'});
+      expectNoHostChrome(tester);
     });
 
     testWidgets('Issue 61: unticking the default password shows the '
@@ -276,37 +276,6 @@ void main() {
   });
 
   group('Issue 61: UserForm creating, rules across fields', () {
-    testWidgets('Issue 61: a username found taken keeps the form refused '
-        'inline and canSubmit false', (tester) async {
-      final reported = <bool>[];
-      final state = await pumpCreate(
-        tester,
-        available: false,
-        onCanSubmitChanged: reported.add,
-      );
-      await fillCreate(tester, state);
-
-      expect(find.text('Already taken'), findsOneWidget);
-      expect(reported, [false]);
-      expect(state.validate(), isNull);
-      await tester.pumpAndSettle();
-      expectInlineMessage(UserFormValidators.availabilityCheckRequired);
-    });
-
-    testWidgets('Issue 61: canSubmit is told false, true once the username '
-        'is confirmed, and false again when it is edited', (tester) async {
-      final reported = <bool>[];
-      final state = await pumpCreate(tester, onCanSubmitChanged: reported.add);
-      expect(reported, [false]);
-
-      await checkUsername(tester, _username, 'robin');
-      expect(reported, [false, true]);
-      expect(state.canSubmit, isTrue);
-
-      await enterField(tester, _username, 'robin2');
-      expect(reported, [false, true, false]);
-    });
-
     testWidgets('Issue 61: its own passwords that differ are refused '
         'inline, and taken once they are the same', (tester) async {
       final state = await pumpCreate(tester);
@@ -342,22 +311,14 @@ void main() {
       expect(find.text(noNameMessage), findsNothing);
     });
 
-    testWidgets('Issue 61: the unchecked username is reported before the '
-        'passwords, and the passwords before the name', (tester) async {
+    testWidgets('Issue 161: the passwords are reported before the name, and '
+        'a username needs no check', (tester) async {
       final state = await pumpCreate(tester);
       await fillCreate(tester, state);
       await typeOwnPassword(tester, confirm: 'something-else');
       await enterField(tester, _first, '');
       await enterField(tester, _username, 'robin2');
 
-      expect(state.validate(), isNull);
-      await tester.pumpAndSettle();
-      expectInlineMessage(UserFormValidators.availabilityCheckRequired);
-      expect(find.text(UserFormValidators.passwordsDiffer), findsNothing);
-      expect(find.text(noNameMessage), findsNothing);
-
-      await tester.tap(checkAvailabilityButton);
-      await tester.pumpAndSettle();
       expect(state.validate(), isNull);
       await tester.pumpAndSettle();
       expectInlineMessage(UserFormValidators.passwordsDiffer);

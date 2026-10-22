@@ -88,7 +88,7 @@ void main() {
       expect(find.text('Other'), findsOneWidget);
       expect(find.text('4 Mar 2010'), findsOneWidget);
 
-      await checkUsername(tester, _username, 'robin');
+      await enterField(tester, _username, 'robin');
 
       expect(state.validate(), {
         ...UserFormAssembly.seed(UserFormFields.userIds, seeded),

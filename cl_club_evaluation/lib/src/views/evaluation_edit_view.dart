@@ -72,7 +72,10 @@ class EvaluationEditView extends ConsumerWidget {
     if (ref.watch(evaluationsProvider) != true) return const SizedBox.shrink();
     final evaluations = ref.watch(clEvaluationsMasterProvider);
     final templates = ref.watch(clEvaluationTemplatesMasterProvider);
-    if (evaluations.isLoading || templates.isLoading) {
+    // Only the first load shows the spinner: a reload (an autosave's
+    // refetch) keeps the page and what is being typed (club_client#162).
+    if ((evaluations.isLoading && !evaluations.hasValue) ||
+        (templates.isLoading && !templates.hasValue)) {
       return const Center(child: ShadProgress());
     }
     final evaluation = evaluations.valueOrNull?[evaluationId];

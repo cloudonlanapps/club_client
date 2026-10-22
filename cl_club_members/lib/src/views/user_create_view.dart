@@ -7,8 +7,7 @@ import 'package:cl_club_members/src/utils/temporary_password.dart';
 import 'package:cl_club_members/src/widgets/default_password_dialog.dart';
 import 'package:cl_club_members/src/widgets/user_create_actions.dart';
 import 'package:cl_club_members/src/widgets/user_create_card.dart';
-import 'package:cl_member_auth/cl_member_auth.dart'
-    show UsernameAvailability, authStateProvider, usernameAvailabilityProvider;
+import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clUsersMasterProvider, defaultCountryCodeProvider, writeFailureMessage;
 import 'package:club_sdk_2/club_sdk_2.dart';
@@ -50,8 +49,7 @@ class UserCreateView extends ConsumerStatefulWidget {
   ConsumerState<UserCreateView> createState() => UserCreateViewState();
 }
 
-/// State of [UserCreateView]: holds the form's key, the in-flight flag and
-/// whether the form may be submitted.
+/// State of [UserCreateView]: holds the form's key and the in-flight flag.
 class UserCreateViewState extends ConsumerState<UserCreateView> {
   /// Key of the create form.
   final createFormKey = GlobalKey<UserFormState>();
@@ -63,10 +61,6 @@ class UserCreateViewState extends ConsumerState<UserCreateView> {
   /// ticked: drawn once for this user, shown in [DefaultPasswordDialog] and
   /// sent with the create (#221).
   final String temporaryPassword = generateTemporaryPassword();
-
-  /// Whether the form may be submitted: its username is confirmed
-  /// available.
-  bool canSubmit = false;
 
   /// The Create user action: validates the form, creates the user its
   /// values describe and reports the outcome.
@@ -139,14 +133,6 @@ class UserCreateViewState extends ConsumerState<UserCreateView> {
     widget.onCancel();
   }
 
-  /// Whether [username] is free to create.
-  Future<bool> checkUsernameAvailable(String username) async {
-    final result = await ref.read(
-      usernameAvailabilityProvider(username).future,
-    );
-    return result == UsernameAvailability.available;
-  }
-
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(authStateProvider).valueOrNull;
@@ -178,20 +164,14 @@ class UserCreateViewState extends ConsumerState<UserCreateView> {
                 enabled: !isSubmitting,
                 canAssignAdmin: isSuperAdmin,
                 canAssignCoach: isAdmin,
-                onCheckUsernameAvailable: checkUsernameAvailable,
                 onShowDefaultPassword: () => showDialog<void>(
                   context: context,
                   builder: (_) =>
                       DefaultPasswordDialog(password: temporaryPassword),
                 ),
-                onCanSubmitChanged: (value) {
-                  if (canSubmit == value) return;
-                  setState(() => canSubmit = value);
-                },
               ),
               actions: UserCreateActions(
                 isSubmitting: isSubmitting,
-                canSubmit: canSubmit,
                 onCancel: confirmCancel,
                 onSubmit: submit,
               ),

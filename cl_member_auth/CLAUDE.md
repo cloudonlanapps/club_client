@@ -33,7 +33,7 @@ cd example && flutter run -d chrome
 - **flutter_riverpod** - State management (all auth state flows through Riverpod)
 - **shadcn_ui** - UI components (forms, cards, buttons, toasts). Theme-neutral: all styling comes from `ShadTheme.of(context)`, no hardcoded colors/fonts
 - **shared_preferences** - Session token persistence
-- **ui_lib** (`../ui_lib`) - Hosts the pure-UI `SignupView` and `UsernameAvailabilityField`. `SignupScreen` here wires the SDK-bound defaults (provider-based username check, `client.auth.register` + `ServerException`→`SignupFailureException` translation) around the view.
+- **cl_club_forms** (`../cl_club_forms`) - Hosts the pure-UI `SignupForm`. `SignupView` here wires the SDK-bound side around it (`client.auth.register`, and the server's refusals, a taken username among them, put back on the form's fields through `SignupFormSubmit.fieldErrorsFor`).
 
 Does **not** depend on: `go_router`, `meta`.
 

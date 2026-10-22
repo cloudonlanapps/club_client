@@ -31,6 +31,7 @@ just website-test                                   # whole suite, once per conf
 just website-test app_test_server2.conf             # whole suite, one conf
 just website-test-one app_test_server1.conf workflow_emptysite_every_route_test.dart
 just website-test-one app_test_server1.conf <file> keep=1   # leave the server up
+just phone-test app_test_server1.conf website       # in Chrome on the Android phone
 ```
 
 The stacks, the two server confs and the rules for writing a test are the

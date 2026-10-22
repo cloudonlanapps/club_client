@@ -24,6 +24,33 @@ fresh database, torn down on exit. It never touches the dev, beta or prod
 stacks, so there is nothing to ask permission about. Runs are Linux desktop
 (`flutter test -d linux`); a web target is club_core#89.
 
+### On the Android phone, in Chrome (`justfile_phone_tests.just`, #274)
+
+The same files run as a web build in Chrome on the Android test phone,
+connected over USB with USB debugging allowed:
+
+```bash
+just phone-test                                  # both suites, once per conf
+just phone-test app_test_server1.conf app        # the member app's suite, one conf
+just phone-test-one app_test_server1.conf workflow1_password_reset_by_user_test.dart
+just phone-test-one app_test_server1.conf <file> real=""   # forced desktop size
+```
+
+The recipe needs nothing set up by hand. It fetches the ChromeDriver that
+matches the phone's Chrome (Chrome for Testing, cached in the repo root's
+gitignored `.phone_test/`) and runs it on port 4444. It creates a `web/`
+folder in the example for the run and removes it afterwards, so no tracked
+file changes. It forwards the stack's port and the web port to the phone
+with `adb reverse`. Files run one at a time through
+`scripts/phone_web_test.sh`, about 4–5 minutes each. Logs and `summary.txt`
+go to `.phone_test/runs/<time>/`.
+
+The app is laid out at the phone's own size (`REAL_VIEWPORT=true`, #264).
+`real=""` brings back the forced 1600×4000 desktop surface. Set
+`ANDROID_SERIAL` when more than one device is attached. Run one phone suite
+at a time: there is one phone, and a ChromeDriver already on port 4444 stops
+the run.
+
 ## The server confs
 
 At the club_core root, one per real deployment shape, named without the club:

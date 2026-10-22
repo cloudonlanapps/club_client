@@ -51,6 +51,26 @@ The app is laid out at the phone's own size (`REAL_VIEWPORT=true`, #264).
 at a time: there is one phone, and a ChromeDriver already on port 4444 stops
 the run.
 
+### On the Android phone, as the Android app (`justfile_android_tests.just`, #262)
+
+The example has an Android target (`android/`, a neutral id
+`com.example.cl_club_app_example` and label "Example Club"), so the suite also
+runs as the installed app:
+
+```bash
+just android-test                                # whole suite, once per conf
+just android-test-one app_test_server1.conf workflow1_password_reset_by_user_test.dart
+just android-test-one app_test_server1.conf <file> real=""   # forced desktop size
+```
+
+Each file is built in debug, installed and run with `flutter test -d
+<phone>`. The stack's port is forwarded with `adb reverse`, so the app
+reaches it as `localhost`. Plain HTTP is allowed in the debug and profile
+manifests only, never in release. It needs the Android SDK
+(`scripts/dev-env.sh`); logs go to `.phone_test/runs/<time>-android/`. The
+layout and `ANDROID_SERIAL` work as for `phone-test`. The project generator
+does not copy `android/` into a club's app yet (#280).
+
 ## The server confs
 
 At the club_core root, one per real deployment shape, named without the club:

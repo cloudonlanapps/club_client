@@ -79,7 +79,15 @@ void main() {
   });
 
   test('Issue 153: no pubspec.yaml in the checkout carries a version', () {
-    const skipped = {'.dart_tool', 'build', '.native_deploy', '.git'};
+    // `ephemeral` is Flutter's generated platform folder: once an example
+    // has been built, it links the plugins' own packages.
+    const skipped = {
+      '.dart_tool',
+      'build',
+      '.native_deploy',
+      '.git',
+      'ephemeral',
+    };
     final carrying = <String>[];
     void scan(Directory dir) {
       for (final entity in dir.listSync()) {

@@ -6,15 +6,18 @@
 //   1. Admin creates a venue, opens it, and sees the editable sections.
 //   2. Coach opens the venue — every section is read-only (no pencil, flags
 //      disabled, no management section).
-//   3. Member opens the venue — same read-only view; content is visible.
+//   3. Member is refused the staff venue list (#203) and reads the venue on
+//      its member page (`/memberzone/my-venues/:id`), with nothing to edit.
 //   4. Admin edits location (inline), description (markdown) and a flag; each
 //      change round-trips to the server AND the updated section reflects it
 //      in place.
-//   5. Member re-opens the venue and sees the updated content.
+//   5. Member re-opens the member page and sees the updated content.
 //   6. Cleanup: admin soft-deletes the venue; sudo soft-deletes the actors.
 
+import 'package:cl_club_app/cl_club_app.dart' show routerProvider;
 import 'package:cl_club_venues/cl_club_venues.dart'
-    show VenueCard, VenueProfileView;
+    show MemberVenueDetailView, VenueCard, VenueProfileView;
+import 'package:cl_member_auth/cl_member_auth.dart' show AccessDeniedView;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clVenuesMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show Role, Venue;
@@ -23,7 +26,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton, MapEmbed;
+import 'package:ui_lib/ui_lib.dart'
+    show ActionButton, MapEmbed, SectionEditButton;
 
 import '_helpers/auth.dart';
 import '_helpers/editors.dart';
@@ -130,11 +134,19 @@ void main() {
       expect(find.text(_kInitialAddress), findsOneWidget);
       await logout(tester);
 
-      // ─── Phase 3: member view is read-only too ─────────────────────────
+      // ─── Phase 3: a member is refused the staff venue pages (#203) and
+      // reads the venue on its member page, with nothing to edit ─────────
       await loginViaUi(tester, _kMember, _kPwd);
-      await _openVenueDetail(tester, _kVenueName);
-      expectSectionReadOnly(tester, find.byType(VenueProfileView));
-      expect(find.text(_kInitialAddress), findsOneWidget);
+      await go(tester, '/memberzone/venues');
+      await waitFor(
+        tester,
+        () => find.byType(AccessDeniedView).evaluate().isNotEmpty,
+        description: 'the staff venue list to refuse a member',
+      );
+      expect(find.byType(VenueCard), findsNothing);
+      await _openMemberVenue(tester, venueId, _kInitialAddress);
+      expect(find.byType(SectionEditButton), findsNothing);
+      expect(find.byType(VenueProfileView), findsNothing);
       await logout(tester);
 
       // ─── Phase 4: admin edits location, description, and a flag ────────
@@ -184,8 +196,7 @@ void main() {
 
       // ─── Phase 5: member sees the updated content ──────────────────────
       await loginViaUi(tester, _kMember, _kPwd);
-      await _openVenueDetail(tester, _kVenueName);
-      expect(find.text(_kEditedAddress), findsOneWidget);
+      await _openMemberVenue(tester, venueId, _kEditedAddress);
       await logout(tester);
 
       // ─── Phase 6: cleanup ──────────────────────────────────────────────
@@ -252,6 +263,43 @@ Future<void> _openVenueDetail(WidgetTester tester, String name) async {
         find.text('No map link provided.').evaluate().isNotEmpty,
     description: 'VenueLocationCard to render',
   );
+}
+
+/// Opens the member's page for venue [venueId] and waits for [address].
+Future<void> _openMemberVenue(
+  WidgetTester tester,
+  int venueId,
+  String address,
+) async {
+  await go(tester, '/memberzone/my-venues/$venueId');
+  final view = find.byType(MemberVenueDetailView);
+  try {
+    await waitFor(
+      tester,
+      () => find
+          .descendant(
+            of: view,
+            // The address is the hero's markdown description: a RichText.
+            matching: find.text(address, findRichText: true),
+          )
+          .evaluate()
+          .isNotEmpty,
+      description: 'member venue page showing "$address"',
+    );
+  } on TestFailure catch (e) {
+    final router = container(tester).read(routerProvider);
+    final texts = [
+      for (final t in tester.widgetList<RichText>(
+        find.descendant(of: view, matching: find.byType(RichText)),
+      ))
+        t.text.toPlainText(),
+    ];
+    throw TestFailure(
+      '$e; view mounted: ${view.evaluate().isNotEmpty}; '
+      'location: ${router.routerDelegate.currentConfiguration.uri}; '
+      'texts: $texts',
+    );
+  }
 }
 
 void _expectFlagsDisabled(WidgetTester tester) {

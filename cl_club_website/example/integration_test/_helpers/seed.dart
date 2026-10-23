@@ -12,7 +12,8 @@
 
 import 'package:cl_remote_store/cl_remote_store.dart' show kUserAvatarTag;
 import 'package:club_sdk_2/club_sdk_2.dart';
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
+
+import 'pump.dart' show createTestClient;
 
 /// A logged-in SDK client for the super-admin. Log it out when done.
 Future<SecureClient> sudoClient({
@@ -20,7 +21,7 @@ Future<SecureClient> sudoClient({
   required String username,
   required String password,
 }) async {
-  final client = await createRemoteSecureClient(baseUrl: baseUrl);
+  final client = await createTestClient(baseUrl: baseUrl);
   await client.auth.login(username, password);
   return client;
 }
@@ -76,7 +77,7 @@ Future<Media?> seedCoach(
   );
   await admin.users.assignRole(username, 'coach');
 
-  final coach = await createRemoteSecureClient(baseUrl: baseUrl);
+  final coach = await createTestClient(baseUrl: baseUrl);
   await coach.auth.login(username, seededPassword);
   try {
     await coach.users.updateUser(

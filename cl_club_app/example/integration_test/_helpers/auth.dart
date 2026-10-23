@@ -175,7 +175,7 @@ Future<void> attemptLoginExpectFailure(
   // button pressed below would then read "Signing in…".
   await tester.pump();
 
-  await tester.tap(find.widgetWithText(ShadButton, 'Sign in').last);
+  await tapVisible(tester, find.widgetWithText(ShadButton, 'Sign in').last);
   await settle(tester);
 
   // The auth notifier sets `state.error` on failure and `state.value`

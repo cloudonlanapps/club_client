@@ -75,7 +75,6 @@ import 'package:club_sdk_2/club_sdk_2.dart'
         Gender,
         SecureClient,
         Visibility;
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -120,7 +119,7 @@ const List<String> _kCast = [_kAdmin, _kCoach, _kM1, _kM2, _kM3, _kM4];
 const _kSessionLead = Duration(minutes: 25);
 
 Future<SecureClient> _sudoClient() async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(_kSudoUsername, _kSudoPassword);
   return c;
 }
@@ -351,7 +350,8 @@ void main() {
             1,
         description: 'the picker to show the trial credit m3 was given',
       );
-      await tester.tap(
+      await tapVisible(
+        tester,
         find.descendant(
           of: find.byType(AssignTrialDialogContent),
           matching: find.text(_kM3),
@@ -490,12 +490,10 @@ void main() {
         (w) => w is EnrollmentTile && w.username == _kM3,
       );
       try {
-        await waitFor(
+        await waitForInList(
           tester,
-          () => find
-              .descendant(of: m3Tile, matching: find.byIcon(LucideIcons.flag))
-              .evaluate()
-              .isNotEmpty,
+          find.descendant(of: m3Tile, matching: find.byIcon(LucideIcons.flag)),
+          within: find.byType(Scaffold),
           description: 'm3 in Inactive with the trial-ended flag',
         );
       } on TestFailure catch (e) {
@@ -714,17 +712,13 @@ Future<void> _waitForTile(
     await _expandInactive(tester);
   }
   try {
-    await waitFor(
+    await waitForInList(
       tester,
-      () => find
-          .byWidgetPredicate(
-            (w) =>
-                w is EnrollmentTile &&
-                w.username == username &&
-                w.status == status,
-          )
-          .evaluate()
-          .isNotEmpty,
+      find.byWidgetPredicate(
+        (w) =>
+            w is EnrollmentTile && w.username == username && w.status == status,
+      ),
+      within: find.byType(Scaffold),
       description: '$username ${status.name} on the enrollment screen',
     );
   } on TestFailure {
@@ -764,13 +758,15 @@ Future<void> _expandInactive(WidgetTester tester) async {
         w is EnrollmentGroupSection &&
         w.category == EnrollmentCategory.inactive,
   );
-  await waitFor(
+  await waitForInList(
     tester,
-    () => section.evaluate().isNotEmpty,
+    section,
+    within: find.byType(Scaffold),
     description: 'the Inactive enrollment group',
   );
   if (tester.state<EnrollmentGroupSectionState>(section).expanded) return;
-  await tester.tap(
+  await tapVisible(
+    tester,
     find.descendant(of: section, matching: find.text('Inactive')),
   );
   await settle(tester);

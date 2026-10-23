@@ -50,13 +50,13 @@ import 'package:club_sdk_2/club_sdk_2.dart'
         Gender,
         SecureClient,
         Visibility;
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
-import 'package:ui_lib/ui_lib.dart' show ActionGroup, ActionItem;
+import 'package:ui_lib/ui_lib.dart' show ActionItem;
 
+import '_helpers/actions.dart';
 import '_helpers/attendance.dart';
 import '_helpers/auth.dart';
 import '_helpers/capabilities.dart';
@@ -89,7 +89,7 @@ const List<String> _kCast = [_kAdmin, _kCoach, _kMember, _kLeaver];
 const _kSessionLead = Duration(minutes: 25);
 
 Future<SecureClient> _sudoClient() async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(_kSudoUsername, _kSudoPassword);
   return c;
 }
@@ -309,7 +309,8 @@ Future<void> _selectDay(WidgetTester tester, DateTime day) async {
     description: 'the My Calendar grid',
   );
   if (day.month != DateTime.now().month) {
-    await tester.tap(
+    await tapVisible(
+      tester,
       find.descendant(
         of: find.byType(CalendarGrid),
         matching: find.byIcon(LucideIcons.chevronRight),
@@ -322,7 +323,7 @@ Future<void> _selectDay(WidgetTester tester, DateTime day) async {
     () => cell.evaluate().isNotEmpty,
     description: 'the ${day.month}/${day.day} cell on My Calendar',
   );
-  await tester.tap(cell.first);
+  await tapVisible(tester, cell.first);
   await settle(tester);
 }
 
@@ -333,20 +334,14 @@ Future<ActionItem> _cardAction(
   String label, {
   bool prefix = false,
 }) async {
-  final group = find.descendant(
-    of: find.byWidgetPredicate(
-      (w) => w is OccurrenceCard && w.eventId == _programmeId,
-    ),
-    matching: find.byType(ActionGroup),
+  final card = find.byWidgetPredicate(
+    (w) => w is OccurrenceCard && w.eventId == _programmeId,
   );
   bool matches(ActionItem a) =>
       prefix ? a.label.startsWith(label) : a.label == label;
   ActionItem? found() {
-    for (final element in group.evaluate()) {
-      final actions = (element.widget as ActionGroup).actions;
-      for (final a in actions) {
-        if (matches(a) && a.onPressed != null && !a.loading) return a;
-      }
+    for (final a in cardActions(tester, card)) {
+      if (matches(a) && a.onPressed != null && !a.loading) return a;
     }
     return null;
   }

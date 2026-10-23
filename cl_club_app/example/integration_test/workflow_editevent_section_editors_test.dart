@@ -508,7 +508,7 @@ Future<void> _transferOrganizer(WidgetTester tester, String username) async {
     reason: 'open the transfer picker',
   );
   await settle(tester);
-  await tester.tap(find.text('@$username'));
+  await tapVisible(tester, find.text('@$username'));
   await settle(tester);
   invokeShadButton(
     tester,
@@ -530,7 +530,7 @@ Future<void> _addCoach(WidgetTester tester, String username) async {
     reason: 'open the add-coaches picker',
   );
   await settle(tester);
-  await tester.tap(find.text('@$username'));
+  await tapVisible(tester, find.text('@$username'));
   await settle(tester);
   invokeShadButton(
     tester,
@@ -545,7 +545,10 @@ Future<void> _addCoach(WidgetTester tester, String username) async {
 
 /// Stages removal of the first coach row (its ✕ flips it to strikethrough).
 Future<void> _removeFirstCoach(WidgetTester tester) async {
-  await tester.tap(find.widgetWithIcon(ShadButton, LucideIcons.x).first);
+  await tapVisible(
+    tester,
+    find.widgetWithIcon(ShadButton, LucideIcons.x).first,
+  );
   await settle(tester);
 }
 

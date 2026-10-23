@@ -38,7 +38,6 @@ import 'package:cl_club_forms/cl_club_forms.dart'
         ProgrammeScheduleData;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show Event, EventType, Gender, SecureClient, Visibility;
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -77,7 +76,7 @@ const Set<int> _kNewDays = {DateTime.tuesday, DateTime.saturday};
 const _kFromIndex = 2;
 
 Future<SecureClient> _sudoClient() async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(_kSudoUsername, _kSudoPassword);
   return c;
 }

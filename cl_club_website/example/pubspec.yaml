@@ -37,6 +37,8 @@ dev_dependencies:
   flutter_riverpod: 2.6.1
   flutter_test:
     sdk: flutter
+  # The integration tests' cache-busting client (#291).
+  http: 1.6.0
   integration_test:
     sdk: flutter
   media_kit: 1.2.6

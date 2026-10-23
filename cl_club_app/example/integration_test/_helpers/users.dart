@@ -16,6 +16,7 @@
 // two-step UI walk: createUserViaUi(...) followed by
 // assignRolesViaProfileViaUi(..., roles: {Role.admin}).
 
+import 'package:cl_club_members/cl_club_members.dart' show UserListView;
 import 'package:cl_club_members/src/models/user_form_helpers.dart'
     show GenderToForm;
 import 'package:cl_club_members/src/widgets/role_chip.dart' show RoleChip;
@@ -59,7 +60,7 @@ Future<void> createUserViaUi(
     () => addUserButton.evaluate().isNotEmpty,
     description: '"+ Add user" button on the admin users list',
   );
-  await tester.tap(addUserButton);
+  await tapVisible(tester, addUserButton);
   await settle(tester);
 
   await waitFor(
@@ -182,12 +183,13 @@ Future<void> assignRolesViaProfileViaUi(
   // profile card.
   await go(tester, '/memberzone/users');
   final userCard = find.byKey(ValueKey(username));
-  await waitFor(
+  await waitForInList(
     tester,
-    () => userCard.evaluate().isNotEmpty,
+    userCard,
+    within: find.byType(UserListView),
     description: 'user card "$username" to appear in the admin list',
   );
-  await tester.tap(userCard);
+  await tapVisible(tester, userCard);
   await settle(tester);
 
   await waitFor(
@@ -268,20 +270,21 @@ Future<void> grantRolesViaCheckboxViaUi(
 }) async {
   await go(tester, '/memberzone/users');
   final userCard = find.byKey(ValueKey(username));
-  await waitFor(
+  await waitForInList(
     tester,
-    () => userCard.evaluate().isNotEmpty,
+    userCard,
+    within: find.byType(UserListView),
     description: 'user card "$username" to appear in the admin list',
   );
-  await tester.tap(userCard);
+  await tapVisible(tester, userCard);
   await settle(tester);
 
-  await waitFor(
+  // The roles section sits far down the profile: on a phone it is built
+  // only once scrolled to (#291).
+  await waitForInList(
     tester,
-    () => find
-        .text('Toggle the roles assigned to this user.')
-        .evaluate()
-        .isNotEmpty,
+    find.text('Toggle the roles assigned to this user.'),
+    within: find.byType(Scaffold),
     description: 'RolesSection on admin profile for "$username"',
   );
 
@@ -341,12 +344,13 @@ Future<void> softDeleteUserViaUi(
   // profile through the same UI an admin would use.
   await go(tester, '/memberzone/users');
   final userCard = find.byKey(ValueKey(username));
-  await waitFor(
+  await waitForInList(
     tester,
-    () => userCard.evaluate().isNotEmpty,
+    userCard,
+    within: find.byType(UserListView),
     description: 'user card "$username" to appear in the admin list',
   );
-  await tester.tap(userCard);
+  await tapVisible(tester, userCard);
   await settle(tester);
 
   // The admin user-profile renders two ActionButton(label: 'Delete')

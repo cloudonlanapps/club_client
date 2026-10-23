@@ -49,6 +49,8 @@ dev_dependencies:
       ref: 693f6b81c07386ab0b9ae921fd104adac17c9140
   flutter_test:
     sdk: flutter
+  # The integration tests' cache-busting client (#291).
+  http: 1.6.0
   integration_test:
     sdk: flutter
   very_good_analysis: 10.3.0

@@ -15,10 +15,10 @@
 // Run (single file, fresh server):
 //   just app-test-one app_test_server2.conf workflow_eval_evaluations_test.dart
 
+import 'package:cl_club_members/cl_club_members.dart' show UserListView;
 import 'package:cl_member_zone/src/widgets/sidebar/sidebar_item.dart'
     show SidebarItem;
 import 'package:club_sdk_2/club_sdk_2.dart';
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -28,6 +28,7 @@ import 'package:ui_lib/ui_lib.dart' show ActionButton;
 import '_helpers/auth.dart';
 import '_helpers/capabilities.dart';
 import '_helpers/forms.dart';
+import '_helpers/navigation.dart';
 import '_helpers/pump.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
@@ -53,7 +54,7 @@ const _kAddReview = 'Add Review';
 late Capabilities _caps;
 
 Future<SecureClient> _adminClient() async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(_kSudoUsername, _kSudoPassword);
   return c;
 }
@@ -66,20 +67,16 @@ Future<void> _sidebar(
   String label, {
   bool last = false,
 }) async {
-  final labels = find.descendant(
-    of: find.byType(SidebarItem),
-    matching: find.text(label),
-  );
+  // On a phone the sidebar is a drawer behind the menu button (#264).
   await waitFor(
     tester,
-    () => labels.evaluate().isNotEmpty,
+    () =>
+        find.widgetWithText(SidebarItem, label).evaluate().isNotEmpty ||
+        find.byTooltip('Open menu').evaluate().isNotEmpty,
     description: 'sidebar entry "$label"',
   );
-  final entry = find.ancestor(
-    of: last ? labels.last : labels.first,
-    matching: find.byType(SidebarItem),
-  );
-  tester.widget<SidebarItem>(entry.first).onTap();
+  final entries = await revealSidebarEntry(tester, label);
+  tester.widget<SidebarItem>(last ? entries.last : entries.first).onTap();
   await settle(tester);
 }
 
@@ -87,12 +84,13 @@ Future<void> _sidebar(
 Future<void> _openProfile(WidgetTester tester, String username) async {
   await _sidebar(tester, 'Members');
   final card = find.byKey(ValueKey(username));
-  await waitFor(
+  await waitForInList(
     tester,
-    () => card.evaluate().isNotEmpty,
+    card,
+    within: find.byType(UserListView),
     description: 'user card "$username" in the members list',
   );
-  await tester.tap(card);
+  await tapVisible(tester, card);
   await settle(tester);
   await waitFor(
     tester,
@@ -178,7 +176,7 @@ void main() {
     try {
       if (_caps.evaluations) {
         // The coach's evaluation goes first: a template in use stays.
-        final coach = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+        final coach = await createTestClient(baseUrl: _kApiBaseUrl);
         await coach.auth.login(_kCoach, _kCoachPwd);
         final mine = await coach.evaluations.listEvaluations();
         for (final e in mine.items) {
@@ -273,9 +271,9 @@ void main() {
     await _openProfile(tester, _kMember);
     await _press(tester, _kAddReview);
     await _waitText(tester, 'Start a review');
-    await tester.tap(find.text('Choose a template'));
+    await tapVisible(tester, find.text('Choose a template'));
     await settle(tester);
-    await tester.tap(find.text(_kTemplate).last);
+    await tapVisible(tester, find.text(_kTemplate).last);
     await settle(tester);
     await _press(tester, 'Start');
 
@@ -307,7 +305,7 @@ void main() {
     expect(entries, findsOneWidget, reason: 'a member has one Reviews entry');
     await _sidebar(tester, _kReviews);
     await _waitText(tester, _kTemplate);
-    await tester.tap(find.text(_kTemplate).first);
+    await tapVisible(tester, find.text(_kTemplate).first);
     await settle(tester);
     await _waitText(tester, _kQuestion);
     await waitFor(

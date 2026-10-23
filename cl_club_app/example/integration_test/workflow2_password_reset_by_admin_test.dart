@@ -32,6 +32,7 @@
 //     --dart-define=SUDO_PASSWORD=... \
 //     --dart-define=SUDO_USERNAME=sudo
 
+import 'package:cl_club_members/cl_club_members.dart' show UserListView;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -177,12 +178,13 @@ Future<String> _adminResetPasswordViaUi(
 ) async {
   await go(tester, '/memberzone/users');
   final userCard = find.byKey(ValueKey(username));
-  await waitFor(
+  await waitForInList(
     tester,
-    () => userCard.evaluate().isNotEmpty,
+    userCard,
+    within: find.byType(UserListView),
     description: 'user card "$username" to appear in the admin list',
   );
-  await tester.tap(userCard);
+  await tapVisible(tester, userCard);
   await settle(tester);
 
   await waitFor(
@@ -264,7 +266,7 @@ Future<String> _adminResetPasswordViaUi(
     findsOneWidget,
     reason: 'expected one Copy button inside the result dialog',
   );
-  await tester.tap(copyFinder);
+  await tapVisible(tester, copyFinder);
   await settle(tester);
   final clip = await Clipboard.getData(Clipboard.kTextPlain);
   expect(
@@ -283,7 +285,7 @@ Future<String> _adminResetPasswordViaUi(
     findsOneWidget,
     reason: 'expected one OK button inside the result dialog',
   );
-  await tester.tap(okFinder);
+  await tapVisible(tester, okFinder);
   await settle(tester);
 
   await waitFor(

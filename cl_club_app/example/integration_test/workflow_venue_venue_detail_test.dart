@@ -150,7 +150,8 @@ void main() {
         findsOneWidget,
         reason: 'description must render via EditableMarkdown',
       );
-      await tester.tap(
+      await tapVisible(
+        tester,
         find.descendant(
           of: editableMarkdown,
           matching: find.byTooltip('Edit Description'),

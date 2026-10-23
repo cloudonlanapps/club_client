@@ -74,7 +74,7 @@ Future<int> _sidebarCount(WidgetTester tester) =>
     sidebarBadge(tester, 'Inquiries');
 
 Future<void> _openDetail(WidgetTester tester, String name) async {
-  await tester.tap(find.text(name));
+  await tapVisible(tester, find.text(name));
   await settle(tester);
   await waitFor(
     tester,
@@ -187,7 +187,7 @@ void main() {
         findsOneWidget,
         reason: 'the interest inquiry notified too',
       );
-      await tester.tap(notificationRow);
+      await tapVisible(tester, notificationRow);
       await settle(tester);
       await waitFor(
         tester,
@@ -198,7 +198,7 @@ void main() {
       // --- The sidebar entry and its count. -------------------------------
       await openSidebarEntry(tester, 'Inquiries');
       // The inbox loaded with the shell; Refresh picks up the new rows.
-      await tester.tap(find.widgetWithText(ShadButton, 'Refresh'));
+      await tapVisible(tester, find.widgetWithText(ShadButton, 'Refresh'));
       await settle(tester);
       await waitFor(
         tester,
@@ -214,7 +214,8 @@ void main() {
       expect(await _sidebarCount(tester), openBefore);
 
       // --- Filter by kind. ------------------------------------------------
-      await tester.tap(
+      await tapVisible(
+        tester,
         find.byKey(const ValueKey('inquiryFilter.kind.interest')),
       );
       await settle(tester);
@@ -224,7 +225,10 @@ void main() {
         description: 'the interest filter to hide the contact inquiry',
       );
       expect(_row(_kInterestName), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('inquiryFilter.kind.all')));
+      await tapVisible(
+        tester,
+        find.byKey(const ValueKey('inquiryFilter.kind.all')),
+      );
       await settle(tester);
       await waitFor(
         tester,
@@ -268,7 +272,8 @@ void main() {
       expect(await _sidebarCount(tester), openBefore - 1);
 
       // --- It sits under Handled, stamped with the admin. -----------------
-      await tester.tap(
+      await tapVisible(
+        tester,
         find.byKey(const ValueKey('inquiryFilter.state.handled')),
       );
       await settle(tester);
@@ -290,7 +295,10 @@ void main() {
       await _deleteOpen(tester);
       expect(_row(_kContactName), findsNothing);
 
-      await tester.tap(find.byKey(const ValueKey('inquiryFilter.state.all')));
+      await tapVisible(
+        tester,
+        find.byKey(const ValueKey('inquiryFilter.state.all')),
+      );
       await settle(tester);
       await waitFor(
         tester,

@@ -37,9 +37,9 @@ import 'package:cl_club_events/src/widgets/my_events_section_header.dart'
     show MyEventsSectionHeader;
 import 'package:cl_club_events/src/widgets/my_events_switch.dart'
     show MyEventsSwitch;
+import 'package:cl_club_members/cl_club_members.dart' show UserListView;
 import 'package:club_sdk_2/club_sdk_2.dart' hide Visibility;
 import 'package:club_sdk_2/club_sdk_2.dart' as sdk show Visibility;
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -78,7 +78,7 @@ late int _cancelledId;
 late int _endedId;
 
 Future<SecureClient> _sdkClient(String username, String password) async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(username, password);
   return c;
 }
@@ -206,12 +206,13 @@ void main() {
       await loginViaUi(tester, _kAdmin, _kPwd);
       await go(tester, '/memberzone/users');
       final memberCard = find.byKey(const ValueKey(_kMember));
-      await waitFor(
+      await waitForInList(
         tester,
-        () => memberCard.evaluate().isNotEmpty,
+        memberCard,
+        within: find.byType(UserListView),
         description: "the member's card in the members list",
       );
-      await tester.tap(memberCard);
+      await tapVisible(tester, memberCard);
       await settle(tester);
       await _checkSwitches(tester, "an admin's view of the member");
       await logout(tester);
@@ -277,7 +278,7 @@ Future<void> _turn(
     !on,
     reason: '"$label" before it is turned ${on ? 'on' : 'off'}',
   );
-  await tester.tap(_switch(label));
+  await tapVisible(tester, _switch(label));
   await waitFor(
     tester,
     () => tester.widget<ShadSwitch>(_switch(label)).value == on,

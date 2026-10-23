@@ -6,6 +6,9 @@
 //   * settle      — pump-and-settle that swallows the "still pumping" timeout
 //                   so a slow async chain doesn't fail the whole test.
 //   * waitFor     — busy-wait predicate with a description for diagnostics.
+//   * tapVisible  — scrolls [finder] into view, then taps it.
+//   * waitForInList — waitFor an item of a lazy list, scrolling the list to
+//                   it (a phone-sized screen builds only what it shows).
 //   * InMemory*Storage — token/credential storage doubles.
 //
 // Extracted from workflow1 so workflow5+ can share without copy-paste.
@@ -17,6 +20,7 @@ import 'package:cl_member_auth/cl_member_auth.dart'
         AuthSession,
         CredentialStorage,
         TokenStorage,
+        apiHttpClientProvider,
         authStateProvider,
         clientProvider,
         credentialStorageProvider,
@@ -31,9 +35,16 @@ import 'package:cl_remote_store/cl_remote_store.dart'
         currentUserProvider,
         secureClientProvider,
         tokenFreeClientProvider;
+import 'package:cl_remote_store/src/providers/public_source.dart'
+    show clPublicSourceProvider;
 import 'package:cl_server_config/cl_server_config.dart';
+import 'package:club_sdk_2/club_sdk_2.dart' show SecureClient;
+import 'package:club_sdk_2/remote_store.dart'
+    show RemoteStore, createRemotePublicSource, createRemoteSecureClient;
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
 
 /// Mounts [App] under a [ProviderScope] preconfigured for the integration
 /// test stack: the supplied [apiBaseUrl] (typically the port-8155 test
@@ -72,6 +83,13 @@ Future<void> pumpApp(
         ),
         currentUserProvider.overrideWith(
           (ref) => ref.watch(authStateProvider).valueOrNull,
+        ),
+        apiHttpClientProvider.overrideWithValue(_uncachedHttp),
+        clPublicSourceProvider.overrideWithValue(
+          createRemotePublicSource(
+            baseUrl: apiBaseUrl,
+            store: RemoteStore(baseUrl: apiBaseUrl, client: _uncachedHttp),
+          ),
         ),
         tokenStorageProvider.overrideWithValue(InMemoryTokenStorage()),
         credentialStorageProvider.overrideWithValue(
@@ -156,3 +174,98 @@ Future<void> waitFor(
   }
   throw TestFailure('Timed out waiting for: $description');
 }
+
+/// Waits until [item] is built inside [within], scrolling the vertical lists
+/// in [within] a screen at a time until it is. A lazy list builds only the
+/// rows it shows, so on a phone-sized screen a row below the fold never
+/// appears to a plain [waitFor] (club_client#291). When a list reaches its
+/// end without the item it starts again from the top, since the rows may
+/// still be loading. Once found, the item is scrolled into view.
+Future<void> waitForInList(
+  WidgetTester tester,
+  Finder item, {
+  required Finder within,
+  required String description,
+  Duration timeout = const Duration(seconds: 30),
+}) async {
+  await waitFor(
+    tester,
+    () {
+      if (item.evaluate().isNotEmpty) return true;
+      final lists = find.descendant(
+        of: within,
+        matching: find.byWidgetPredicate(
+          (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+        ),
+      );
+      for (final element in lists.evaluate()) {
+        if (element is! StatefulElement) continue;
+        final state = element.state;
+        if (state is! ScrollableState) continue;
+        final position = state.position;
+        if (!position.hasContentDimensions) continue;
+        if (position.maxScrollExtent <= 0) continue;
+        final next = position.pixels >= position.maxScrollExtent
+            ? 0.0
+            : (position.pixels + position.viewportDimension * 0.8).clamp(
+                0.0,
+                position.maxScrollExtent,
+              );
+        position.jumpTo(next);
+      }
+      return false;
+    },
+    description: description,
+    timeout: timeout,
+  );
+  final context = item.evaluate().first;
+  await Scrollable.ensureVisible(context);
+  await tester.pump();
+}
+
+/// The server lets a browser keep a public read for five minutes
+/// (club_server#297), so in Chrome a test that changes what the server holds
+/// would read the old answer back. Each GET gets a query parameter of its
+/// own, which the server ignores and no cache has seen (club_client#291).
+final http.Client _uncachedHttp = _UncachedClient(http.Client());
+
+class _UncachedClient extends http.BaseClient {
+  _UncachedClient(this._inner);
+
+  final http.Client _inner;
+  int _count = 0;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    if (request.method != 'GET') return _inner.send(request);
+    final url = request.url.replace(
+      queryParameters: {
+        ...request.url.queryParametersAll,
+        '_test_nocache': '${DateTime.now().microsecondsSinceEpoch}-${_count++}',
+      },
+    );
+    final copy = http.Request('GET', url)
+      ..headers.addAll(request.headers)
+      ..followRedirects = request.followRedirects
+      ..maxRedirects = request.maxRedirects;
+    return _inner.send(copy);
+  }
+}
+
+/// Scrolls [finder] into view, then taps it. A tap lands where the widget is
+/// drawn, so on a phone-sized screen a widget below the fold takes no tap
+/// (club_client#291); on a wide one the scroll does nothing.
+Future<void> tapVisible(WidgetTester tester, Finder finder) async {
+  await tester.ensureVisible(finder);
+  await tester.pump();
+  await tester.tap(finder);
+}
+
+/// A test's own SDK client, for setup and for reading back what the server
+/// holds. It shares the pages' cache-busting HTTP client, so in Chrome it
+/// never reads an answer the browser kept (club_client#291).
+Future<SecureClient> createTestClient({required String baseUrl}) =>
+    createRemoteSecureClient(
+      baseUrl: baseUrl,
+      store: RemoteStore(baseUrl: baseUrl, client: _uncachedHttp),
+    );

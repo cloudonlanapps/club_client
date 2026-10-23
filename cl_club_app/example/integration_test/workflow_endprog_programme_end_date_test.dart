@@ -47,7 +47,6 @@ import 'package:club_sdk_2/club_sdk_2.dart'
         OccurrenceStatus,
         SecureClient,
         Visibility;
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -97,7 +96,7 @@ DateTime _localDay(int days, [int hour = 0]) {
 DateTime _cutoffAfter(int days) => _localDay(days + 1, _kHour).toUtc();
 
 Future<SecureClient> _sudoClient() async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(_kSudoUsername, _kSudoPassword);
   return c;
 }

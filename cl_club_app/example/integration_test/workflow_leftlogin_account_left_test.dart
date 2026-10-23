@@ -22,7 +22,6 @@
 import 'package:cl_member_auth/src/utils/login_error_messages.dart'
     show LoginErrorMessages;
 import 'package:club_sdk_2/club_sdk_2.dart';
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -45,7 +44,7 @@ const _kMember = 'workflow_leftlogin_member';
 const _kPwd = 'WorkflowLeftLogin!2024';
 
 Future<SecureClient> _adminClient() async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(_kSudoUsername, _kSudoPassword);
   return c;
 }

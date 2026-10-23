@@ -200,14 +200,29 @@ Future<void> _expectContactPhone(WidgetTester tester, String phone) async {
     description: "the server's public club info",
   );
   final card = find.byType(ClubContactCard);
-  await waitFor(
-    tester,
-    () => find
-        .descendant(of: card, matching: find.text(phone))
-        .evaluate()
-        .isNotEmpty,
-    description: '"$phone" in the contact card',
-  );
+  try {
+    await waitFor(
+      tester,
+      () => find
+          .descendant(of: card, matching: find.text(phone))
+          .evaluate()
+          .isNotEmpty,
+      description: '"$phone" in the contact card',
+    );
+  } on TestFailure catch (e) {
+    final shown = [
+      for (final t in tester.widgetList<Text>(
+        find.descendant(of: card, matching: find.byType(Text)),
+      ))
+        t.data ?? t.textSpan?.toPlainText(),
+    ];
+    final info = container(tester).read(clPublicClubInfoProvider);
+    final contact = container(tester).read(contactInfoProvider);
+    throw TestFailure(
+      '$e; card: ${card.evaluate().length} showing $shown; '
+      'club info: ${info.valueOrNull}; contact phone: ${contact.phoneNumber}',
+    );
+  }
 }
 
 void main() {

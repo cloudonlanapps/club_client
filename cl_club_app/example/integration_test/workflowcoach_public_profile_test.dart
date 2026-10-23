@@ -23,7 +23,6 @@
 
 import 'package:club_sdk_2/club_sdk_2.dart' hide Visibility;
 import 'package:club_sdk_2/club_sdk_2.dart' as sdk show Visibility;
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter/widgets.dart' show Scrollable;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -53,7 +52,7 @@ late int _venueId;
 late int _eventId;
 
 Future<SecureClient> _adminClient() async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(_kSudoUsername, _kSudoPassword);
   return c;
 }
@@ -107,7 +106,7 @@ void main() {
       bio: () => 'Loves hockey.',
       achievements: () => _kCoachAchievements,
     );
-    final coach = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+    final coach = await createTestClient(baseUrl: _kApiBaseUrl);
     await coach.auth.login(_kCoach, _kCoachPwd);
     await coach.users.updateUser(
       _kCoach,
@@ -174,7 +173,7 @@ void main() {
         120,
         scrollable: find.byType(Scrollable).first,
       );
-      await tester.tap(find.text(coachRow));
+      await tapVisible(tester, find.text(coachRow));
       await settle(tester);
 
       // The public profile view: display name + achievements heading.

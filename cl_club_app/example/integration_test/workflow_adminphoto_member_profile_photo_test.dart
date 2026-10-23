@@ -37,12 +37,12 @@
 //   just app-test-one app_test_server1.conf \
 //       workflow_adminphoto_member_profile_photo_test.dart
 
+import 'package:cl_club_members/cl_club_members.dart' show UserListView;
 import 'package:cl_club_members/cl_club_members.dart' show PublicProfileView;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show avatarImageProvider, imagePickerProvider, kUserAvatarTag;
 import 'package:club_sdk_2/club_sdk_2.dart' hide Visibility;
 import 'package:club_sdk_2/club_sdk_2.dart' as sdk show Visibility;
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -405,7 +405,7 @@ late int _venueId;
 late int _eventId;
 
 Future<SecureClient> _sdkClient(String username, String password) async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(username, password);
   return c;
 }
@@ -516,12 +516,13 @@ void main() {
       await loginViaUi(tester, _kAdmin, _kPwd);
       await go(tester, '/memberzone/users');
       final coachCard = find.byKey(const ValueKey(_kCoach));
-      await waitFor(
+      await waitForInList(
         tester,
-        () => coachCard.evaluate().isNotEmpty,
+        coachCard,
+        within: find.byType(UserListView),
         description: "the coach's card in the members list",
       );
-      await tester.tap(coachCard);
+      await tapVisible(tester, coachCard);
       await settle(tester);
       await waitFor(
         tester,
@@ -534,7 +535,7 @@ void main() {
         reason: "the tick on the current photo is the member's alone",
       );
 
-      await tester.tap(find.byTooltip('Change photo'));
+      await tapVisible(tester, find.byTooltip('Change photo'));
       await settle(tester);
       expect(find.text('Update profile photo'), findsOneWidget);
       expect(
@@ -649,7 +650,7 @@ void main() {
       );
 
       // ─── 7. The coach replaces the photo the admin uploaded ────────────
-      await tester.tap(find.byTooltip('Change photo'));
+      await tapVisible(tester, find.byTooltip('Change photo'));
       await settle(tester);
       expect(
         find.descendant(
@@ -757,7 +758,7 @@ Future<void> _openCoachPublicProfile(WidgetTester tester) async {
     120,
     scrollable: find.byType(Scrollable).first,
   );
-  await tester.tap(find.text(_kCoachRow));
+  await tapVisible(tester, find.text(_kCoachRow));
   await settle(tester);
   await waitFor(
     tester,

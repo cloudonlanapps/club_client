@@ -29,15 +29,15 @@ import 'package:cl_club_events/src/widgets/calendar_grid.dart'
     show CalendarGrid;
 import 'package:cl_club_events/src/widgets/cards/occurrence_card.dart'
     show OccurrenceCard;
+import 'package:cl_member_zone/cl_member_zone.dart' show EventsCalendarScreen;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show EventType, Gender, SecureClient, Visibility;
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
-import 'package:ui_lib/ui_lib.dart' show ActionGroup;
 
+import '_helpers/actions.dart';
 import '_helpers/auth.dart';
 import '_helpers/pump.dart';
 import '_helpers/surface.dart';
@@ -67,7 +67,7 @@ const List<String> _kCast = [_kAdmin, _kCoach, _kOtherCoach];
 const List<String> _kManaged = ['Call off'];
 
 Future<SecureClient> _sudoClient() async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(_kSudoUsername, _kSudoPassword);
   return c;
 }
@@ -155,7 +155,7 @@ void main() {
       await _openOccurrence(tester);
       await waitFor(
         tester,
-        () => _kManaged.every(_occurrenceLabels().contains),
+        () => _kManaged.every(_occurrenceLabels(tester).contains),
         description: 'Call off for the organizer',
       );
       await logout(tester);
@@ -164,7 +164,7 @@ void main() {
       for (final coach in const [_kCoach, _kOtherCoach]) {
         await loginViaUi(tester, coach, _kPwd);
         await _openOccurrence(tester);
-        final offered = _occurrenceLabels();
+        final offered = _occurrenceLabels(tester);
         for (final label in _kManaged) {
           expect(
             offered,
@@ -189,7 +189,8 @@ Future<void> _openOccurrence(WidgetTester tester) async {
     description: 'the Club Calendar grid',
   );
   if (_dayLocal.month != DateTime.now().month) {
-    await tester.tap(
+    await tapVisible(
+      tester,
       find.descendant(
         of: find.byType(CalendarGrid),
         matching: find.byIcon(LucideIcons.chevronRight),
@@ -208,30 +209,26 @@ Future<void> _openOccurrence(WidgetTester tester) async {
     () => cell.evaluate().isNotEmpty,
     description: 'the ${_dayLocal.month}/${_dayLocal.day} cell',
   );
-  await tester.tap(cell.first);
+  await tapVisible(tester, cell.first);
   await settle(tester);
   final card = find.ancestor(
     of: find.textContaining(_kEvent),
     matching: find.byType(OccurrenceCard),
   );
-  await waitFor(
+  await waitForInList(
     tester,
-    () => card.evaluate().isNotEmpty,
+    card,
+    within: find.byType(EventsCalendarScreen),
     description: 'the "$_kEvent" occurrence on the Club Calendar',
   );
   await settle(tester);
 }
 
 /// The labels of every action the event's occurrence card offers.
-List<String> _occurrenceLabels() {
-  final groups = find.descendant(
-    of: find.byWidgetPredicate(
-      (w) => w is OccurrenceCard && w.eventId == _eventId,
-    ),
-    matching: find.byType(ActionGroup),
-  );
-  return [
-    for (final element in groups.evaluate())
-      for (final a in (element.widget as ActionGroup).actions) a.label,
-  ];
-}
+List<String> _occurrenceLabels(WidgetTester tester) => [
+  for (final a in cardActions(
+    tester,
+    find.byWidgetPredicate((w) => w is OccurrenceCard && w.eventId == _eventId),
+  ))
+    a.label,
+];

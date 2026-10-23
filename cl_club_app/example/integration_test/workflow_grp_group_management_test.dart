@@ -41,7 +41,6 @@ import 'package:cl_club_members/src/widgets/group_eligibility_section.dart'
     show GroupEligibilitySection;
 import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -105,7 +104,7 @@ DateTime _bornYearsAgo(int years) {
 }
 
 Future<SecureClient> _sudoClient() async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(_kSudoUsername, _kSudoPassword);
   return c;
 }
@@ -1139,7 +1138,7 @@ Future<void> _selectAndConfirmInDialog(
     () => tile.evaluate().isNotEmpty,
     description: 'eligible user tile for $username inside AddMemberDialog',
   );
-  await tester.tap(tile.first);
+  await tapVisible(tester, tile.first);
   await settle(tester);
 
   // Once a user is selected the picker's confirm button relabels from "Add"

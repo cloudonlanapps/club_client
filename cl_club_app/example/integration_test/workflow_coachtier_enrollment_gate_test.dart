@@ -238,13 +238,14 @@ void main() {
         description: 'the Assign / Invite bar for the organizer',
       );
       expect(find.text('Invite More…'), findsOneWidget);
-      final remove = find.descendant(
-        of: find.byType(EnrollmentTile),
-        matching: find.text('Remove'),
-      );
+      // The row's actions, not its buttons: on a phone all but the first
+      // are in the overflow menu (#296).
       await waitFor(
         tester,
-        () => remove.evaluate().isNotEmpty,
+        () => cardActions(
+          tester,
+          find.byType(EnrollmentTile),
+        ).any((a) => a.label == 'Remove'),
         description: "Remove on the member's row for the organizer",
       );
       await logout(tester);

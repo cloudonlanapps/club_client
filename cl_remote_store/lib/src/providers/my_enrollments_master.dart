@@ -35,7 +35,7 @@ class ClMyEnrollmentsMasterNotifier
   @override
   Future<Enrollment> build(ClMyEnrollmentsKey arg) async {
     ref.watch(clManualRefreshProvider);
-    final client = await ref.read(secureClientProvider.future);
+    final client = await ref.watch(secureClientProvider.future);
     return client.myEvents.getMyEnrollment(key.username, key.eventId);
   }
 

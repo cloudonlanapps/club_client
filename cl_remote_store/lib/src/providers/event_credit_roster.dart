@@ -43,7 +43,7 @@ class ClEventCreditRosterNotifier
       clEventsMasterProvider.select((s) => s.valueOrNull?[eventId]?.type),
     );
     if (type != EventType.programme) return const {};
-    final client = await ref.read(secureClientProvider.future);
+    final client = await ref.watch(secureClientProvider.future);
     final rows = await fetchAllPages(
       ({required offset, required limit}) => client.credits.listEventCredits(
         eventId,

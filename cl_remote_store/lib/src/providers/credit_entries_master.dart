@@ -49,6 +49,8 @@ class ClCreditEntriesMasterNotifier
     if (ref.watch(creditSystemProvider) != true) {
       return (entries: const <CreditEntry>[], hasMore: false);
     }
+    // A new session rebuilds this on its client (club_client#294).
+    await ref.watch(secureClientProvider.future);
     final page = await fetchPage(0);
     return (entries: page.items, hasMore: page.hasMore);
   }

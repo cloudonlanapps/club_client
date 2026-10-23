@@ -51,6 +51,8 @@ class ClAttendancesMasterNotifier
         clResourceVersionProvider.select((s) => s.occurrencesVersion),
       )
       ..watch(clManualRefreshProvider);
+    // A new session rebuilds this on its client (club_client#294).
+    await ref.watch(secureClientProvider.future);
     return fetch();
   }
 

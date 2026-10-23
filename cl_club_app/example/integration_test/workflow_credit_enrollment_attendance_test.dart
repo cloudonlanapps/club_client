@@ -64,7 +64,7 @@ import 'package:cl_club_events/src/widgets/enrollment_tile.dart'
 import 'package:cl_club_members/src/widgets/profile_credit_line.dart'
     show ProfileCreditLine;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clEventsMasterProvider;
+    show clEnrollmentRecordsMasterProvider, clEventsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show
         AttendanceStatus,
@@ -77,6 +77,7 @@ import 'package:club_sdk_2/club_sdk_2.dart'
         Visibility;
 import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter/material.dart' hide Visibility;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -488,14 +489,27 @@ void main() {
       final m3Tile = find.byWidgetPredicate(
         (w) => w is EnrollmentTile && w.username == _kM3,
       );
-      await waitFor(
-        tester,
-        () => find
-            .descendant(of: m3Tile, matching: find.byIcon(LucideIcons.flag))
-            .evaluate()
-            .isNotEmpty,
-        description: 'm3 in Inactive with the trial-ended flag',
-      );
+      try {
+        await waitFor(
+          tester,
+          () => find
+              .descendant(of: m3Tile, matching: find.byIcon(LucideIcons.flag))
+              .evaluate()
+              .isNotEmpty,
+          description: 'm3 in Inactive with the trial-ended flag',
+        );
+      } on TestFailure catch (e) {
+        final events = container(tester).read(clEventsMasterProvider).value!;
+        final id = events.values.firstWhere((e) => e.title == _kProgramme).id;
+        final records = container(
+          tester,
+        ).read(clEnrollmentRecordsMasterProvider(id));
+        throw TestFailure(
+          '$e; rows: ${_shownTiles(tester)}; records: '
+          '${records.runtimeType} loading=${records.isLoading} '
+          'm3=${records.valueOrNull?[_kM3]?.toMap()} error=${records.error}',
+        );
+      }
       await logout(tester);
 
       // ─── 12. m1 asks to withdraw ────────────────────────────────────────
@@ -736,6 +750,14 @@ String _sectionState(Element e) {
 
 /// Opens the Inactive enrollment group, which starts collapsed (#98), once
 /// it exists.
+/// The enrollment rows on screen, as `username:status:withdrawalReason`.
+String _shownTiles(WidgetTester tester) => [
+  for (final t in tester.widgetList<EnrollmentTile>(
+    find.byType(EnrollmentTile),
+  ))
+    '${t.username}:${t.status.name}:${t.withdrawalReason}',
+].join(', ');
+
 Future<void> _expandInactive(WidgetTester tester) async {
   final section = find.byWidgetPredicate(
     (w) =>

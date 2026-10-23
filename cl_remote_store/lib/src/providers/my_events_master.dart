@@ -45,7 +45,7 @@ class ClMyEventsMasterNotifier
         clResourceVersionProvider.select((s) => s.occurrencesVersion),
       )
       ..watch(clManualRefreshProvider);
-    final client = await ref.read(secureClientProvider.future);
+    final client = await ref.watch(secureClientProvider.future);
     return fetchAllPages(
       ({required offset, required limit}) => client.myEvents.listMyEvents(
         username,

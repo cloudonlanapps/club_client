@@ -41,7 +41,7 @@ class ClMyAttendancesMasterNotifier
   @override
   Future<AttendanceRecord?> build(ClMyAttendancesKey arg) async {
     ref.watch(clManualRefreshProvider);
-    final client = await ref.read(secureClientProvider.future);
+    final client = await ref.watch(secureClientProvider.future);
     return client.myEvents.getMyOccurrenceAttendance(
       key.username,
       key.eventId,

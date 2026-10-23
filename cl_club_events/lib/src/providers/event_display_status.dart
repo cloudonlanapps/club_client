@@ -24,9 +24,15 @@ import '../models/event_display_status.dart';
 /// - **Ongoing**: everything else that's active.
 final FutureProviderFamily<EventDisplayStatus, int> eventDisplayStatusProvider =
     FutureProvider.family<EventDisplayStatus, int>((ref, eventId) async {
-      final event = await ref.watch(
-        clEventsMasterProvider.selectAsync((events) => events[eventId]),
+      // A synchronous select, so a write to another event leaves this one
+      // alone. `selectAsync` would throw when its scope is disposed while
+      // the master is still loading (club_client#290).
+      final entry = ref.watch(
+        clEventsMasterProvider.select((s) => s.whenData((m) => m[eventId])),
       );
+      final event = entry.hasValue
+          ? entry.requireValue
+          : (await ref.read(clEventsMasterProvider.future))[eventId];
       if (event == null) {
         throw StateError('Event $eventId not found in master');
       }

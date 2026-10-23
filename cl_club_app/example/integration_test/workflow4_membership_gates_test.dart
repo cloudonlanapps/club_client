@@ -45,7 +45,6 @@ import 'package:cl_member_zone/src/widgets/panels/shared/day_occurrences_list.da
     show DayOccurrencesList;
 import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -75,7 +74,7 @@ var _actingIsMember = false;
 late int _venueId;
 
 Future<SecureClient> _adminClient() async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(_kSudoUsername, _kSudoPassword);
   return c;
 }

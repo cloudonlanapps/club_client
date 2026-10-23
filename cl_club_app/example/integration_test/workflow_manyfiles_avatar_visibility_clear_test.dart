@@ -34,7 +34,6 @@ import 'package:cl_remote_store/cl_remote_store.dart'
         avatarVisibilityProvider,
         kUserAvatarTag;
 import 'package:club_sdk_2/club_sdk_2.dart';
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -74,7 +73,7 @@ late Media _photo;
 final List<int> _newerFileIds = [];
 
 Future<SecureClient> _sdkClient(String username, String password) async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(username, password);
   return c;
 }

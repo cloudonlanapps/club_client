@@ -54,6 +54,7 @@ import 'package:cl_club_app/cl_club_app.dart';
 import 'package:cl_club_forms/cl_club_forms.dart' show SignupGender;
 import 'package:cl_club_forms/src/widgets/read_only_field.dart'
     show ReadOnlyField;
+import 'package:cl_club_members/cl_club_members.dart' show UserListView;
 import 'package:cl_club_members/src/widgets/address_card.dart';
 import 'package:cl_club_members/src/widgets/personal_details_card.dart';
 import 'package:cl_club_members/src/widgets/user_contact_info_card.dart';
@@ -73,7 +74,7 @@ import 'package:ui_lib/ui_lib.dart'
 import '_helpers/actions.dart';
 import '_helpers/auth.dart' show attemptLoginExpectFailure, loginViaUi;
 import '_helpers/capabilities.dart';
-import '_helpers/pump.dart' show pumpApp;
+import '_helpers/pump.dart' show pumpApp, tapVisible, waitForInList;
 import '_helpers/surface.dart';
 
 const _kApiBaseUrl = String.fromEnvironment(
@@ -695,7 +696,7 @@ Future<void> _uploadIdentityDocAndSubmit(WidgetTester tester) async {
     () => find.byIcon(Icons.add).evaluate().isNotEmpty,
     description: 'identity-document add tile on the submit-documents view',
   );
-  await tester.tap(find.byIcon(Icons.add).first);
+  await tapVisible(tester, find.byIcon(Icons.add).first);
   await _settle(tester);
   // Give the upload (file picker → server media upload → slot) time to land.
   await tester.pump(const Duration(seconds: 2));
@@ -1067,7 +1068,7 @@ Future<void> _createMemberViaUi(
     () => addUserButton.evaluate().isNotEmpty,
     description: '"+ Add user" button on the admin users list',
   );
-  await tester.tap(addUserButton);
+  await tapVisible(tester, addUserButton);
   await _settle(tester);
 
   await _waitFor(
@@ -1224,12 +1225,13 @@ Future<void> _openAdminProfileViaUi(
 ) async {
   await _go(tester, '/memberzone/users');
   final userCard = find.byKey(ValueKey(username));
-  await _waitFor(
+  await waitForInList(
     tester,
-    () => userCard.evaluate().isNotEmpty,
+    userCard,
+    within: find.byType(UserListView),
     description: 'user card "$username" to appear in the admin list',
   );
-  await tester.tap(userCard);
+  await tapVisible(tester, userCard);
   await _settle(tester);
 }
 
@@ -1251,7 +1253,7 @@ Future<void> _editMarkdownFieldViaUi(
     description: 'pencil icon with tooltip "$tooltip"',
   );
 
-  await tester.tap(find.byTooltip(tooltip));
+  await tapVisible(tester, find.byTooltip(tooltip));
   await _settle(tester);
 
   // The MarkdownEditorDialog is a centered Dialog with a single editable

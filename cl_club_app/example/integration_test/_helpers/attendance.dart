@@ -13,10 +13,12 @@ import 'package:cl_club_events/src/widgets/attendance_member_tile.dart'
     show AttendanceMemberTile;
 import 'package:cl_club_events/src/widgets/cards/occurrence_card.dart'
     show OccurrenceCard;
+import 'package:cl_member_zone/cl_member_zone.dart' show EventsCalendarScreen;
 import 'package:club_sdk_2/club_sdk_2.dart' show AttendanceStatus;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton;
+import 'package:ui_lib/ui_lib.dart' show ActionItem;
 
+import 'actions.dart';
 import 'auth.dart';
 import 'pump.dart';
 
@@ -31,21 +33,27 @@ Future<void> openRegisterViaCalendarViaUi(
     of: find.textContaining(eventTitle),
     matching: find.byType(OccurrenceCard),
   );
-  await waitFor(
+  // The day's occurrences sit below the grid: on a phone they are built
+  // only once scrolled to (#291).
+  await waitForInList(
     tester,
-    () => card.evaluate().isNotEmpty,
+    card,
+    within: find.byType(EventsCalendarScreen),
     description: 'the "$eventTitle" occurrence on the Club Calendar',
   );
-  final button = find.descendant(
-    of: card.first,
-    matching: find.widgetWithText(ActionButton, 'Attendance'),
-  );
+  ActionItem? attendance() {
+    for (final a in cardActions(tester, card.first)) {
+      if (a.label == 'Attendance' && a.onPressed != null) return a;
+    }
+    return null;
+  }
+
   await waitFor(
     tester,
-    () => button.evaluate().isNotEmpty,
+    () => attendance() != null,
     description: 'the Attendance action on "$eventTitle"',
   );
-  tester.widget<ActionButton>(button.first).onPressed!.call();
+  attendance()!.onPressed!.call();
   await settle(tester);
   await waitFor(
     tester,

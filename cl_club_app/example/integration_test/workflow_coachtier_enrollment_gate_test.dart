@@ -34,14 +34,15 @@ import 'package:cl_club_events/src/widgets/cards/occurrence_card.dart'
     show OccurrenceCard;
 import 'package:cl_club_events/src/widgets/enrollment_tile.dart'
     show EnrollmentTile;
+import 'package:cl_member_zone/cl_member_zone.dart' show EventsCalendarScreen;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show EventType, Gender, SecureClient, Visibility;
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton, ActionGroup;
+import 'package:ui_lib/ui_lib.dart' show ActionGroup;
 
+import '_helpers/actions.dart';
 import '_helpers/attendance.dart';
 import '_helpers/auth.dart';
 import '_helpers/enrollments.dart';
@@ -77,7 +78,7 @@ const _kOneOffSegment = 'one-off';
 const _kSessionLead = Duration(minutes: 25);
 
 Future<SecureClient> _sudoClient() async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(_kSudoUsername, _kSudoPassword);
   return c;
 }
@@ -199,11 +200,8 @@ void main() {
       await loginViaUi(tester, _kOtherCoach, _kPwd);
       final eventCard = await _eventCard(tester);
       expect(
-        find.descendant(
-          of: eventCard,
-          matching: find.widgetWithText(ActionButton, 'Enrollments'),
-        ),
-        findsNothing,
+        [for (final a in cardActions(tester, eventCard)) a.label],
+        isNot(contains('Enrollments')),
         reason: 'a coach not on the event has no Enrollments entry',
       );
 
@@ -212,18 +210,16 @@ void main() {
         of: find.textContaining(_kEvent),
         matching: find.byType(OccurrenceCard),
       );
-      await waitFor(
+      await waitForInList(
         tester,
-        () => occurrence.evaluate().isNotEmpty,
+        occurrence,
+        within: find.byType(EventsCalendarScreen),
         description: 'the "$_kEvent" occurrence on the Club Calendar',
       );
       await settle(tester);
       expect(
-        find.descendant(
-          of: occurrence.first,
-          matching: find.widgetWithText(ActionButton, 'Attendance'),
-        ),
-        findsNothing,
+        [for (final a in cardActions(tester, occurrence.first)) a.label],
+        isNot(contains('Attendance')),
         reason: 'a coach not on the event may not take attendance',
       );
       await logout(tester);
@@ -259,12 +255,12 @@ void main() {
 
 /// The member's row on the open enrollment list, once it is there.
 Future<void> _memberRow(WidgetTester tester) async {
-  await waitFor(
+  await waitForInList(
     tester,
-    () => find
-        .byWidgetPredicate((w) => w is EnrollmentTile && w.username == _kMember)
-        .evaluate()
-        .isNotEmpty,
+    find.byWidgetPredicate(
+      (w) => w is EnrollmentTile && w.username == _kMember,
+    ),
+    within: find.byType(Scaffold),
     description: '$_kMember on the enrollment list',
   );
 }
@@ -276,9 +272,10 @@ Future<Finder> _eventCard(WidgetTester tester) async {
     of: find.text(_kEvent),
     matching: find.byType(EventCard),
   );
-  await waitFor(
+  await waitForInList(
     tester,
-    () => card.evaluate().isNotEmpty,
+    card,
+    within: find.byType(Scaffold),
     description: 'the "$_kEvent" card on the one-off events list',
   );
   await settle(tester);

@@ -37,7 +37,6 @@ import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show Event, EventType, Gender, SecureClient, Visibility;
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -87,7 +86,7 @@ DateTime _localDay(int days, int hour) {
 }
 
 Future<SecureClient> _sudoClient() async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(_kSudoUsername, _kSudoPassword);
   return c;
 }

@@ -6,10 +6,16 @@
 //                  one (a phone). Both carry the same label (#263).
 //   * pressAction — calls that action's onPressed directly, for flows that
 //                  avoid hit-test misses on a narrow viewport.
+//   * cardActions — the actions of the cards inside [within]: an ActionGroup
+//                  on a wide screen, the first action and an overflow menu
+//                  (MobilePrimaryActionRow) on a phone (#291).
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton, ActionIcon;
+import 'package:ui_lib/src/widgets/cards/entity_card.dart'
+    show MobilePrimaryActionRow;
+import 'package:ui_lib/ui_lib.dart'
+    show ActionButton, ActionGroup, ActionIcon, ActionItem;
 
 /// The action named [label], as an [ActionButton] or an [ActionIcon].
 Finder findAction(String label) => find.byWidgetPredicate(
@@ -29,3 +35,16 @@ void pressAction(WidgetTester tester, Finder action) {
   if (onPressed == null) throw StateError('$action is disabled');
   onPressed();
 }
+
+/// The actions of the cards inside [within], in order, whatever the screen
+/// width: an [ActionGroup] on a wide screen, a [MobilePrimaryActionRow] (the
+/// first action, then the rest in an overflow menu) on a phone.
+List<ActionItem> cardActions(WidgetTester tester, Finder within) => [
+  for (final g in tester.widgetList<ActionGroup>(
+    find.descendant(of: within, matching: find.byType(ActionGroup)),
+  ))
+    ...g.actions,
+  for (final r in tester.widgetList<MobilePrimaryActionRow>(
+    find.descendant(of: within, matching: find.byType(MobilePrimaryActionRow)),
+  )) ...[r.primary, ...r.overflow],
+];

@@ -29,7 +29,6 @@ import 'package:cl_club_communication/src/widgets/pending_action_trailing.dart'
 import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:club_sdk_2/club_sdk_2.dart' hide Visibility;
 import 'package:club_sdk_2/club_sdk_2.dart' as sdk show Visibility;
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -65,7 +64,7 @@ late int _privateAssignedId;
 late int _privateHiddenId;
 
 Future<SecureClient> _adminClient() async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(_kSudoUsername, _kSudoPassword);
   return c;
 }
@@ -363,7 +362,8 @@ void main() {
       );
 
       // Tap Accept — drives clMyEnrollmentsMasterProvider.acceptInvite.
-      await tester.tap(
+      await tapVisible(
+        tester,
         find.descendant(
           of: find.byType(PendingActionTrailing),
           matching: find.widgetWithText(ShadButton, 'Accept'),
@@ -471,7 +471,7 @@ void main() {
             'Approve button must be present on the enrollmentRequest '
             'row for public_join',
       );
-      await tester.tap(approveBtn);
+      await tapVisible(tester, approveBtn);
       await settle(tester);
 
       // ─────────────────────────────────────────────────────────────

@@ -28,10 +28,10 @@
 //   just app-test-one app_test_server1.conf \
 //       workflow_privphoto_admin_replaces_private_photo_test.dart
 
+import 'package:cl_club_members/cl_club_members.dart' show UserListView;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show avatarImageProvider, imagePickerProvider, kUserAvatarTag;
 import 'package:club_sdk_2/club_sdk_2.dart';
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -62,7 +62,7 @@ const _kPrivateRoles = ['self', 'admin', 'coach'];
 const _kSelfAlone = ['self'];
 
 Future<SecureClient> _sdkClient(String username, String password) async {
-  final c = await createRemoteSecureClient(baseUrl: _kApiBaseUrl);
+  final c = await createTestClient(baseUrl: _kApiBaseUrl);
   await c.auth.login(username, password);
   return c;
 }
@@ -246,12 +246,13 @@ String? _avatarUrl(WidgetTester tester) =>
 Future<void> _openMember(WidgetTester tester) async {
   await go(tester, '/memberzone/users');
   final memberCard = find.byKey(const ValueKey(_kMember));
-  await waitFor(
+  await waitForInList(
     tester,
-    () => memberCard.evaluate().isNotEmpty,
+    memberCard,
+    within: find.byType(UserListView),
     description: "the member's card in the members list",
   );
-  await tester.tap(memberCard);
+  await tapVisible(tester, memberCard);
   await settle(tester);
 }
 
@@ -263,7 +264,7 @@ Future<void> _openPreview(WidgetTester tester) async {
     () => find.byTooltip('Change photo').evaluate().isNotEmpty,
     description: 'the pencil on the photo',
   );
-  await tester.tap(find.byTooltip('Change photo'));
+  await tapVisible(tester, find.byTooltip('Change photo'));
   await settle(tester);
   expect(find.text('Update profile photo'), findsOneWidget);
 }

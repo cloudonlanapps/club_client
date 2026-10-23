@@ -14,6 +14,7 @@
 //   5. Member confirms the updates on their own profile.
 //   6. Cleanup: admin soft-deletes the member; sudo soft-deletes admin + coach.
 
+import 'package:cl_club_members/cl_club_members.dart' show UserListView;
 import 'package:cl_club_members/src/widgets/address_card.dart';
 import 'package:cl_club_members/src/widgets/personal_details_card.dart';
 import 'package:cl_club_members/src/widgets/user_contact_info_card.dart';
@@ -258,12 +259,13 @@ UserPrivate _member(WidgetTester tester) {
 Future<void> _openMemberProfile(WidgetTester tester, String username) async {
   await go(tester, '/memberzone/users');
   final card = find.byKey(ValueKey(username));
-  await waitFor(
+  await waitForInList(
     tester,
-    () => card.evaluate().isNotEmpty,
+    card,
+    within: find.byType(UserListView),
     description: 'user card "$username" in the admin list',
   );
-  await tester.tap(card);
+  await tapVisible(tester, card);
   await settle(tester);
   await waitFor(
     tester,

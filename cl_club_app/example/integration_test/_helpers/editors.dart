@@ -104,7 +104,7 @@ Future<void> editMarkdownField(
     () => find.byTooltip(tooltip).evaluate().isNotEmpty,
     description: 'markdown pencil with tooltip "$tooltip"',
   );
-  await tester.tap(find.byTooltip(tooltip));
+  await tapVisible(tester, find.byTooltip(tooltip));
   await settle(tester);
 
   await waitFor(

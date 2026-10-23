@@ -26,7 +26,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show EntityCard;
+import 'package:ui_lib/ui_lib.dart' show EditorPreviewLayout, EntityCard;
 
 import '_helpers/auth.dart';
 import '_helpers/capabilities.dart';
@@ -132,6 +132,7 @@ void main() {
         _kStamp,
       );
       await settle(tester);
+      await _showSide(tester, EditorPreviewLayout.previewLabel);
       expect(
         find.descendant(
           of: find.byType(EventMarketingPreview),
@@ -141,6 +142,7 @@ void main() {
         findsWidgets,
         reason: 'the preview shows the stamp before it is saved',
       );
+      await _showSide(tester, EditorPreviewLayout.editLabel);
       await saveInlineEditor(tester);
       await waitFor(
         tester,
@@ -203,6 +205,19 @@ Event _event(WidgetTester tester, int eventId) {
 }
 
 /// Finds a section card's `ShadCard` by its title text.
+/// On a narrow screen the editor and the preview show one at a time, behind
+/// an Edit / Preview switch: presses [label]. A wide screen shows both and
+/// has no switch.
+Future<void> _showSide(WidgetTester tester, String label) async {
+  final button = find.descendant(
+    of: find.byType(EditorPreviewLayout),
+    matching: find.widgetWithText(ShadButton, label),
+  );
+  if (button.evaluate().isEmpty) return;
+  tester.widget<ShadButton>(button.first).onPressed!();
+  await settle(tester);
+}
+
 Finder _sectionCard(String title) =>
     find.ancestor(of: find.text(title), matching: find.byType(ShadCard));
 

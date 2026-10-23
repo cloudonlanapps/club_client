@@ -10,8 +10,9 @@
 // not as a pass that asserted nothing.
 
 import 'package:club_sdk_2/club_sdk_2.dart';
-import 'package:club_sdk_2/remote_store.dart' show createRemoteSecureClient;
 import 'package:flutter_test/flutter_test.dart';
+
+import 'pump.dart' show createTestClient;
 
 /// Reads the stack's capabilities as [username]. `GET /capabilities` answers
 /// without a login too; the sudo credentials a test already has are used so
@@ -21,7 +22,7 @@ Future<Capabilities> stackCapabilities({
   required String username,
   required String password,
 }) async {
-  final client = await createRemoteSecureClient(baseUrl: baseUrl);
+  final client = await createTestClient(baseUrl: baseUrl);
   await client.auth.login(username, password);
   try {
     return await client.capabilities.getCapabilities();

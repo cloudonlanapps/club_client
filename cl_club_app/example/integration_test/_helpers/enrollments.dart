@@ -2,8 +2,8 @@
 //
 // Owns:
 //   * navigateToEnrollmentManagementViaUi — from any starting point,
-//     navigates to /memberzone/events/<type> and taps the "Enrollments"
-//     ActionButton on the matching event's card. Lands on
+//     navigates to /memberzone/events/<type> and runs the "Enrollments"
+//     action of the matching event's card. Lands on
 //     EventEnrolmentsView. The `go` to the events list is a sub-flow start,
 //     not a deep link — every step from there is a tap.
 //
@@ -16,15 +16,17 @@ import 'package:cl_club_events/src/views/event_enrolments_view.dart'
     show EventEnrolmentsView;
 import 'package:cl_club_events/src/widgets/cards/event_card.dart'
     show EventCard;
+import 'package:flutter/material.dart' show Scaffold;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton;
+import 'package:ui_lib/ui_lib.dart' show ActionItem;
 
+import 'actions.dart';
 import 'auth.dart';
 import 'pump.dart';
 
 /// Sub-flow start: open the events list for [eventTypeSegment]
 /// (`camps`, `programmes` or `one-off`), find the EventCard for
-/// [eventTitle], and tap its "Enrollments" ActionButton. Lands on
+/// [eventTitle], and run its "Enrollments" action. Lands on
 /// EventEnrolmentsView.
 ///
 /// Caller must already be logged in as the event's organizer or as an
@@ -41,32 +43,34 @@ Future<void> navigateToEnrollmentManagementViaUi(
     of: find.text(eventTitle),
     matching: find.byType(EventCard),
   );
-  await waitFor(
+  await waitForInList(
     tester,
-    () => cardFinder.evaluate().isNotEmpty,
+    cardFinder,
+    within: find.byType(Scaffold),
     description: 'EventCard for "$eventTitle" on /events/$eventTypeSegment',
   );
 
-  // The Enrollments button lives inside the EventCard's primaryAction
-  // slot. Tapping ActionButton's onPressed directly mirrors workflow1's
-  // pattern for off-screen buttons (the events list scrolls on long
-  // event lists, so the card may sit below the fold).
-  final enrollmentsBtn = find.descendant(
-    of: cardFinder,
-    matching: find.widgetWithText(ActionButton, 'Enrollments'),
-  );
+  // Enrollments is one of the card's actions: a button on a wide screen,
+  // and on a phone the first action or an entry of its overflow menu
+  // (#291). Its handler is called directly.
+  ActionItem? enrollments() {
+    for (final a in cardActions(tester, cardFinder.first)) {
+      if (a.label == 'Enrollments') return a;
+    }
+    return null;
+  }
+
   await waitFor(
     tester,
-    () => enrollmentsBtn.evaluate().isNotEmpty,
-    description: '"Enrollments" ActionButton on EventCard for "$eventTitle"',
+    () => enrollments() != null,
+    description: '"Enrollments" action on EventCard for "$eventTitle"',
   );
-  final btn = tester.widget<ActionButton>(enrollmentsBtn);
   expect(
-    btn.onPressed,
+    enrollments()!.onPressed,
     isNotNull,
-    reason: '"Enrollments" ActionButton should be enabled for organizer/admin',
+    reason: '"Enrollments" should be enabled for organizer/admin',
   );
-  btn.onPressed!.call();
+  enrollments()!.onPressed!.call();
   await settle(tester);
 
   await waitFor(

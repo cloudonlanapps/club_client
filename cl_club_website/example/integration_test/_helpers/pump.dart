@@ -18,10 +18,18 @@ import 'package:cl_club_website/src/site/app.dart' show App;
 import 'package:cl_club_website/src/site/router.dart' show routerProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show bundledContactInfoProvider;
+import 'package:cl_remote_store/src/providers/public_source.dart'
+    show clPublicSourceProvider;
+import 'package:cl_remote_store/src/providers/sessionless_client.dart'
+    show clSessionlessClientProvider;
 import 'package:cl_server_config/cl_server_config.dart';
+import 'package:club_sdk_2/club_sdk_2.dart' show SecureClient;
+import 'package:club_sdk_2/remote_store.dart'
+    show RemoteStore, createRemotePublicSource, createRemoteSecureClient;
 import 'package:flutter/widgets.dart' show SizedBox;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 
 /// Mounts the site against [apiBaseUrl], the way `websiteMain()` runs it: the
@@ -55,6 +63,18 @@ Future<void> pumpSite(
       siteConfigProvider.overrideWithValue(config),
       serverConfigProvider.overrideWithValue(ServerConfig(baseUrl: apiBaseUrl)),
       bundledContactInfoProvider.overrideWithValue(contact),
+      clSessionlessClientProvider.overrideWith(
+        (ref) => createRemoteSecureClient(
+          baseUrl: apiBaseUrl,
+          store: RemoteStore(baseUrl: apiBaseUrl, client: _uncachedHttp),
+        ),
+      ),
+      clPublicSourceProvider.overrideWithValue(
+        createRemotePublicSource(
+          baseUrl: apiBaseUrl,
+          store: RemoteStore(baseUrl: apiBaseUrl, client: _uncachedHttp),
+        ),
+      ),
       ...extraOverrides,
     ],
   );
@@ -146,3 +166,41 @@ Future<void> waitFor(
   }
   throw TestFailure('Timed out waiting for: $description');
 }
+
+/// The server lets a browser keep a public read for five minutes
+/// (club_server#297), so in Chrome a test that changes what the server holds
+/// would read the old answer back. Each GET gets a query parameter of its
+/// own, which the server ignores and no cache has seen (club_client#291).
+final http.Client _uncachedHttp = _UncachedClient(http.Client());
+
+class _UncachedClient extends http.BaseClient {
+  _UncachedClient(this._inner);
+
+  final http.Client _inner;
+  int _count = 0;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    if (request.method != 'GET') return _inner.send(request);
+    final url = request.url.replace(
+      queryParameters: {
+        ...request.url.queryParametersAll,
+        '_test_nocache': '${DateTime.now().microsecondsSinceEpoch}-${_count++}',
+      },
+    );
+    final copy = http.Request('GET', url)
+      ..headers.addAll(request.headers)
+      ..followRedirects = request.followRedirects
+      ..maxRedirects = request.maxRedirects;
+    return _inner.send(copy);
+  }
+}
+
+/// A test's own SDK client, for setup and for reading back what the server
+/// holds. It shares the pages' cache-busting HTTP client, so in Chrome it
+/// never reads an answer the browser kept (club_client#291).
+Future<SecureClient> createTestClient({required String baseUrl}) =>
+    createRemoteSecureClient(
+      baseUrl: baseUrl,
+      store: RemoteStore(baseUrl: baseUrl, client: _uncachedHttp),
+    );

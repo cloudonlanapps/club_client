@@ -24,7 +24,7 @@ final Finder _menuButton = find.byTooltip('Open menu');
 Future<Finder> revealSidebarEntry(WidgetTester tester, String label) async {
   final entry = find.widgetWithText(SidebarItem, label);
   if (entry.evaluate().isEmpty && _menuButton.evaluate().isNotEmpty) {
-    await tester.tap(_menuButton.first);
+    await tapVisible(tester, _menuButton.first);
     await settle(tester);
   }
   expect(entry, findsWidgets, reason: 'sidebar entry "$label"');

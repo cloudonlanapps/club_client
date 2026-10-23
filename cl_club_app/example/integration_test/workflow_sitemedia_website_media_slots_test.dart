@@ -19,6 +19,7 @@
 //   just app-test-one app_test_server1.conf \
 //       workflow_sitemedia_website_media_slots_test.dart
 
+import 'package:cl_club_admin/cl_club_admin.dart' show SiteMediaView;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show imagePickerProvider, secureClientProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show Media, SecureClient;
@@ -70,6 +71,17 @@ Finder _slot(String key) => find.byKey(ValueKey('siteMediaSlot.$key'));
 Finder _button(String key) => find.byKey(ValueKey(key));
 
 Future<void> _press(WidgetTester tester, String key) async {
+  // The page is a lazy list: on a phone a button below the fold is not
+  // built until the list is scrolled to it (#291). The media library opens
+  // in a dialog, outside the page.
+  if (!key.startsWith('mediaLibrary.')) {
+    await waitForInList(
+      tester,
+      _button(key),
+      within: find.byType(SiteMediaView),
+      description: key,
+    );
+  }
   invokeShadButton(tester, _button(key), reason: key);
   await settle(tester);
 }

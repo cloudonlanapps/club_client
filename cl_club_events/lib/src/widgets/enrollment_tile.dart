@@ -3,7 +3,7 @@ import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionGroup;
+import 'package:ui_lib/ui_lib.dart' show ActionGroup, isMobileWidth;
 
 import '../models/enrollment_category.dart';
 import '../models/withdrawal_reasons.dart';
@@ -79,6 +79,54 @@ class EnrollmentTile extends ConsumerWidget {
         status == EnrollmentStatus.removed &&
         isTrialCreditExhausted(withdrawalReason);
 
+    // The trial-ended flag, or the status of a member who is not active.
+    final narrow = isMobileWidth(context);
+    // On a phone one action shows and the rest are in the overflow menu, as
+    // on an EntityCard's phone row: two buttons with their reasons are
+    // wider than the screen (club_client#296).
+    final inlineLimit = narrow ? 1 : 2;
+    final marker = trialEnded
+        ? Semantics(
+            label: 'Trial ended',
+            child: Icon(
+              LucideIcons.flag,
+              size: 14,
+              color: theme.colorScheme.mutedForeground,
+            ),
+          )
+        : category != EnrollmentCategory.active
+        ? EnrollmentStatusBadge(status: status)
+        : null;
+    final actions = canManage
+        ? AdminEnrollmentActions(
+            eventId: eventId,
+            username: username,
+            status: status,
+            displayName: displayName,
+            builder: (context, actions) => ActionGroup(
+              actions: [...actions, ?review],
+              inlineLimit: inlineLimit,
+            ),
+          )
+        : review != null
+        ? ActionGroup(actions: [review], inlineLimit: inlineLimit)
+        : null;
+    final member = [
+      EnrollmentAvatar(
+        displayName: displayName,
+        showActiveDot: category == EnrollmentCategory.active,
+      ),
+      const SizedBox(width: 10),
+      Expanded(
+        child: EnrollmentMemberLines(
+          displayName: displayName,
+          username: username,
+          eligible: eligible,
+        ),
+      ),
+      if (marker != null) ...[const SizedBox(width: 8), marker],
+    ];
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -86,47 +134,24 @@ class EnrollmentTile extends ConsumerWidget {
           bottom: BorderSide(color: theme.colorScheme.border),
         ),
       ),
-      child: Row(
-        children: [
-          EnrollmentAvatar(
-            displayName: displayName,
-            showActiveDot: category == EnrollmentCategory.active,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: EnrollmentMemberLines(
-              displayName: displayName,
-              username: username,
-              eligible: eligible,
-            ),
-          ),
-          if (trialEnded) ...[
-            Semantics(
-              label: 'Trial ended',
-              child: Icon(
-                LucideIcons.flag,
-                size: 14,
-                color: theme.colorScheme.mutedForeground,
-              ),
-            ),
-            const SizedBox(width: 8),
-          ] else if (category != EnrollmentCategory.active) ...[
-            EnrollmentStatusBadge(status: status),
-            const SizedBox(width: 8),
-          ],
-          if (canManage)
-            AdminEnrollmentActions(
-              eventId: eventId,
-              username: username,
-              status: status,
-              displayName: displayName,
-              builder: (context, actions) =>
-                  ActionGroup(actions: [...actions, ?review]),
+      // On a phone the actions do not fit beside the member: they go on a
+      // line of their own, as an EntityCard's do (club_client#296).
+      child: narrow
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 8,
+              children: [
+                Row(children: member),
+                if (actions != null)
+                  Align(alignment: Alignment.centerRight, child: actions),
+              ],
             )
-          else if (review != null)
-            ActionGroup(actions: [review]),
-        ],
-      ),
+          : Row(
+              children: [
+                ...member,
+                if (actions != null) ...[const SizedBox(width: 8), actions],
+              ],
+            ),
     );
   }
 }

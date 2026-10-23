@@ -81,8 +81,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart'
-    show ActionButton, CreditCountChip, UserSelectionDialogContent;
+    show ActionButton, ActionItem, CreditCountChip, UserSelectionDialogContent;
 
+import '_helpers/actions.dart';
 import '_helpers/attendance.dart';
 import '_helpers/auth.dart';
 import '_helpers/capabilities.dart';
@@ -773,28 +774,34 @@ Future<void> _expandInactive(WidgetTester tester) async {
 }
 
 /// The [label] action on [username]'s enrollment row.
-Future<ActionButton> _tileAction(
+Future<ActionItem> _tileAction(
   WidgetTester tester,
   String username,
   String label, {
-  bool Function(ActionButton button)? until,
+  bool Function(ActionItem action)? until,
 }) async {
-  final finder = find.descendant(
-    of: find.byWidgetPredicate(
-      (w) => w is EnrollmentTile && w.username == username,
-    ),
-    matching: find.widgetWithText(ActionButton, label),
+  // Read from the row's actions, not its buttons: on a phone all but the
+  // first are in the overflow menu (#296).
+  final tile = find.byWidgetPredicate(
+    (w) => w is EnrollmentTile && w.username == username,
   );
+  ActionItem? found() {
+    for (final a in cardActions(tester, tile)) {
+      if (a.label == label) return a;
+    }
+    return null;
+  }
+
   await waitFor(
     tester,
     () {
-      final found = finder.evaluate();
-      if (found.isEmpty) return false;
-      return until?.call(found.first.widget as ActionButton) ?? true;
+      final action = found();
+      if (action == null) return false;
+      return until?.call(action) ?? true;
     },
     description: '"$label" on the enrollment row of $username',
   );
-  return tester.widget<ActionButton>(finder.first);
+  return found()!;
 }
 
 /// Taps the credit chip beside [username]'s greyed-out row action.

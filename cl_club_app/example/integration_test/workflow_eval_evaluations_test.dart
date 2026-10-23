@@ -80,6 +80,23 @@ Future<void> _sidebar(
   await settle(tester);
 }
 
+/// Shows the sidebar, so its entries can be counted: on a phone it is a
+/// drawer behind the menu button, built only once opened (#264, #291).
+Future<void> _openSidebar(WidgetTester tester) async {
+  final menu = find.byTooltip('Open menu');
+  await waitFor(
+    tester,
+    () =>
+        find.byType(SidebarItem).evaluate().isNotEmpty ||
+        menu.evaluate().isNotEmpty,
+    description: 'the sidebar or its menu button',
+  );
+  if (find.byType(SidebarItem).evaluate().isEmpty) {
+    await tapVisible(tester, menu.first);
+    await settle(tester);
+  }
+}
+
 /// Opens [username]'s profile from the Members list, as staff do.
 Future<void> _openProfile(WidgetTester tester, String username) async {
   await _sidebar(tester, 'Members');
@@ -298,6 +315,7 @@ void main() {
 
     // 3. The member reads it under Reviews, with its PDF offered.
     await loginViaUi(tester, _kMember, _kMemberPwd);
+    await _openSidebar(tester);
     final entries = find.descendant(
       of: find.byType(SidebarItem),
       matching: find.text(_kReviews),
@@ -325,6 +343,7 @@ void main() {
 
     await loginViaUi(tester, _kCoach, _kCoachPwd);
     await _sidebar(tester, 'Members');
+    await _openSidebar(tester);
     expect(
       find.descendant(
         of: find.byType(SidebarItem),

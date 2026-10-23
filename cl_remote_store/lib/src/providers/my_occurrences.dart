@@ -28,7 +28,7 @@ clMyOccurrencesProvider = FutureProvider.autoDispose
             clResourceVersionProvider.select((s) => s.attendanceVersion),
           )
           ..watch(clManualRefreshProvider);
-        final client = await ref.read(secureClientProvider.future);
+        final client = await ref.watch(secureClientProvider.future);
         return client.myEvents.listMyOccurrences(
           key.username,
           fromTimeUtc: key.from,

@@ -48,6 +48,9 @@ const _kSudoPassword = String.fromEnvironment('SUDO_PASSWORD');
 const _kPwd = 'workflow_createcamp_pwd_1';
 const _kCoach = 'workflow_createcamp_coach';
 const _kVenueName = 'workflow_createcamp_venue';
+// The coach's camp has its own venue: both camps take the form's default
+// dates and times, and the server refuses a venue clash (club_server#74).
+const _kCoachVenueName = 'workflow_createcamp_coachvenue';
 const _kAdminCamp = 'workflow_createcamp_admincamp';
 const _kCoachCamp = 'workflow_createcamp_coachcamp';
 
@@ -80,6 +83,8 @@ void main() {
       );
       await createVenueViaUi(tester, name: _kVenueName);
       final venueId = await waitForVenueId(tester, _kVenueName);
+      await createVenueViaUi(tester, name: _kCoachVenueName);
+      final coachVenueId = await waitForVenueId(tester, _kCoachVenueName);
 
       // ─── Phase 1: super-admin creates a camp via the UI ────────────────
       await createEventViaUi(
@@ -104,7 +109,7 @@ void main() {
         tester,
         type: EventType.camp,
         title: _kCoachCamp,
-        venueId: venueId,
+        venueId: coachVenueId,
       );
       final coachCamp = await waitForEvent(tester, _kCoachCamp);
       expect(
@@ -112,7 +117,7 @@ void main() {
         _kCoach,
         reason: 'a coach who creates an event becomes its organizer',
       );
-      _expectCampWired(coachCamp, venueId);
+      _expectCampWired(coachCamp, coachVenueId);
       await logout(tester);
 
       // ─── Phase 3: cleanup ──────────────────────────────────────────────

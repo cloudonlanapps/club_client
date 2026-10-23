@@ -29,7 +29,7 @@ clUserPrivateProvider = FutureProvider.autoDispose.family<UserPrivate, String>(
       }),
     );
     if (entry is UserPrivate) return entry;
-    final client = await ref.read(secureClientProvider.future);
+    final client = await ref.watch(secureClientProvider.future);
     return client.users.getUserPrivate(username);
   },
 );

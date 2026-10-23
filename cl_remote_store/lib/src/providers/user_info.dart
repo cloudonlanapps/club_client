@@ -13,6 +13,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final AutoDisposeFutureProviderFamily<UserInfo, String> clUserInfoProvider =
     FutureProvider.autoDispose.family<UserInfo, String>((ref, username) async {
       ref.watch(clManualRefreshProvider);
-      final client = await ref.read(secureClientProvider.future);
+      final client = await ref.watch(secureClientProvider.future);
       return client.users.getUserInfo(username);
     });

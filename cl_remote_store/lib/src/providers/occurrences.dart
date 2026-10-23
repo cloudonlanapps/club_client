@@ -24,7 +24,7 @@ clOccurrencesProvider = FutureProvider.autoDispose
           )
           ..watch(clManualRefreshProvider);
         final types = ref.watch(clubEventTypesProvider);
-        final client = await ref.read(secureClientProvider.future);
+        final client = await ref.watch(secureClientProvider.future);
         final occurrences = await fetchForEventTypes(
           types,
           (type) => client.occurrences.listOccurrences(

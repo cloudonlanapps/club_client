@@ -16,6 +16,6 @@ clPublicProfileProvider = FutureProvider.autoDispose
       publicId,
     ) async {
       ref.watch(clManualRefreshProvider);
-      final client = await ref.read(secureClientProvider.future);
+      final client = await ref.watch(secureClientProvider.future);
       return client.public.getPublicProfile(publicId);
     });

@@ -22,12 +22,16 @@
 #   EXTRA_DEFINES    more flutter flags, e.g. --dart-define=REAL_VIEWPORT=true
 #                    to lay the app out at the phone's own size (#264)
 #   FILE_TIMEOUT     seconds per file (default 900)
+#   DEVTOOLS_PORT    local port for the phone's Chrome DevTools socket (default 9223)
 #
 # Each file is built and run on its own (about 4-5 minutes); the result line
-# (PASS / FAIL / TIMEOUT) goes to <out_dir>/summary.txt.
+# (PASS / FAIL / TIMEOUT) goes to <out_dir>/summary.txt. While they run,
+# scripts/phone_chrome_grant.py keeps the clipboard permissions granted to
+# the test page, so a clipboard read does not wait on Chrome's prompt (#288);
+# its log is <out_dir>/chrome_grant.log.
 set -u
 if [ $# -lt 3 ]; then
-  sed -n '2,25p' "$0"
+  sed -n '2,31p' "$0"
   exit 2
 fi
 PORT=$1
@@ -38,6 +42,22 @@ WEB_PORT=8099
 TIMEOUT=${FILE_TIMEOUT:-900}
 mkdir -p "$OUT"
 SUMMARY=$OUT/summary.txt
+
+# Grant the test page the clipboard permissions in Chrome on the phone, so
+# a test that reads the clipboard does not stop at Chrome's prompt (#288).
+# ChromeDriver starts Chrome for each file, so the helper keeps granting
+# while the files run; what it did goes to chrome_grant.log.
+DEVTOOLS_PORT=${DEVTOOLS_PORT:-9223}
+if ss -ltnH "sport = :$DEVTOOLS_PORT" | grep -q .; then
+  echo "ERROR: port $DEVTOOLS_PORT is in use; set DEVTOOLS_PORT to a free one." >&2
+  exit 1
+fi
+adb forward tcp:"$DEVTOOLS_PORT" localabstract:chrome_devtools_remote >/dev/null \
+  || { echo "ERROR: adb forward of Chrome's DevTools socket failed" >&2; exit 1; }
+python3 -I "$REPO/scripts/phone_chrome_grant.py" "$DEVTOOLS_PORT" "http://localhost:$WEB_PORT" \
+  >"$OUT/chrome_grant.log" 2>&1 &
+grant_pid=$!
+trap 'kill "$grant_pid" 2>/dev/null; adb forward --remove tcp:"$DEVTOOLS_PORT" >/dev/null 2>&1' EXIT
 for item in "$@"; do
   dir=${item%%:*}
   file=${item#*:}

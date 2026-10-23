@@ -23,7 +23,7 @@ final FutureProviderFamily<List<EventSchedule>, int> clEventSchedulesProvider =
           ),
         )
         ..watch(clManualRefreshProvider);
-      final client = await ref.read(secureClientProvider.future);
+      final client = await ref.watch(secureClientProvider.future);
       return client.events.listSchedules(eventId);
     });
 

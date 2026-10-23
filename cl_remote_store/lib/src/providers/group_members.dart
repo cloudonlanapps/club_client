@@ -11,6 +11,6 @@ final AutoDisposeFutureProviderFamily<List<GroupMember>, int>
 clGroupMembersProvider = FutureProvider.autoDispose
     .family<List<GroupMember>, int>((ref, groupId) async {
       ref.watch(clManualRefreshProvider);
-      final client = await ref.read(secureClientProvider.future);
+      final client = await ref.watch(secureClientProvider.future);
       return client.groups.getMembers(groupId);
     });

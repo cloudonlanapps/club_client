@@ -30,7 +30,6 @@ export 'src/models/page_section_header_data.dart' show PageSectionHeaderData;
 // Theme
 export 'src/theme/custom_colors.dart'
     show FilmRollColorsExtension, darkCustomColors, lightCustomColors;
-export 'src/theme/semantic_colors.dart' show SemanticColors;
 export 'src/theme/text_theme_extensions.dart' show ClubTextTheme;
 // Reaching a person (pure UI, no SDK / no Riverpod, #32): the launcher
 // (`launchContactUrl`), and a phone number or an email address with its
@@ -74,8 +73,7 @@ export 'src/widgets/credit/credit_count_chip.dart' show CreditCountChip;
 export 'src/widgets/date_day_label.dart' show DateDayLabel;
 export 'src/widgets/detail_row.dart' show DetailRow;
 export 'src/widgets/discard_changes_prompt.dart' show DiscardChangesPrompt;
-export 'src/widgets/editor_preview_layout.dart'
-    show EditorPreviewLayout, EditorPreviewLayoutState;
+export 'src/widgets/editor_preview_layout.dart' show EditorPreviewLayout;
 export 'src/widgets/error_view.dart' show ErrorTone, ErrorView;
 export 'src/widgets/evaluation/fill/evaluation_fill_body.dart'
     show EvaluationFillBody, EvaluationFillBodyState;

@@ -131,7 +131,9 @@ void main() {
       organizerName: _kAdmin,
       rrule: 'FREQ=DAILY;COUNT=5',
     );
-    final programmeStart = _daysAgo(10);
+    // Three hours before the camp's hour, so their sessions never overlap:
+    // the server refuses a venue or organizer clash (club_server#74).
+    final programmeStart = _daysAgo(10).subtract(const Duration(hours: 3));
     _programme = await client.events.createEvent(
       title: _kProgramme,
       description: 'workflow_timetable programme',

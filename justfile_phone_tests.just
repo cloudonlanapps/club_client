@@ -132,15 +132,19 @@ phone-test CONF="" SUITE="" keep="" real="1":
         website) dirs="{{WEBSITE_EXAMPLE_DIR}}" ;;
         *) echo "ERROR: SUITE is app, website or empty (both)." >&2; exit 2 ;;
     esac
-    items=""
-    for d in $dirs; do
-        for f in "$d"/integration_test/workflow*_test.dart; do
-            [ -e "$f" ] && items="$items $d:integration_test/$(basename "$f")"
-        done
-    done
     fail=0
     for conf in {{ if CONF == "" { APP_TEST_CONFS } else { CONF } }}; do
-        just _phone-test "$conf" "$items" "{{keep}}" "{{real}}" || fail=1
+        # Each suite gets a fresh stack, as `just app-test` and
+        # `just website-test` give it: the website's empty-site file needs
+        # a server no test has written to (#302).
+        for d in $dirs; do
+            items=""
+            for f in "$d"/integration_test/workflow*_test.dart; do
+                [ -e "$f" ] && items="$items $d:integration_test/$(basename "$f")"
+            done
+            [ -n "$items" ] || continue
+            just _phone-test "$conf" "$items" "{{keep}}" "{{real}}" || fail=1
+        done
     done
     exit $fail
 

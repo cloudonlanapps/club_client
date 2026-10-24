@@ -145,6 +145,7 @@ void main() {
     );
     final first = _todayUtc.subtract(const Duration(days: 1));
     final programme = await client.events.createEvent(
+      acceptConflicts: true,
       title: _kProgramme,
       description: 'workflow_occtimes programme',
       type: EventType.programme,

@@ -130,6 +130,7 @@ void main() {
       final created = await container(tester)
           .read(clEventsMasterProvider.notifier)
           .createEvent(
+            acceptConflicts: true,
             title: _kEventTitle,
             description: _kInitialDescription,
             type: EventType.camp,

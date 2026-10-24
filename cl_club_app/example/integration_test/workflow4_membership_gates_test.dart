@@ -92,6 +92,7 @@ Future<({int id, DateTime day})> _createEvent({
 }) async {
   final start = DateTime.now().toUtc().add(const Duration(hours: 1));
   final event = await client.events.createEvent(
+    acceptConflicts: true,
     title: title,
     description: 'Workflow4 test event',
     type: EventType.oneOff,

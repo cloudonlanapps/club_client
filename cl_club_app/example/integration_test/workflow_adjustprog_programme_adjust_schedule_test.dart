@@ -113,6 +113,7 @@ void main() {
     final day = DateTime.now().subtract(const Duration(days: 10));
     final start = DateTime(day.year, day.month, day.day, _kHour).toUtc();
     _programme = await client.events.createEvent(
+      acceptConflicts: true,
       title: _kProgramme,
       description: 'workflow_adjustprog programme',
       type: EventType.programme,

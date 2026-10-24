@@ -99,6 +99,7 @@ void main() {
       final created = await container(tester)
           .read(clEventsMasterProvider.notifier)
           .createEvent(
+            acceptConflicts: true,
             title: _kEventTitle,
             description: 'workflow_marketing description.',
             type: EventType.camp,

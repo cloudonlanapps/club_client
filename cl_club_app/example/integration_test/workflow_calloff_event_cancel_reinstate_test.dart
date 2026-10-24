@@ -104,6 +104,7 @@ void main() {
       final campStart = _firstDay.add(const Duration(hours: 9));
       final notifier = container(tester).read(clEventsMasterProvider.notifier);
       final camp = await notifier.createEvent(
+        acceptConflicts: true,
         title: _kCamp,
         description: '',
         type: EventType.camp,
@@ -116,6 +117,7 @@ void main() {
       );
       final oneOffStart = _firstDay.add(const Duration(days: 5, hours: 9));
       final oneOff = await notifier.createEvent(
+        acceptConflicts: true,
         title: _kOneOff,
         description: '',
         type: EventType.oneOff,

@@ -120,6 +120,7 @@ void main() {
     _venueId = venue.id;
     final campStart = _daysAgo(1);
     _camp = await client.events.createEvent(
+      acceptConflicts: true,
       title: _kCamp,
       description: 'workflow_timetable camp',
       type: EventType.camp,
@@ -134,6 +135,7 @@ void main() {
     // the server refuses a venue or organizer clash (club_server#74).
     final programmeStart = _daysAgo(10).subtract(const Duration(hours: 3));
     _programme = await client.events.createEvent(
+      acceptConflicts: true,
       title: _kProgramme,
       description: 'workflow_timetable programme',
       type: EventType.programme,

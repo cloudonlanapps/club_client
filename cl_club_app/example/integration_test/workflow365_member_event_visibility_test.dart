@@ -112,6 +112,7 @@ Future<int> _createEvent(
   final start = now.add(Duration(minutes: 15 + slotIndex * 30));
   final end = start.add(const Duration(minutes: 20));
   final event = await client.events.createEvent(
+    acceptConflicts: true,
     title: title,
     description: 'workflow365 test event',
     type: EventType.oneOff,

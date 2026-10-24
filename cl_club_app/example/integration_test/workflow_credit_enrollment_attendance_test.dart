@@ -170,6 +170,7 @@ void main() {
       now.minute,
     );
     final programme = await client.events.createEvent(
+      acceptConflicts: true,
       title: _kProgramme,
       description: 'workflow_credit programme',
       type: EventType.programme,

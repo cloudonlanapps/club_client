@@ -111,6 +111,7 @@ void main() {
     _dayLocal = DateTime(now.year, now.month, now.day + 1, 12);
     final start = _dayLocal.toUtc();
     final event = await client.events.createEvent(
+      acceptConflicts: true,
       title: _kEvent,
       description: 'workflow_coachocc one-off event',
       type: EventType.oneOff,

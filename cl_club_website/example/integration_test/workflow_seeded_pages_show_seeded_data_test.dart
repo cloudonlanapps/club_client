@@ -252,6 +252,7 @@ void main() {
     String? shortDescription,
   }) async {
     final event = await admin.events.createEvent(
+      acceptConflicts: true,
       title: title,
       description: '$title description',
       type: type,

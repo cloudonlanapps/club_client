@@ -118,6 +118,7 @@ void main() {
     // Public event coached by the surfaced coach.
     final start = DateTime.now().toUtc().add(const Duration(hours: 1));
     final event = await admin.events.createEvent(
+      acceptConflicts: true,
       title: 'workflowcoach_event',
       description: 'workflowcoach test event',
       type: EventType.oneOff,

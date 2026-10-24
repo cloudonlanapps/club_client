@@ -132,6 +132,7 @@ void main() {
       DateTime start, {
       String? rrule,
     }) => sudo.events.createEvent(
+      acceptConflicts: true,
       title: title,
       description: 'workflow_evswitch test event',
       type: type,

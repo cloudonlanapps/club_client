@@ -460,6 +460,7 @@ void main() {
 
     final start = DateTime.now().toUtc().add(const Duration(hours: 1));
     final event = await sudo.events.createEvent(
+      acceptConflicts: true,
       title: _kEventTitle,
       description: 'workflow_adminphoto test event',
       type: EventType.oneOff,

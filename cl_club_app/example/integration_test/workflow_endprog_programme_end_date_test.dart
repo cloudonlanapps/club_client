@@ -130,6 +130,7 @@ void main() {
     _venueId = (await client.venues.createVenue(name: _kVenue)).id;
     final start = _localDay(-10, _kHour).toUtc();
     _programme = await client.events.createEvent(
+      acceptConflicts: true,
       title: _kProgramme,
       description: 'workflow_endprog programme',
       type: EventType.programme,

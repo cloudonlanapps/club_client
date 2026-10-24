@@ -124,6 +124,7 @@ void main() {
       soon.minute,
     );
     final event = await client.events.createEvent(
+      acceptConflicts: true,
       title: _kEvent,
       description: 'workflow_coachtier one-off event',
       type: EventType.oneOff,

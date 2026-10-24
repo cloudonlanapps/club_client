@@ -123,6 +123,7 @@ void main() {
     _otherVenueId = (await client.venues.createVenue(name: _kOtherVenue)).id;
     final upcomingStart = _localDay(3, _kStartHour).toUtc();
     _upcoming = await client.events.createEvent(
+      acceptConflicts: true,
       title: _kUpcoming,
       description: 'workflow_moveoneoff upcoming one-off',
       type: EventType.oneOff,
@@ -140,6 +141,7 @@ void main() {
       now.hour,
     ).subtract(const Duration(hours: 1));
     _started = await client.events.createEvent(
+      acceptConflicts: true,
       title: _kStarted,
       description: 'workflow_moveoneoff started one-off',
       type: EventType.oneOff,

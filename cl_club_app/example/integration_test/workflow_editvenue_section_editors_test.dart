@@ -18,6 +18,7 @@ import 'package:cl_club_app/cl_club_app.dart' show routerProvider;
 import 'package:cl_club_venues/cl_club_venues.dart'
     show MemberVenueDetailView, VenueCard, VenueProfileView;
 import 'package:cl_member_auth/cl_member_auth.dart' show AccessDeniedView;
+import 'package:cl_member_zone/cl_member_zone.dart' show VenuesScreen;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clVenuesMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show Role, Venue;
@@ -242,12 +243,12 @@ Future<int> _waitForVenueId(WidgetTester tester, String name) async {
 
 Future<void> _openVenueDetail(WidgetTester tester, String name) async {
   await go(tester, '/memberzone/venues');
-  await waitFor(
+  // The list builds only the cards on screen: on a phone the venue may be
+  // below the fold (#301).
+  await waitForInList(
     tester,
-    () => find
-        .descendant(of: find.byType(VenueCard), matching: find.text(name))
-        .evaluate()
-        .isNotEmpty,
+    find.descendant(of: find.byType(VenueCard), matching: find.text(name)),
+    within: find.byType(VenuesScreen),
     description: 'VenueCard for "$name" to render',
   );
   final card = find.ancestor(

@@ -7,6 +7,7 @@ import 'package:ui_lib/ui_lib.dart' show TitleRow;
 
 import '../models/selected_occurrence.dart';
 import '../providers/cached_date_items.dart';
+import '../utils/calendar_selected_day.dart';
 import '../widgets/calendar_grid.dart';
 import '../widgets/cards/occurrence_card.dart';
 
@@ -34,7 +35,7 @@ class EventsCalendarView extends ConsumerWidget {
 
     return GetCalendarViewRange(
       builder: (controller, range, selectedDateTime, onChangeSelectedDateTime) {
-        final date = DateUtils.dateOnly(selectedDateTime);
+        final date = selectedLocalDay(selectedDateTime);
         final cached = ref.watch(
           cachedDateItemsProvider((
             date: date,

@@ -41,6 +41,8 @@ import 'package:cl_server_config/cl_server_config.dart';
 import 'package:club_sdk_2/club_sdk_2.dart' show SecureClient;
 import 'package:club_sdk_2/remote_store.dart'
     show RemoteStore, createRemotePublicSource, createRemoteSecureClient;
+import 'package:club_sdk_2/remote_store/http/default_http_client.dart'
+    show createDefaultHttpClient;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -227,7 +229,12 @@ Future<void> waitForInList(
 /// (club_server#297), so in Chrome a test that changes what the server holds
 /// would read the old answer back. Each GET gets a query parameter of its
 /// own, which the server ignores and no cache has seen (club_client#291).
-final http.Client _uncachedHttp = _UncachedClient(http.Client());
+///
+/// It wraps the SDK's own client, which drops an idle connection before the
+/// server does: a plain `http.Client()` keeps one 15 s, past uvicorn's 5 s,
+/// and on the Android phone (through `adb reverse`) a request written onto
+/// it never reaches the server (club_client#305).
+final http.Client _uncachedHttp = _UncachedClient(createDefaultHttpClient());
 
 class _UncachedClient extends http.BaseClient {
   _UncachedClient(this._inner);

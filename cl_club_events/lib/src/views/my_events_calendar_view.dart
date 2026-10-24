@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show ErrorView, LoadingView, TitleRow;
+import '../utils/calendar_selected_day.dart';
 import '../widgets/calendar_grid.dart';
 import '../widgets/cards/occurrence_card.dart';
 
@@ -110,7 +111,7 @@ class MyEventsCalendarView extends ConsumerWidget {
   ) {
     final dayOccurrences = allOccurrences.where((o) {
       final local = o.actualStartTimeUtc.toLocal();
-      return DateUtils.isSameDay(local, selectedDate);
+      return DateUtils.isSameDay(local, selectedLocalDay(selectedDate));
     }).toList();
 
     if (dayOccurrences.isEmpty) {

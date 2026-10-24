@@ -234,6 +234,11 @@ Future<void> waitForInList(
 /// server does: a plain `http.Client()` keeps one 15 s, past uvicorn's 5 s,
 /// and on the Android phone (through `adb reverse`) a request written onto
 /// it never reaches the server (club_client#305).
+///
+/// Every request also asks for its connection to be closed after it. adb
+/// relays a connection separately on the phone and on the laptop, so a
+/// reused one can be closed under a request even within the idle timeout,
+/// and Dart does not retry it (club_client#310). The browser ignores this.
 final http.Client _uncachedHttp = _UncachedClient(createDefaultHttpClient());
 
 class _UncachedClient extends http.BaseClient {
@@ -244,7 +249,9 @@ class _UncachedClient extends http.BaseClient {
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) {
-    if (request.method != 'GET') return _inner.send(request);
+    if (request.method != 'GET') {
+      return _inner.send(request..persistentConnection = false);
+    }
     final url = request.url.replace(
       queryParameters: {
         ...request.url.queryParametersAll,
@@ -254,7 +261,8 @@ class _UncachedClient extends http.BaseClient {
     final copy = http.Request('GET', url)
       ..headers.addAll(request.headers)
       ..followRedirects = request.followRedirects
-      ..maxRedirects = request.maxRedirects;
+      ..maxRedirects = request.maxRedirects
+      ..persistentConnection = false;
     return _inner.send(copy);
   }
 }

@@ -706,19 +706,154 @@ void main() {
         ['Attendance', 'Call off'],
       );
     });
+  });
 
-    testWidgets('Issue 187: a camp keeps Attendance alone for a super-admin '
-        'once it has started', (tester) async {
-      expect(
-        await _resolveLabels(
+  group(
+    'Issue 312: a super-admin manages a session whose register is open',
+    () {
+      const lateActions = [
+        'Attendance',
+        'Reschedule',
+        'Cancel this occurrence',
+        'Manage requests',
+      ];
+
+      for (final type in [EventType.camp, EventType.programme]) {
+        for (final (moment, fromNow) in [
+          ('inside the last 30 minutes', _inAttendanceWindow),
+          ('once it has started', const Duration(hours: -1)),
+          ('past the attendance edit window', _pastEditWindow),
+        ]) {
+          testWidgets(
+            'Issue 312: a ${type.name} offers Attendance first, then '
+            'Reschedule, Cancel this occurrence and Manage requests, $moment',
+            (
+              tester,
+            ) async {
+              expect(
+                await _resolveLabels(
+                  tester,
+                  _occurrenceAt(fromNow, OccurrenceStatus.scheduled),
+                  user: _superAdmin(),
+                  event: _camp(type: type),
+                ),
+                lateActions,
+              );
+            },
+          );
+        }
+      }
+
+      testWidgets('Issue 312: an admin and the organizer still see Attendance '
+          'alone', (tester) async {
+        for (final user in [_adminUser(), _coach(_organizer)]) {
+          expect(
+            await _resolveLabels(
+              tester,
+              _occurrenceAt(
+                const Duration(hours: -1),
+                OccurrenceStatus.scheduled,
+              ),
+              user: user,
+              event: _camp(type: EventType.programme),
+            ),
+            ['Attendance'],
+          );
+        }
+      });
+
+      /// Presses Cancel this occurrence on a programme session that started an
+      /// hour ago, as a super-admin, and returns the master.
+      Future<_StaticCampNotifier> pressCancel(WidgetTester tester) async {
+        final events = _StaticCampNotifier({
+          _eventId: _camp(type: EventType.programme),
+        });
+        final actions = await _resolveActions(
           tester,
           _occurrenceAt(const Duration(hours: -1), OccurrenceStatus.scheduled),
+          camp: events,
           user: _superAdmin(),
-        ),
-        ['Attendance'],
-      );
-    });
-  });
+        );
+        actions
+            .singleWhere((a) => a.label == 'Cancel this occurrence')
+            .onPressed!();
+        await tester.pumpAndSettle();
+        return events;
+      }
+
+      testWidgets('Issue 312: Cancel this occurrence first asks to confirm '
+          'that the marks go and the credit is refunded; Back sends nothing', (
+        tester,
+      ) async {
+        final events = await pressCancel(tester);
+
+        expect(find.byType(EventCancellationDialog), findsNothing);
+        expect(
+          find.text(EventCancellationMessages.cancelOpenRegisterConfirm),
+          findsOneWidget,
+        );
+        expect(
+          EventCancellationMessages.cancelOpenRegisterConfirm,
+          allOf(contains('attendance marks'), contains('refunds')),
+        );
+
+        await tester.tap(
+          find.widgetWithText(ShadButton, EventCancellationMessages.back),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(EventCancellationDialog), findsNothing);
+        expect(events.calls, isEmpty);
+      });
+
+      testWidgets('Issue 312: once confirmed, the cancellation dialog says '
+          'members are not notified and cancels the session', (tester) async {
+        final events = await pressCancel(tester);
+
+        await tester.tap(
+          find.widgetWithText(
+            ShadButton,
+            EventCancellationMessages.cancelOpenRegisterContinue,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final dialog = find.byType(EventCancellationDialog);
+        expect(dialog, findsOneWidget);
+        expect(
+          find.descendant(
+            of: dialog,
+            matching: find.text(
+              EventCancellationMessages.cancelOpenRegisterDescription,
+            ),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          EventCancellationMessages.cancelOpenRegisterDescription,
+          contains('not notified'),
+        );
+
+        await tester.enterText(
+          find.descendant(of: dialog, matching: find.byType(EditableText)),
+          'Wrong day',
+        );
+        await tester.pump();
+        await tester.tap(
+          find.descendant(
+            of: dialog,
+            matching: find.widgetWithText(
+              ShadButton,
+              EventCancellationMessages.cancelOccurrence,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(events.calls, ['cancelOccurrence(v1, Wrong day)']);
+      });
+    },
+  );
 
   group('Issue 189: a series action on a rescheduled day is offered by the '
       'start it sends', () {

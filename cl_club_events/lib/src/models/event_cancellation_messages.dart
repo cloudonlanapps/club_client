@@ -64,6 +64,27 @@ abstract final class EventCancellationMessages {
       'This session is cancelled. Enrolled members are notified, with the '
       'reason. You can restore it later with Undo Cancel.';
 
+  /// Title of the confirmation a super-admin answers before cancelling a
+  /// session whose register is open (club_client#312).
+  static const String cancelOpenRegisterTitle = 'Attendance is open';
+
+  /// Body of that confirmation: what the server does to the session's
+  /// register (`clear_cancelled_registers`).
+  static const String cancelOpenRegisterConfirm =
+      "This session's register is open. Cancelling it deletes its "
+      'attendance marks and refunds any credit paid for it. Members are '
+      'not notified.';
+
+  /// The button that goes on from that confirmation to the cancellation
+  /// dialog.
+  static const String cancelOpenRegisterContinue = 'Continue';
+
+  /// Body of the dialog that cancels a session whose register is open: a
+  /// super-admin's late cancel, which the server sends no notification for.
+  static const String cancelOpenRegisterDescription =
+      'This session is cancelled. Members are not notified. You can restore '
+      'it later with Undo Cancel; its attendance marks are not restored.';
+
   /// Body of the dialog that cancels a camp from one of its sessions.
   static const String cancelSeriesDescription =
       'The camp is cancelled from this session onward; sessions before it '

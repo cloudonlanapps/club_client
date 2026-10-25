@@ -10,7 +10,7 @@ import 'programme_end_date.dart';
 ///
 /// | Occurrence | Before `start − 30min` | From `start − 30min` |
 /// |---|---|---|
-/// | scheduled / rescheduled | [scheduledActionsFor] the event, and Manage requests | Attendance, until `end + 15d` (a super-admin: no end) |
+/// | scheduled / rescheduled | [scheduledActionsFor] the event, and Manage requests | Attendance, until `end + 15d` (a super-admin: no end, then [lateSuperAdminActions] on a camp or programme) |
 /// | cancelled | Undo Cancel | Undo Cancel, a super-admin only |
 /// | cancelled one-off | Reinstate | Reinstate until the start, then none |
 /// | live one-off, for a super-admin | as above | Attendance, and Call off |
@@ -70,6 +70,11 @@ List<AdminOccurrenceAction> adminOccurrenceActionsFor({
           canManageEvent(event, actingUser) &&
           canCallOffOneOffAt(start, actingUser))
         AdminOccurrenceAction.callOff,
+      if (event.type != EventType.oneOff &&
+          actingUser.isSuperAdmin &&
+          isLive(occurrence) &&
+          canManageEvent(event, actingUser))
+        ...lateSuperAdminActions,
     ];
   }
 
@@ -81,10 +86,7 @@ List<AdminOccurrenceAction> adminOccurrenceActionsFor({
 
   // A rescheduled occurrence is still a live, future day: it offers the
   // same actions as a scheduled one, all keyed by `originalStartTimeUtc`.
-  final live =
-      occurrence.status == OccurrenceStatus.scheduled ||
-      occurrence.status == OccurrenceStatus.rescheduled;
-  if (!live) return const [];
+  if (!isLive(occurrence)) return const [];
   // Cancel entire series and End programme from here send the slot
   // (`originalStartTimeUtc`), which the server checks against its time
   // rules; on a rescheduled day it may be closer than the actual start
@@ -105,6 +107,27 @@ List<AdminOccurrenceAction> adminOccurrenceActionsFor({
     AdminOccurrenceAction.manageRequests,
   ];
 }
+
+/// What a super-admin is offered after Attendance on a live camp or
+/// programme session whose register is open, the server waiving its lead
+/// time and past rules for them (club_client#312). No series action: a
+/// series is ended or cancelled from a session still ahead.
+const List<AdminOccurrenceAction> lateSuperAdminActions = [
+  AdminOccurrenceAction.reschedule,
+  AdminOccurrenceAction.cancelOccurrence,
+  AdminOccurrenceAction.manageRequests,
+];
+
+/// Whether [occurrence] is scheduled or rescheduled: still to be run, not
+/// cancelled.
+bool isLive(Occurrence occurrence) =>
+    occurrence.status == OccurrenceStatus.scheduled ||
+    occurrence.status == OccurrenceStatus.rescheduled;
+
+/// Whether the register of [occurrence] is open, so cancelling it clears
+/// its marks: from 30 minutes before its start on.
+bool hasOpenRegister(Occurrence occurrence) =>
+    !isInScheduleManagementWindow(occurrence.actualStartTimeUtc);
 
 /// Whether [occurrence] is at or after [event]'s cutoff, so cancelled with
 /// the series (a cancelled camp, a terminated programme) rather than alone.

@@ -175,13 +175,30 @@ class AdminOccurrenceActionsState
 
   /// Cancels this session of [event] alone, in the cancellation dialog,
   /// which asks for the reason and saves while it is open (club_client#213).
-  Future<void> _cancelInstance(Event event) => _openCancellation(
-    EventCancellationDialog.occurrence(
-      event: event,
-      occurrence: widget.occurrence,
-    ),
-    done: EventCancellationMessages.occurrenceCancelled,
-  );
+  ///
+  /// A session whose register is open, which only a super-admin is offered,
+  /// is first confirmed: cancelling it deletes its marks and refunds its
+  /// credit, with no notification (club_client#312).
+  Future<void> _cancelInstance(Event event) async {
+    if (hasOpenRegister(widget.occurrence)) {
+      final confirmed = await ConfirmDialog.show(
+        context,
+        title: EventCancellationMessages.cancelOpenRegisterTitle,
+        message: EventCancellationMessages.cancelOpenRegisterConfirm,
+        confirmLabel: EventCancellationMessages.cancelOpenRegisterContinue,
+        cancelLabel: EventCancellationMessages.back,
+        destructive: true,
+      );
+      if (!confirmed || !mounted) return;
+    }
+    await _openCancellation(
+      EventCancellationDialog.occurrence(
+        event: event,
+        occurrence: widget.occurrence,
+      ),
+      done: EventCancellationMessages.occurrenceCancelled,
+    );
+  }
 
   /// Cancels the camp [event] from this session on, in the cancellation
   /// dialog (club_client#213).

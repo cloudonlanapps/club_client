@@ -15,6 +15,7 @@ import 'package:ui_lib/ui_lib.dart'
 import '../../models/event_cancellation_form_helpers.dart';
 import '../../models/event_cancellation_messages.dart';
 import '../../models/stale_version_message.dart';
+import '../../utils/admin_occurrence_actions_for.dart' show hasOpenRegister;
 import '../../utils/event_cancellation_error.dart';
 
 /// What an [EventCancellationDialog] cancels.
@@ -134,7 +135,9 @@ class EventCancellationDialogState
     EventCancellationKind.oneOff =>
       EventCancellationMessages.callOffDescription,
     EventCancellationKind.occurrence =>
-      EventCancellationMessages.cancelOccurrenceDescription,
+      hasOpenRegister(widget.occurrence!)
+          ? EventCancellationMessages.cancelOpenRegisterDescription
+          : EventCancellationMessages.cancelOccurrenceDescription,
     EventCancellationKind.seriesFromOccurrence =>
       EventCancellationMessages.cancelSeriesDescription,
   };

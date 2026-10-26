@@ -66,6 +66,8 @@ class _FakeInquirySource extends Fake implements InquirySource {}
 
 class _FakePublicSource extends Fake implements PublicSource {}
 
+class _FakeApplicationSource extends Fake implements ApplicationSource {}
+
 /// Builds a fully-faked client; pass the sources this test drives.
 SecureClient fakeSecureClient({
   AdminSource? admin,
@@ -96,6 +98,7 @@ SecureClient fakeSecureClient({
   EvaluationMediaSource? evaluationMedia,
   InquirySource? inquiries,
   PublicSource? public,
+  ApplicationSource? applications,
 }) {
   return SecureClient(
     admin: admin ?? _FakeAdminSource(),
@@ -126,5 +129,6 @@ SecureClient fakeSecureClient({
     evaluationMedia: evaluationMedia ?? _FakeEvaluationMediaSource(),
     inquiries: inquiries ?? _FakeInquirySource(),
     public: public ?? _FakePublicSource(),
+    applications: applications ?? _FakeApplicationSource(),
   );
 }

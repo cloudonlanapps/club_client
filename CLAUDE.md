@@ -107,6 +107,12 @@ Rules:
 - **`club.json` must tolerate both directions.** One brand file is built against
   several club_core branches, so its readers (`ClubConfig`, `SiteConfig`)
   ignore unknown keys, and a key added later must be optional with a default.
+- **The page sets its own Content-Security-Policy** (#315): a meta tag the
+  generator builds from `--api-url` (`contentSecurityPolicy` in
+  `web_files.dart`). The template runs no inline script (its own script is
+  `templates/web/index.js`) and loads none from another origin (#314). A
+  package that starts loading from, framing or connecting to a new origin
+  adds it to that policy in the same change, or the browser refuses it.
 - **Splash and browser-chrome colours** come from an optional `web` block in
   `club.json` (`backgroundLight`, `backgroundDark`, `accentLight`,
   `accentDark`, each `#RRGGBB`); missing ones are neutral.

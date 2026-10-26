@@ -67,10 +67,18 @@ HeroSection
 - Opus
 
 ### Streaming Formats
-- HLS (`.m3u8`) - Recommended for Safari/iOS
-- Progressive download (direct MP4)
+- Progressive download (direct MP4): what the club's videos are. The server
+  converts every uploaded video to MP4.
+- HLS (`.m3u8`): not used. Nothing the server serves is HLS, and the web
+  template loads no hls.js (club_client#314).
 
-## HLS Streaming (Recommended)
+## HLS Streaming (not used)
+
+The rest of this section describes HLS, which the club's videos no longer
+use. A browser other than Safari plays HLS only with hls.js loaded, and the
+web template does not load it: adopting HLS again means bringing hls.js in
+from the app's own origin, at a pinned version, inside the page's
+Content-Security-Policy.
 
 HLS (HTTP Live Streaming) provides the best compatibility across all browsers, especially Safari and iOS.
 
@@ -161,14 +169,11 @@ HighlightVideo(
 
 ## Web Setup
 
-### Required: HLS.js
+### No HLS.js
 
-For non-Safari browsers, HLS.js provides HLS support. Add to `web/index.html`:
-
-```html
-<!-- HLS.js for Safari/iOS video playback compatibility -->
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-```
+The web template (`club_project_generator/templates/web/index.html`) loads no
+hls.js and no other script from another origin (club_client#314). MP4 plays
+in every browser without it.
 
 ### Required: MediaKit Initialization
 

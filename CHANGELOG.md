@@ -1,5 +1,40 @@
 # Changelog
 
+## 1.2.0
+
+Released with club_server, club_sdk and club_cli 1.2.0. club_sdk_2 is pinned
+at the SDK's 1.2.0 commit.
+
+- Schedule clashes are shown in a dialog and saved only if the organizer
+  accepts them, as club_server 1.2.0 now reports every clash (#278).
+- A super-admin can reschedule, cancel and manage requests on a session that
+  has already happened (#312).
+- Evaluation templates: deleted templates are listed and can be restored
+  (#277); a review template has a live preview beside its editor (#28).
+- One Broadcast screen for every audience, admin-only, with the composer
+  fixed at the top (#252, #269, #203).
+- Occurrence and event-page actions follow the server's rules: by event type,
+  Undo Cancel on a cancelled occurrence, one cancellation dialog (#177–#179,
+  #182–#189, #191, #213, #230).
+- The session is restored offline, Try Again re-runs it, and signing out stops
+  every request that needs the session (#190, #257, #272); screens are gated
+  by role and the sidebar routes belong to the router (#192, #203, #204).
+- A deleted member stays in the admin list, shown as deleted (#236); a failed
+  reload keeps the evaluation page and what was typed (#268); the calendar
+  lists today's sessions after local midnight (#300).
+- Phones: keyboard and focus fixes, enrollment rows that fit, icon-only
+  actions with labels (#159–#166, #168, #263, #264, #296).
+- The generated web page sets a Content-Security-Policy, and hls.js is gone
+  from the web template (#314, #315).
+- The generator adds an Android target to the app with the brand's id, name
+  and icons (#280); the member app example has one too (#262).
+- Review findings fixed across ui_lib, cl_remote_store and the member, venue
+  and event packages (#193–#201, #205–#212, #214–#216, #219–#221, #223–#229,
+  #231–#235, #237–#244, #246–#248).
+- Tests: the integration suites run at a phone's size, in Chrome and on an
+  Android phone, each suite on a fresh stack, with a full unattended
+  regression runner (#274, #288, #291, #302, #286).
+
 ## 1.0.1
 
 - Review templates can be exported to a JSON file and imported from one (#27).

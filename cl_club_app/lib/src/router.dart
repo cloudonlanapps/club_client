@@ -96,6 +96,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ui_lib/ui_lib.dart' show StringExtensions;
 
+import 'application_routes.dart';
 import 'member_zone_routes.dart';
 import 'providers/public_site_uri.dart';
 import 'review_routes.dart';
@@ -527,6 +528,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 onHome: () => context.go('/'),
                 onAddProfileDetails: () =>
                     context.go(onboardingExtendedProfilePath),
+                applications: waitingPageApplications,
               ),
             ),
           ),
@@ -821,6 +823,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                       context,
                     ).push('/memberzone/my-events/$u/${event.id}'),
                   ),
+                  applicationsSection: profileApplicationsSection,
                   // Always show a back button (canPop() reads false inside the
                   // shell pageBuilder even for pushed routes); pop when
                   // poppable, else fall back to the members list.
@@ -1312,11 +1315,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                     context,
                   ).push('/memberzone/my-events/$u/${event.id}'),
                 ),
+                applicationsSection: profileApplicationsSection,
                 onBack: context.canPop() ? () => context.pop() : null,
               ),
             ),
           ),
           ...reviewRoutes(),
+          ...applicationRoutes(),
           GoRoute(
             path: '/memberzone/contact',
             pageBuilder: (context, state) => NoTransitionPage(

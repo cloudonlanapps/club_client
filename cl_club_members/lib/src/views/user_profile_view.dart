@@ -29,6 +29,7 @@ class UserProfileView extends ConsumerWidget {
   const UserProfileView({
     required this.targetUsername,
     this.eventsSection,
+    this.applicationsSection,
     this.onBioSave,
     this.onAchievementsSave,
     this.onRoleToggle,
@@ -50,6 +51,13 @@ class UserProfileView extends ConsumerWidget {
   /// host app can construct the section without knowing the username upfront.
   /// Injected to avoid a direct dependency on cl_club_events.
   final Widget Function(String username)? eventsSection;
+
+  /// Optional builder of the Applications section (club_client#321), given
+  /// the member and whether they are the signed-in member. Shown to the
+  /// member and to admins. Injected to avoid a direct dependency on
+  /// cl_club_applications.
+  final Widget Function(UserPrivate member, {required bool own})?
+  applicationsSection;
 
   /// Called with updated bio markdown. If null, bio is not editable.
   final ValueChanged<String>? onBioSave;
@@ -159,6 +167,10 @@ class UserProfileView extends ConsumerWidget {
                     if (isSelf || viewerIsAdmin) ...[
                       ExtendedProfileSections(user: user, canEdit: canEdit),
                       const SizedBox(height: 20),
+                      if (applicationsSection case final section?) ...[
+                        section(user, own: isSelf),
+                        const SizedBox(height: 20),
+                      ],
                     ],
                     UserGroupsSection(username: targetUsername),
                     PendingJoinRequestsSection(username: targetUsername),

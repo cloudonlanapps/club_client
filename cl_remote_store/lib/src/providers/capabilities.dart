@@ -63,6 +63,18 @@ final extendedProfileProvider = Provider<bool?>(
   (ref) => ref.watch(capabilitiesProvider).valueOrNull?.extendedProfile,
 );
 
+/// Whether this deployment offers printable applications, or null while
+/// [capabilitiesProvider] has no answer (club_client#321).
+///
+/// The server reports it on only where it also verifies identity. The
+/// Applications menu, the profile's Applications section and the waiting
+/// page's list render, and the application providers call the server, only
+/// when this is `true`: the routes answer 503 where the module is off, and
+/// an unknown answer is never guessed either way.
+final applicationsProvider = Provider<bool?>(
+  (ref) => ref.watch(capabilitiesProvider).valueOrNull?.applications,
+);
+
 /// The country calling code used when the server reports none (#31).
 const String fallbackCountryCode = '91';
 

@@ -9,6 +9,7 @@ class SubmittedConfirmation extends StatelessWidget {
   const SubmittedConfirmation({
     required this.onBack,
     this.onAddDetails,
+    this.applications,
     super.key,
   });
 
@@ -18,6 +19,10 @@ class SubmittedConfirmation extends StatelessWidget {
   /// Opens the optional extended-profile step (club_client#320); null shows
   /// no button for it.
   final VoidCallback? onAddDetails;
+
+  /// The published applications to download, with what to do with the
+  /// form (club_client#321); null shows none.
+  final Widget? applications;
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +59,10 @@ class SubmittedConfirmation extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
+                if (applications case final applications?) ...[
+                  applications,
+                  const SizedBox(height: 24),
+                ],
                 if (onAddDetails case final onAddDetails?) ...[
                   ShadButton.outline(
                     onPressed: onAddDetails,

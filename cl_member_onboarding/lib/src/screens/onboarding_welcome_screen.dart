@@ -28,6 +28,7 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
     required this.onContinue,
     required this.onHome,
     this.onAddProfileDetails,
+    this.applications,
     super.key,
   });
 
@@ -38,6 +39,12 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
   /// (club_client#320). Offered only while the server reports the extended
   /// profile on; null offers it never.
   final VoidCallback? onAddProfileDetails;
+
+  /// Builds the waiting page's list of the published applications for the
+  /// signed-in member (club_client#321). Shown only while the server offers
+  /// applications; null shows it never. The host builds it: this package
+  /// does not hold it.
+  final Widget Function(UserPrivate currentUser)? applications;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -73,6 +80,12 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
       identityVerification: caps.valueOrNull?.identityVerification ?? true,
       onAddProfileDetails: caps.valueOrNull?.extendedProfile == true
           ? onAddProfileDetails
+          : null,
+      // The list is the waiting page's, so it is built for it alone.
+      applications:
+          user.status == UserStatus.pending &&
+              caps.valueOrNull?.applications == true
+          ? applications?.call(user)
           : null,
     );
   }

@@ -1,5 +1,6 @@
 import 'package:cl_club_members/cl_club_members.dart';
 import 'package:cl_member_auth/cl_member_auth.dart' show RoleGate;
+import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,6 +12,7 @@ class AdminUserProfileScreen extends ConsumerWidget {
     required this.onReview,
     required this.eventsSection,
     required this.onHome,
+    this.applicationsSection,
     this.onBack,
     this.onBroadcast,
     this.onHistory,
@@ -21,6 +23,11 @@ class AdminUserProfileScreen extends ConsumerWidget {
   final String targetUsername;
   final VoidCallback onReview;
   final Widget Function(String username) eventsSection;
+
+  /// Builds the Applications section (club_client#321) for the member and
+  /// whether they are the signed-in member.
+  final Widget Function(UserPrivate member, {required bool own})?
+  applicationsSection;
   final VoidCallback? onBack;
 
   /// Opens the Broadcast screen for this page's audience (club_client#252).
@@ -42,6 +49,7 @@ class AdminUserProfileScreen extends ConsumerWidget {
         targetUsername: targetUsername,
         onReview: onReview,
         eventsSection: eventsSection,
+        applicationsSection: applicationsSection,
         onBack: onBack,
         onBroadcast: onBroadcast,
         onHistory: onHistory,

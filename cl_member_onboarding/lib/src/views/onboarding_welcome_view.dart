@@ -31,6 +31,7 @@ class OnboardingWelcomeView extends ConsumerWidget {
     required this.onSubmitForReview,
     required this.identityVerification,
     this.onAddProfileDetails,
+    this.applications,
     super.key,
   });
 
@@ -54,6 +55,10 @@ class OnboardingWelcomeView extends ConsumerWidget {
   /// (club_client#320); null shows no button for it.
   final VoidCallback? onAddProfileDetails;
 
+  /// The published applications to download, on the waiting card
+  /// (club_client#321); null shows none.
+  final Widget? applications;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     assert(
@@ -67,6 +72,7 @@ class OnboardingWelcomeView extends ConsumerWidget {
       return SubmittedConfirmation(
         onBack: () => ref.read(authStateProvider.notifier).logout(),
         onAddDetails: onAddProfileDetails,
+        applications: applications,
       );
     }
     final next = identityVerification ? onContinue : onSubmitForReview;

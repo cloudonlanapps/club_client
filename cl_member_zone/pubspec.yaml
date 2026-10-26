@@ -9,6 +9,8 @@ environment:
 dependencies:
   cl_club_admin:
     path: ../cl_club_admin
+  cl_club_applications:
+    path: ../cl_club_applications
   cl_club_branding:
     path: ../cl_club_branding
   cl_club_communication:

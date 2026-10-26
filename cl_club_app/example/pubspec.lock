@@ -96,6 +96,13 @@ packages:
       relative: true
     source: path
     version: "0.0.0"
+  cl_club_applications:
+    dependency: transitive
+    description:
+      path: "../../cl_club_applications"
+      relative: true
+    source: path
+    version: "0.0.0"
   cl_club_branding:
     dependency: "direct main"
     description:

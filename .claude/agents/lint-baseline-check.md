@@ -47,6 +47,7 @@ included** — there is no exemption. The top-level packages:
 
 - `cl_club_admin`
 - `cl_club_app`
+- `cl_club_applications`
 - `cl_club_branding`
 - `cl_club_communication`
 - `cl_club_credits`

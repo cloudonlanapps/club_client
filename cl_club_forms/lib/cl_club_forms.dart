@@ -3,6 +3,31 @@
 // stays in `src/`; a test that needs one imports it from there.
 
 // Form-local models and values (pure UI, no SDK)
+// Application templates' form-local types (pure UI, no SDK): what a host
+// passes in from the clause library and label catalogue, and the printed
+// texts the template's JSON holds
+export 'src/models/application/application_choice_option.dart'
+    show ApplicationChoiceOption;
+export 'src/models/application/application_clause_kind.dart'
+    show ApplicationClauseKind;
+export 'src/models/application/application_clause_option.dart'
+    show ApplicationClauseOption;
+export 'src/models/application/application_clause_text.dart'
+    show ApplicationClauseText;
+export 'src/models/application/application_custom_text.dart'
+    show ApplicationCustomText;
+export 'src/models/application/application_fact_text.dart'
+    show ApplicationFactText;
+export 'src/models/application/application_fact_type.dart'
+    show ApplicationFactType;
+export 'src/models/application/application_joined_text.dart'
+    show ApplicationJoinedText;
+export 'src/models/application/application_label_option.dart'
+    show ApplicationLabelOption;
+export 'src/models/application/application_language_option.dart'
+    show ApplicationLanguageOption;
+export 'src/models/application/application_text_value.dart'
+    show ApplicationTextValue;
 export 'src/models/camp_schedule_data.dart' show CampScheduleData;
 export 'src/models/event_staff_member.dart' show EventStaffMember;
 export 'src/models/event_timetable_value.dart' show EventTimetableValue;
@@ -39,6 +64,32 @@ export 'src/widgets/age_eligibility/age_eligibility_summary.dart'
 export 'src/widgets/age_eligibility/age_eligibility_text.dart'
     show AgeEligibilityText;
 export 'src/widgets/age_eligibility/form_age.dart' show FormAge;
+// Application template forms (pure UI, no SDK / no Riverpod): one per
+// section of the template, and what a template lacks before it is saved
+export 'src/widgets/application/application_age_categories_form.dart'
+    show ApplicationAgeCategoriesForm, ApplicationAgeCategoriesFormState;
+export 'src/widgets/application/application_completeness.dart'
+    show ApplicationCompleteness;
+export 'src/widgets/application/application_create_form.dart'
+    show ApplicationCreateForm, ApplicationCreateFormState;
+export 'src/widgets/application/application_declaration_form.dart'
+    show ApplicationDeclarationForm, ApplicationDeclarationFormState;
+export 'src/widgets/application/application_facts_form.dart'
+    show ApplicationFactsForm, ApplicationFactsFormState;
+export 'src/widgets/application/application_form_fields.dart'
+    show ApplicationFormFields;
+export 'src/widgets/application/application_header_form.dart'
+    show ApplicationHeaderForm, ApplicationHeaderFormState;
+export 'src/widgets/application/application_heading_form.dart'
+    show ApplicationHeadingForm, ApplicationHeadingFormState;
+export 'src/widgets/application/application_labels_form.dart'
+    show ApplicationLabelsForm, ApplicationLabelsFormState;
+export 'src/widgets/application/application_notes_form.dart'
+    show ApplicationNotesForm, ApplicationNotesFormState;
+export 'src/widgets/application/application_selections_form.dart'
+    show ApplicationSelectionsForm, ApplicationSelectionsFormState;
+export 'src/widgets/application/application_terms_form.dart'
+    show ApplicationTermsForm, ApplicationTermsFormState;
 // Club identity section forms (pure UI, no SDK / no Riverpod): the club's
 // details, its contact block and its address, translatable fields as
 // FormTranslatedText; and the one-field form that adds a language to

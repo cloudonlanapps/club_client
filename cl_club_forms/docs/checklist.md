@@ -100,6 +100,22 @@ messages, **Reset**, which mounts it afresh, and the light / dark toggle.
 - [ ] Club language form: always shown in the Translations card at the bottom of the same page, with the "Add language" button; a language added there appears as an extra input in the three forms above.
 - [ ] Profile options form: shown on the same page when the pencil on the Profile options card is pressed (extended profile on).
 
+## Applications (admin)
+
+Hosted by the application editor (`/memberzone/applications/:id`, club_client#321), one section editor per part of the template, each open while the template is a draft.
+
+- [ ] Application create form: shown when Create is pressed on the Applications list; the English title and the print languages.
+- [ ] Application heading form: the print languages, organisation, title, subtitle and footer line; picking another language gives every written text its input.
+- [ ] Application facts form: the dates, times, amounts, names and choices the clauses refer to; a type change shows the inputs of the new type.
+- [ ] Application header form: the header strip's items, each a clause, a fact or written here, several joined on one line.
+- [ ] Application age categories form: the categories' names, birth dates (each cleared by its x) and genders.
+- [ ] Application selections form: the lines ticked by hand, each a selection clause or written here.
+- [ ] Application declaration form: a declaration clause or written here, in every print language.
+- [ ] Application terms form: each term a rule clause or a heading and text written here.
+- [ ] Application notes form: the notes under the terms, with their attributions.
+- [ ] Application labels form: every standard label in each print language, pre-filled from the catalogue.
+- [ ] A clause picker offers only that section's kind of clause, shows the English text with its gaps, and offers for each gap only the facts of the right type.
+
 ## Evaluations (these stay in `ui_lib`)
 
 - [ ] Evaluation start form: shown in a dialog from the Reviews page (`/memberzone/reviews`), from Evaluate on an event's enrolment list, and from the review section of a member's profile.

@@ -22,7 +22,7 @@ void main() {
   testWidgets('Issue 76: the sidebar names the app, every family and every '
       'entry', (tester) async {
     // Tall enough that the list builds every item.
-    await pumpDemo(tester, const Size(1280, 3000));
+    await pumpDemo(tester, const Size(1280, 4000));
 
     expect(find.text(DemoStrings.appName), findsOneWidget);
     for (final group in FormDemoGroup.values) {

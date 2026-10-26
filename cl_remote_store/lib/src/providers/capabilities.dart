@@ -53,6 +53,16 @@ final eventMarketingProvider = Provider<bool?>(
   (ref) => ref.watch(capabilitiesProvider).valueOrNull?.eventMarketing,
 );
 
+/// Whether this deployment shows the extended profile — sports details,
+/// background, guardian, membership date — and the club's profile options,
+/// or null while [capabilitiesProvider] has no answer (club_client#320).
+///
+/// The fields are stored either way; their sections render only when this
+/// is `true`, and an unknown answer is never guessed either way.
+final extendedProfileProvider = Provider<bool?>(
+  (ref) => ref.watch(capabilitiesProvider).valueOrNull?.extendedProfile,
+);
+
 /// The country calling code used when the server reports none (#31).
 const String fallbackCountryCode = '91';
 

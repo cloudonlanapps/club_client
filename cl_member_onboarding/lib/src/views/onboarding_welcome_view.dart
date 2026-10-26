@@ -22,13 +22,15 @@ import '../widgets/submitted_confirmation.dart';
 ///   the response into `authStateProvider.setUser`, then calls
 ///   [onContinue].
 /// - `status == pending` → "application submitted, awaiting approval"
-///   confirmation card with a "Back to sign in" button that logs out.
+///   confirmation card with a "Back to sign in" button that logs out, and
+///   an "Add profile details" button when [onAddProfileDetails] is given.
 class OnboardingWelcomeView extends ConsumerWidget {
   const OnboardingWelcomeView({
     required this.currentUser,
     required this.onContinue,
     required this.onSubmitForReview,
     required this.identityVerification,
+    this.onAddProfileDetails,
     super.key,
   });
 
@@ -48,6 +50,10 @@ class OnboardingWelcomeView extends ConsumerWidget {
   /// (`Capabilities.identityVerification`).
   final bool identityVerification;
 
+  /// Opens the optional extended-profile step from the waiting card
+  /// (club_client#320); null shows no button for it.
+  final VoidCallback? onAddProfileDetails;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     assert(
@@ -60,6 +66,7 @@ class OnboardingWelcomeView extends ConsumerWidget {
     if (currentUser.status == UserStatus.pending) {
       return SubmittedConfirmation(
         onBack: () => ref.read(authStateProvider.notifier).logout(),
+        onAddDetails: onAddProfileDetails,
       );
     }
     final next = identityVerification ? onContinue : onSubmitForReview;

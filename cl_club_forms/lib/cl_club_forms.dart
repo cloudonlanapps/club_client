@@ -269,6 +269,8 @@ export 'src/widgets/signup/signup_form.dart' show SignupForm, SignupFormState;
 export 'src/widgets/signup/signup_gender.dart' show SignupGender;
 // User form + section editors (pure UI, no SDK / no Riverpod)
 export 'src/widgets/user_form/form_address.dart' show FormAddress;
+export 'src/widgets/user_form/membership_date_form.dart'
+    show MembershipDateForm, MembershipDateFormState;
 export 'src/widgets/user_form/user_address_form.dart'
     show UserAddressForm, UserAddressFormState;
 export 'src/widgets/user_form/user_background_form.dart'

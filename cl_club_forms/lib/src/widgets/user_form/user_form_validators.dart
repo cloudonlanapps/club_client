@@ -77,6 +77,13 @@ class UserFormValidators {
     return null;
   }
 
+  /// Shown when the membership date is left blank.
+  static const String membershipDateRequired = 'Pick the membership date';
+
+  /// The membership date an admin saves must be a day.
+  static String? membershipDate(DateTime? value) =>
+      value == null ? membershipDateRequired : null;
+
   /// Pincode is optional, but if provided must be exactly 6 digits.
   static String? pincode(String value) {
     final t = value.trim();

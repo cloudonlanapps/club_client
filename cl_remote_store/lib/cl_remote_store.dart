@@ -37,6 +37,7 @@ export 'src/providers/capabilities.dart'
         defaultCountryCodeProvider,
         evaluationsProvider,
         eventMarketingProvider,
+        extendedProfileProvider,
         fallbackCountryCode,
         identityVerificationProvider;
 export 'src/providers/client.dart' show secureClientProvider;
@@ -138,6 +139,8 @@ export 'src/providers/my_occurrences_list.dart';
 export 'src/providers/notifications_master.dart';
 export 'src/providers/occurrences.dart';
 export 'src/providers/pending_actions_master.dart';
+export 'src/providers/profile_options.dart'
+    show ProfileOptionsNotifier, profileOptionsProvider;
 export 'src/providers/public_club_content.dart'
     show clPublicClubContentProvider;
 export 'src/providers/public_club_info.dart' show clPublicClubInfoProvider;

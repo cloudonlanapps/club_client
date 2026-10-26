@@ -51,6 +51,7 @@ messages, **Reset**, which mounts it afresh, and the light / dark toggle.
 - [ ] User sports details form: shown on a member's profile when the pencil on the Sports details card is pressed (extended profile on), and in onboarding's optional extended-profile step.
 - [ ] User background form: shown on a member's profile when the pencil on the Background card is pressed (extended profile on), and in onboarding's optional extended-profile step.
 - [ ] User guardian form: shown on a member's profile when the pencil on the Guardian card is pressed (extended profile on), and in onboarding's optional extended-profile step.
+- [ ] Membership date form: shown on a member's profile when an admin presses the pencil on the Account info card (extended profile on).
 
 ## Groups (admin)
 

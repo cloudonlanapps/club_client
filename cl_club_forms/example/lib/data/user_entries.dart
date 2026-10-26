@@ -96,6 +96,14 @@ abstract final class UserEntries {
       ),
     ),
     FormDemoEntry(
+      id: 'membership-date',
+      title: 'Membership date form',
+      group: FormDemoGroup.users,
+      formType: MembershipDateForm,
+      builder: (key) =>
+          MembershipDateForm(key: key, initialValue: DateTime.utc(2025, 4, 2)),
+    ),
+    FormDemoEntry(
       id: 'identity-documents-consent',
       title: 'Identity documents consent form',
       group: FormDemoGroup.users,

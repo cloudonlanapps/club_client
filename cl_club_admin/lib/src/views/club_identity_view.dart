@@ -1,5 +1,8 @@
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clClubIdentityMasterProvider;
+    show
+        clClubIdentityMasterProvider,
+        extendedProfileProvider,
+        profileOptionsProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +13,7 @@ import '../widgets/club_address_card.dart';
 import '../widgets/club_contact_card.dart';
 import '../widgets/club_details_card.dart';
 import '../widgets/club_translations_card.dart';
+import '../widgets/profile_options_card.dart';
 
 /// The club's identity (club_core#20): name, short name, inquiry email and
 /// the public contact block — the `club_info` preference the website and
@@ -22,6 +26,9 @@ import '../widgets/club_translations_card.dart';
 /// during this visit. Adding a language stores nothing; a translation is
 /// saved with its section. Gating is the screen's job; this view asserts
 /// the super-admin precondition.
+///
+/// While the extended profile is on, a Profile options section follows:
+/// the positions and languages members choose from (club_client#320).
 class ClubIdentityView extends ConsumerStatefulWidget {
   const ClubIdentityView({required this.currentUser, this.onBack, super.key});
 
@@ -64,6 +71,9 @@ class ClubIdentityViewState extends ConsumerState<ClubIdentityView> {
       'ClubIdentityView reached by a non-super-admin. Screen gate failed.',
     );
     final saved = ref.watch(clClubIdentityMasterProvider);
+    final profileOptions = ref.watch(extendedProfileProvider) == true
+        ? ref.watch(profileOptionsProvider).valueOrNull
+        : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -100,6 +110,11 @@ class ClubIdentityViewState extends ConsumerState<ClubIdentityView> {
                       languages: languages,
                       onAdd: addLanguage,
                     ),
+                    if (profileOptions != null)
+                      ProfileOptionsCard(
+                        options: profileOptions,
+                        canEdit: widget.currentUser.isAdmin,
+                      ),
                   ],
                 ),
               );

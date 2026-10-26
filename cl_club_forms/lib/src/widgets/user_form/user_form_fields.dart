@@ -137,6 +137,10 @@ class UserFormFields {
     pincodeId,
   ];
 
+  /// The day the member joined the club (`DateTime?`, a date-only value
+  /// at UTC midnight), which `MembershipDateForm` edits.
+  static const String membershipDateUtcId = 'membershipDateUtc';
+
   /// The fields `UserSportsDetailsForm` edits.
   static const List<String> sportsDetailsIds = [
     clubDistrictId,

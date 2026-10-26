@@ -2,6 +2,7 @@ import 'package:cl_club_members/src/utils/admin_user_actions.dart';
 import 'package:cl_club_members/src/widgets/account_info_section.dart';
 import 'package:cl_club_members/src/widgets/address_card.dart';
 import 'package:cl_club_members/src/widgets/events_placeholder_section.dart';
+import 'package:cl_club_members/src/widgets/extended_profile_sections.dart';
 import 'package:cl_club_members/src/widgets/pending_join_requests_section.dart';
 import 'package:cl_club_members/src/widgets/personal_details_card.dart';
 import 'package:cl_club_members/src/widgets/profile_actions_section.dart';
@@ -153,6 +154,12 @@ class UserProfileView extends ConsumerWidget {
                     const SizedBox(height: 20),
                     AddressCard(user: user, canEdit: canEdit),
                     const SizedBox(height: 20),
+                    // The extended profile, as private as the personal
+                    // details: the member and admins (club_client#320).
+                    if (isSelf || viewerIsAdmin) ...[
+                      ExtendedProfileSections(user: user, canEdit: canEdit),
+                      const SizedBox(height: 20),
+                    ],
                     UserGroupsSection(username: targetUsername),
                     PendingJoinRequestsSection(username: targetUsername),
                     const SizedBox(height: 20),
@@ -182,7 +189,10 @@ class UserProfileView extends ConsumerWidget {
                       ),
                     ],
                     const SizedBox(height: 20),
-                    AccountInfoSection(user: user),
+                    AccountInfoSection(
+                      user: user,
+                      canEditMembershipDate: viewerIsAdmin && mutable,
+                    ),
                     if (onRoleToggle == null && onResetPassword != null) ...[
                       const SizedBox(height: 20),
                       ProfileActionsSection(

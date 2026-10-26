@@ -27,11 +27,17 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
   const OnboardingWelcomeScreen({
     required this.onContinue,
     required this.onHome,
+    this.onAddProfileDetails,
     super.key,
   });
 
   final VoidCallback onContinue;
   final VoidCallback onHome;
+
+  /// Opens the optional extended-profile step from the waiting page
+  /// (club_client#320). Offered only while the server reports the extended
+  /// profile on; null offers it never.
+  final VoidCallback? onAddProfileDetails;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,6 +71,9 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
       onContinue: onContinue,
       onSubmitForReview: () => unawaited(_submitForReview(context, ref)),
       identityVerification: caps.valueOrNull?.identityVerification ?? true,
+      onAddProfileDetails: caps.valueOrNull?.extendedProfile == true
+          ? onAddProfileDetails
+          : null,
     );
   }
 

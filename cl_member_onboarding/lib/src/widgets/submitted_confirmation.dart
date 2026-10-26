@@ -2,10 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show isMobileWidth;
 
-class SubmittedConfirmation extends StatelessWidget {
-  const SubmittedConfirmation({required this.onBack, super.key});
+import '../models/onboarding_extended_profile_strings.dart';
 
+/// The waiting page: the application is submitted and under review.
+class SubmittedConfirmation extends StatelessWidget {
+  const SubmittedConfirmation({
+    required this.onBack,
+    this.onAddDetails,
+    super.key,
+  });
+
+  /// Signs out.
   final VoidCallback onBack;
+
+  /// Opens the optional extended-profile step (club_client#320); null shows
+  /// no button for it.
+  final VoidCallback? onAddDetails;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +54,15 @@ class SubmittedConfirmation extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
+                if (onAddDetails case final onAddDetails?) ...[
+                  ShadButton.outline(
+                    onPressed: onAddDetails,
+                    child: const Text(
+                      OnboardingExtendedProfileStrings.addDetails,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 ShadButton(
                   onPressed: onBack,
                   child: const Text('Back to sign in'),

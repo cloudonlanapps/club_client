@@ -101,7 +101,10 @@ class ClUsersMasterNotifier extends AsyncNotifier<Map<String, UserInfo>> {
     }, refetch: ref.invalidateSelf);
   }
 
-  /// Update a user's profile.
+  /// Update a user's profile. A getter left out leaves its field as it is;
+  /// one that returns null clears it. The extended profile (club_client#320)
+  /// may be sent by a user not yet approved, on their own profile, as long
+  /// as nothing else is; [membershipDateUtc] is an admin's alone.
   Future<UserPrivate> updateUser(
     String username, {
     String? email,
@@ -119,6 +122,13 @@ class ClUsersMasterNotifier extends AsyncNotifier<Map<String, UserInfo>> {
     Gender? Function()? gender,
     Address? Function()? address,
     bool? isPublicProfile,
+    String? Function()? clubDistrict,
+    String? Function()? preferredPosition,
+    String? Function()? pastExperience,
+    String? Function()? nationality,
+    String? Function()? preferredLanguage,
+    Guardian? Function()? guardian,
+    DateTime? Function()? membershipDateUtc,
   }) {
     return refetchIfWriteUncertain(() async {
       final client = await ref.read(secureClientProvider.future);
@@ -139,6 +149,13 @@ class ClUsersMasterNotifier extends AsyncNotifier<Map<String, UserInfo>> {
         gender: gender,
         address: address,
         isPublicProfile: isPublicProfile,
+        clubDistrict: clubDistrict,
+        preferredPosition: preferredPosition,
+        pastExperience: pastExperience,
+        nationality: nationality,
+        preferredLanguage: preferredLanguage,
+        guardian: guardian,
+        membershipDateUtc: membershipDateUtc,
       );
 
       replaceLocally(updated);

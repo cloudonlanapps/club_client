@@ -151,6 +151,12 @@ abstract final class UserFormStrings {
   /// The choice of a select that leaves its field blank.
   static const String noChoice = 'None';
 
+  /// Label of the membership-date field.
+  static const String membershipDate = 'Membership date';
+
+  /// Hint in the empty membership-date field.
+  static const String membershipDatePlaceholder = 'Select membership date';
+
   /// Label of the guardian's name.
   static const String guardianName = 'Guardian name';
 

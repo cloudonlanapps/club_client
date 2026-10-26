@@ -23,3 +23,7 @@ export 'src/views/user_list_view.dart' show UserListView;
 // Public staff list (the website)
 export 'src/widgets/coach_card.dart' show CoachCard;
 export 'src/widgets/coaches_card_list.dart' show CoachesCardList;
+// The extended profile's sections, which onboarding's optional step hosts
+// through the app's router (club_client#320)
+export 'src/widgets/extended_profile_sections.dart'
+    show ExtendedProfileSections;

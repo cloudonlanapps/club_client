@@ -13,6 +13,8 @@ dependencies:
     path: ../cl_club_communication
   cl_club_events:
     path: ../cl_club_events
+  cl_club_members:
+    path: ../cl_club_members
   cl_member_auth:
     path: ../cl_member_auth
   cl_member_onboarding:

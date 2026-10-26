@@ -1,6 +1,7 @@
 import '../models/form_demo_entry.dart';
 import '../models/form_demo_group.dart';
 import 'account_entries.dart';
+import 'application_entries.dart';
 import 'club_identity_entries.dart';
 import 'credit_entries.dart';
 import 'event_entries.dart';
@@ -24,6 +25,7 @@ abstract final class FormDemoEntries {
     ...CreditEntries.all,
     ...GroupEntries.all,
     ...VenueEntries.all,
+    ...ApplicationEntries.all,
     ...ClubIdentityEntries.all,
     ...WebsiteEntries.all,
   ]);

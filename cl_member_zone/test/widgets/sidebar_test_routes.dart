@@ -8,6 +8,7 @@ String testSidebarRoute(SidebarDestination destination, String username) =>
       SidebarDestination.myCalendar => '/my-events/$username/calendar',
       SidebarDestination.myGroups => '/my-groups/$username',
       SidebarDestination.myEvents => '/my-events/$username',
+      SidebarDestination.applications => '/applications',
       SidebarDestination.myAttendance => '/my-events/$username/attendance',
       SidebarDestination.myReviews => '/reviews/mine',
       SidebarDestination.clubCalendar => '/events/calendar',

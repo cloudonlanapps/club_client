@@ -21,6 +21,7 @@ class AppSidebar extends StatelessWidget {
     this.onLogoTap,
     this.eventTypes = const {EventType.camp},
     this.evaluations = false,
+    this.applications = false,
     this.unhandledInquiries = 0,
     super.key,
   });
@@ -37,6 +38,9 @@ class AppSidebar extends StatelessWidget {
   /// then every member gets *Reviews* under Main and staff get *Reviews*
   /// under Club Management (club_core#174). Unknown counts as off.
   final bool evaluations;
+
+  /// Whether every member gets *Applications* under Main (club_client#321).
+  final bool applications;
 
   final bool isCollapsed;
 
@@ -95,6 +99,13 @@ class AppSidebar extends StatelessWidget {
       destination: SidebarDestination.myEvents,
       section: 'Main',
     ),
+    if (applications)
+      const NavItem(
+        icon: LucideIcons.fileText,
+        label: 'Applications',
+        destination: SidebarDestination.applications,
+        section: 'Main',
+      ),
     const NavItem(
       icon: LucideIcons.clipboardCheck,
       label: 'Attendance',

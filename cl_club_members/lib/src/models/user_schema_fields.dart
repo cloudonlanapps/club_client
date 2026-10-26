@@ -60,9 +60,40 @@ abstract final class UserSchemaFields {
   /// The pincode of the address.
   static const String pincode = 'address.pincode';
 
+  /// The club or district (extended profile, club_client#320).
+  static const String clubDistrict = 'clubDistrict';
+
+  /// The preferred position.
+  static const String preferredPosition = 'preferredPosition';
+
+  /// The past experience.
+  static const String pastExperience = 'pastExperience';
+
+  /// The nationality.
+  static const String nationality = 'nationality';
+
+  /// The preferred language.
+  static const String preferredLanguage = 'preferredLanguage';
+
+  /// The guardian, as a whole.
+  static const String guardian = 'guardian';
+
+  /// The guardian's name.
+  static const String guardianName = 'guardian.name';
+
+  /// The guardian's relation.
+  static const String guardianRelation = 'guardian.relation';
+
+  /// The guardian's phone.
+  static const String guardianPhone = 'guardian.phone';
+
+  /// The membership date.
+  static const String membershipDateUtc = 'membershipDateUtc';
+
   /// Each field of a user, as the server names it, with the id of the form
   /// field that holds it. The emergency contact's three inputs are one text
-  /// to the server, so a refusal of it shows on the first.
+  /// to the server, so a refusal of it shows on the first; so does a
+  /// refusal of the guardian as a whole.
   static const Map<String, String> fieldIds = {
     username: UserFormFields.usernameId,
     email: UserFormFields.emailId,
@@ -83,5 +114,15 @@ abstract final class UserSchemaFields {
     city: UserFormFields.cityId,
     state: UserFormFields.stateId,
     pincode: UserFormFields.pincodeId,
+    clubDistrict: UserFormFields.clubDistrictId,
+    preferredPosition: UserFormFields.preferredPositionId,
+    pastExperience: UserFormFields.pastExperienceId,
+    nationality: UserFormFields.nationalityId,
+    preferredLanguage: UserFormFields.preferredLanguageId,
+    guardian: UserFormFields.guardianNameId,
+    guardianName: UserFormFields.guardianNameId,
+    guardianRelation: UserFormFields.guardianRelationId,
+    guardianPhone: UserFormFields.guardianPhoneId,
+    membershipDateUtc: UserFormFields.membershipDateUtcId,
   };
 }

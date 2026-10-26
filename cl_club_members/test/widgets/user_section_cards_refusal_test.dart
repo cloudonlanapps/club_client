@@ -53,6 +53,13 @@ class _FailingUsers extends ClUsersMasterNotifier {
     Gender? Function()? gender,
     Address? Function()? address,
     bool? isPublicProfile,
+    String? Function()? clubDistrict,
+    String? Function()? preferredPosition,
+    String? Function()? pastExperience,
+    String? Function()? nationality,
+    String? Function()? preferredLanguage,
+    Guardian? Function()? guardian,
+    DateTime? Function()? membershipDateUtc,
   }) async => throw failure;
 }
 

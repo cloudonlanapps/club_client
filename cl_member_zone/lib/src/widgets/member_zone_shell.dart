@@ -3,6 +3,7 @@ import 'package:cl_member_auth/cl_member_auth.dart'
     show SessionCountdown, authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
+        applicationsProvider,
         bumpManualRefresh,
         clUnhandledInquiryCountProvider,
         clubEventTypesProvider,
@@ -99,6 +100,7 @@ class MemberZoneShellState extends ConsumerState<MemberZoneShell> {
         : 0;
     final isDark = widget.isDark;
     final evaluations = ref.watch(evaluationsProvider) ?? false;
+    final applications = ref.watch(applicationsProvider) ?? false;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -199,6 +201,7 @@ class MemberZoneShellState extends ConsumerState<MemberZoneShell> {
                 currentLocation: widget.currentLocation,
                 eventTypes: ref.watch(clubEventTypesProvider),
                 evaluations: evaluations,
+                applications: applications,
                 unhandledInquiries: unhandledInquiries,
                 onLogoTap: widget.onLogoTap,
                 onNavigate: widget.onNavigate,
@@ -225,6 +228,7 @@ class MemberZoneShellState extends ConsumerState<MemberZoneShell> {
                 currentLocation: widget.currentLocation,
                 eventTypes: ref.watch(clubEventTypesProvider),
                 evaluations: evaluations,
+                applications: applications,
                 unhandledInquiries: unhandledInquiries,
                 isCollapsed: isTablet,
                 onLogoTap: widget.onLogoTap,

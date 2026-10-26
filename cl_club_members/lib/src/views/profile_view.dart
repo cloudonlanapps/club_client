@@ -16,6 +16,7 @@ class ProfileView extends ConsumerWidget {
   const ProfileView({
     required this.currentUser,
     this.eventsSection,
+    this.applicationsSection,
     this.onBack,
     super.key,
   });
@@ -26,6 +27,13 @@ class ProfileView extends ConsumerWidget {
   /// host app can construct the section without knowing the username upfront.
   final Widget Function(String username)? eventsSection;
 
+  /// Optional builder of the Applications section (club_client#321), given
+  /// the member and whether they are the signed-in member. Shown to the
+  /// member and to admins. Injected to avoid a direct dependency on
+  /// cl_club_applications.
+  final Widget Function(UserPrivate member, {required bool own})?
+  applicationsSection;
+
   final VoidCallback? onBack;
 
   @override
@@ -34,6 +42,7 @@ class ProfileView extends ConsumerWidget {
     return UserProfileView(
       targetUsername: username,
       eventsSection: eventsSection,
+      applicationsSection: applicationsSection,
       onBack: onBack,
       onBioSave: (bio) =>
           adminSaveUserField(ref, context, username, bio: () => bio),

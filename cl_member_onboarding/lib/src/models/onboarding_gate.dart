@@ -11,6 +11,9 @@ enum OnboardingGate {
   /// `status == registered && (adminReviewNote ?? '').isEmpty` —
   /// used by `/onboarding/submit-documents`.
   registeredNoNote,
+
+  /// `status == pending` — used by `/onboarding/extended-profile`.
+  pending,
 }
 
 bool onboardingGateAllows(OnboardingGate gate, UserPrivate user) {
@@ -21,5 +24,7 @@ bool onboardingGateAllows(OnboardingGate gate, UserPrivate user) {
     case OnboardingGate.registeredNoNote:
       return user.status == UserStatus.registered &&
           (user.adminReviewNote ?? '').isEmpty;
+    case OnboardingGate.pending:
+      return user.status == UserStatus.pending;
   }
 }

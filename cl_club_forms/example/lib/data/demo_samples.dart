@@ -118,5 +118,43 @@ abstract final class DemoSamples {
         UserFormAssembly.emergencyRelations.first,
     UserFormFields.emergencyContactPhoneId: '+12025550144',
     UserFormFields.medicalInfoId: 'None known',
+    UserFormFields.clubDistrictId: 'Example District',
+    UserFormFields.preferredPositionId: 'Forward',
+    UserFormFields.pastExperienceId: 'Two seasons in a school team',
+    UserFormFields.nationalityId: 'Indian',
+    UserFormFields.preferredLanguageId: 'Marathi',
+    UserFormFields.guardianNameId: 'Pat Sample',
+    UserFormFields.guardianRelationId: 'Parent',
+    UserFormFields.guardianPhoneId: '+12025550145',
+  };
+
+  /// The positions the sample club offers, as the sports details form
+  /// takes them.
+  static const List<ProfilePositionOption> positions = [
+    ProfilePositionOption(value: 'Forward', label: 'Forward'),
+    ProfilePositionOption(value: 'Defense', label: 'Defense'),
+    ProfilePositionOption(value: 'Goalie', label: 'Goalie'),
+  ];
+
+  /// The languages a sample member may prefer, by name.
+  static const List<String> memberLanguages = ['English', 'Marathi', 'Hindi'];
+
+  /// The languages the sample club labels its positions in.
+  static const List<ProfileLabelLanguage> labelLanguages = [
+    ProfileLabelLanguage(code: 'en', name: 'English'),
+    ProfileLabelLanguage(code: 'mr', name: 'Marathi'),
+    ProfileLabelLanguage(code: 'hi', name: 'Hindi'),
+  ];
+
+  /// The sample club's profile options, as the options form takes them.
+  static Map<String, dynamic> get profileOptions => {
+    ProfileOptionsFormFields.positionsId: [
+      for (final position in positions)
+        {
+          ProfileOptionsFormFields.valueKey: position.value,
+          ProfileOptionsFormFields.labelKey: {'en': position.label},
+        },
+    ],
+    ProfileOptionsFormFields.languagesId: memberLanguages,
   };
 }

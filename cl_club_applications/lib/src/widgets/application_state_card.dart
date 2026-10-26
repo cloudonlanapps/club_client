@@ -1,0 +1,189 @@
+import 'dart:typed_data';
+
+import 'package:cl_remote_store/cl_remote_store.dart'
+    show clApplicationsMasterProvider;
+import 'package:club_sdk_2/club_sdk_2.dart'
+    show ApplicationStatus, ApplicationTemplate;
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart' show ConfirmDialog;
+
+import '../constants/application_view_sizes.dart';
+import '../constants/application_view_strings.dart';
+import '../models/application_download.dart';
+import '../models/application_step.dart';
+import '../utils/application_save_refusal.dart';
+import 'application_download_button.dart';
+import 'application_missing_texts.dart';
+import 'application_step_button.dart';
+
+/// The **State** card of the application editor (club_client#321): the
+/// template's state and stored layout, the moves Save, Publish, Unpublish,
+/// Revert and Delete, and Preview.
+///
+/// A move the state forbids is greyed out up front with its reason beside
+/// it; so is Save while the client's check finds texts [missing], which it
+/// lists. What the server refuses about the template on Save shows inline
+/// here, never as a toast.
+class ApplicationStateCard extends ConsumerStatefulWidget {
+  const ApplicationStateCard({
+    required this.template,
+    required this.missing,
+    required this.onDeleted,
+    required this.onOpenPdfBytes,
+    super.key,
+  });
+
+  /// The template.
+  final ApplicationTemplate template;
+
+  /// The texts the client's check finds missing, as shown; empty when none
+  /// or while the library is not read.
+  final List<String> missing;
+
+  /// Leaves the editor once the template is deleted.
+  final VoidCallback onDeleted;
+
+  /// Opens the preview.
+  final ValueChanged<Uint8List> onOpenPdfBytes;
+
+  @override
+  ConsumerState<ApplicationStateCard> createState() =>
+      ApplicationStateCardState();
+}
+
+/// State of [ApplicationStateCard]: the move in flight and the last
+/// refusal.
+class ApplicationStateCardState extends ConsumerState<ApplicationStateCard> {
+  /// The move running, if any.
+  ApplicationStep? running;
+
+  /// What the server refused about the template on Save; null for none.
+  String? refusal;
+
+  /// Shows [message] as a toast; [failed] makes it destructive.
+  void toast(String message, {bool failed = false}) {
+    final text = Text(message);
+    ShadToaster.of(context).show(
+      failed
+          ? ShadToast.destructive(description: text)
+          : ShadToast(description: text),
+    );
+  }
+
+  /// Runs [step], asking first for Delete.
+  Future<void> run(ApplicationStep step) async {
+    if (step == ApplicationStep.delete) {
+      final ok = await ConfirmDialog.show(
+        context,
+        title: ApplicationViewStrings.deleteTitle,
+        message: ApplicationViewStrings.deleteMessage,
+        confirmLabel: step.label,
+        destructive: true,
+      );
+      if (!ok || !mounted) return;
+    }
+    setState(() {
+      running = step;
+      refusal = null;
+    });
+    try {
+      final notifier = ref.read(clApplicationsMasterProvider.notifier);
+      await step.run(notifier, widget.template.id);
+      if (!mounted) return;
+      toast(step.doneMessage);
+      if (step == ApplicationStep.delete) widget.onDeleted();
+    } on Object catch (e) {
+      if (!mounted) return;
+      final message = applicationSaveRefusal(e);
+      if (message != null) {
+        setState(() => refusal = message);
+      } else if (applicationChangedMeanwhile(e)) {
+        ref.invalidate(clApplicationsMasterProvider);
+        toast(ApplicationViewStrings.changedMeanwhile, failed: true);
+      } else {
+        toast(ApplicationViewStrings.writeFailed, failed: true);
+      }
+    } finally {
+      if (mounted) setState(() => running = null);
+    }
+  }
+
+  /// Why [step] is greyed out now, or null when it may run.
+  String? reasonFor(ApplicationStep step) {
+    final blocked = step.blockedBy(widget.template.status);
+    if (blocked != null) return blocked;
+    if (step == ApplicationStep.save && widget.missing.isNotEmpty) {
+      return ApplicationViewStrings.textsMissing(widget.missing.length);
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final template = widget.template;
+    final busy = running != null;
+    final layout = template.layout;
+    final refused = refusal;
+    final draft = template.status == ApplicationStatus.draft;
+    return ShadCard(
+      title: Text(ApplicationViewStrings.stateTitle, style: theme.textTheme.h4),
+      child: Padding(
+        padding: const EdgeInsets.only(top: ApplicationViewSizes.smallGap),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: ApplicationViewSizes.smallGap,
+          children: [
+            Text(
+              ApplicationViewStrings.statusLabels[template.status.wireName] ??
+                  template.status.wireName,
+              style: theme.textTheme.large,
+            ),
+            Text(
+              layout == null
+                  ? ApplicationViewStrings.noLayout
+                  : ApplicationViewStrings.layout(layout.name),
+              style: theme.textTheme.muted,
+            ),
+            if (!draft)
+              Text(
+                ApplicationViewStrings.revertToEdit,
+                style: theme.textTheme.muted,
+              ),
+            if (draft && widget.missing.isNotEmpty)
+              ApplicationMissingTexts(missing: widget.missing),
+            if (refused != null)
+              Text(
+                refused,
+                key: const ValueKey('application.state.refusal'),
+                style: theme.textTheme.small.copyWith(
+                  color: theme.colorScheme.destructive,
+                ),
+              ),
+            Wrap(
+              spacing: ApplicationViewSizes.smallGap,
+              runSpacing: ApplicationViewSizes.smallGap,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                for (final step in ApplicationStep.values)
+                  ApplicationStepButton(
+                    step: step,
+                    loading: running == step,
+                    reason: reasonFor(step),
+                    onPressed: busy ? null : () => run(step),
+                  ),
+                ApplicationDownloadButton(
+                  download: ApplicationPreview(template.id),
+                  onOpenPdfBytes: widget.onOpenPdfBytes,
+                  label: ApplicationViewStrings.preview,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

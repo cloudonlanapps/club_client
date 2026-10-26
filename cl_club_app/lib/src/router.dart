@@ -20,6 +20,8 @@ import 'package:cl_club_communication/cl_club_communication.dart'
         NotifVenueLink,
         NotificationDeepLink;
 import 'package:cl_club_events/cl_club_events.dart' show MyEventsSection;
+import 'package:cl_club_members/cl_club_members.dart'
+    show ExtendedProfileSections;
 import 'package:cl_member_auth/cl_member_auth.dart'
     show
         AuthShell,
@@ -30,10 +32,13 @@ import 'package:cl_member_auth/cl_member_auth.dart'
         authStateProvider;
 import 'package:cl_member_onboarding/cl_member_onboarding.dart'
     show
+        OnboardingExtendedProfileScreen,
         OnboardingShell,
         OnboardingSubmitDocumentsScreen,
         OnboardingWelcomeScreen,
         allowedOnboardingPaths,
+        onboardingExtendedProfilePath,
+        onboardingFallbackPath,
         onboardingWelcomePath;
 import 'package:cl_member_zone/cl_member_zone.dart'
     show
@@ -81,12 +86,17 @@ import 'package:cl_member_zone/cl_member_zone.dart'
         VenueProfileScreen,
         VenuesScreen;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show AuditLogScope, BroadcastScope, identityVerificationProvider;
+    show
+        AuditLogScope,
+        BroadcastScope,
+        extendedProfileProvider,
+        identityVerificationProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ui_lib/ui_lib.dart' show StringExtensions;
 
+import 'application_routes.dart';
 import 'member_zone_routes.dart';
 import 'providers/public_site_uri.dart';
 import 'review_routes.dart';
@@ -360,14 +370,22 @@ class RouterRefreshListenable extends ChangeNotifier {
       (_, _) => notifyListeners(),
       fireImmediately: false,
     );
+    // So does the extended-profile step (club_client#320).
+    _extendedSub = ref.listen(
+      extendedProfileProvider,
+      (_, _) => notifyListeners(),
+      fireImmediately: false,
+    );
   }
   late final ProviderSubscription<dynamic> _sub;
   late final ProviderSubscription<dynamic> _capsSub;
+  late final ProviderSubscription<dynamic> _extendedSub;
 
   @override
   void dispose() {
     _sub.close();
     _capsSub.close();
+    _extendedSub.close();
     super.dispose();
   }
 }
@@ -402,14 +420,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Logged in: status-gated routing (see allowedOnboardingPaths). The
       // welcome page is always legal for `registered` and `pending` users;
       // the document step only without an admin review note, and never on
-      // a server that does not verify identity (#84).
+      // a server that does not verify identity (#84). A member who has just
+      // submitted their document goes on to the optional extended-profile
+      // step while the server has it on (club_client#320).
+      final extendedProfile = ref.read(extendedProfileProvider);
       final onboarding = allowedOnboardingPaths(
         user,
         identityVerification: ref.read(identityVerificationProvider),
+        extendedProfile: extendedProfile,
       );
       if (onboarding != null) {
         if (onboarding.contains(path)) return null;
-        return onboardingWelcomePath;
+        return onboardingFallbackPath(
+          user,
+          path,
+          extendedProfile: extendedProfile,
+        );
       }
 
       // Active (or other non-blocking statuses).
@@ -473,12 +499,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           builder: (context, ref, _) {
             final isSubmitDocs =
                 state.matchedLocation == '/onboarding/submit-documents';
+            final isExtendedProfile =
+                state.matchedLocation == onboardingExtendedProfilePath;
             final isDark = ref.watchIsDark(context);
             return OnboardingShell(
               title: isSubmitDocs
                   ? (_) => 'Upload identity document'
+                  : isExtendedProfile
+                  ? (_) => 'Profile details'
                   : (u) => 'Welcome ${u.displayName.toTitleCase()}',
-              onBack: isSubmitDocs
+              onBack: isSubmitDocs || isExtendedProfile
                   ? () => context.go('/onboarding/welcome')
                   : null,
               onRefresh: () => ref.invalidate(authStateProvider),
@@ -496,6 +526,9 @@ final routerProvider = Provider<GoRouter>((ref) {
               child: OnboardingWelcomeScreen(
                 onContinue: () => context.go('/onboarding/submit-documents'),
                 onHome: () => context.go('/'),
+                onAddProfileDetails: () =>
+                    context.go(onboardingExtendedProfilePath),
+                applications: waitingPageApplications,
               ),
             ),
           ),
@@ -504,6 +537,20 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => buildTransitionPage(
               key: state.pageKey,
               child: OnboardingSubmitDocumentsScreen(
+                onHome: () => context.go('/'),
+              ),
+            ),
+          ),
+          // The optional extended-profile step, after the document is
+          // submitted (club_client#320). Its sections are the profile's own.
+          GoRoute(
+            path: onboardingExtendedProfilePath,
+            pageBuilder: (context, state) => buildTransitionPage(
+              key: state.pageKey,
+              child: OnboardingExtendedProfileScreen(
+                sections: (user) =>
+                    ExtendedProfileSections(user: user, canEdit: true),
+                onContinue: () => context.go(onboardingWelcomePath),
                 onHome: () => context.go('/'),
               ),
             ),
@@ -776,6 +823,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                       context,
                     ).push('/memberzone/my-events/$u/${event.id}'),
                   ),
+                  applicationsSection: profileApplicationsSection,
                   // Always show a back button (canPop() reads false inside the
                   // shell pageBuilder even for pushed routes); pop when
                   // poppable, else fall back to the members list.
@@ -1267,11 +1315,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                     context,
                   ).push('/memberzone/my-events/$u/${event.id}'),
                 ),
+                applicationsSection: profileApplicationsSection,
                 onBack: context.canPop() ? () => context.pop() : null,
               ),
             ),
           ),
           ...reviewRoutes(),
+          ...applicationRoutes(),
           GoRoute(
             path: '/memberzone/contact',
             pageBuilder: (context, state) => NoTransitionPage(

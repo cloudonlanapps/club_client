@@ -132,4 +132,37 @@ abstract final class UserFormStrings {
 
   /// Text beside the tick that makes a created account a coach.
   static const String assignCoach = 'This user is a coach';
+
+  /// Label of the club-or-district field.
+  static const String clubDistrict = 'Club / District';
+
+  /// Label of the preferred-position select.
+  static const String preferredPosition = 'Preferred position';
+
+  /// Label of the past-experience field.
+  static const String pastExperience = 'Past experience';
+
+  /// Label of the nationality field.
+  static const String nationality = 'Nationality';
+
+  /// Label of the preferred-language select.
+  static const String preferredLanguage = 'Preferred language';
+
+  /// The choice of a select that leaves its field blank.
+  static const String noChoice = 'None';
+
+  /// Label of the membership-date field.
+  static const String membershipDate = 'Membership date';
+
+  /// Hint in the empty membership-date field.
+  static const String membershipDatePlaceholder = 'Select membership date';
+
+  /// Label of the guardian's name.
+  static const String guardianName = 'Guardian name';
+
+  /// Label of the guardian's relation.
+  static const String guardianRelation = 'Guardian relation';
+
+  /// Label of the guardian's phone.
+  static const String guardianPhone = 'Guardian phone';
 }

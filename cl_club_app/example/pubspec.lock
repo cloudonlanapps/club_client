@@ -96,6 +96,13 @@ packages:
       relative: true
     source: path
     version: "0.0.0"
+  cl_club_applications:
+    dependency: transitive
+    description:
+      path: "../../cl_club_applications"
+      relative: true
+    source: path
+    version: "0.0.0"
   cl_club_branding:
     dependency: "direct main"
     description:
@@ -208,8 +215,8 @@ packages:
     dependency: "direct dev"
     description:
       path: "."
-      ref: "3b966f66a925e7b08f9ae46dc0a7001ff127a972"
-      resolved-ref: "3b966f66a925e7b08f9ae46dc0a7001ff127a972"
+      ref: b64a0f3daed7137648e319b9a9395033dbe66afd
+      resolved-ref: b64a0f3daed7137648e319b9a9395033dbe66afd
       url: "https://github.com/cloudonlanapps/club_sdk.git"
     source: git
     version: "1.2.0"

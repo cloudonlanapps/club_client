@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cl_club_members/src/utils/admin_user_profile_saves.dart';
 import 'package:cl_club_members/src/views/user_profile_view.dart';
 import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
+import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,6 +16,7 @@ class AdminUserProfileView extends ConsumerWidget {
   const AdminUserProfileView({
     required this.targetUsername,
     this.eventsSection,
+    this.applicationsSection,
     this.onReview,
     this.onBack,
     this.onBroadcast,
@@ -30,6 +32,13 @@ class AdminUserProfileView extends ConsumerWidget {
   /// Optional builder for the events section. Receives the username so the
   /// host app can construct the section without knowing the username upfront.
   final Widget Function(String username)? eventsSection;
+
+  /// Optional builder of the Applications section (club_client#321), given
+  /// the member and whether they are the signed-in member. Shown to the
+  /// member and to admins. Injected to avoid a direct dependency on
+  /// cl_club_applications.
+  final Widget Function(UserPrivate member, {required bool own})?
+  applicationsSection;
 
   /// Tap handler for the pending-user `Review` action. The host pushes
   /// `AdminUserReviewView` for [targetUsername].
@@ -57,6 +66,7 @@ class AdminUserProfileView extends ConsumerWidget {
     return UserProfileView(
       targetUsername: targetUsername,
       eventsSection: eventsSection,
+      applicationsSection: applicationsSection,
       onBack: onBack,
       onBroadcast: onBroadcast,
       onHistory: onHistory,

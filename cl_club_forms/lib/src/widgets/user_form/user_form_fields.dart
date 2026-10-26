@@ -1,6 +1,8 @@
 /// Field-id constants shared by the forms that edit a user: `SignupForm`,
-/// `UserForm`, `UserPersonalDetailsForm`, `UserContactForm` and
-/// `UserAddressForm`. A field has the same id in every form that shows it.
+/// `UserForm`, `UserPersonalDetailsForm`, `UserContactForm`,
+/// `UserAddressForm` and the extended profile's `UserSportsDetailsForm`,
+/// `UserBackgroundForm` and `UserGuardianForm`. A field has the same id in
+/// every form that shows it.
 class UserFormFields {
   UserFormFields._();
 
@@ -74,6 +76,30 @@ class UserFormFields {
   /// Pincode (`String`).
   static const String pincodeId = 'pincode';
 
+  /// Club or district the member plays for (`String`).
+  static const String clubDistrictId = 'clubDistrict';
+
+  /// Preferred position (`String`, one of the club's positions or `''`).
+  static const String preferredPositionId = 'preferredPosition';
+
+  /// Past experience (`String`, multi-line).
+  static const String pastExperienceId = 'pastExperience';
+
+  /// Nationality (`String`).
+  static const String nationalityId = 'nationality';
+
+  /// Preferred language (`String`, one of the club's languages or `''`).
+  static const String preferredLanguageId = 'preferredLanguage';
+
+  /// Guardian's name (`String`).
+  static const String guardianNameId = 'guardianName';
+
+  /// Guardian's relation to the member (`String`).
+  static const String guardianRelationId = 'guardianRelation';
+
+  /// Guardian's phone (`String`).
+  static const String guardianPhoneId = 'guardianPhone';
+
   /// Whether a created account is made an admin (`bool`).
   static const String assignAdminId = 'assignAdmin';
 
@@ -109,6 +135,30 @@ class UserFormFields {
     cityId,
     stateId,
     pincodeId,
+  ];
+
+  /// The day the member joined the club (`DateTime?`, a date-only value
+  /// at UTC midnight), which `MembershipDateForm` edits.
+  static const String membershipDateUtcId = 'membershipDateUtc';
+
+  /// The fields `UserSportsDetailsForm` edits.
+  static const List<String> sportsDetailsIds = [
+    clubDistrictId,
+    preferredPositionId,
+    pastExperienceId,
+  ];
+
+  /// The fields `UserBackgroundForm` edits.
+  static const List<String> backgroundIds = [
+    nationalityId,
+    preferredLanguageId,
+  ];
+
+  /// The fields `UserGuardianForm` edits.
+  static const List<String> guardianIds = [
+    guardianNameId,
+    guardianRelationId,
+    guardianPhoneId,
   ];
 
   /// The fields `SignupForm` edits.

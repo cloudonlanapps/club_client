@@ -8,6 +8,7 @@ enum SidebarDestination {
   myCalendar,
   myGroups,
   myEvents,
+  applications,
   myAttendance,
   myReviews,
   clubCalendar,

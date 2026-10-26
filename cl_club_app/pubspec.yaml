@@ -7,12 +7,16 @@ environment:
   flutter: ">=3.10.0"
 
 dependencies:
+  cl_club_applications:
+    path: ../cl_club_applications
   cl_club_branding:
     path: ../cl_club_branding
   cl_club_communication:
     path: ../cl_club_communication
   cl_club_events:
     path: ../cl_club_events
+  cl_club_members:
+    path: ../cl_club_members
   cl_member_auth:
     path: ../cl_member_auth
   cl_member_onboarding:
@@ -26,7 +30,7 @@ dependencies:
   club_sdk_2:
     git:
       url: https://github.com/cloudonlanapps/club_sdk.git
-      ref: 3b966f66a925e7b08f9ae46dc0a7001ff127a972
+      ref: b64a0f3daed7137648e319b9a9395033dbe66afd
   file_picker: 8.3.7
   flutter:
     sdk: flutter

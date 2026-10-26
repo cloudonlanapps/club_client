@@ -24,6 +24,9 @@ enum FormDemoGroup {
   /// Venues.
   venues('Venues'),
 
+  /// Application templates and their sections.
+  applications('Applications'),
+
   /// The club's own details.
   clubIdentity('Club identity'),
 

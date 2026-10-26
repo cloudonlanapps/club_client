@@ -15,6 +15,8 @@ export 'src/screens/admin_group_profile_screen.dart'
     show AdminGroupProfileScreen;
 export 'src/screens/admin_user_profile_screen.dart' show AdminUserProfileScreen;
 export 'src/screens/admin_user_review_screen.dart' show AdminUserReviewScreen;
+export 'src/screens/application_screen.dart' show ApplicationScreen;
+export 'src/screens/applications_screen.dart' show ApplicationsScreen;
 export 'src/screens/audit_log_screen.dart' show AuditLogScreen;
 export 'src/screens/broadcast.dart' show BroadcastScreen;
 export 'src/screens/club_identity_screen.dart' show ClubIdentityScreen;

@@ -3,6 +3,31 @@
 // stays in `src/`; a test that needs one imports it from there.
 
 // Form-local models and values (pure UI, no SDK)
+// Application templates' form-local types (pure UI, no SDK): what a host
+// passes in from the clause library and label catalogue, and the printed
+// texts the template's JSON holds
+export 'src/models/application/application_choice_option.dart'
+    show ApplicationChoiceOption;
+export 'src/models/application/application_clause_kind.dart'
+    show ApplicationClauseKind;
+export 'src/models/application/application_clause_option.dart'
+    show ApplicationClauseOption;
+export 'src/models/application/application_clause_text.dart'
+    show ApplicationClauseText;
+export 'src/models/application/application_custom_text.dart'
+    show ApplicationCustomText;
+export 'src/models/application/application_fact_text.dart'
+    show ApplicationFactText;
+export 'src/models/application/application_fact_type.dart'
+    show ApplicationFactType;
+export 'src/models/application/application_joined_text.dart'
+    show ApplicationJoinedText;
+export 'src/models/application/application_label_option.dart'
+    show ApplicationLabelOption;
+export 'src/models/application/application_language_option.dart'
+    show ApplicationLanguageOption;
+export 'src/models/application/application_text_value.dart'
+    show ApplicationTextValue;
 export 'src/models/camp_schedule_data.dart' show CampScheduleData;
 export 'src/models/event_staff_member.dart' show EventStaffMember;
 export 'src/models/event_timetable_value.dart' show EventTimetableValue;
@@ -10,6 +35,8 @@ export 'src/models/form_translated_text.dart' show FormTranslatedText;
 export 'src/models/marketing_list_column.dart' show MarketingListColumn;
 export 'src/models/one_off_schedule_data.dart' show OneOffScheduleData;
 export 'src/models/one_off_schedule_value.dart' show OneOffScheduleValue;
+export 'src/models/profile_label_language.dart' show ProfileLabelLanguage;
+export 'src/models/profile_position_option.dart' show ProfilePositionOption;
 export 'src/models/programme_schedule_adjust_value.dart'
     show ProgrammeScheduleAdjustValue;
 export 'src/models/programme_schedule_data.dart' show ProgrammeScheduleData;
@@ -37,6 +64,32 @@ export 'src/widgets/age_eligibility/age_eligibility_summary.dart'
 export 'src/widgets/age_eligibility/age_eligibility_text.dart'
     show AgeEligibilityText;
 export 'src/widgets/age_eligibility/form_age.dart' show FormAge;
+// Application template forms (pure UI, no SDK / no Riverpod): one per
+// section of the template, and what a template lacks before it is saved
+export 'src/widgets/application/application_age_categories_form.dart'
+    show ApplicationAgeCategoriesForm, ApplicationAgeCategoriesFormState;
+export 'src/widgets/application/application_completeness.dart'
+    show ApplicationCompleteness;
+export 'src/widgets/application/application_create_form.dart'
+    show ApplicationCreateForm, ApplicationCreateFormState;
+export 'src/widgets/application/application_declaration_form.dart'
+    show ApplicationDeclarationForm, ApplicationDeclarationFormState;
+export 'src/widgets/application/application_facts_form.dart'
+    show ApplicationFactsForm, ApplicationFactsFormState;
+export 'src/widgets/application/application_form_fields.dart'
+    show ApplicationFormFields;
+export 'src/widgets/application/application_header_form.dart'
+    show ApplicationHeaderForm, ApplicationHeaderFormState;
+export 'src/widgets/application/application_heading_form.dart'
+    show ApplicationHeadingForm, ApplicationHeadingFormState;
+export 'src/widgets/application/application_labels_form.dart'
+    show ApplicationLabelsForm, ApplicationLabelsFormState;
+export 'src/widgets/application/application_notes_form.dart'
+    show ApplicationNotesForm, ApplicationNotesFormState;
+export 'src/widgets/application/application_selections_form.dart'
+    show ApplicationSelectionsForm, ApplicationSelectionsFormState;
+export 'src/widgets/application/application_terms_form.dart'
+    show ApplicationTermsForm, ApplicationTermsFormState;
 // Club identity section forms (pure UI, no SDK / no Riverpod): the club's
 // details, its contact block and its address, translatable fields as
 // FormTranslatedText; and the one-field form that adds a language to
@@ -202,6 +255,12 @@ export 'src/widgets/occurrence_reschedule/occurrence_reschedule_form.dart'
     show OccurrenceRescheduleForm, OccurrenceRescheduleFormState;
 export 'src/widgets/occurrence_reschedule/occurrence_reschedule_form_fields.dart'
     show OccurrenceRescheduleFormFields;
+// The club's choices for the extended profile: positions, each with a
+// label per language, and languages (pure UI, no SDK / no Riverpod)
+export 'src/widgets/profile_options/profile_options_form.dart'
+    show ProfileOptionsForm, ProfileOptionsFormState;
+export 'src/widgets/profile_options/profile_options_form_fields.dart'
+    show ProfileOptionsFormFields;
 // The single-text form behind every rename dialog
 export 'src/widgets/rename/rename_form.dart' show RenameForm, RenameFormState;
 export 'src/widgets/rename/rename_form_fields.dart' show RenameFormFields;
@@ -210,15 +269,23 @@ export 'src/widgets/signup/signup_form.dart' show SignupForm, SignupFormState;
 export 'src/widgets/signup/signup_gender.dart' show SignupGender;
 // User form + section editors (pure UI, no SDK / no Riverpod)
 export 'src/widgets/user_form/form_address.dart' show FormAddress;
+export 'src/widgets/user_form/membership_date_form.dart'
+    show MembershipDateForm, MembershipDateFormState;
 export 'src/widgets/user_form/user_address_form.dart'
     show UserAddressForm, UserAddressFormState;
+export 'src/widgets/user_form/user_background_form.dart'
+    show UserBackgroundForm, UserBackgroundFormState;
 export 'src/widgets/user_form/user_contact_form.dart'
     show UserContactForm, UserContactFormState;
 export 'src/widgets/user_form/user_form.dart' show UserForm, UserFormState;
 export 'src/widgets/user_form/user_form_assembly.dart' show UserFormAssembly;
 export 'src/widgets/user_form/user_form_fields.dart' show UserFormFields;
+export 'src/widgets/user_form/user_guardian_form.dart'
+    show UserGuardianForm, UserGuardianFormState;
 export 'src/widgets/user_form/user_personal_details_form.dart'
     show UserPersonalDetailsForm, UserPersonalDetailsFormState;
+export 'src/widgets/user_form/user_sports_details_form.dart'
+    show UserSportsDetailsForm, UserSportsDetailsFormState;
 // Venue create form (pure UI, no SDK / no Riverpod)
 export 'src/widgets/venue_form/venue_create_form.dart'
     show VenueCreateForm, VenueCreateFormState;

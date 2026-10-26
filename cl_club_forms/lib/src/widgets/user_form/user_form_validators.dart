@@ -77,6 +77,13 @@ class UserFormValidators {
     return null;
   }
 
+  /// Shown when the membership date is left blank.
+  static const String membershipDateRequired = 'Pick the membership date';
+
+  /// The membership date an admin saves must be a day.
+  static String? membershipDate(DateTime? value) =>
+      value == null ? membershipDateRequired : null;
+
   /// Pincode is optional, but if provided must be exactly 6 digits.
   static String? pincode(String value) {
     final t = value.trim();
@@ -93,5 +100,22 @@ class UserFormValidators {
       return 'First name or last name is required';
     }
     return null;
+  }
+
+  /// Shown when a guardian's relation or phone is given without a name.
+  static const String guardianNameRequired =
+      "Enter the guardian's name, or clear the relation and phone";
+
+  /// The guardian is optional, but once a relation or a phone is given the
+  /// name must be too.
+  static String? guardianNamed(
+    String? name,
+    String? relation,
+    String? phone,
+  ) {
+    final named = (name ?? '').trim().isNotEmpty;
+    final other =
+        (relation ?? '').trim().isNotEmpty || (phone ?? '').trim().isNotEmpty;
+    return other && !named ? guardianNameRequired : null;
   }
 }

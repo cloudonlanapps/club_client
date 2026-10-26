@@ -78,5 +78,16 @@ abstract final class ClubIdentityEntries {
       builder: (key) =>
           ClubLanguageForm(key: key, languages: DemoSamples.languages),
     ),
+    FormDemoEntry(
+      id: 'profile-options',
+      title: 'Profile options form',
+      group: FormDemoGroup.clubIdentity,
+      formType: ProfileOptionsForm,
+      builder: (key) => ProfileOptionsForm(
+        key: key,
+        initialValues: DemoSamples.profileOptions,
+        labelLanguages: DemoSamples.labelLanguages,
+      ),
+    ),
   ];
 }

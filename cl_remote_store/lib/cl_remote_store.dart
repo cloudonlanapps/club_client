@@ -24,6 +24,12 @@ export 'src/models/secure_client_not_provided.dart'
     show SecureClientNotProvided;
 export 'src/models/site_media_asset.dart' show SiteMediaAsset;
 export 'src/models/site_media_slot.dart' show SiteMediaSlot;
+export 'src/providers/application_clauses.dart'
+    show applicationClausesProvider, emptyApplicationClauses;
+export 'src/providers/application_labels.dart'
+    show applicationLabelsProvider, emptyApplicationLabels;
+export 'src/providers/applications_master.dart'
+    show ClApplicationsMasterNotifier, clApplicationsMasterProvider;
 export 'src/providers/attendances_master.dart';
 export 'src/providers/audit_log_master.dart';
 export 'src/providers/broadcast_audience.dart';
@@ -32,11 +38,13 @@ export 'src/providers/bundled_contact_info.dart'
     show bundledContactInfoProvider;
 export 'src/providers/capabilities.dart'
     show
+        applicationsProvider,
         capabilitiesProvider,
         creditSystemProvider,
         defaultCountryCodeProvider,
         evaluationsProvider,
         eventMarketingProvider,
+        extendedProfileProvider,
         fallbackCountryCode,
         identityVerificationProvider;
 export 'src/providers/client.dart' show secureClientProvider;
@@ -138,6 +146,8 @@ export 'src/providers/my_occurrences_list.dart';
 export 'src/providers/notifications_master.dart';
 export 'src/providers/occurrences.dart';
 export 'src/providers/pending_actions_master.dart';
+export 'src/providers/profile_options.dart'
+    show ProfileOptionsNotifier, profileOptionsProvider;
 export 'src/providers/public_club_content.dart'
     show clPublicClubContentProvider;
 export 'src/providers/public_club_info.dart' show clPublicClubInfoProvider;

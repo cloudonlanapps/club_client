@@ -1,5 +1,7 @@
 import 'package:cl_member_zone/cl_member_zone.dart' show SidebarDestination;
 
+import 'utils/router_helpers.dart';
+
 /// The route of each member-zone sidebar entry for the signed-in member
 /// [username]. The router owns these paths; the sidebar only names its
 /// destinations (#204).
@@ -11,6 +13,7 @@ String memberZoneSidebarRoute(
   SidebarDestination.myCalendar => '/memberzone/my-events/$username/calendar',
   SidebarDestination.myGroups => '/memberzone/my-groups/$username',
   SidebarDestination.myEvents => '/memberzone/my-events/$username',
+  SidebarDestination.applications => applicationsPath,
   SidebarDestination.myAttendance =>
     '/memberzone/my-events/$username/attendance',
   SidebarDestination.myReviews => '/memberzone/reviews/mine',

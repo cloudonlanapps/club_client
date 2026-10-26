@@ -57,6 +57,7 @@ void main() {
       'assets/data/contact_info.json',
       'assets/images/club_logo.png',
       'web/index.html',
+      'web/$indexScript',
       'web/manifest.json',
       'web/favicon.png',
       'web/icons/Icon-512.png',
@@ -75,6 +76,18 @@ void main() {
       File(p.join(out, 'web/index.html')).readAsStringSync(),
       allOf(contains('<title>Example Club</title>'), isNot(contains('@@'))),
     );
+  });
+
+  test('Issue 315: each target allows its own API origin', () async {
+    for (final target in Target.values) {
+      final out = await run(target);
+      expect(
+        File(p.join(out, 'web/index.html')).readAsStringSync(),
+        contains("connect-src 'self' http://203.0.113.10:8201 "),
+        reason: target.name,
+      );
+      expect(File(p.join(out, 'web/$indexScript')).existsSync(), isTrue);
+    }
   });
 
   test("Issue 153: each target carries the checkout's VERSION", () async {

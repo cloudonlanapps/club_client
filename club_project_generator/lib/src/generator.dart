@@ -158,6 +158,7 @@ Future<void> generate(GenerateOptions o, {void Function(String)? log}) async {
   _write(
     p.join(o.out, 'web/index.html'),
     renderIndexHtml(
+      apiUrl: o.apiUrl,
       template: File(
         p.join(await generatorRoot(), 'templates/web/index.html'),
       ).readAsStringSync(),
@@ -166,6 +167,12 @@ Future<void> generate(GenerateOptions o, {void Function(String)? log}) async {
       colors: colors,
       description: description,
     ),
+  );
+  _write(
+    p.join(o.out, 'web/$indexScript'),
+    File(
+      p.join(await generatorRoot(), 'templates/web/$indexScript'),
+    ).readAsStringSync(),
   );
   _write(
     p.join(o.out, 'web/manifest.json'),

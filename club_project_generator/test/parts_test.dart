@@ -7,6 +7,8 @@ import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
+const api = 'https://api.example.org/v1';
+
 Uint8List png(int w, int h) => img.encodePng(img.Image(width: w, height: h));
 
 void main() {
@@ -110,6 +112,7 @@ void main() {
 
     test('index.html fills every token and escapes the names', () {
       final html = renderIndexHtml(
+        apiUrl: api,
         template: '<title>@@FULL_NAME@@</title>@@DESCRIPTION@@ @@ACCENT_DARK@@',
         target: Target.website,
         names: names,
@@ -123,6 +126,7 @@ void main() {
     test('index.html refuses a token it does not know', () {
       expect(
         () => renderIndexHtml(
+          apiUrl: api,
           template: '@@NOPE@@',
           target: Target.app,
           names: names,
@@ -145,6 +149,53 @@ void main() {
         expect(src, isNot(startsWith('//')), reason: src);
       }
       expect(template, isNot(contains('hls.js')));
+    });
+
+    test('Issue 315: the policy names the API origin and no wildcard', () {
+      final csp = contentSecurityPolicy(apiUrl: 'https://api.example.org/v1');
+      final directives = {
+        for (final d in csp.split(';').map((d) => d.trim()))
+          if (d.isNotEmpty) d.split(' ').first: d.split(' ').skip(1).toList(),
+      };
+      expect(directives['default-src'], ["'self'"]);
+      expect(directives['object-src'], ["'none'"]);
+      expect(directives['connect-src'], contains('https://api.example.org'));
+      expect(directives['img-src'], contains('https://api.example.org'));
+      expect(directives['media-src'], contains('https://api.example.org'));
+      for (final name in ['script-src', 'connect-src']) {
+        final sources = directives[name]!;
+        expect(sources.where((s) => s.contains('*')), isEmpty, reason: name);
+      }
+      expect(directives['script-src'], isNot(contains("'unsafe-inline'")));
+      expect(directives['script-src'], isNot(contains("'unsafe-eval'")));
+      expect(csp, isNot(contains('/v1')));
+    });
+
+    test('Issue 315: the API origin keeps its scheme and port', () {
+      final csp = contentSecurityPolicy(apiUrl: 'http://203.0.113.10:8201/v1');
+      expect(csp, contains("connect-src 'self' http://203.0.113.10:8201 "));
+    });
+
+    test('Issue 315: the page sets the policy before any script, and runs '
+        'no inline script', () async {
+      final template = File(
+        p.join(await generatorRoot(), 'templates/web/index.html'),
+      ).readAsStringSync();
+      final html = renderIndexHtml(
+        apiUrl: api,
+        template: template,
+        target: Target.app,
+        names: names,
+        colors: WebColors.neutral,
+      );
+      final policy = html.indexOf('http-equiv="Content-Security-Policy"');
+      expect(policy, greaterThan(0));
+      expect(policy, lessThan(html.indexOf('<script')));
+      expect(html, contains(contentSecurityPolicy(apiUrl: api)));
+      for (final tag in RegExp('<script[^>]*>').allMatches(html)) {
+        expect(tag[0], contains('src="'), reason: tag[0]);
+      }
+      expect(html, contains('<script src="$indexScript"></script>'));
     });
 
     test('the manifest names the club', () {
@@ -297,6 +348,7 @@ void main() {
 
     test('index.html and the manifest carry it, escaped in the page', () {
       final html = renderIndexHtml(
+        apiUrl: api,
         template: '<meta name="description" content="@@DESCRIPTION@@">',
         target: Target.website,
         names: names,

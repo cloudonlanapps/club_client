@@ -28,7 +28,9 @@ export 'src/web_colors.dart' show WebColors;
 export 'src/web_files.dart'
     show
         WebNames,
+        contentSecurityPolicy,
         decodeBrandIcon,
+        indexScript,
         renderIcons,
         renderIndexHtml,
         renderManifest;

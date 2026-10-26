@@ -27,12 +27,54 @@ class WebNames {
   final String shortName;
 }
 
+/// The page's own script, copied beside index.html from the template. The
+/// page runs no inline script, so its policy needs no `'unsafe-inline'` for
+/// scripts.
+const indexScript = 'index.js';
+
+/// The page's Content-Security-Policy: what the generated app and website may
+/// load and where they may connect (#315).
+///
+/// - Scripts come from the page's own origin, plus CanvasKit, which Flutter
+///   web fetches from `www.gstatic.com` and compiles as WebAssembly
+///   (`'wasm-unsafe-eval'`).
+/// - The API ([apiUrl]'s origin) answers requests and serves images and video.
+/// - Flutter's fallback fonts come from `fonts.gstatic.com`.
+/// - Styles allow `'unsafe-inline'`: Flutter web sets inline styles on the
+///   elements it draws with, and the splash's style is inline.
+/// - A venue's map is an embedded Google Maps frame.
+/// - `blob:` and `data:` cover pictures, video and PDFs the app opens from
+///   memory.
+///
+/// A meta tag cannot set `frame-ancestors` or reporting; those are the host's.
+String contentSecurityPolicy({required String apiUrl}) {
+  final api = Uri.parse(apiUrl).origin;
+  const gstatic = 'https://www.gstatic.com';
+  const fonts = 'https://fonts.gstatic.com';
+  return [
+    "default-src 'self'",
+    "script-src 'self' 'wasm-unsafe-eval' $gstatic",
+    "connect-src 'self' $api $gstatic $fonts",
+    "img-src 'self' data: blob: $api",
+    "media-src 'self' blob: $api",
+    "font-src 'self' data: $fonts",
+    "style-src 'self' 'unsafe-inline'",
+    'frame-src https://www.google.com',
+    "worker-src 'self' blob:",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join('; ');
+}
+
 /// Fills the `@@TOKEN@@`s of the index.html template. Fails on any token
 /// left over, so a template change cannot ship a page with a raw token in it.
 ///
-/// [description] is the page's description; without one it is the club's
-/// name and what the target is.
+/// [apiUrl] is the API the page talks to, which its policy allows
+/// ([contentSecurityPolicy]). [description] is the page's description;
+/// without one it is the club's name and what the target is.
 String renderIndexHtml({
+  required String apiUrl,
   required String template,
   required Target target,
   required WebNames names,
@@ -50,6 +92,10 @@ String renderIndexHtml({
     'BACKGROUND_DARK': colors.backgroundDark,
     'ACCENT_LIGHT': colors.accentLight,
     'ACCENT_DARK': colors.accentDark,
+    'CONTENT_SECURITY_POLICY': const HtmlEscape(
+      HtmlEscapeMode.attribute,
+    ).convert(contentSecurityPolicy(apiUrl: apiUrl)),
+    'INDEX_SCRIPT': indexScript,
   };
   final out = template.replaceAllMapped(
     RegExp('@@([A-Z_]+)@@'),

@@ -80,6 +80,10 @@ At the club_core root, one per real deployment shape, named without the club:
 | `app_test_server1.conf` | off | on | `44` |
 | `app_test_server2.conf` | on | off | unset (the apps fall back to `91`) |
 
+Both turn on the extended profile and applications. Applications need identity
+verification, so they are reported on with `app_test_server1.conf` only; with
+`app_test_server2.conf` the server reports them off (#321).
+
 Between them the two confs cover both settings of every optional module, and a
 server that reports a default country code and one that reports none (#31);
 keep them in step with the deployments they stand for. Both clone club_server's `main` from git. To test against a

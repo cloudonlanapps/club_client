@@ -1,9 +1,11 @@
-# Applications and the extended profile — design (draft, 2026-10-26)
+# Applications and the extended profile — design (2026-10-26)
 
-Status: **draft, awaiting confirmation.** Nothing here is implemented. The PDF
-is being polished first as a standalone prototype
-(kept outside the repos): a template JSON
-and a member JSON in, a PDF out.
+Status: **implemented** (2026-10-27): club_server#94, club_sdk#67,
+club_cli#39, club_client#322. The PDF is the prototype's, ported into the
+server. Where the build differs from this text: every application route,
+reads included, answers 503 while the module is off (as evaluations and
+credits do); the profile options are edited on Club Details, which is
+super-admin only.
 
 A club that needs a physically signed application form from each member (a
 registration form for a camp, a trial or a championship) gets it from the

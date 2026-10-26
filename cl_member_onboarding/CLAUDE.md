@@ -8,6 +8,9 @@ Onboarding zone for users whose status is `registered` or `pending`. Mounted und
 |---|---|---|
 | `/onboarding/welcome` | `OnboardingWelcomeScreen` | `OnboardingWelcomeView` |
 | `/onboarding/submit-documents` | `OnboardingSubmitDocumentsScreen` | `OnboardingSubmitDocumentsView` |
+| `/onboarding/extended-profile` | `OnboardingExtendedProfileScreen` | `OnboardingExtendedProfileView` |
+
+`/onboarding/extended-profile` is the optional step after the identity document (#320): a `pending` member, only while `extendedProfileProvider` is true. The sections themselves (`ExtendedProfileSections`, cl_club_members) are passed in by the router, since this package does not depend on cl_club_members. While applications are on, the waiting page lists the published applications with Download, also passed in by the router (#321).
 
 ### `/onboarding/welcome` — three status-driven variants
 

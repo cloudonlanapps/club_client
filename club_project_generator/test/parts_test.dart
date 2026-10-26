@@ -132,6 +132,21 @@ void main() {
       );
     });
 
+    test('Issue 314: the page loads no script from another origin', () async {
+      final template = File(
+        p.join(await generatorRoot(), 'templates/web/index.html'),
+      ).readAsStringSync();
+      final sources = RegExp(
+        r'<script[^>]*\bsrc="([^"]*)"',
+      ).allMatches(template).map((m) => m[1]!);
+      expect(sources, isNotEmpty);
+      for (final src in sources) {
+        expect(Uri.parse(src).hasScheme, isFalse, reason: src);
+        expect(src, isNot(startsWith('//')), reason: src);
+      }
+      expect(template, isNot(contains('hls.js')));
+    });
+
     test('the manifest names the club', () {
       final m =
           json.decode(

@@ -63,6 +63,39 @@ abstract final class UserEntries {
           UserAddressForm(key: key, initialValues: DemoSamples.member),
     ),
     FormDemoEntry(
+      id: 'user-sports-details',
+      title: 'User sports details form',
+      group: FormDemoGroup.users,
+      formType: UserSportsDetailsForm,
+      builder: (key) => UserSportsDetailsForm(
+        key: key,
+        initialValues: DemoSamples.member,
+        positions: DemoSamples.positions,
+      ),
+    ),
+    FormDemoEntry(
+      id: 'user-background',
+      title: 'User background form',
+      group: FormDemoGroup.users,
+      formType: UserBackgroundForm,
+      builder: (key) => UserBackgroundForm(
+        key: key,
+        initialValues: DemoSamples.member,
+        languages: DemoSamples.memberLanguages,
+      ),
+    ),
+    FormDemoEntry(
+      id: 'user-guardian',
+      title: 'User guardian form',
+      group: FormDemoGroup.users,
+      formType: UserGuardianForm,
+      builder: (key) => UserGuardianForm(
+        key: key,
+        defaultCountryCode: DemoSamples.countryCode,
+        initialValues: DemoSamples.member,
+      ),
+    ),
+    FormDemoEntry(
       id: 'identity-documents-consent',
       title: 'Identity documents consent form',
       group: FormDemoGroup.users,

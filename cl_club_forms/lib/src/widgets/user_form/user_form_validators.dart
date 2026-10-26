@@ -94,4 +94,21 @@ class UserFormValidators {
     }
     return null;
   }
+
+  /// Shown when a guardian's relation or phone is given without a name.
+  static const String guardianNameRequired =
+      "Enter the guardian's name, or clear the relation and phone";
+
+  /// The guardian is optional, but once a relation or a phone is given the
+  /// name must be too.
+  static String? guardianNamed(
+    String? name,
+    String? relation,
+    String? phone,
+  ) {
+    final named = (name ?? '').trim().isNotEmpty;
+    final other =
+        (relation ?? '').trim().isNotEmpty || (phone ?? '').trim().isNotEmpty;
+    return other && !named ? guardianNameRequired : null;
+  }
 }

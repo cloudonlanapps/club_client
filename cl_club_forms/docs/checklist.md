@@ -48,6 +48,9 @@ messages, **Reset**, which mounts it afresh, and the light / dark toggle.
 - [ ] User personal details form: shown on a member's profile (`/memberzone/users/:username`) when the pencil on the Personal details card is pressed.
 - [ ] User contact form: shown on a member's profile when the pencil on the Contact card is pressed.
 - [ ] User address form: shown on a member's profile when the pencil on the Address card is pressed.
+- [ ] User sports details form: shown on a member's profile when the pencil on the Sports details card is pressed (extended profile on), and in onboarding's optional extended-profile step.
+- [ ] User background form: shown on a member's profile when the pencil on the Background card is pressed (extended profile on), and in onboarding's optional extended-profile step.
+- [ ] User guardian form: shown on a member's profile when the pencil on the Guardian card is pressed (extended profile on), and in onboarding's optional extended-profile step.
 
 ## Groups (admin)
 
@@ -95,6 +98,7 @@ messages, **Reset**, which mounts it afresh, and the light / dark toggle.
 - [ ] Club contact form: shown on the same page when the pencil on the Contact card is pressed.
 - [ ] Club address form: shown on the same page when the pencil on the Address card is pressed.
 - [ ] Club language form: always shown in the Translations card at the bottom of the same page, with the "Add language" button; a language added there appears as an extra input in the three forms above.
+- [ ] Profile options form: shown on the same page when the pencil on the Profile options card is pressed (extended profile on).
 
 ## Evaluations (these stay in `ui_lib`)
 

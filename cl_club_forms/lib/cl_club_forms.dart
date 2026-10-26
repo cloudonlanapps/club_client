@@ -10,6 +10,8 @@ export 'src/models/form_translated_text.dart' show FormTranslatedText;
 export 'src/models/marketing_list_column.dart' show MarketingListColumn;
 export 'src/models/one_off_schedule_data.dart' show OneOffScheduleData;
 export 'src/models/one_off_schedule_value.dart' show OneOffScheduleValue;
+export 'src/models/profile_label_language.dart' show ProfileLabelLanguage;
+export 'src/models/profile_position_option.dart' show ProfilePositionOption;
 export 'src/models/programme_schedule_adjust_value.dart'
     show ProgrammeScheduleAdjustValue;
 export 'src/models/programme_schedule_data.dart' show ProgrammeScheduleData;
@@ -202,6 +204,12 @@ export 'src/widgets/occurrence_reschedule/occurrence_reschedule_form.dart'
     show OccurrenceRescheduleForm, OccurrenceRescheduleFormState;
 export 'src/widgets/occurrence_reschedule/occurrence_reschedule_form_fields.dart'
     show OccurrenceRescheduleFormFields;
+// The club's choices for the extended profile: positions, each with a
+// label per language, and languages (pure UI, no SDK / no Riverpod)
+export 'src/widgets/profile_options/profile_options_form.dart'
+    show ProfileOptionsForm, ProfileOptionsFormState;
+export 'src/widgets/profile_options/profile_options_form_fields.dart'
+    show ProfileOptionsFormFields;
 // The single-text form behind every rename dialog
 export 'src/widgets/rename/rename_form.dart' show RenameForm, RenameFormState;
 export 'src/widgets/rename/rename_form_fields.dart' show RenameFormFields;
@@ -212,13 +220,19 @@ export 'src/widgets/signup/signup_gender.dart' show SignupGender;
 export 'src/widgets/user_form/form_address.dart' show FormAddress;
 export 'src/widgets/user_form/user_address_form.dart'
     show UserAddressForm, UserAddressFormState;
+export 'src/widgets/user_form/user_background_form.dart'
+    show UserBackgroundForm, UserBackgroundFormState;
 export 'src/widgets/user_form/user_contact_form.dart'
     show UserContactForm, UserContactFormState;
 export 'src/widgets/user_form/user_form.dart' show UserForm, UserFormState;
 export 'src/widgets/user_form/user_form_assembly.dart' show UserFormAssembly;
 export 'src/widgets/user_form/user_form_fields.dart' show UserFormFields;
+export 'src/widgets/user_form/user_guardian_form.dart'
+    show UserGuardianForm, UserGuardianFormState;
 export 'src/widgets/user_form/user_personal_details_form.dart'
     show UserPersonalDetailsForm, UserPersonalDetailsFormState;
+export 'src/widgets/user_form/user_sports_details_form.dart'
+    show UserSportsDetailsForm, UserSportsDetailsFormState;
 // Venue create form (pure UI, no SDK / no Riverpod)
 export 'src/widgets/venue_form/venue_create_form.dart'
     show VenueCreateForm, VenueCreateFormState;

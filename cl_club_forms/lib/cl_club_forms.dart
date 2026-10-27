@@ -31,7 +31,6 @@ export 'src/models/form_translated_text.dart' show FormTranslatedText;
 export 'src/models/marketing_list_column.dart' show MarketingListColumn;
 export 'src/models/one_off_schedule_data.dart' show OneOffScheduleData;
 export 'src/models/one_off_schedule_value.dart' show OneOffScheduleValue;
-export 'src/models/profile_label_language.dart' show ProfileLabelLanguage;
 export 'src/models/profile_position_option.dart' show ProfilePositionOption;
 export 'src/models/programme_schedule_adjust_value.dart'
     show ProgrammeScheduleAdjustValue;

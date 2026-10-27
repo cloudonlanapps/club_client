@@ -139,12 +139,12 @@ abstract final class DemoSamples {
   /// The languages a sample member may prefer, by name.
   static const List<String> memberLanguages = ['English', 'Marathi', 'Hindi'];
 
-  /// The sample club's languages: a code and a name each.
-  static const List<ProfileLabelLanguage> labelLanguages = [
-    ProfileLabelLanguage(code: 'en', name: 'English'),
-    ProfileLabelLanguage(code: 'mr', name: 'Marathi'),
-    ProfileLabelLanguage(code: 'hi', name: 'Hindi'),
-  ];
+  /// The sample club's languages, by code.
+  static const Map<String, String> clubLanguages = {
+    'en': 'English',
+    'mr': 'Marathi',
+    'hi': 'Hindi',
+  };
 
   /// The sample club's profile options, as the options form takes them.
   static Map<String, dynamic> get profileOptions => {
@@ -156,10 +156,10 @@ abstract final class DemoSamples {
         },
     ],
     ProfileOptionsFormFields.languagesId: [
-      for (final language in labelLanguages)
+      for (final MapEntry(key: code, value: name) in clubLanguages.entries)
         {
-          ProfileOptionsFormFields.codeKey: language.code,
-          ProfileOptionsFormFields.nameKey: language.name,
+          ProfileOptionsFormFields.codeKey: code,
+          ProfileOptionsFormFields.nameKey: name,
         },
     ],
   };

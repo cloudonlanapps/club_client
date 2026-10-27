@@ -5,8 +5,9 @@ import 'package:club_sdk_2/club_sdk_2.dart' show ApplicationStatus;
 /// A move of an application template through its states, as on an
 /// evaluation (design §2.1.1), and Delete.
 enum ApplicationStep {
-  /// Draft → saved, checked complete and its layout decided.
-  save('Save', 'Application saved.'),
+  /// Draft → saved (shown as Finalize), checked complete and its layout
+  /// decided.
+  save('Finalize', 'Application finalized.'),
 
   /// Saved → published: members see it.
   publish('Publish', 'Application published.'),
@@ -28,20 +29,16 @@ enum ApplicationStep {
   /// The toast once it is done.
   final String doneMessage;
 
-  /// Why the step cannot run on a template in [status], or null when it
-  /// can.
-  String? blockedBy(ApplicationStatus status) => switch ((this, status)) {
-    (save, ApplicationStatus.draft) => null,
-    (save, ApplicationStatus.saved) => 'Already saved',
-    (save || publish, ApplicationStatus.published) => 'Already published',
-    (publish, ApplicationStatus.saved) => null,
-    (publish, ApplicationStatus.draft) => 'Save it first',
-    (unpublish, ApplicationStatus.published) => null,
-    (unpublish, _) => 'Not published',
-    (revert, ApplicationStatus.saved) => null,
-    (revert, ApplicationStatus.draft) => 'Already a draft',
-    (revert || delete, ApplicationStatus.published) => 'Unpublish it first',
-    (delete, _) => null,
+  /// Whether the step is offered on a template in [status]: only the
+  /// moves that state allows are shown (club_client#398). A draft is
+  /// finalized or deleted, a saved one published, reverted or deleted, a
+  /// published one unpublished.
+  bool offeredIn(ApplicationStatus status) => switch ((this, status)) {
+    (save, ApplicationStatus.draft) => true,
+    (publish || revert, ApplicationStatus.saved) => true,
+    (unpublish, ApplicationStatus.published) => true,
+    (delete, ApplicationStatus.draft || ApplicationStatus.saved) => true,
+    _ => false,
   };
 
   /// Runs the step on template [id].

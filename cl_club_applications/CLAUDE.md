@@ -50,11 +50,24 @@ forms' ids for a schema refusal.
   `ProfileApplicationsSection` both filter. Change the rule here only with
   the server's.
 
-- Moves the state forbids are greyed out with their reason beside them; Save
-  is also greyed out while `ApplicationCompleteness.missingTexts` lists
-  texts, or `ApplicationFactGaps.unknown` lists `{gap}`s naming no fact
-  (club_client#389), which the State card shows by place and language
-  ("Selection 2 (Marathi): no fact named match_date").
+- The editor's heading card (`ApplicationStateCard`, club_client#398)
+  opens with "<Title> (Draft | Saved | Published)", with Preview and, once
+  finalized, Download blank form as icons at the right of that row. It
+  shows the moves the state allows, no others: a draft Finalize (the save
+  move), a saved one Publish and Revert to draft, a published one
+  Unpublish; Delete is a bin icon at the bottom right (draft and saved),
+  asking first. Finalize is greyed out, with no reason beside it, while
+  the card lists what blocks it: **Missing:**
+  (`ApplicationCompleteness.missingTexts`) and **Unknown facts:**
+  (`ApplicationFactGaps.unknown`, `{gap}`s naming no fact,
+  club_client#389), by place and language ("Selection 2 (Marathi): no
+  fact named match_date"), each one heading in the error colour with
+  smaller lines.
+- A section's read view keeps the line of each fixed text of Languages and
+  titles, and of the Declaration, while blank: an optional one shows
+  nothing, a required one (title, footer line, declaration) **Required** in
+  the error colour. A line's label is set larger than its value
+  (club_client#398).
 - A library text, built-in or the club's, is inserted as written in every
   print language, gaps included: nothing is filled and no call is made
   (club_client#389). A fact prints wherever its `{name}` stands; the (?) on
@@ -66,9 +79,9 @@ forms' ids for a schema refusal.
   edits it in place and deletes it after asking. The adapter is
   `ApplicationLibraryTextFormSubmit`. The texts appear in each section's
   list beside the built-in clauses, marked as the club's.
-- What the server refuses about the template on Save (incomplete, a gap
-  naming no fact, does not fit, broken reference) shows inline on the State
-  card; a download refused
+- What the server refuses about the template on Finalize (incomplete, a
+  gap naming no fact, does not fit, broken reference) shows inline on the
+  heading card; a download refused
   for the member (not eligible, no identity document, not published) shows
   under its button. Anything else is a toast with a fixed message.
 - A member's download of their own form (`ApplicationOwnForm`) first asks
@@ -79,11 +92,10 @@ forms' ids for a schema refusal.
   downloads, No calls the host's `onOpenProfile`, or only closes the
   dialog where there is none (the profile section, already on the profile).
   An admin's preview and a member's form fetched by an admin do not ask.
-- The editor's State card shows **Download blank form** beside Preview
-  (club_client#393): the template printed blank, no member and no
-  watermark (`ApplicationBlankForm`, `downloadBlankForm`). It is greyed
-  out with "Save the application first" on a draft (the button's
-  `reason`) and on for a saved or published template; the PDF goes to the
-  `PdfAction` as "<title> - blank form.pdf". A refusal
+- The editor's heading card shows **Download blank form** as an icon
+  beside Preview's (club_client#393, #398): the template printed blank, no
+  member and no watermark (`ApplicationBlankForm`, `downloadBlankForm`).
+  It is hidden on a draft and shown for a saved or published template; the
+  PDF goes to the `PdfAction` as "<title> - blank form.pdf". A refusal
   (`APPLICATION_NOT_SAVED`, a template reverted meanwhile) shows under the
   button.

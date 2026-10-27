@@ -63,8 +63,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton;
 
+import '_helpers/applications.dart';
 import '_helpers/auth.dart';
 import '_helpers/capabilities.dart';
 import '_helpers/editors.dart';
@@ -151,25 +151,16 @@ Future<SecureClient> _adminClient() async {
   return c;
 }
 
-/// The step of the State card named [name] (`save`, `publish`, …).
-Finder _step(String name) => find.byKey(ValueKey('application.step.$name'));
+/// The step of the heading card named [name] (`save`, `publish`, …).
+Finder _step(String name) => applicationStep(name);
 
 /// The section card of the editor named [name] (`heading`, …).
 Finder _section(String name) =>
     find.byKey(ValueKey('application.section.$name'));
 
 /// Waits for the step [name] to be enabled, then runs it.
-Future<void> _run(WidgetTester tester, String name) async {
-  await waitFor(
-    tester,
-    () =>
-        _step(name).evaluate().isNotEmpty &&
-        tester.widget<ActionButton>(_step(name)).enabled,
-    description: 'the "$name" step to be enabled',
-  );
-  tester.widget<ActionButton>(_step(name)).onPressed!();
-  await settle(tester);
-}
+Future<void> _run(WidgetTester tester, String name) =>
+    runApplicationStep(tester, name);
 
 /// Saves the inline editor open in [card] with its own Save, and waits for
 /// it to close. Fails fast on an error toast.
@@ -278,7 +269,7 @@ Future<int> _publishApplicationViaUi(WidgetTester tester) async {
   await _run(tester, 'publish');
   await waitFor(
     tester,
-    () => tester.widget<ActionButton>(_step('unpublish')).enabled,
+    () => applicationStepEnabled(tester, 'unpublish'),
     description: 'the application to be published',
   );
   final templates = container(tester).read(clApplicationsMasterProvider);
@@ -616,7 +607,7 @@ Future<void> _deleteApplicationViaUi(WidgetTester tester, int id) async {
   final confirm = find.widgetWithText(ShadButton, 'Delete');
   await waitFor(
     tester,
-    () => confirm.evaluate().length > 1,
+    () => confirm.evaluate().isNotEmpty,
     description: 'the delete confirmation',
   );
   tester.widget<ShadButton>(confirm.last).onPressed!();

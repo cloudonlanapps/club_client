@@ -1,10 +1,11 @@
 // workflow_apptemplate: what the application editor refuses, and where it
 // says so (club_client#341; covers #321 and #114).
 //
-// The admin creates a draft. Before it is saved, Publish is greyed out with
-// its reason, and Save too while texts are missing, which the State card
-// lists. A title cleared of its English is refused on its field, and the
-// draft keeps its title and stays a draft. A declaration the server refuses
+// The admin creates a draft. Before it is finalized, only Finalize
+// and Delete are shown (club_client#398), and Finalize is greyed out
+// while texts are missing, which the heading card lists. A title
+// cleared of its English is refused on its field, and the draft keeps its
+// title and stays a draft. A declaration the server refuses
 // at its schema (a text in a language outside the label catalogue, which
 // the editor keeps as it was given, as it keeps any language it does not
 // show) shows the server's reason on the declaration field, with no toast,
@@ -28,8 +29,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton;
 
+import '_helpers/applications.dart';
 import '_helpers/auth.dart';
 import '_helpers/capabilities.dart';
 import '_helpers/editors.dart';
@@ -65,8 +66,8 @@ Future<SecureClient> _adminClient() async {
   return c;
 }
 
-/// The step of the State card named [name] (`save`, `publish`, …).
-Finder _step(String name) => find.byKey(ValueKey('application.step.$name'));
+/// The step of the heading card named [name] (`save`, `publish`, …).
+Finder _step(String name) => applicationStep(name);
 
 /// The section card of the editor named [name] (`heading`, …).
 Finder _section(String name) =>
@@ -216,12 +217,10 @@ void main() {
     );
     final id = _draft(tester).id;
 
-    // 2. Before it is saved, Publish is greyed out with its reason; so is
-    // Save while texts are missing, which the State card lists.
-    expect(tester.widget<ActionButton>(_step('publish')).enabled, isFalse);
-    expect(find.text('Save it first'), findsOneWidget);
-    expect(tester.widget<ActionButton>(_step('save')).enabled, isFalse);
-    expect(find.text('2 texts missing'), findsOneWidget);
+    // 2. Before it is finalized, Publish is not shown; Finalize is greyed
+    // out while texts are missing, which the heading card lists.
+    expect(_step('publish'), findsNothing);
+    expect(applicationStepEnabled(tester, 'save'), isFalse);
     final missing = find.byKey(const ValueKey('application.state.missing'));
     expect(missing, findsOneWidget);
     for (final place in ['Declaration', 'Footer line']) {
@@ -231,7 +230,7 @@ void main() {
         reason: '"$place" is listed as missing',
       );
     }
-    expect(find.text('Draft'), findsOneWidget);
+    expect(find.text('$_kTitle (Draft)'), findsOneWidget);
 
     // 3. A title cleared of its English is refused on the title field, and
     // the draft keeps its title and stays a draft.
@@ -276,8 +275,8 @@ void main() {
     await _cancelIn(tester, heading);
     expect(_draft(tester).content.title?.texts['en'], _kTitle);
     expect(_draft(tester).status, ApplicationStatus.draft);
-    expect(find.text('Draft'), findsOneWidget);
-    expect(tester.widget<ActionButton>(_step('publish')).enabled, isFalse);
+    expect(find.text('$_kTitle (Draft)'), findsOneWidget);
+    expect(_step('publish'), findsNothing);
 
     // 4. A declaration the server refuses at its schema shows the server's
     // reason on the declaration field, and nothing is stored.
@@ -313,13 +312,12 @@ void main() {
     await _cancelIn(tester, declaration);
     expect(_draft(tester).status, ApplicationStatus.draft);
 
-    // 5. Cleanup through the UI: Delete, confirmed.
-    tester.widget<ActionButton>(_step('delete')).onPressed!();
-    await settle(tester);
+    // 5. Cleanup through the UI: Delete (a bin icon), confirmed.
+    await runApplicationStep(tester, 'delete');
     final confirm = find.widgetWithText(ShadButton, 'Delete');
     await waitFor(
       tester,
-      () => confirm.evaluate().length > 1,
+      () => confirm.evaluate().isNotEmpty,
       description: 'the delete confirmation',
     );
     tester.widget<ShadButton>(confirm.last).onPressed!();

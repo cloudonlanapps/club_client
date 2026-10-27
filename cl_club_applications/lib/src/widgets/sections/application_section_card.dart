@@ -120,13 +120,12 @@ class ApplicationSectionCardState
       isEmpty: lines.isEmpty,
       emptyHint: ApplicationViewStrings.emptySection,
       editMaxWidth: ApplicationViewSizes.editMaxWidth,
-      read: ApplicationSectionRead(lines: lines),
-      editBuilder: ({required enabled}) => spec.build(
-        formKey,
-        widget.json,
-        widget.options,
-        enabled: enabled,
+      read: ApplicationSectionRead(
+        lines: lines,
+        required: ApplicationSectionLines.requiredLabels(widget.section),
       ),
+      editBuilder: ({required enabled}) =>
+          spec.build(formKey, widget.json, widget.options, enabled: enabled),
       onValidate: () => spec.validate(formKey),
       isDirty: () => spec.isDirty(formKey),
       onSave: save,

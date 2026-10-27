@@ -105,15 +105,12 @@ class UserCard extends ConsumerWidget {
   }
 
   static String _initials(UserInfo user) {
-    final first = (user.firstName ?? '').trim();
-    final last = (user.lastName ?? '').trim();
-    if (first.isNotEmpty && last.isNotEmpty) {
-      return '${first[0]}${last[0]}'.toUpperCase();
-    }
-    if (first.isNotEmpty) return first[0].toUpperCase();
-    if (user.displayName.isNotEmpty) {
-      return user.displayName[0].toUpperCase();
-    }
+    final first = textInitial(user.firstName ?? '');
+    final last = textInitial(user.lastName ?? '');
+    if (first.isNotEmpty && last.isNotEmpty) return '$first$last';
+    if (first.isNotEmpty) return first;
+    final display = textInitial(user.displayName);
+    if (display.isNotEmpty) return display;
     return '?';
   }
 }

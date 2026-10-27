@@ -1,9 +1,9 @@
 import 'package:club_sdk_2/club_sdk_2.dart' show EvaluationTemplate;
 import 'package:flutter/widgets.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionItem, EntityCard, EntityImage;
+import 'package:ui_lib/ui_lib.dart'
+    show ActionItem, EntityCard, EntityImage, textInitial;
 
 import '../constants/evaluation_view_strings.dart';
-import '../utils/evaluation_initial.dart';
 
 /// One template of the library: its name, how many questions it asks and,
 /// as plain text, whether an evaluation uses it, with the host's
@@ -30,7 +30,7 @@ class TemplateRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final questions = template.items.where((i) => i.type.isQuestion).length;
     return EntityCard(
-      image: EntityImage.initials(evaluationInitial(template.name)),
+      image: EntityImage.initials(textInitial(template.name)),
       title: template.name,
       caption: [
         EvaluationViewStrings.questionCount(questions),

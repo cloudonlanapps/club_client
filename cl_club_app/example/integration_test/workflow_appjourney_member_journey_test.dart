@@ -6,27 +6,28 @@
 // member under 18, signs up, uploads an identity document and submits it,
 // and lands on the waiting page with the application listed. Update profile
 // opens the onboarding profile page, where the member fills in their
-// guardian. Download on the waiting page asks "Is your profile complete?"
-// and lists what is blank, the guardian no longer among it; No opens the
-// profile page. There, No only closes the question and Yes downloads. Back
-// on the waiting page, Yes downloads too. The admin approves the member, who
-// signs in again and downloads the form from Applications.
+// guardian, sports details and background (a position and a language from
+// the club's profile options, sent as lists: club_client#343). Download on
+// the waiting page asks "Is your profile complete?" and lists what is
+// blank, none of those among it; No opens the profile page. There, No
+// only closes the question and Yes downloads. Back on the waiting page, Yes
+// downloads too. The admin approves the member, who signs in again and
+// downloads the form from Applications.
 //
 // The PDF action is the desktop's viewer on Linux, so the test stands in for
 // it (`debugPdfBytesHandler`, cl_club_app) and checks the bytes each
 // Download hands it.
 //
 // Against club_server main the onboarding profile page saves only the
-// Guardian card for a pending member, so the "nothing blank, no question"
-// path of #340 cannot be reached here:
-//   * Personal details, contact and address: the server takes only the
-//     extended fields from a member who is not active
-//     (`check_profile_edit_access`, 403 ACCOUNT_NOT_ACTIVE), so those cards
-//     fail with "Could not save" (#340 assumed the server takes every card).
-//   * Sports details and Background: the client's pinned club_sdk sends the
-//     singular `preferredPosition` / `preferredLanguage`, which the server
-//     replaced with lists (club_server#120) and refuses as unknown fields
-//     (422), so neither card saves; club_client#343, #335.
+// extended cards (Guardian, Sports details, Background) for a pending
+// member, so the "nothing blank, no question" path of #340 cannot be
+// reached here: the server takes only the extended fields from a member who
+// is not active (`check_profile_edit_access`, 403 ACCOUNT_NOT_ACTIVE), so
+// Personal details, contact and address fail with "Could not save" (#340
+// assumed the server takes every card). The address stays blank.
+//
+// The club's profile options are set for the test through the SDK, as the
+// super admin, and put back as they were afterwards.
 
 // Fixtures (all `workflow_appjourney_` prefixed): the member, signed up
 // through the UI, and the application, created through the UI; both are
@@ -42,8 +43,10 @@ import 'package:cl_club_app/src/utils/pdf_actions.dart'
     show debugPdfBytesHandler;
 import 'package:cl_club_forms/cl_club_forms.dart'
     show ApplicationCustomText, SignupGender, UserFormFields;
+import 'package:cl_club_members/src/widgets/background_card.dart';
 import 'package:cl_club_members/src/widgets/guardian_card.dart';
 import 'package:cl_club_members/src/widgets/personal_details_card.dart';
+import 'package:cl_club_members/src/widgets/sports_details_card.dart';
 import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_member_zone/src/widgets/sidebar/sidebar_item.dart'
     show SidebarItem;
@@ -82,6 +85,8 @@ const _kMemberPwd = 'WorkflowAppjourneyPwd!2024';
 const _kMemberEmail = 'workflow_appjourney_member@example.com';
 const _kMemberPhone = '7400534101';
 const _kGuardian = 'Appjourney Guardian';
+const _kPosition = 'workflow_appjourney_forward';
+const _kLanguage = 'workflow_appjourney Marathi';
 
 const _kTitle = 'workflow_appjourney Trial';
 const _kOrganisation = 'workflow_appjourney Skating Club';
@@ -93,15 +98,19 @@ const _kQuestion = 'Is your profile complete?';
 const Key _kYes = ValueKey('application.profileComplete.yes');
 const Key _kNo = ValueKey('application.profileComplete.no');
 
-/// The printed fields a member who signed up has blank: everything sign-up
-/// does not ask for (club_client#340).
-const _kBlankAfterSignup = [
-  'Address',
+/// The printed fields still blank once the member has filled in the cards
+/// a pending member may save: the address (club_client#340).
+const _kBlankAfterProfile = ['Address'];
+
+/// The printed fields the member fills in on the profile page, which the
+/// question then no longer lists.
+const _kFilledOnProfile = [
   'Nationality',
   'Preferred language',
   'Club / District',
   'Preferred position',
   'Past experience',
+  'Guardian',
 ];
 
 /// The printed fields sign-up fills, which the question never lists.
@@ -115,6 +124,9 @@ const _kFilledBySignup = [
 ];
 
 late Capabilities _caps;
+
+/// The club's profile options before the test, put back after it.
+ProfileOptions? _savedOptions;
 
 /// The bytes each run of the PDF action was handed, in order.
 final List<Uint8List> _pdfRuns = [];
@@ -252,7 +264,7 @@ Future<int> _publishApplicationViaUi(WidgetTester tester) async {
   );
   final templates = container(tester).read(clApplicationsMasterProvider);
   return templates.value!.values
-      .firstWhere((t) => t.content.title?.texts?['en'] == _kTitle)
+      .firstWhere((t) => t.content.title?.texts['en'] == _kTitle)
       .id;
 }
 
@@ -452,6 +464,27 @@ UserPrivate _me(WidgetTester tester) =>
 /// The Guardian card of the profile page.
 final Finder _guardianCard = find.byKey(GuardianCard.cardKey);
 
+/// The Sports details card of the profile page.
+final Finder _sportsCard = find.byKey(SportsDetailsCard.cardKey);
+
+/// The Background card of the profile page.
+final Finder _backgroundCard = find.byKey(BackgroundCard.cardKey);
+
+/// Sets [values] on the form of the editor open in [card], the outermost
+/// one inside it.
+Future<void> _setCardValues(
+  WidgetTester tester,
+  Finder card,
+  Map<String, Object?> values,
+) async {
+  tester
+      .state<ShadFormState>(
+        find.descendant(of: card, matching: find.byType(ShadForm)).first,
+      )
+      .setValue(values);
+  await tester.pump();
+}
+
 /// The card of [type] on the page.
 Finder _card(Type type) =>
     find.byElementPredicate((e) => e.widget.runtimeType == type);
@@ -556,6 +589,23 @@ void main() {
       username: _kSudoUsername,
       password: _kSudoPassword,
     );
+    if (!_caps.extendedProfile) return;
+    final admin = await _adminClient();
+    try {
+      final saved = await admin.users.getProfileOptions();
+      _savedOptions = saved;
+      await admin.users.setProfileOptions(
+        ProfileOptions(
+          positions: [
+            ...saved.positions,
+            const ProfilePosition(value: _kPosition, label: {'en': 'Forward'}),
+          ],
+          languages: [...saved.languages, _kLanguage],
+        ),
+      );
+    } finally {
+      await admin.auth.logout();
+    }
   });
 
   setUp(() {
@@ -572,7 +622,7 @@ void main() {
         // Only when the UI cleanup did not run to the end.
         final left = await admin.applications.listApplications(limit: 100);
         for (final t in left.items) {
-          if (t.content.title?.texts?['en'] != _kTitle) continue;
+          if (t.content.title?.texts['en'] != _kTitle) continue;
           if (t.status == ApplicationStatus.published) {
             await admin.applications.unpublishApplication(t.id);
           }
@@ -586,6 +636,8 @@ void main() {
         // ignore: avoid_print
         print('[test] $_kMember not deleted in tearDownAll: ${e.code}');
       }
+      final saved = _savedOptions;
+      if (saved != null) await admin.users.setProfileOptions(saved);
     } finally {
       await admin.auth.logout();
     }
@@ -630,7 +682,8 @@ void main() {
     expect(_me(tester).status, UserStatus.pending);
 
     // 3. Update profile opens the profile page, with every card, where the
-    // member fills in their guardian; back returns to the waiting page.
+    // member fills in their guardian, sports details and background; back
+    // returns to the waiting page.
     invokeShadButton(
       tester,
       find.widgetWithText(ShadButton, 'Update profile'),
@@ -654,6 +707,26 @@ void main() {
       () => _me(tester).guardian?.name == _kGuardian,
       description: 'the saved guardian to reach the session',
     );
+    await _editCard(tester, _sportsCard, UserFormFields.clubDistrictId);
+    await enterTextById(tester, UserFormFields.clubDistrictId, 'Pune');
+    await enterTextById(tester, UserFormFields.pastExperienceId, 'Two seasons');
+    await _setCardValues(tester, _sportsCard, {
+      UserFormFields.preferredPositionsId: _kPosition,
+    });
+    await _saveCard(tester, _sportsCard);
+    await _editCard(tester, _backgroundCard, UserFormFields.nationalityId);
+    await enterTextById(tester, UserFormFields.nationalityId, 'Indian');
+    await _setCardValues(tester, _backgroundCard, {
+      UserFormFields.preferredLanguagesId: _kLanguage,
+    });
+    await _saveCard(tester, _backgroundCard);
+    await waitFor(
+      tester,
+      () =>
+          _me(tester).preferredPositions.join() == _kPosition &&
+          _me(tester).preferredLanguages.join() == _kLanguage,
+      description: 'the saved position and language to reach the session',
+    );
     await _back(tester);
     await _waitForWaitingPage(tester, id);
 
@@ -661,14 +734,18 @@ void main() {
     // page and downloads nothing.
     await _pressDownload(tester, _row(id));
     await _waitForQuestion(tester);
-    for (final field in _kBlankAfterSignup) {
+    for (final field in _kBlankAfterProfile) {
       expect(
         find.text('• $field'),
         findsOneWidget,
         reason: 'Issue 340: "$field" is blank and listed',
       );
     }
-    for (final field in [..._kFilledBySignup, 'Guardian', 'Middle name']) {
+    for (final field in [
+      ..._kFilledBySignup,
+      ..._kFilledOnProfile,
+      'Middle name',
+    ]) {
       expect(
         find.text('• $field'),
         findsNothing,

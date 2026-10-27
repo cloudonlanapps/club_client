@@ -1,21 +1,21 @@
 # Member evaluations — design
 
-Status: **draft, sections 1 and 3 of 4** (2026-10-01). Each section is agreed
-before the next is written and before any code is built on it. This document
-is intermediate: once section 3 is agreed, club_server's
-`docs/evaluation_requirements.md` is rewritten to match it (3.9).
+Status: **implemented**. All four sections are built: the server API, the
+SDK models (club_sdk#98) and the `cl_club_evaluation` package. This document
+is kept as the design record; where the build differs from it, club_server's
+`docs/evaluation_requirements.md` and the code win.
 
 | # | Section | State |
 |---|---|---|
-| 1 | Glossary and data structure | agreed in discussion; written for review |
-| 2 | Models (client package and SDK) | done in the SDK (club_sdk#98); the client uses them directly |
-| 3 | Server changes and API | agreed in discussion; written for review |
-| 4 | Views and UI workflow | agreed in discussion; written for review |
+| 1 | Glossary and data structure | built |
+| 2 | Models (client package and SDK) | built in the SDK (club_sdk#98); the client uses them directly |
+| 3 | Server changes and API | built |
+| 4 | Views and UI workflow | built in `cl_club_evaluation` |
 
 Sources: club_server `docs/evaluation_requirements.md` (rules cited as R-n),
 `club_server/db/models/evaluation*.py`, `club_server/schemas/evaluation*.py`,
 and the SDK `club_sdk_2` (`lib/sdk/interfaces/evaluation.dart`). The client
-package is **`cl_club_evaluation`**, inside club_core.
+package is **`cl_club_evaluation`**, in this repo.
 
 ---
 

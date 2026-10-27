@@ -174,8 +174,8 @@ Rules, declarations, header items, selections and closing notes come from a
 library: the built-in clauses that ship with the server (prototype:
 `clauses.json`), each a sentence written in English, Marathi and Hindi with
 gaps for facts, and the club's own library texts (#389), which an admin
-adds, edits and deletes in the **Library** section of Club Management ›
-Applications: a kind (header, selection, declaration, rule, note), a short
+adds, edits and deletes in the **Library** card of Club details, after
+Profile options (#399): a kind (header, selection, declaration, rule, note), a short
 name, its text in each language with gaps allowed, and a heading for a
 rule. `GET /v1/applications/clauses` lists both, each with its `source`
 (`builtin` with its `key`, `club` with its `id`).

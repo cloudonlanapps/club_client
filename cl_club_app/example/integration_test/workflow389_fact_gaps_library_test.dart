@@ -2,7 +2,8 @@
 // (club_client#389, club_server#126).
 //
 // With applications on: the admin adds a selection to the club's Library on
-// *Applications*, with a gap naming a fact the draft lacks; opens a draft
+// *Club details* (club_client#399), with a gap naming a fact the draft
+// lacks; opens, under *Applications*, a draft
 // that already uses one date-range fact in its declaration and has a
 // second; inserts the club text into the selections, as written, gaps
 // included; sees the heading card list the gap naming no fact and
@@ -61,6 +62,9 @@ const _kText =
 const _kVenue = 'workflow389 Rink';
 
 const _kApplications = 'Applications';
+
+/// The sidebar entry of Club details, where the Library card is.
+const _kClubDetails = 'Club details';
 
 late Capabilities _caps;
 
@@ -225,7 +229,7 @@ void main() {
     await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
     await ensureLoggedOut(tester);
 
-    // 1. The admin adds a selection to the club's Library.
+    // 1. The admin adds a selection to the club's Library, on Club details.
     await loginViaUi(tester, _kSudoUsername, _kSudoPassword);
     await waitFor(
       tester,
@@ -237,7 +241,7 @@ void main() {
           find.byTooltip('Open menu').evaluate().isNotEmpty,
       description: 'the Applications sidebar entry',
     );
-    await openSidebarEntry(tester, _kApplications, last: true);
+    await openSidebarEntry(tester, _kClubDetails);
     final library = find.byKey(const ValueKey('application.library'));
     final add = find.descendant(
       of: library,
@@ -293,7 +297,9 @@ void main() {
     );
     final textId = _libraryTextId(tester);
 
-    // 2. It opens the draft and pastes the club text into the selections.
+    // 2. It opens the draft under Applications and pastes the club text
+    // into the selections.
+    await openSidebarEntry(tester, _kApplications, last: true);
     final row = find.byKey(ValueKey('application.row.$_templateId'));
     await waitFor(
       tester,
@@ -418,11 +424,12 @@ void main() {
       () => row.evaluate().isEmpty && find.text(_kTitle).evaluate().isEmpty,
       description: 'the deleted draft to leave the list',
     );
+    await openSidebarEntry(tester, _kClubDetails);
     final card = find.byKey(ValueKey('application.library.$textId'));
     await waitFor(
       tester,
       () => card.evaluate().isNotEmpty,
-      description: 'the library text on the Applications page',
+      description: 'the library text on Club details',
     );
     invokeShadButton(
       tester,

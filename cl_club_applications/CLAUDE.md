@@ -23,6 +23,7 @@ Everything is capability-aware: each view and widget renders nothing unless
 | `applications` (Club Management, admin) | `ApplicationsView` | `currentUser`, `onOpen(int id)` |
 | `applications/:id` (admin) | `ApplicationView` | `currentUser`, `applicationId`, `onBack`, `onDeleted`, `pdfAction` |
 | profile (injected by the router) | `ProfileApplicationsSection` | `member`, `own`, `pdfAction` |
+| Club details (injected by `ClubIdentityScreen`) | `ApplicationLibrarySection` | — |
 | onboarding's waiting page (injected) | `PublishedApplicationsList` | `currentUser`, `pdfAction`, `onOpenProfile` |
 
 Screens are `MyApplicationsScreen`, `ApplicationsScreen` and
@@ -73,8 +74,12 @@ forms' ids for a schema refusal.
   (club_client#389). A fact prints wherever its `{name}` stands; the (?) on
   the Facts heading (`ApplicationFactsHelp`) says so, with one example per
   type.
-- The club's library texts are managed in the **Library** section of
-  `ApplicationsView`, below the templates (`ApplicationLibrarySection`):
+- The club's library texts are managed in the **Library** card
+  (`ApplicationLibrarySection`, exported) on Club details, after Profile
+  options (club_client#399): `ClubIdentityScreen` (cl_member_zone) passes
+  it to `ClubIdentityView` as `librarySection`, so cl_club_admin does not
+  depend on this package. It renders nothing unless `applicationsProvider`
+  is `true`; the Applications page lists templates only.
   Add text opens `ApplicationLibraryTextForm` in a dialog; each text's card
   edits it in place and deletes it after asking. The adapter is
   `ApplicationLibraryTextFormSubmit`. The texts appear in each section's

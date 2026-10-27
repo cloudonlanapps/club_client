@@ -30,7 +30,12 @@ import '../widgets/profile_options_card.dart';
 /// While the extended profile is on, a Profile options section follows:
 /// the positions and languages members choose from (club_client#320).
 class ClubIdentityView extends ConsumerStatefulWidget {
-  const ClubIdentityView({required this.currentUser, this.onBack, super.key});
+  const ClubIdentityView({
+    required this.currentUser,
+    this.onBack,
+    this.librarySection,
+    super.key,
+  });
 
   /// Key of the scrolling list of section cards, for tests and the
   /// integration suite.
@@ -47,6 +52,11 @@ class ClubIdentityView extends ConsumerStatefulWidget {
 
   /// Leaves the screen; null shows no back affordance.
   final VoidCallback? onBack;
+
+  /// The applications' Library card, shown after Profile options; passed
+  /// in by the screen, so this package does not depend on the applications
+  /// package.
+  final Widget? librarySection;
 
   @override
   ConsumerState<ClubIdentityView> createState() => ClubIdentityViewState();
@@ -115,6 +125,7 @@ class ClubIdentityViewState extends ConsumerState<ClubIdentityView> {
                         options: profileOptions,
                         canEdit: widget.currentUser.isSuperAdmin,
                       ),
+                    ?widget.librarySection,
                   ],
                 ),
               );

@@ -71,6 +71,15 @@ void main() {
       );
     });
 
+    testWidgets('Issue 399: lists the templates only, with no Library', (
+      tester,
+    ) async {
+      await _pump(tester, master: FakeApplicationsMaster(_all()));
+      expect(find.text('Season 2026'), findsOneWidget);
+      expect(find.byKey(const ValueKey('application.library')), findsNothing);
+      expect(find.text('Add text'), findsNothing);
+    });
+
     testWidgets('Issue 321: Duplicate copies the template and opens the copy', (
       tester,
     ) async {

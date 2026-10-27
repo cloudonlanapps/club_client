@@ -28,15 +28,49 @@ class _StubClubIdentity extends ClClubIdentityMasterNotifier {
   Future<ClubIdentity> build() async => const ClubIdentity(name: 'Stub Club');
 }
 
-Widget _wrap(UserPrivate user) => ProviderScope(
+class _StubProfileOptions extends ProfileOptionsNotifier {
+  @override
+  Future<ProfileOptions> build() async =>
+      const ProfileOptions(positions: [], languages: ['English']);
+}
+
+class _StubLibrary extends ClApplicationLibraryMasterNotifier {
+  @override
+  Future<Map<int, ApplicationLibraryText>> build() async => const {};
+}
+
+/// The screen for [user]; with [applications] and [extendedProfile] given,
+/// the server's capabilities say so and the Profile options and the
+/// Library read stubs.
+Widget _wrap(
+  UserPrivate user, {
+  bool? applications,
+  bool extendedProfile = false,
+}) => ProviderScope(
   overrides: [
     authStateProvider.overrideWith(() => _StubAuth(user)),
     clClubIdentityMasterProvider.overrideWith(_StubClubIdentity.new),
+    if (applications != null) ...[
+      capabilitiesProvider.overrideWith(
+        (ref) async => Capabilities(
+          applications: applications,
+          extendedProfile: extendedProfile,
+        ),
+      ),
+      profileOptionsProvider.overrideWith(_StubProfileOptions.new),
+      clApplicationLibraryMasterProvider.overrideWith(_StubLibrary.new),
+      applicationLabelsProvider.overrideWith(
+        (ref) async => emptyApplicationLabels,
+      ),
+    ],
   ],
   child: ShadApp(
     home: Scaffold(body: ClubIdentityScreen(onHome: () {})),
   ),
 );
+
+const Key _library = ValueKey('application.library');
+const Key _profileOptions = ValueKey('clubIdentity.section.profileOptions');
 
 void main() {
   group('Issue 20: ClubIdentityScreen gating', () {
@@ -59,6 +93,53 @@ void main() {
       expect(find.text('Access Denied'), findsNothing);
       expect(find.text('Club details'), findsOneWidget);
       expect(find.text('Stub Club'), findsOneWidget);
+    });
+  });
+
+  group('Issue 399: the Library card on Club details', () {
+    testWidgets('Issue 399: shows after Profile options while applications '
+        'are on', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1100, 4000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        _wrap(
+          _user(superAdmin: true),
+          applications: true,
+          extendedProfile: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(_profileOptions), findsOneWidget);
+      expect(find.byKey(_library), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byKey(_library)).dy,
+        greaterThan(tester.getBottomLeft(find.byKey(_profileOptions)).dy),
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(_library),
+          matching: find.widgetWithText(ShadButton, 'Add text'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Issue 399: shows nothing while applications are off', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1100, 4000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        _wrap(
+          _user(superAdmin: true),
+          applications: false,
+          extendedProfile: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(_profileOptions), findsOneWidget);
+      expect(find.byKey(_library), findsNothing);
+      expect(find.text('Add text'), findsNothing);
     });
   });
 }

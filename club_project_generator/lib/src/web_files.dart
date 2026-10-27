@@ -43,7 +43,7 @@ const indexScript = 'index.js';
 /// - Styles allow `'unsafe-inline'`: Flutter web sets inline styles on the
 ///   elements it draws with, and the splash's style is inline.
 /// - A venue's map is an embedded Google Maps frame.
-/// - `blob:` and `data:` cover pictures, video and PDFs the app opens from
+/// - `blob:` and `data:` cover pictures and video the app opens from
 ///   memory.
 ///
 /// A meta tag cannot set `frame-ancestors` or reporting; those are the host's.

@@ -471,7 +471,7 @@ own isolated server.
 **Module-specific test guides:**
 - SDK (`club_sdk_2`) integration tests: `CLAUDE.md` in `cloudonlanapps/club_sdk` (the workspace's `packages/club_sdk`) — `just test` / `just test-one <file>`, self-contained-fixture rules, delete-lifecycle testing.
 - Website integration tests: [`cl_club_website/CLAUDE.md`](cl_club_website/CLAUDE.md#integration-suite) — the suite lives in `cl_club_website/example/integration_test/` and runs the site as a visitor sees it, with no session, on the Linux desktop once per server conf; the rules are the member app's suite's.
-- UI integration tests: [`cl_club_app/example/CLAUDE.md`](cl_club_app/example/CLAUDE.md) — the suite lives in `cl_club_app/example/integration_test/` and runs on the Linux desktop once per server conf (`app_test_server1.conf` with the optional modules off and a default country code, `app_test_server2.conf` with the modules on and no default country code); expectations come from `/v1/capabilities`, never from the club; naming/cleanup rules, off-screen-widget pitfalls, provider-read patterns.
+- UI integration tests: [`cl_club_app/example/CLAUDE.md`](cl_club_app/example/CLAUDE.md) — the suite lives in `cl_club_app/example/integration_test/` and runs on the Linux desktop once per server conf (`app_test_server1.conf` with credits, evaluations and marketing off, identity verification, the extended profile and applications on, and a default country code; `app_test_server2.conf` the other way round, with no default country code); expectations come from `/v1/capabilities`, never from the club; naming/cleanup rules, off-screen-widget pitfalls, provider-read patterns.
 
 ## Form Design Guidelines
 

@@ -75,14 +75,14 @@ does not copy `android/` into a club's app yet (#280).
 
 At the club_core root, one per real deployment shape, named without the club:
 
-| Conf | Credits, evaluations, event marketing | Identity verification | Default country code |
+| Conf | Credits, evaluations, event marketing | Identity verification, extended profile, applications | Default country code |
 |---|---|---|---|
 | `app_test_server1.conf` | off | on | `44` |
 | `app_test_server2.conf` | on | off | unset (the apps fall back to `91`) |
 
-Both turn on the extended profile and applications. Applications need identity
-verification, so they are reported on with `app_test_server1.conf` only; with
-`app_test_server2.conf` the server reports them off (#321).
+A test of the extended profile or applications runs on `app_test_server1.conf`
+and skips itself on `app_test_server2.conf` (#349). club_sdk's and club_cli's
+test stacks follow the same split.
 
 Between them the two confs cover both settings of every optional module, and a
 server that reports a default country code and one that reports none (#31);

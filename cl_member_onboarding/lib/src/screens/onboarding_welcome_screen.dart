@@ -27,7 +27,7 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
   const OnboardingWelcomeScreen({
     required this.onContinue,
     required this.onHome,
-    this.onAddProfileDetails,
+    this.onUpdateProfile,
     this.applications,
     super.key,
   });
@@ -35,10 +35,10 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
   final VoidCallback onContinue;
   final VoidCallback onHome;
 
-  /// Opens the optional extended-profile step from the waiting page
-  /// (club_client#320). Offered only while the server reports the extended
-  /// profile on; null offers it never.
-  final VoidCallback? onAddProfileDetails;
+  /// Opens the member's profile page from the waiting page
+  /// (club_client#340), whatever the server's capabilities say; null offers
+  /// it never.
+  final VoidCallback? onUpdateProfile;
 
   /// Builds the waiting page's list of the published applications for the
   /// signed-in member (club_client#321). Shown only while the server offers
@@ -75,9 +75,7 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
       onContinue: onContinue,
       onSubmitForReview: () => unawaited(_submitForReview(context, ref)),
       identityVerification: caps.valueOrNull?.identityVerification ?? true,
-      onAddProfileDetails: caps.valueOrNull?.extendedProfile == true
-          ? onAddProfileDetails
-          : null,
+      onUpdateProfile: onUpdateProfile,
       // The list is the waiting page's, so it is built for it alone.
       applications:
           user.status == UserStatus.pending &&

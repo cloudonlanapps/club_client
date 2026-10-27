@@ -9,12 +9,20 @@ import '../constants/application_view_sizes.dart';
 import '../constants/application_view_strings.dart';
 import '../models/application_download.dart';
 import '../utils/application_download_refusal.dart';
+import 'profile_complete_dialog.dart';
 
 /// Fetches one application PDF — a member's form or an admin's preview
 /// ([download]) — and hands its bytes to [pdfAction] as [fileName]: the
 /// app's share, download or viewer, whichever works on the platform
 /// (club_client#324). The button shows the action's icon and, unless
 /// [label] names it otherwise, its label.
+///
+/// A member's own form prints from their profile, so before it is fetched
+/// the button asks "Is your profile complete?" (club_client#340): **Yes**
+/// downloads; **No** calls [onOpenProfile], or only closes the dialog when
+/// that is null (the button is on the member's profile page already). A
+/// member's form fetched by an admin, and an admin's preview, are not the
+/// viewer's own form and download without asking.
 ///
 /// While it downloads the button is off and shows a spinner. A refusal
 /// about the member or the application (not eligible, no identity
@@ -26,6 +34,7 @@ class ApplicationDownloadButton extends ConsumerStatefulWidget {
     required this.pdfAction,
     required this.fileName,
     this.label,
+    this.onOpenProfile,
     super.key,
   });
 
@@ -41,6 +50,14 @@ class ApplicationDownloadButton extends ConsumerStatefulWidget {
   /// The button's text; the action's label when null.
   final String? label;
 
+  /// Opens the member's profile page when they answer **No** to "Is your
+  /// profile complete?"; null only closes the dialog.
+  final VoidCallback? onOpenProfile;
+
+  /// Whether the button asks "Is your profile complete?" first: for the
+  /// signed-in member's own form only.
+  bool get asksProfileComplete => download is ApplicationOwnForm;
+
   @override
   ConsumerState<ApplicationDownloadButton> createState() =>
       ApplicationDownloadButtonState();
@@ -55,6 +72,19 @@ class ApplicationDownloadButtonState
 
   /// What the server refused, shown under the button; null for nothing.
   String? refusal;
+
+  /// Asks "Is your profile complete?" when the form is the member's own,
+  /// then fetches the PDF and hands it to the action on **Yes**.
+  Future<void> onPressed() async {
+    if (downloading) return;
+    if (widget.asksProfileComplete) {
+      final complete = await showProfileCompleteDialog(context);
+      if (!mounted) return;
+      if (complete == false) widget.onOpenProfile?.call();
+      if (complete != true) return;
+    }
+    await run();
+  }
 
   /// Fetches the PDF and hands it to the action.
   Future<void> run() async {
@@ -96,7 +126,7 @@ class ApplicationDownloadButtonState
         ShadButton.outline(
           size: ShadButtonSize.sm,
           enabled: !downloading,
-          onPressed: run,
+          onPressed: onPressed,
           leading: downloading
               ? const SizedBox.square(
                   dimension: ApplicationViewSizes.spinner,

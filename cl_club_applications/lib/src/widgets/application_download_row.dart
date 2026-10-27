@@ -14,6 +14,7 @@ class ApplicationDownloadRow extends StatelessWidget {
     required this.title,
     required this.download,
     required this.pdfAction,
+    this.onOpenProfile,
     super.key,
   });
 
@@ -25,6 +26,10 @@ class ApplicationDownloadRow extends StatelessWidget {
 
   /// What the fetched PDF is handed to.
   final PdfAction pdfAction;
+
+  /// Opens the member's profile page when they answer **No** to "Is your
+  /// profile complete?" (club_client#340); null only closes the dialog.
+  final VoidCallback? onOpenProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +45,7 @@ class ApplicationDownloadRow extends StatelessWidget {
             download: download,
             pdfAction: pdfAction,
             fileName: PdfAction.fileNameFor(title),
+            onOpenProfile: onOpenProfile,
           ),
         ],
       ),

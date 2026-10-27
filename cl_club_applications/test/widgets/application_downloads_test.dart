@@ -13,6 +13,7 @@ import 'package:ui_lib/ui_lib.dart' show PdfAction;
 import '../support/application_samples.dart';
 import '../support/applications_harness.dart';
 import '../support/pdf_action.dart';
+import '../support/profile_complete.dart';
 
 Map<int, ApplicationTemplate> _published() => {
   4: ApplicationSamples.template(id: 4, status: ApplicationStatus.published),
@@ -34,7 +35,7 @@ void main() {
         master: master,
       );
       await tester.tap(find.text(testPdfActionLabel));
-      await tester.pumpAndSettle();
+      await answerProfileComplete(tester);
       expect(master.calls, ['own 4']);
       expect(opened.single, [37, 80, 68, 70]);
     });
@@ -59,7 +60,7 @@ void main() {
       expect(find.byIcon(LucideIcons.share2), findsOneWidget);
       expect(find.byIcon(LucideIcons.download), findsNothing);
       await tester.tap(find.text('Share'));
-      await tester.pumpAndSettle();
+      await answerProfileComplete(tester);
       expect(handed.single.$1, [37, 80, 68, 70]);
       expect(handed.single.$2, 'Membership form.pdf');
     });
@@ -81,7 +82,7 @@ void main() {
         master: FakeApplicationsMaster(_published()),
       );
       await tester.tap(find.text('Share'));
-      await tester.pumpAndSettle();
+      await answerProfileComplete(tester);
       expect(find.text(ApplicationViewStrings.downloadFailed), findsOneWidget);
       expect(find.textContaining('raw platform words'), findsNothing);
     });
@@ -100,7 +101,7 @@ void main() {
         master: FakeApplicationsMaster(_published()),
       );
       await tester.tap(find.text(testPdfActionLabel));
-      await tester.pumpAndSettle();
+      await answerProfileComplete(tester);
       expect(names, ['Membership form.pdf']);
     });
 
@@ -123,7 +124,7 @@ void main() {
         master: master,
       );
       await tester.tap(find.text(testPdfActionLabel));
-      await tester.pumpAndSettle();
+      await answerProfileComplete(tester);
       expect(find.text(ApplicationViewStrings.notEligible), findsOneWidget);
       expect(find.textContaining('raw server words'), findsNothing);
       expect(opened, isEmpty);
@@ -148,7 +149,7 @@ void main() {
         master: master,
       );
       await tester.tap(find.text(testPdfActionLabel));
-      await tester.pumpAndSettle();
+      await answerProfileComplete(tester);
       expect(find.text(ApplicationViewStrings.downloadFailed), findsOneWidget);
       expect(find.textContaining('raw server words'), findsNothing);
     });
@@ -170,7 +171,7 @@ void main() {
       );
       expect(find.text('Trial'), findsOneWidget, reason: 'published only');
       await tester.tap(find.text(testPdfActionLabel));
-      await tester.pumpAndSettle();
+      await answerProfileComplete(tester);
       expect(master.calls, ['own 4']);
     });
 

@@ -8,6 +8,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../support/application_samples.dart';
 import '../support/applications_harness.dart';
 import '../support/pdf_action.dart';
+import '../support/profile_complete.dart';
 
 Map<int, ApplicationTemplate> _all() => {
   1: ApplicationSamples.template(id: 1),
@@ -42,6 +43,7 @@ Future<void> _pump(
     currentUser: applicationsUser(admin: admin),
     onOpen: onOpen ?? (_) {},
     pdfAction: recordingPdfAction(),
+    onOpenProfile: () {},
   ),
   master: master,
   enabled: enabled,
@@ -61,7 +63,7 @@ void main() {
       expect(find.text(ApplicationViewStrings.create), findsNothing);
 
       await tester.tap(find.text(testPdfActionLabel));
-      await tester.pumpAndSettle();
+      await answerProfileComplete(tester);
       expect(master.calls, ['own 2']);
     });
 

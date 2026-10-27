@@ -208,4 +208,44 @@ void main() {
       });
     }
   });
+
+  group('Issue 340: the waiting page offers Update profile', () {
+    testWidgets('Issue 340: a pending member sees Update profile, and it '
+        'calls back', (tester) async {
+      var opened = 0;
+      await tester.pumpWidget(
+        _wrap(
+          OnboardingWelcomeView(
+            currentUser: _user(status: UserStatus.pending),
+            onContinue: () {},
+            onSubmitForReview: () {},
+            identityVerification: true,
+            onUpdateProfile: () => opened++,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(ShadButton, 'Update profile'));
+      expect(opened, 1);
+      expect(find.text('Add profile details'), findsNothing);
+    });
+
+    testWidgets('Issue 340: a registered member does not', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          OnboardingWelcomeView(
+            currentUser: _user(status: UserStatus.registered),
+            onContinue: () {},
+            onSubmitForReview: () {},
+            identityVerification: true,
+            onUpdateProfile: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Update profile'), findsNothing);
+    });
+  });
 }

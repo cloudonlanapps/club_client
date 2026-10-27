@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show isMobileWidth;
 
-import '../models/onboarding_extended_profile_strings.dart';
+import '../models/onboarding_profile_strings.dart';
 
 /// The waiting page: the application is submitted and under review.
 class SubmittedConfirmation extends StatelessWidget {
   const SubmittedConfirmation({
     required this.onBack,
-    this.onAddDetails,
+    this.onUpdateProfile,
     this.applications,
     super.key,
   });
@@ -16,9 +16,9 @@ class SubmittedConfirmation extends StatelessWidget {
   /// Signs out.
   final VoidCallback onBack;
 
-  /// Opens the optional extended-profile step (club_client#320); null shows
-  /// no button for it.
-  final VoidCallback? onAddDetails;
+  /// Opens the member's profile page (club_client#340); null shows no
+  /// button for it.
+  final VoidCallback? onUpdateProfile;
 
   /// The published applications to download, with what to do with the
   /// form (club_client#321); null shows none.
@@ -63,12 +63,10 @@ class SubmittedConfirmation extends StatelessWidget {
                   applications,
                   const SizedBox(height: 24),
                 ],
-                if (onAddDetails case final onAddDetails?) ...[
+                if (onUpdateProfile case final onUpdateProfile?) ...[
                   ShadButton.outline(
-                    onPressed: onAddDetails,
-                    child: const Text(
-                      OnboardingExtendedProfileStrings.addDetails,
-                    ),
+                    onPressed: onUpdateProfile,
+                    child: const Text(OnboardingProfileStrings.updateProfile),
                   ),
                   const SizedBox(height: 12),
                 ],

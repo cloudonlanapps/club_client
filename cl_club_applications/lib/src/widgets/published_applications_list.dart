@@ -20,12 +20,15 @@ import 'application_download_row.dart';
 /// passport-size photograph, sign it and hand it in (club_client#321).
 ///
 /// The member's Applications page and onboarding's waiting page show it.
+/// Download first asks whether the member's profile is complete; **No**
+/// calls [onOpenProfile] (club_client#340).
 /// Without an identity document the server offers none, and the list says
 /// so. Renders nothing unless the server offers applications.
 class PublishedApplicationsList extends ConsumerWidget {
   const PublishedApplicationsList({
     required this.currentUser,
     required this.pdfAction,
+    required this.onOpenProfile,
     super.key,
   });
 
@@ -34,6 +37,10 @@ class PublishedApplicationsList extends ConsumerWidget {
 
   /// What a downloaded form is handed to: shared, saved or opened.
   final PdfAction pdfAction;
+
+  /// Opens the member's profile page, for a member who says their profile
+  /// is not complete.
+  final VoidCallback onOpenProfile;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -73,6 +80,7 @@ class PublishedApplicationsList extends ConsumerWidget {
             title: applicationTitle(template),
             download: ApplicationOwnForm(template.id),
             pdfAction: pdfAction,
+            onOpenProfile: onOpenProfile,
           ),
       ],
     );

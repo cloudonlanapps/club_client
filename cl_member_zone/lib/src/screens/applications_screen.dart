@@ -12,6 +12,7 @@ class ApplicationsScreen extends StatelessWidget {
   const ApplicationsScreen({
     required this.onOpen,
     required this.pdfAction,
+    required this.onOpenProfile,
     required this.onHome,
     super.key,
   });
@@ -21,6 +22,10 @@ class ApplicationsScreen extends StatelessWidget {
 
   /// What a downloaded form is handed to: shared, saved or opened.
   final PdfAction pdfAction;
+
+  /// Opens the member's own profile, for a member who says their profile is
+  /// not complete before a download (club_client#340).
+  final VoidCallback onOpenProfile;
 
   /// Leaves a refused route for home.
   final VoidCallback onHome;
@@ -33,6 +38,7 @@ class ApplicationsScreen extends StatelessWidget {
       currentUser: user,
       onOpen: onOpen,
       pdfAction: pdfAction,
+      onOpenProfile: onOpenProfile,
     ),
   );
 }

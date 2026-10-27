@@ -133,6 +133,21 @@ abstract final class ApplicationViewStrings {
   /// A download refused: no longer published.
   static const String notPublished = 'This application is no longer published.';
 
+  /// The question before a member downloads their own form
+  /// (club_client#340).
+  static const String profileCompleteTitle = 'Is your profile complete?';
+
+  /// Why the question is asked.
+  static const String profileCompleteMessage =
+      'Your form is printed from your profile. Check that your details are '
+      'complete and up to date before you download it.';
+
+  /// The answer that downloads the form.
+  static const String profileCompleteYes = 'Yes';
+
+  /// The answer that does not download it.
+  static const String profileCompleteNo = 'No';
+
   /// A download failed for another reason.
   static const String downloadFailed =
       'Could not download the form. Please try again.';

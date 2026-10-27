@@ -15,10 +15,12 @@ import 'application_download_row.dart';
 /// The Applications section of a member's profile (club_client#321): each
 /// published application with a button to download [member]'s form of it.
 ///
-/// On one's own profile ([own]) it downloads the signed-in member's form;
-/// an admin on another member's profile downloads that member's. The host
-/// shows it to no one else. Renders nothing unless the server offers
-/// applications.
+/// On one's own profile ([own]) it downloads the signed-in member's form,
+/// after asking whether their profile is complete; **No** only closes the
+/// question, since the member is on their profile already
+/// (club_client#340). An admin on another member's profile downloads that
+/// member's form without asking. The host shows it to no one else.
+/// Renders nothing unless the server offers applications.
 class ProfileApplicationsSection extends ConsumerWidget {
   const ProfileApplicationsSection({
     required this.member,

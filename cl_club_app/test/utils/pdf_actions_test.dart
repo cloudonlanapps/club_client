@@ -3,6 +3,7 @@ import 'package:cl_club_app/src/utils/share_outcome.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 final Uint8List _pdf = Uint8List.fromList([37, 80, 68, 70]);
 
@@ -159,5 +160,42 @@ void main() {
       await runKind(PdfActionKind.open);
       expect(calls, ['open Trial.pdf']);
     });
+  });
+
+  group('Issue 341: the test stand-in for the platform', () {
+    tearDown(() => debugPdfBytesHandler = null);
+
+    PdfAction action(List<String> calls) => withDebugPdfBytesHandler(
+      pdfActionOf(
+        PdfActionKind.open,
+        share: (_, _) async => ShareOutcome.shared,
+        download: (_, _) async {},
+        open: (bytes, fileName) async => calls.add('open $fileName'),
+      ),
+    );
+
+    test('Issue 341: without a stand-in the platform’s action runs', () async {
+      final calls = <String>[];
+      final wrapped = action(calls);
+      expect(wrapped.label, PdfActionStrings.download);
+      expect(wrapped.icon, LucideIcons.download);
+      await wrapped.run(_pdf, 'Trial.pdf');
+      expect(calls, ['open Trial.pdf']);
+    });
+
+    test(
+      'Issue 341: a stand-in takes the bytes in place of the platform',
+      () async {
+        final calls = <String>[];
+        final taken = <Uint8List>[];
+        debugPdfBytesHandler = (bytes, fileName) async {
+          taken.add(bytes);
+          calls.add('stand-in $fileName');
+        };
+        await action(calls).run(_pdf, 'Trial.pdf');
+        expect(calls, ['stand-in Trial.pdf']);
+        expect(taken.single, _pdf);
+      },
+    );
   });
 }

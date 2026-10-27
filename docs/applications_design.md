@@ -318,6 +318,14 @@ from that member's profile (Applications section). A draft's preview is measured
 or published template's uses its stored layout, so it is exactly what members
 will get.
 
+**Blank form** (club_client#393, club_server#129). An admin can download a
+saved or published template printed blank, to print and hand out to
+applicants who cannot reach the app: no member's details and no watermark;
+a published one carries "Form <publishId>". A draft has none (422
+`APPLICATION_NOT_SAVED`). The editor shows **Download blank form** beside
+Preview, greyed out with "Save the application first" on a draft; the PDF
+goes to the app's `PdfAction` as "<title> - blank form.pdf".
+
 ### 2.5 API (server)
 
 | method | path | who |
@@ -329,6 +337,7 @@ will get.
 | DELETE | `/v1/applications/{id}` | admin, draft or saved only |
 | POST | `/v1/applications/{id}/save` · `/publish` · `/unpublish` · `/revert` | admin, the moves of §2.1.1 |
 | GET | `/v1/applications/{id}/preview` | admin, any state: the sample member's form |
+| GET | `/v1/applications/{id}/blank-form` | admin, saved or published: the form printed blank |
 | GET | `/v1/applications/labels` | admin: the label catalogue, to pre-fill the editor |
 | GET | `/v1/applications/clauses` | admin: the built-in clauses and the club's library texts, for the editor's lists |
 | GET / POST | `/v1/applications/library` | admin: the club's library texts; add one |
@@ -402,10 +411,11 @@ disabled.
   `applicationLabelsProvider`; `capabilitiesProvider` gains the two flags.
 - `cl_club_applications` (new): `ApplicationsView` (member list with
   Download; admin list with each state and Create), `ApplicationView`
-  (admin editor, in sections, with Preview and the state actions),
+  (admin editor, in sections, with Preview, Download blank form and the
+  state actions),
   `ApplicationDownloadButton` (hands the PDF to the app's `PdfAction`:
   share, download or open by platform, club_client#324; also fetches a
-  preview).
+  preview and a blank form).
 - `cl_member_zone`: `ApplicationsScreen`, `ApplicationScreen`;
   `SidebarDestination.applications`; routes `/memberzone/applications` and
   `/memberzone/applications/:id`.

@@ -3,7 +3,8 @@ import 'package:cl_remote_store/cl_remote_store.dart'
 import 'package:flutter/foundation.dart';
 
 /// Which PDF of an application a download button fetches: the signed-in
-/// member's own form, a member's form for an admin, or an admin's preview.
+/// member's own form, a member's form for an admin, or an admin's preview
+/// or blank form.
 @immutable
 sealed class ApplicationDownload {
   const ApplicationDownload(this.applicationId);
@@ -58,4 +59,17 @@ final class ApplicationPreview extends ApplicationDownload {
     ClApplicationsMasterNotifier notifier, {
     int? category,
   }) => notifier.downloadPreview(applicationId);
+}
+
+/// A saved or published application printed blank, to fill by hand: no
+/// member's details and no watermark, for an admin (club_client#393). It
+/// names no member, so [fetch] takes no category.
+final class ApplicationBlankForm extends ApplicationDownload {
+  const ApplicationBlankForm(super.applicationId);
+
+  @override
+  Future<Uint8List> fetch(
+    ClApplicationsMasterNotifier notifier, {
+    int? category,
+  }) => notifier.downloadBlankForm(applicationId);
 }

@@ -79,3 +79,11 @@ forms' ids for a schema refusal.
   downloads, No calls the host's `onOpenProfile`, or only closes the
   dialog where there is none (the profile section, already on the profile).
   An admin's preview and a member's form fetched by an admin do not ask.
+- The editor's State card shows **Download blank form** beside Preview
+  (club_client#393): the template printed blank, no member and no
+  watermark (`ApplicationBlankForm`, `downloadBlankForm`). It is greyed
+  out with "Save the application first" on a draft (the button's
+  `reason`) and on for a saved or published template; the PDF goes to the
+  `PdfAction` as "<title> - blank form.pdf". A refusal
+  (`APPLICATION_NOT_SAVED`, a template reverted meanwhile) shows under the
+  button.

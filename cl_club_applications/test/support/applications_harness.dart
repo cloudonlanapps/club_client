@@ -102,6 +102,9 @@ class FakeApplicationsMaster extends ClApplicationsMasterNotifier {
   @override
   Future<Uint8List> downloadPreview(int id) => _pdf('preview $id');
 
+  @override
+  Future<Uint8List> downloadBlankForm(int id) => _pdf('blank $id');
+
   Future<Uint8List> _form(String call, int? category) async {
     final several = fitting;
     if (category == null && several != null && several.length > 1) {

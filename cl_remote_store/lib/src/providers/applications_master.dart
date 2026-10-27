@@ -105,6 +105,12 @@ class ClApplicationsMasterNotifier
   Future<Uint8List> downloadPreview(int id) =>
       readPdf((source) => source.downloadPreview(id));
 
+  /// Saved or published template [id] printed blank, to fill by hand: no
+  /// member's details and no watermark (club_client#393). Admin only. A
+  /// draft is 422 `APPLICATION_NOT_SAVED`.
+  Future<Uint8List> downloadBlankForm(int id) =>
+      readPdf((source) => source.downloadBlankForm(id));
+
   /// The signed-in member's own form of published template [id]. A member
   /// no age category matches is 422 `APPLICATION_NOT_ELIGIBLE`; [category]
   /// is the index of the age category to tick, needed when the member fits

@@ -39,6 +39,16 @@ abstract final class ApplicationViewStrings {
   /// The preview button.
   static const String preview = 'Preview';
 
+  /// The editor's button for the form printed blank (club_client#393).
+  static const String blankForm = 'Download blank form';
+
+  /// Why [blankForm] is greyed out on a draft.
+  static const String blankFormNeedsSave = 'Save the application first';
+
+  /// The name the blank form of application [title] is saved under,
+  /// before its extension.
+  static String blankFormFileTitle(String title) => '$title - blank form';
+
   /// The create button and dialog title.
   static const String create = 'Create application';
 
@@ -175,6 +185,10 @@ abstract final class ApplicationViewStrings {
 
   /// A download refused: no longer published.
   static const String notPublished = 'This application is no longer published.';
+
+  /// The blank form of a template that is a draft again (club_client#393).
+  static const String notSaved =
+      'This application is a draft again: save it first.';
 
   /// The question before a member downloads their own form
   /// (club_client#340).

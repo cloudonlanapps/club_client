@@ -140,6 +140,9 @@ class _FakeApplications extends Fake implements ApplicationSource {
   Future<List<int>> downloadPreview(int id) async => [1, id];
 
   @override
+  Future<List<int>> downloadBlankForm(int id) async => [4, id];
+
+  @override
   Future<List<int>> downloadOwnForm(int id, {int? category}) async {
     final failure = failWith;
     if (failure != null) throw failure;
@@ -386,6 +389,13 @@ void main() {
       expect(await notifier.downloadPreview(4), [1, 4]);
       expect(await notifier.downloadOwnForm(4), [2, 4]);
       expect(await notifier.downloadMemberForm(4, 'abc'), [3, 4, 3]);
+    });
+
+    test('Issue 393: the blank form gives the PDF bytes', () async {
+      final source = _FakeApplications();
+      final c = await _container(source);
+      final notifier = c.read(clApplicationsMasterProvider.notifier);
+      expect(await notifier.downloadBlankForm(4), [4, 4]);
     });
 
     test('Issue 343: a download passes on the age category it names', () async {

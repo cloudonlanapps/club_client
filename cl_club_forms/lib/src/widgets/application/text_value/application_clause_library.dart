@@ -10,8 +10,8 @@ import '../application_form_fields.dart';
 import '../application_form_strings.dart';
 import 'application_clause_row.dart';
 
-/// The library texts a section offers (club_client#336, #389): the
-/// built-in clauses, then the club's own texts, each a row showing its
+/// The library texts a section offers (club_client#336, #389, #396): the
+/// club's texts of the section's kind, each a row showing its name and its
 /// English text. Tapping one hands it, in the print [languages] only and
 /// exactly as written, `{fact}` gaps included, to [onInsert], which puts
 /// it at its one place. Nothing is filled: the PDF fills each gap from the
@@ -92,7 +92,7 @@ class ApplicationClauseLibrary extends StatelessWidget {
             ApplicationClauseRow(
               key: ValueKey<String>(clause.id),
               text: englishOf(clause),
-              clubName: clause.club ? clause.name : null,
+              name: clause.name,
               enabled: enabled,
               onTap: () => onInsert(clause.only(codes)),
             ),

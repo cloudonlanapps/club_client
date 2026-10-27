@@ -136,5 +136,16 @@ abstract final class ApplicationEntries {
         languages: ApplicationSamples.languageOptions,
       ),
     ),
+    FormDemoEntry(
+      id: 'application-label',
+      title: 'Application label form',
+      group: FormDemoGroup.applications,
+      formType: ApplicationLabelForm,
+      builder: (key) => ApplicationLabelForm(
+        key: key,
+        initialValues: ApplicationSamples.label,
+        languages: ApplicationSamples.languageOptions,
+      ),
+    ),
   ];
 }

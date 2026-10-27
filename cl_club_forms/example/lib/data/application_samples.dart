@@ -16,7 +16,7 @@ abstract final class ApplicationSamples {
     ApplicationLanguageOption(code: 'mr', name: 'Marathi'),
   ];
 
-  /// The library texts: built-in clauses, then a club text.
+  /// The library texts.
   static const List<ApplicationClauseOption> clauses = [
     ApplicationClauseOption(
       id: 'header.camp',
@@ -51,10 +51,9 @@ abstract final class ApplicationSamples {
       text: {'en': 'Follow the rules above.', 'mr': 'वरील नियम पाळा.'},
     ),
     ApplicationClauseOption(
-      id: 'club.1',
+      id: '1',
       kind: ApplicationClauseKind.selection,
       name: 'Attend the matches',
-      club: true,
       text: {
         'en': 'I will play the matches on {match_dates} at {venue}.',
         'mr': 'मी {match_dates} रोजी {venue} येथे सामने खेळेन.',
@@ -168,5 +167,11 @@ abstract final class ApplicationSamples {
       'en': 'I will play the matches on {match_dates} at {venue}.',
       'mr': 'मी {match_dates} रोजी {venue} येथे सामने खेळेन.',
     },
+  };
+
+  /// One of the club's labels, as its form edits it (club_client#396):
+  /// English and Marathi written, Hindi still blank.
+  static const Map<String, dynamic> label = {
+    ApplicationLabelFormFields.textId: {'en': 'Full name', 'mr': 'पूर्ण नाव'},
   };
 }

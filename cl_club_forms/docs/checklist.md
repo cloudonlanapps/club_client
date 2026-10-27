@@ -99,7 +99,7 @@ messages, **Reset**, which mounts it afresh, and the light / dark toggle.
 - [ ] Club contact form: shown on the same page when the pencil on the Contact card is pressed.
 - [ ] Club address form: shown on the same page when the pencil on the Address card is pressed.
 - [ ] Club language form: always shown in the Translations card at the bottom of the same page, with the "Add language" button; a language added there appears as an extra input in the three forms above.
-- [ ] Profile options form: shown on the same page when the pencil on the Profile options card is pressed (extended profile on).
+- [ ] Profile options form: shown on the same page when the pencil on the Profile options card is pressed (extended profile on); English first and fixed, each other language a name and a code; adding a language gives every position a label input in it (#396).
 
 ## Applications (admin)
 
@@ -115,8 +115,9 @@ Hosted by the application editor (`/memberzone/applications/:id`, club_client#32
 - [ ] Application terms form: each term a rule clause or a heading and text written here.
 - [ ] Application notes form: the notes under the terms, with their attributions.
 - [ ] Application labels form: every standard label in each print language, pre-filled from the catalogue.
-- [ ] A section's library list offers only that section's kind of text, the built-in clauses then the club's (marked as the club's), each with its English text and gaps; tapping one inserts it as written in every print language, gaps included (#389).
-- [ ] Application library text form: shown in a dialog from **Add text** in the Library section of the Applications list (`/memberzone/applications`), and in place on a library text's card when its pencil is pressed; the kind, the name, the text in each language and, for a term, a heading (#389).
+- [ ] A section's library list offers only that section's kind of text, every one the club's (the built-in clauses seeded into the library, #396), each with its name above its English text and gaps, no built-in or club mark; tapping one inserts it as written in every print language, gaps included (#389).
+- [ ] Application library text form: shown in a dialog from **Add text** in the Library card on Club details (`/memberzone/club-details`), and in place on a library text's card when its pencil is pressed; the kind, the name, the text in each of the club's languages and, for a term, a heading (#389, #399).
+- [ ] Application label form: shown in place on a label's row in the Labels card on Club details (`/memberzone/club-details`, applications on) when its pencil is pressed; the label's text in each of the club's languages, English required (#396).
 
 ## Evaluations (these stay in `ui_lib`)
 

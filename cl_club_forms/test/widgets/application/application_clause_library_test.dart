@@ -1,8 +1,8 @@
 // Issue 336, Issue 389: tapping a library text pastes it at that one
 // place, as written, `{fact}` gaps included, in the print languages: a new
 // item of a list section, or the declaration. Nothing is filled and no
-// host call is made; the club's own texts are offered beside the built-in
-// ones, marked as the club's.
+// host call is made. Issue 396: every text is the club's, each shown with
+// its name, with no built-in or club mark.
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -24,13 +24,12 @@ List<Object?> _items() => [
   },
 ];
 
-/// A club text using two date-range facts by name, written in three
+/// A library text using two date-range facts by name, written in three
 /// languages; the template prints in two.
 const ApplicationClauseOption _clubSelection = ApplicationClauseOption(
-  id: 'club.7',
+  id: '7',
   kind: ApplicationClauseKind.selection,
   name: 'Matches and practice',
-  club: true,
   text: {
     'en': 'Matches {match_dates}, practice {practice_dates}.',
     'mr': 'सामने {match_dates}, सराव {practice_dates}.',
@@ -116,8 +115,10 @@ void main() {
       });
     });
 
-    testWidgets("Issue 389: a club text is marked as the club's and pasted "
-        'in the print languages alone', (tester) async {
+    testWidgets('Issue 396: a library text shows its name, with no club '
+        'mark; Issue 389: it is pasted in the print languages alone', (
+      tester,
+    ) async {
       final key = GlobalKey<ApplicationSelectionsFormState>();
       await pumpForm(
         tester,
@@ -129,7 +130,8 @@ void main() {
         ),
       );
 
-      expect(find.text("Club's text: Matches and practice"), findsOneWidget);
+      expect(find.text('Matches and practice'), findsOneWidget);
+      expect(find.textContaining("Club's text"), findsNothing);
       await _tapClause(
         tester,
         'Matches {match_dates}, practice {practice_dates}.',

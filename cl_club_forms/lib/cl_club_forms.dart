@@ -88,6 +88,10 @@ export 'src/widgets/application/application_selections_form.dart'
     show ApplicationSelectionsForm, ApplicationSelectionsFormState;
 export 'src/widgets/application/application_terms_form.dart'
     show ApplicationTermsForm, ApplicationTermsFormState;
+export 'src/widgets/application/library/application_label_form.dart'
+    show ApplicationLabelForm, ApplicationLabelFormState;
+export 'src/widgets/application/library/application_label_form_fields.dart'
+    show ApplicationLabelFormFields;
 export 'src/widgets/application/library/application_library_text_form.dart'
     show ApplicationLibraryTextForm, ApplicationLibraryTextFormState;
 export 'src/widgets/application/library/application_library_text_form_fields.dart'

@@ -1,24 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../application_form_strings.dart';
-
-/// One text of the library, tapped to paste it. A club text is marked as
-/// the club's, with its name, above its text.
+/// One text of the library, tapped to paste it: its name, if any, above
+/// its text.
 class ApplicationClauseRow extends StatelessWidget {
   const ApplicationClauseRow({
     required this.text,
     required this.enabled,
     required this.onTap,
-    this.clubName,
+    this.name,
     super.key,
   });
 
   /// The text as the row shows it.
   final String text;
 
-  /// A club text's name; null for a built-in clause.
-  final String? clubName;
+  /// The text's name; null for none.
+  final String? name;
 
   /// Whether the row responds.
   final bool enabled;
@@ -35,7 +33,7 @@ class ApplicationClauseRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    final name = clubName;
+    final name = this.name;
     return MouseRegion(
       cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
       child: GestureDetector(
@@ -54,11 +52,7 @@ class ApplicationClauseRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (name != null)
-                    Text(
-                      ApplicationFormStrings.clubText(name),
-                      style: theme.textTheme.muted,
-                    ),
+                  if (name != null) Text(name, style: theme.textTheme.muted),
                   Text(text, style: theme.textTheme.small),
                 ],
               ),

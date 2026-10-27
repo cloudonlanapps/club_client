@@ -47,6 +47,12 @@ List<ProfilePositionOption> profilePositionOptions(ProfileOptions options) => [
     ),
 ];
 
+/// The club's languages as a member chooses among them: by name, which
+/// is what `preferredLanguages` holds (club_client#396).
+List<String> profileLanguageNames(ProfileOptions options) => [
+  for (final language in options.languages) language.name,
+];
+
 /// How [value], a member's preferred position, reads: the club's label for
 /// it, or the value itself when the club no longer lists it.
 String profilePositionLabel(ProfileOptions options, String value) =>

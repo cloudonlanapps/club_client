@@ -41,7 +41,10 @@ class _FixedOptions extends ProfileOptionsNotifier {
       ProfilePosition(value: 'Forward', label: {'en': 'Forward (F)'}),
       ProfilePosition(value: 'Goalie', label: {'en': 'Goalie'}),
     ],
-    languages: ['English', 'Marathi'],
+    languages: [
+      ProfileLanguage(code: 'en', name: 'English'),
+      ProfileLanguage(code: 'mr', name: 'Marathi'),
+    ],
   );
 }
 

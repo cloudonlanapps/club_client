@@ -31,7 +31,10 @@ class _StubClubIdentity extends ClClubIdentityMasterNotifier {
 class _StubProfileOptions extends ProfileOptionsNotifier {
   @override
   Future<ProfileOptions> build() async =>
-      const ProfileOptions(positions: [], languages: ['English']);
+      const ProfileOptions(
+        positions: [],
+        languages: [ProfileLanguage(code: 'en', name: 'English')],
+      );
 }
 
 class _StubLibrary extends ClApplicationLibraryMasterNotifier {

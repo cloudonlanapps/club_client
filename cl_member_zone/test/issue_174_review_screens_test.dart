@@ -8,6 +8,14 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
+
+/// A PDF action that does nothing.
+final _pdfAction = PdfAction(
+  label: 'Download',
+  icon: LucideIcons.download,
+  run: (_, _) async {},
+);
 
 class _Auth extends AuthNotifier {
   _Auth(this.user);
@@ -208,7 +216,7 @@ void main() {
       evaluationId: 7,
       username: username,
       onBack: () {},
-      onOpenPdfBytes: (_) {},
+      pdfAction: _pdfAction,
       onHome: () {},
     );
 
@@ -257,7 +265,7 @@ void main() {
       onBack: () {},
       onDeleted: () {},
       onTransferred: () {},
-      onOpenPdfBytes: (_) {},
+      pdfAction: _pdfAction,
       onHome: () {},
     );
 

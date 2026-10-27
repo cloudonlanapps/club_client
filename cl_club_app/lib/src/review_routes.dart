@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:cl_member_zone/cl_member_zone.dart'
     show
         MyReviewScreen,
@@ -11,7 +9,7 @@ import 'package:cl_member_zone/cl_member_zone.dart'
         TemplateLibraryScreen;
 import 'package:go_router/go_router.dart';
 
-import 'utils/open_pdf_bytes.dart';
+import 'utils/pdf_actions.dart';
 import 'utils/pick_json_file.dart';
 import 'utils/router_helpers.dart';
 import 'utils/save_file_bytes.dart';
@@ -74,7 +72,7 @@ List<RouteBase> reviewRoutes() => [
           evaluationId: id,
           username: state.uri.queryParameters[reviewUsernameParam],
           onBack: () => popOrGo(context, myReviewsPath),
-          onOpenPdfBytes: (bytes) => unawaited(openPdfBytes(bytes)),
+          pdfAction: appPdfAction,
           onHome: () => context.go('/'),
         ),
       );
@@ -153,7 +151,7 @@ List<RouteBase> reviewRoutes() => [
           onBack: () => popOrGo(context, reviewsPath),
           onDeleted: () => popOrGo(context, reviewsPath),
           onTransferred: () => popOrGo(context, reviewsPath),
-          onOpenPdfBytes: (bytes) => unawaited(openPdfBytes(bytes)),
+          pdfAction: appPdfAction,
           onHome: () => context.go('/'),
         ),
       );

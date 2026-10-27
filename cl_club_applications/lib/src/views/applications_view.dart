@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:cl_remote_store/cl_remote_store.dart' show applicationsProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../constants/application_view_strings.dart';
 import '../widgets/admin_application_list.dart';
@@ -23,7 +23,7 @@ class ApplicationsView extends ConsumerWidget {
   const ApplicationsView({
     required this.currentUser,
     required this.onOpen,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     super.key,
   });
 
@@ -33,8 +33,8 @@ class ApplicationsView extends ConsumerWidget {
   /// Opens the template with this id in the editor (admins).
   final ValueChanged<int> onOpen;
 
-  /// Opens a downloaded form.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What a downloaded form is handed to: shared, saved or opened.
+  final PdfAction pdfAction;
 
   /// Creates a draft and opens it.
   Future<void> create(BuildContext context) async {
@@ -61,7 +61,7 @@ class ApplicationsView extends ConsumerWidget {
         else
           PublishedApplicationsList(
             currentUser: currentUser,
-            onOpenPdfBytes: onOpenPdfBytes,
+            pdfAction: pdfAction,
           ),
       ],
     );

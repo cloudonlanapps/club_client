@@ -8,6 +8,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
+
+/// A PDF action that does nothing.
+final _pdfAction = PdfAction(
+  label: 'Download',
+  icon: LucideIcons.download,
+  run: (_, _) async {},
+);
 
 class _Auth extends AuthNotifier {
   _Auth(this.user);
@@ -77,14 +85,14 @@ const _denied = 'Access Denied';
 void main() {
   Widget list() => ApplicationsScreen(
     onOpen: (_) {},
-    onOpenPdfBytes: (_) {},
+    pdfAction: _pdfAction,
     onHome: () {},
   );
   Widget editor() => ApplicationScreen(
     applicationId: 3,
     onBack: () {},
     onDeleted: () {},
-    onOpenPdfBytes: (_) {},
+    pdfAction: _pdfAction,
     onHome: () {},
   );
 

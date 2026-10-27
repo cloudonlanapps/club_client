@@ -15,6 +15,7 @@ import 'package:ui_lib/ui_lib.dart'
         StampBadge;
 
 import '../support/evaluation_scope.dart';
+import '../support/pdf_action.dart';
 
 /// A public rating section, then a closing run: a public and a private
 /// Q & A.
@@ -100,7 +101,7 @@ class _Host {
           onBack: () => back++,
           onDeleted: () {},
           onTransferred: () {},
-          onOpenPdfBytes: pdfs.add,
+          pdfAction: recordingPdfAction(bytes: pdfs),
         ),
       ),
     );

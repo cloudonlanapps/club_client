@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         clEvaluationTemplatesMasterProvider,
@@ -9,6 +7,7 @@ import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../constants/evaluation_view_strings.dart';
 import '../widgets/evaluation_edit_body.dart';
@@ -28,7 +27,7 @@ import '../widgets/evaluation_message.dart';
 /// offers its member copy from the download icon at the top right.
 /// Evidence and the member copy are private: requests send the session's
 /// headers, and a PDF is downloaded with the session and goes to
-/// [onOpenPdfBytes] as bytes.
+/// [pdfAction].
 ///
 /// Only the effective owner can load it; for anyone else it is not
 /// available. Renders nothing unless the server runs evaluations.
@@ -40,7 +39,7 @@ class EvaluationEditView extends ConsumerWidget {
     required this.onBack,
     required this.onDeleted,
     required this.onTransferred,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     super.key,
   });
 
@@ -59,8 +58,9 @@ class EvaluationEditView extends ConsumerWidget {
   /// Called once the evaluation is handed to another coach.
   final VoidCallback onTransferred;
 
-  /// Shows a downloaded PDF as bytes: the stored member copy or evidence.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What a downloaded PDF — the stored member copy or evidence — is
+  /// handed to.
+  final PdfAction pdfAction;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -104,7 +104,7 @@ class EvaluationEditView extends ConsumerWidget {
       onBack: onBack,
       onDeleted: onDeleted,
       onTransferred: onTransferred,
-      onOpenPdfBytes: onOpenPdfBytes,
+      pdfAction: pdfAction,
     );
   }
 }

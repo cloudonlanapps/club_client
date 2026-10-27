@@ -1,9 +1,8 @@
-import 'dart:typed_data';
-
 import 'package:cl_club_applications/cl_club_applications.dart'
     show ApplicationView;
 import 'package:cl_member_auth/cl_member_auth.dart' show RoleGate;
 import 'package:flutter/widgets.dart';
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../widgets/applications_gate.dart';
 
@@ -15,7 +14,7 @@ class ApplicationScreen extends StatelessWidget {
     required this.applicationId,
     required this.onBack,
     required this.onDeleted,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     required this.onHome,
     super.key,
   });
@@ -29,8 +28,8 @@ class ApplicationScreen extends StatelessWidget {
   /// Leaves the editor once the template is deleted.
   final VoidCallback onDeleted;
 
-  /// Opens the preview.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What the downloaded preview is handed to: shared, saved or opened.
+  final PdfAction pdfAction;
 
   /// Leaves a refused route for home.
   final VoidCallback onHome;
@@ -44,7 +43,7 @@ class ApplicationScreen extends StatelessWidget {
       applicationId: applicationId,
       onBack: onBack,
       onDeleted: onDeleted,
-      onOpenPdfBytes: onOpenPdfBytes,
+      pdfAction: pdfAction,
     ),
   );
 }

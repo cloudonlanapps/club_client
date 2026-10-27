@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:cl_club_forms/cl_club_forms.dart' show ApplicationCompleteness;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
@@ -15,7 +13,7 @@ import 'package:flutter/material.dart' show Divider;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show TitleRow;
+import 'package:ui_lib/ui_lib.dart' show PdfAction, TitleRow;
 
 import '../constants/application_view_strings.dart';
 import '../models/application_editor_options.dart';
@@ -39,7 +37,7 @@ class ApplicationView extends ConsumerWidget {
     required this.applicationId,
     required this.onBack,
     required this.onDeleted,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     super.key,
   });
 
@@ -55,8 +53,8 @@ class ApplicationView extends ConsumerWidget {
   /// Leaves the editor once the template is deleted.
   final VoidCallback onDeleted;
 
-  /// Opens the preview.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What the downloaded preview is handed to: shared, saved or opened.
+  final PdfAction pdfAction;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -108,7 +106,7 @@ class ApplicationView extends ConsumerWidget {
             options: options,
             checkTexts: clauses.hasValue,
             onDeleted: onDeleted,
-            onOpenPdfBytes: onOpenPdfBytes,
+            pdfAction: pdfAction,
           ),
         ),
       ],
@@ -123,7 +121,7 @@ class ApplicationEditorBody extends StatelessWidget {
     required this.options,
     required this.checkTexts,
     required this.onDeleted,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     super.key,
   });
 
@@ -140,8 +138,8 @@ class ApplicationEditorBody extends StatelessWidget {
   /// Leaves the editor once the template is deleted.
   final VoidCallback onDeleted;
 
-  /// Opens the preview.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What the downloaded preview is handed to: shared, saved or opened.
+  final PdfAction pdfAction;
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +160,7 @@ class ApplicationEditorBody extends StatelessWidget {
           template: template,
           missing: missing,
           onDeleted: onDeleted,
-          onOpenPdfBytes: onOpenPdfBytes,
+          pdfAction: pdfAction,
         ),
         for (final section in ApplicationSection.values)
           ApplicationSectionCard(

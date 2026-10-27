@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 
 import '../support/evaluation_scope.dart';
+import '../support/pdf_action.dart';
 
 /// The session headers the scope hands out.
 const Map<String, String> _headers = {'Authorization': 'Bearer t0k'};
@@ -62,6 +63,7 @@ Future<void> _pumpRead(
   WidgetTester tester, {
   required List<Uint8List> opened,
   MediaBytesReader readBytes = fixedPdfReader,
+  List<String>? names,
 }) async {
   await tallSurface(tester);
   await tester.pumpWidget(
@@ -75,7 +77,7 @@ Future<void> _pumpRead(
         username: 'ana',
         evaluationId: 1,
         onBack: () {},
-        onOpenPdfBytes: opened.add,
+        pdfAction: recordingPdfAction(bytes: opened, names: names),
       ),
     ),
   );
@@ -119,6 +121,16 @@ void main() {
       await _openGalleryPdf(tester);
       expect(read, ['ev-uuid']);
       expect(opened.single, fixedPdfBytes);
+    });
+
+    testWidgets('Issue 324: the member copy and evidence go to the action '
+        'under their own file names', (tester) async {
+      final names = <String>[];
+      await _pumpRead(tester, opened: [], names: names);
+      await tester.tap(find.byIcon(LucideIcons.download));
+      await tester.pumpAndSettle();
+      await _openGalleryPdf(tester);
+      expect(names, ['copy-uuid.pdf', 'ev-uuid.pdf']);
     });
 
     testWidgets('Issue 173: a refused download shows a friendly toast and '
@@ -188,7 +200,7 @@ void main() {
             onBack: () {},
             onDeleted: () {},
             onTransferred: () {},
-            onOpenPdfBytes: opened.add,
+            pdfAction: recordingPdfAction(bytes: opened),
           ),
         ),
       );

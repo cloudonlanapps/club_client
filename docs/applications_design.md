@@ -370,7 +370,8 @@ disabled.
 - `cl_club_applications` (new): `ApplicationsView` (member list with
   Download; admin list with each state and Create), `ApplicationView`
   (admin editor, in sections, with Preview and the state actions),
-  `ApplicationDownloadButton` (reuses `open_pdf_bytes`; also opens a
+  `ApplicationDownloadButton` (hands the PDF to the app's `PdfAction`:
+  share, download or open by platform, club_client#324; also fetches a
   preview).
 - `cl_member_zone`: `ApplicationsScreen`, `ApplicationScreen`;
   `SidebarDestination.applications`; routes `/memberzone/applications` and

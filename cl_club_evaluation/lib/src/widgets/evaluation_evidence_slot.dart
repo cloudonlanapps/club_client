@@ -1,10 +1,9 @@
-import 'dart:typed_data';
-
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEvaluationMediaProvider, clEvaluationsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show MediaLink;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../constants/evaluation_view_sizes.dart';
 import '../constants/evaluation_view_strings.dart';
@@ -17,14 +16,14 @@ import 'evaluation_evidence_uploader.dart';
 /// shows once: on a draft, as its own card with its remove action, then
 /// **Attach evidence**; otherwise in the gallery viewer. Evidence is the
 /// member's file, downloadable by the member and staff only, so a PDF is
-/// downloaded with the session and handed to [onOpenPdfBytes] as bytes.
+/// downloaded with the session and handed to [pdfAction].
 class EvaluationEvidenceSlot extends ConsumerWidget {
   /// The evidence on [itemId] of [evaluationId].
   const EvaluationEvidenceSlot({
     required this.evaluationId,
     required this.itemId,
     required this.editable,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     super.key,
   });
 
@@ -37,8 +36,8 @@ class EvaluationEvidenceSlot extends ConsumerWidget {
   /// Whether evidence may change (a draft).
   final bool editable;
 
-  /// Shows a downloaded evidence PDF, as bytes.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What a downloaded evidence PDF is handed to.
+  final PdfAction pdfAction;
 
   /// Detaches [link] from the item.
   Future<void> remove(
@@ -68,7 +67,7 @@ class EvaluationEvidenceSlot extends ConsumerWidget {
           ? const SizedBox.shrink()
           : EvaluationEvidenceGallery(
               links: links,
-              onOpenPdfBytes: onOpenPdfBytes,
+              pdfAction: pdfAction,
             );
     }
     return Column(
@@ -85,7 +84,7 @@ class EvaluationEvidenceSlot extends ConsumerWidget {
                   key: ValueKey(link.mediaUuid),
                   link: link,
                   onRemove: () => remove(context, ref, link),
-                  onOpenPdfBytes: onOpenPdfBytes,
+                  pdfAction: pdfAction,
                 ),
             ],
           ),

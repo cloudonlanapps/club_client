@@ -20,12 +20,12 @@ Views only, plus the start dialog. Screens (`cl_member_zone`), routes
 | Route (design 4.2) | View | Constructor |
 |---|---|---|
 | `reviews/mine` | `MyReviewsView` | `currentUser`, `onOpen(int id)` |
-| `reviews/mine/:id` | `EvaluationReadView` | `currentUser`, `username`, `evaluationId`, `onBack`, `onOpenPdfBytes(Uint8List bytes)` |
+| `reviews/mine/:id` | `EvaluationReadView` | `currentUser`, `username`, `evaluationId`, `onBack`, `pdfAction` |
 | `reviews` (coach) | `CoachReviewsView` | `currentUser`, `onOpenEvaluation(int id)`, `onOpenTemplates()` (**Manage Templates**, every coach) |
 | `reviews` (admin, not coach), `reviews/templates` | `TemplateLibraryView` | `currentUser`, `onOpenTemplate(int id)`, `onCreateTemplate()`, `onDuplicateTemplate(int id)`, `onPickTemplateFile() → Future<Uint8List?>`, `onImportTemplate(Map initialValues)` |
 | `reviews/templates/new` (`?copy=<id>` to duplicate) | `TemplateCreateView` | `currentUser`, `onCreated(int id)`, `onCancel()`, `copyOfTemplateId?` or `initialValues?` (an imported file) |
 | `reviews/templates/:id` | `TemplateDetailView` | `currentUser`, `templateId`, `onBack` (also after Delete), `onDuplicate(int id)`, `onSaveTemplateFile(String fileName, Uint8List bytes) → Future<bool>` |
-| `reviews/:id` | `EvaluationEditView` | `currentUser`, `evaluationId`, `onBack`, `onDeleted`, `onTransferred`, `onOpenPdfBytes(Uint8List bytes)` |
+| `reviews/:id` | `EvaluationEditView` | `currentUser`, `evaluationId`, `onBack`, `onDeleted`, `onTransferred`, `pdfAction` |
 
 `showStartReviewDialog({context, currentUser, templateId?, username?, eventId?})
 → Future<int?>` creates a draft and resolves to its id. The caller fixes what
@@ -41,8 +41,9 @@ them (an admin's only evaluation role is templates). A deleted template
 leaves the library; **Show deleted templates** in the library lists the
 deleted ones (`clDeletedEvaluationTemplatesProvider`), each with **Restore**
 for any staff member (R46, club_client#277). PDFs leave
-the package only as bytes (`onOpenPdfBytes`); the app decides how to show
-them. Template files likewise: the app picks and saves them
+the package only as bytes, handed to the app's `PdfAction` (ui_lib) under the
+media's file name; the app decides whether that shares, downloads or opens
+them (club_client#324). Template files likewise: the app picks and saves them
 (`onPickTemplateFile`, `onSaveTemplateFile`).
 
 **Evidence and the member copy are private** (roles self / coach / admin):

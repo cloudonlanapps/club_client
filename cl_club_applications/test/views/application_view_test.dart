@@ -9,6 +9,7 @@ import 'package:ui_lib/ui_lib.dart' show ActionButton, SectionEditButton;
 
 import '../support/application_samples.dart';
 import '../support/applications_harness.dart';
+import '../support/pdf_action.dart';
 
 const _layout = ApplicationLayout(
   name: 'one page, tighter spacing',
@@ -35,7 +36,7 @@ Future<FakeApplicationsMaster> _pump(
       applicationId: 5,
       onBack: () {},
       onDeleted: () {},
-      onOpenPdfBytes: (_) {},
+      pdfAction: recordingPdfAction(),
     ),
     master: master,
   );

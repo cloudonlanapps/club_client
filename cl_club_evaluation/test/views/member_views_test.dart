@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 
 import '../support/evaluation_scope.dart';
+import '../support/pdf_action.dart';
 
 sdk.EvaluationMemberView _review(
   int id, {
@@ -132,7 +133,7 @@ void main() {
             username: 'ana',
             evaluationId: 1,
             onBack: () {},
-            onOpenPdfBytes: opened.add,
+            pdfAction: recordingPdfAction(bytes: opened),
           ),
         ),
       );
@@ -156,7 +157,7 @@ void main() {
             username: 'ana',
             evaluationId: 2,
             onBack: () {},
-            onOpenPdfBytes: (_) {},
+            pdfAction: recordingPdfAction(),
           ),
         ),
       );
@@ -175,7 +176,7 @@ void main() {
             username: 'ana',
             evaluationId: 5,
             onBack: () {},
-            onOpenPdfBytes: (_) {},
+            pdfAction: recordingPdfAction(),
           ),
         ),
       );

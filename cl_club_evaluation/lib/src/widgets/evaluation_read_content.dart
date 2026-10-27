@@ -1,11 +1,9 @@
-import 'dart:typed_data';
-
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clMemberEvaluationMediaProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show EvaluationMemberView;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ui_lib/ui_lib.dart' show EvaluationReadBody;
+import 'package:ui_lib/ui_lib.dart' show EvaluationReadBody, PdfAction;
 
 import '../models/evaluation_answer_adapter.dart';
 import '../models/evaluation_layout_adapter.dart';
@@ -20,20 +18,20 @@ import 'evaluation_top_bar.dart';
 /// section (left out when there is neither an event nor a period); and its
 /// sections and answers with their evidence, the closing Q & As last in one
 /// untitled card. Both the copy and the evidence are private, so a PDF is
-/// downloaded with the session and handed to [onOpenPdfBytes] as bytes.
+/// downloaded with the session and handed to [pdfAction].
 class EvaluationReadContent extends ConsumerWidget {
   /// Shows [review].
   const EvaluationReadContent({
     required this.review,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     super.key,
   });
 
   /// The review, as the member reads it.
   final EvaluationMemberView review;
 
-  /// Shows a downloaded PDF, as bytes.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What a downloaded PDF is handed to: shared, saved or opened.
+  final PdfAction pdfAction;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,7 +46,7 @@ class EvaluationReadContent extends ConsumerWidget {
               ? null
               : EvaluationPdfDownloadButton(
                   media: copy.media,
-                  onOpenPdfBytes: onOpenPdfBytes,
+                  pdfAction: pdfAction,
                 ),
         ),
         EvaluationPeriodSection(
@@ -69,7 +67,7 @@ class EvaluationReadContent extends ConsumerWidget {
                 ? const SizedBox.shrink()
                 : EvaluationEvidenceGallery(
                     links: links,
-                    onOpenPdfBytes: onOpenPdfBytes,
+                    pdfAction: pdfAction,
                   );
           },
         ),

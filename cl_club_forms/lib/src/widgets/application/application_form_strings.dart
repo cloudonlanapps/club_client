@@ -169,6 +169,9 @@ abstract final class ApplicationFormStrings {
   /// What an age category's name is labelled, before its language.
   static const String ageCategoryName = 'Name';
 
+  /// Label of the tick that gives an age category birth dates.
+  static const String ageLimitApplicable = 'Age limit applicable';
+
   /// Label of an age category's first birth date.
   static const String bornOnOrAfter = 'Born on or after';
 
@@ -249,6 +252,10 @@ abstract final class ApplicationFormStrings {
 
   /// Shown when a range ends before it starts.
   static const String rangeOrder = 'The last day is before the first';
+
+  /// Shown when an age category's age limit has no birth date.
+  static const String birthDateRequired =
+      'Pick a birth date, or untick Age limit applicable';
 
   /// Shown when an age category's dates are the wrong way round.
   static const String birthOrder = 'The last birth date is before the first';

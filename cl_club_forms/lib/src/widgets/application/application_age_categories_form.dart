@@ -16,9 +16,10 @@ import 'sections/application_age_category_values.dart';
 
 /// Pure-UI section editor of an application's age categories, printed
 /// with the member's ticked: each a name (English required, the other
-/// print language offered), optional first and last birth dates, and the
+/// print language offered), an "Age limit applicable" tick with, while
+/// ticked, first and last birth dates (at least one, in order), and the
 /// genders it takes (none ticked: all). Categories are added, removed and
-/// moved.
+/// moved, and may overlap.
 ///
 /// [initialValues] is the template's JSON, or the part of it this section
 /// holds. The form owns no title or Save button: the host drives it
@@ -47,9 +48,10 @@ class ApplicationAgeCategoriesForm extends StatefulWidget {
 }
 
 /// State of [ApplicationAgeCategoriesForm]. Its value is the list of
-/// categories under `ageCategoriesId`, each as the template holds it: a
-/// `label` by language and, when given, `born_on_or_after`,
-/// `born_on_or_before` and `genders`.
+/// categories under `ageCategoriesId`, each as the template holds it plus
+/// its tick: a `label` by language, `age_limit` and, when given,
+/// `born_on_or_after` and `born_on_or_before` (only while `age_limit`) and
+/// `genders`.
 class ApplicationAgeCategoriesFormState
     extends State<ApplicationAgeCategoriesForm>
     with

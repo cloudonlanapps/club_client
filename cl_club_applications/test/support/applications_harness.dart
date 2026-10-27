@@ -11,7 +11,9 @@ import 'application_samples.dart';
 
 /// The applications master with no server: it holds [initial], records
 /// every call in [calls] and, while [failWith] is set, throws it from every
-/// write and download.
+/// write and download. While [fitting] names more than one age category, a
+/// member's form downloaded without a category is refused with them, as
+/// the server does (club_client#337).
 class FakeApplicationsMaster extends ClApplicationsMasterNotifier {
   FakeApplicationsMaster(this.initial);
 
@@ -23,6 +25,9 @@ class FakeApplicationsMaster extends ClApplicationsMasterNotifier {
 
   /// The failure every write and download throws while set.
   Exception? failWith;
+
+  /// The age categories the member fits; null for one or none.
+  List<int>? fitting;
 
   @override
   Future<Map<int, ApplicationTemplate>> build() async => initial;
@@ -91,15 +96,28 @@ class FakeApplicationsMaster extends ClApplicationsMasterNotifier {
   @override
   Future<Uint8List> downloadPreview(int id) => _pdf('preview $id');
 
+  Future<Uint8List> _form(String call, int? category) async {
+    final several = fitting;
+    if (category == null && several != null && several.length > 1) {
+      calls.add(call);
+      throw ApplicationCategoryRequiredException(
+        message: 'raw server words',
+        categories: several,
+      );
+    }
+    return _pdf(category == null ? call : '$call category $category');
+  }
+
   @override
-  Future<Uint8List> downloadOwnForm(int id, {int? category}) => _pdf('own $id');
+  Future<Uint8List> downloadOwnForm(int id, {int? category}) =>
+      _form('own $id', category);
 
   @override
   Future<Uint8List> downloadMemberForm(
     int id,
     String username, {
     int? category,
-  }) => _pdf('member $id $username');
+  }) => _form('member $id $username', category);
 }
 
 /// A member's identity documents with no server.

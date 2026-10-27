@@ -74,6 +74,11 @@ abstract final class ApplicationFormFields {
   /// An age category's name.
   static const String labelKey = 'label';
 
+  /// Whether an age category limits the birth dates it takes: the
+  /// editor's "Age limit applicable" tick. The form keeps it beside the
+  /// dates; the template stores only the dates, sent while it is ticked.
+  static const String ageLimitKey = 'age_limit';
+
   /// The first birth date an age category takes.
   static const String bornOnOrAfterKey = 'born_on_or_after';
 

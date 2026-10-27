@@ -262,6 +262,39 @@ void main() {
       );
     });
 
+    test('Issue 337: a ticked age limit needs a birth date; unticked, '
+        'none', () {
+      expect(
+        ApplicationFormValidators.ageCategory({
+          'label': {'en': 'Open'},
+          'age_limit': true,
+        }),
+        'Pick a birth date, or untick Age limit applicable',
+      );
+      for (final dates in [
+        {'born_on_or_after': '2014-01-01'},
+        {'born_on_or_before': '2014-12-31'},
+        {'born_on_or_after': '2014-01-01', 'born_on_or_before': '2014-01-01'},
+      ]) {
+        expect(
+          ApplicationFormValidators.ageCategory({
+            'label': {'en': 'U12'},
+            'age_limit': true,
+            ...dates,
+          }),
+          isNull,
+          reason: '$dates',
+        );
+      }
+      expect(
+        ApplicationFormValidators.ageCategory({
+          'label': {'en': 'Open'},
+          'age_limit': false,
+        }),
+        isNull,
+      );
+    });
+
     test('Issue 321: a term is a rule clause, or a heading and a text', () {
       expect(
         ApplicationFormValidators.term({

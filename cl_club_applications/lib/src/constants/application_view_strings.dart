@@ -129,11 +129,28 @@ abstract final class ApplicationViewStrings {
       'Not eligible for this application: none of its age categories matches '
       'the date of birth and gender on the profile.';
 
-  /// A download refused: the member fits several age categories and the
-  /// form must tick one. Choosing it is club_client#337.
-  static const String categoryRequired =
-      'The member fits more than one age category of this form, and '
-      'choosing which one it ticks is not available yet.';
+  /// A download refused: the age category chosen is not one the member
+  /// fits (club_client#337).
+  static const String categoryNotFitting =
+      'The age category chosen no longer matches the date of birth and '
+      'gender on the profile. Download again to choose another.';
+
+  /// Title of the dialog that asks which age category the form ticks.
+  static const String chooseCategoryTitle = 'Which age category?';
+
+  /// What the dialog that asks for an age category says.
+  static const String chooseCategoryMessage =
+      'The member fits more than one age category of this form. Choose the '
+      'one the form ticks.';
+
+  /// The name of age category [index] when it has none to show.
+  static String categoryNumber(int index) => 'Category ${index + 1}';
+
+  /// The answer that downloads the form with the category chosen.
+  static const String chooseCategoryDownload = 'Download';
+
+  /// The answer that downloads nothing.
+  static const String chooseCategoryCancel = 'Cancel';
 
   /// A download refused: no identity document.
   static const String identityRequired =

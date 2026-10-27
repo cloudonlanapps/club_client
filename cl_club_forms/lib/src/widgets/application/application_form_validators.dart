@@ -115,7 +115,8 @@ abstract final class ApplicationFormValidators {
     });
   }
 
-  /// An age category: an English name, and its birth dates in order.
+  /// An age category: an English name and, when its age limit is ticked,
+  /// at least one birth date, the two in order.
   static String? ageCategory(Object? item) {
     final map = item is Map ? item : const <Object?, Object?>{};
     final label = ApplicationCustomText.fromJson(
@@ -126,6 +127,11 @@ abstract final class ApplicationFormValidators {
     }
     final after = map[ApplicationFormFields.bornOnOrAfterKey];
     final before = map[ApplicationFormFields.bornOnOrBeforeKey];
+    if (map[ApplicationFormFields.ageLimitKey] == true &&
+        after is! String &&
+        before is! String) {
+      return ApplicationFormStrings.birthDateRequired;
+    }
     if (after is String && before is String && before.compareTo(after) < 0) {
       return ApplicationFormStrings.birthOrder;
     }

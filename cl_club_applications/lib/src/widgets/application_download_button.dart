@@ -3,7 +3,8 @@ import 'package:cl_remote_store/cl_remote_store.dart'
         clApplicationsMasterProvider,
         currentUserProvider,
         extendedProfileProvider;
-import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
+import 'package:club_sdk_2/club_sdk_2.dart'
+    show ApplicationCategoryRequiredException, UserPrivate;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -14,6 +15,7 @@ import '../constants/application_view_strings.dart';
 import '../models/application_download.dart';
 import '../utils/application_download_refusal.dart';
 import '../utils/blank_profile_fields.dart';
+import 'application_category_dialog.dart';
 import 'profile_complete_dialog.dart';
 
 /// Fetches one application PDF — a member's form or an admin's preview
@@ -30,6 +32,16 @@ import 'profile_complete_dialog.dart';
 /// profile page already). With nothing blank it downloads without asking.
 /// A member's form fetched by an admin, and an admin's preview, are not the
 /// viewer's own form and download without asking.
+///
+/// A member who fits more than one of the template's age categories is
+/// then asked which one the form ticks ([showApplicationCategoryDialog],
+/// club_client#337), and the form downloads with it; **Cancel** downloads
+/// nothing. The server says when that is: the download without a category
+/// is refused with the categories the member fits
+/// (`ApplicationCategoryRequiredException`), on the member's own form and
+/// on an admin's download of a member's form alike. With one fit it
+/// downloads without asking. The choice is not remembered. The preview is
+/// the server's demo member and never asks.
 ///
 /// While it downloads the button is off and shows a spinner. A refusal
 /// about the member or the application (not eligible, no identity
@@ -111,21 +123,29 @@ class ApplicationDownloadButtonState
     );
   }
 
-  /// Fetches the PDF and hands it to the action.
-  Future<void> run() async {
+  /// Fetches the PDF, ticking age category [category] when given, and
+  /// hands it to the action. Refused because the member fits several
+  /// categories and none was given, it asks which one and fetches again
+  /// with it.
+  Future<void> run({int? category}) async {
     if (downloading) return;
     setState(() {
       downloading = true;
       refusal = null;
     });
+    List<int>? fitting;
     try {
       final notifier = ref.read(clApplicationsMasterProvider.notifier);
-      final bytes = await widget.download.fetch(notifier);
+      final bytes = await widget.download.fetch(notifier, category: category);
       if (mounted) await widget.pdfAction.run(bytes, widget.fileName);
     } on Object catch (e) {
       if (!mounted) return;
       final message = applicationDownloadRefusal(e);
-      if (message != null) {
+      if (e is ApplicationCategoryRequiredException &&
+          category == null &&
+          e.categories.length > 1) {
+        fitting = e.categories;
+      } else if (message != null) {
         setState(() => refusal = message);
       } else {
         ShadToaster.of(context).show(
@@ -137,6 +157,36 @@ class ApplicationDownloadButtonState
     } finally {
       if (mounted) setState(() => downloading = false);
     }
+    if (fitting == null || !mounted) return;
+    final chosen = await showApplicationCategoryDialog(
+      context,
+      choices: categoryChoices(fitting),
+    );
+    if (chosen != null && mounted) await run(category: chosen);
+  }
+
+  /// The age categories at [indexes] of the template, each by its English
+  /// name, or its first name in another language, or else its number.
+  List<ApplicationCategoryChoice> categoryChoices(List<int> indexes) {
+    final templates = ref.read(clApplicationsMasterProvider).valueOrNull;
+    final categories =
+        templates?[widget.download.applicationId]?.content.ageCategories ??
+        const [];
+    String name(int index) {
+      if (index >= categories.length) {
+        return ApplicationViewStrings.categoryNumber(index);
+      }
+      final label = categories[index].label;
+      return [
+        label['en'],
+        ...label.values,
+      ].whereType<String>().firstWhere(
+        (text) => text.trim().isNotEmpty,
+        orElse: () => ApplicationViewStrings.categoryNumber(index),
+      );
+    }
+
+    return [for (final index in indexes) (index: index, name: name(index))];
   }
 
   @override

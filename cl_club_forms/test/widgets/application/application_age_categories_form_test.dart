@@ -62,9 +62,10 @@ void main() {
         'Born on or before',
         'Genders (none ticked: all)',
       ]);
+      expect(find.text('Age limit applicable'), findsOneWidget);
       expect(find.text('1 Jan 2014'), findsOneWidget);
       expect(find.text('Pick a date'), findsOneWidget);
-      expect(find.byType(ShadCheckbox), findsNWidgets(3));
+      expect(find.byType(ShadCheckbox), findsNWidgets(4));
       expectLabelsAreRows(tester);
       expectNoHostChrome(
         tester,
@@ -81,7 +82,12 @@ void main() {
       final state = await _pump(tester);
 
       expect(state.isDirty, isFalse);
-      expect(state.validate(), {_categories: _items()});
+      expect(state.validate(), {
+        _categories: [
+          for (final item in _items())
+            {...(item! as Map<String, Object?>), 'age_limit': true},
+        ],
+      });
     });
 
     testWidgets('Issue 321: a date is cleared and a gender ticked', (
@@ -90,11 +96,23 @@ void main() {
       final state = await _pump(tester);
 
       await tapIn(tester, _categories, find.byIcon(LucideIcons.x));
-      await tapIn(tester, _categories, find.byType(ShadCheckbox));
+      await tapIn(tester, _categories, find.text('Male'));
 
       expect(state.isDirty, isTrue);
+      expect(state.validate(), isNull);
+      await tester.pump();
+      expect(
+        messageOn(
+          _categories,
+          'Category 1: Pick a birth date, or untick Age limit applicable',
+        ),
+        findsOneWidget,
+      );
+
+      await tapIn(tester, _categories, find.text('Age limit applicable'));
       expect((state.validate()![_categories] as List).first, {
         'label': {'en': 'Under 12', 'mr': 'बारा वर्षांखालील'},
+        'age_limit': false,
         'genders': ['male'],
       });
     });
@@ -115,6 +133,87 @@ void main() {
       await typeIn(tester, _categories, 4, 'Open');
       expect((state.validate()![_categories] as List).last, {
         'label': {'en': 'Open'},
+        'age_limit': false,
+      });
+    });
+
+    testWidgets('Issue 337: a new category has no age limit and shows no '
+        'dates; ticked, it needs a birth date', (tester) async {
+      final state = await _pump(tester, items: const []);
+
+      await tapIn(tester, _categories, find.text('Add age category'));
+      await typeIn(tester, _categories, 0, 'Open');
+      expect(find.text('Born on or after'), findsNothing);
+      expect(find.text('Born on or before'), findsNothing);
+      expect(state.validate(), {
+        _categories: [
+          {
+            'label': {'en': 'Open'},
+            'age_limit': false,
+          },
+        ],
+      });
+
+      await tapIn(tester, _categories, find.text('Age limit applicable'));
+      expect(find.text('Born on or after'), findsOneWidget);
+      expect(find.text('Born on or before'), findsOneWidget);
+      expect(state.validate(), isNull);
+      await tester.pump();
+      expect(
+        messageOn(
+          _categories,
+          'Category 1: Pick a birth date, or untick Age limit applicable',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Issue 337: unticking the age limit sends no dates; ticking '
+        'it again brings them back', (tester) async {
+      final state = await _pump(tester, items: [_items().first]);
+
+      await tapIn(tester, _categories, find.text('Age limit applicable'));
+      expect(find.text('1 Jan 2014'), findsNothing);
+      expect(state.isDirty, isTrue);
+      expect(state.validate(), {
+        _categories: [
+          {
+            'label': {'en': 'Under 12', 'mr': 'बारा वर्षांखालील'},
+            'age_limit': false,
+          },
+        ],
+      });
+
+      await tapIn(tester, _categories, find.text('Age limit applicable'));
+      expect(find.text('1 Jan 2014'), findsOneWidget);
+      expect(state.isDirty, isFalse);
+      expect(
+        (state.validate()![_categories] as List).first,
+        {..._items().first! as Map<String, Object?>, 'age_limit': true},
+      );
+    });
+
+    testWidgets('Issue 337: overlapping categories are allowed', (
+      tester,
+    ) async {
+      final items = [
+        {
+          'label': {'en': 'U12'},
+          'born_on_or_after': '2013-01-01',
+          'born_on_or_before': '2014-12-31',
+        },
+        {
+          'label': {'en': 'U14'},
+          'born_on_or_after': '2011-01-01',
+          'born_on_or_before': '2014-12-31',
+        },
+      ];
+      final state = await _pump(tester, items: items);
+
+      expect(state.validate(), {
+        _categories: [
+          for (final item in items) {...item, 'age_limit': true},
+        ],
       });
     });
 

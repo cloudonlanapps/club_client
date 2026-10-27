@@ -11,8 +11,12 @@ sealed class ApplicationDownload {
   /// The application template's id.
   final int applicationId;
 
-  /// Fetches the PDF through [notifier].
-  Future<Uint8List> fetch(ClApplicationsMasterNotifier notifier);
+  /// Fetches the PDF through [notifier], ticking age category [category]
+  /// when given (club_client#337).
+  Future<Uint8List> fetch(
+    ClApplicationsMasterNotifier notifier, {
+    int? category,
+  });
 }
 
 /// The signed-in member's own form of a published application.
@@ -20,8 +24,10 @@ final class ApplicationOwnForm extends ApplicationDownload {
   const ApplicationOwnForm(super.applicationId);
 
   @override
-  Future<Uint8List> fetch(ClApplicationsMasterNotifier notifier) =>
-      notifier.downloadOwnForm(applicationId);
+  Future<Uint8List> fetch(
+    ClApplicationsMasterNotifier notifier, {
+    int? category,
+  }) => notifier.downloadOwnForm(applicationId, category: category);
 }
 
 /// [username]'s form of a published application, for an admin.
@@ -32,15 +38,24 @@ final class ApplicationMemberForm extends ApplicationDownload {
   final String username;
 
   @override
-  Future<Uint8List> fetch(ClApplicationsMasterNotifier notifier) =>
-      notifier.downloadMemberForm(applicationId, username);
+  Future<Uint8List> fetch(
+    ClApplicationsMasterNotifier notifier, {
+    int? category,
+  }) => notifier.downloadMemberForm(
+    applicationId,
+    username,
+    category: category,
+  );
 }
 
-/// The application drawn for the server's demo member, for an admin.
+/// The application drawn for the server's demo member, for an admin. It
+/// ticks the server's own choice, so [fetch] takes no category.
 final class ApplicationPreview extends ApplicationDownload {
   const ApplicationPreview(super.applicationId);
 
   @override
-  Future<Uint8List> fetch(ClApplicationsMasterNotifier notifier) =>
-      notifier.downloadPreview(applicationId);
+  Future<Uint8List> fetch(
+    ClApplicationsMasterNotifier notifier, {
+    int? category,
+  }) => notifier.downloadPreview(applicationId);
 }

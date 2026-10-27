@@ -129,7 +129,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         find.text(
-          ApplicationViewStrings.incomplete('Footer line', 'Marathi', 1),
+          'Save was refused: these texts are missing or lack a language. '
+          'Footer line: Marathi; Note 2: English, Marathi.',
         ),
         findsOneWidget,
       );

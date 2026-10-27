@@ -86,7 +86,6 @@ abstract final class ClubIdentityEntries {
       builder: (key) => ProfileOptionsForm(
         key: key,
         initialValues: DemoSamples.profileOptions,
-        labelLanguages: DemoSamples.labelLanguages,
       ),
     ),
   ];

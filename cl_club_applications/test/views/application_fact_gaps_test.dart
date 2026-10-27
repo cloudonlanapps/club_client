@@ -148,7 +148,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         find.text(
-          'Save was refused: these gaps name no fact. '
+          'Finalize was refused: these gaps name no fact. '
           'Item 2, line 1 (Marathi): no fact named rink.',
         ),
         findsOneWidget,
@@ -158,9 +158,10 @@ void main() {
   });
 
   group('Issue 389: the library pastes as written', () {
-    testWidgets('Issue 389: a club text tapped in Selections is added with '
-        'its gaps, in the print languages, with no fill call; saving it '
-        'sends the selections', (tester) async {
+    testWidgets('Issue 389: a library text tapped in Selections is added '
+        'with its gaps, in the print languages, with no fill call; saving it '
+        'sends the selections; Issue 396: the seeded and the written texts '
+        'are listed alike, by name', (tester) async {
       final master = await _pump(tester);
       final card = _card('selections');
       await _tap(
@@ -168,12 +169,15 @@ void main() {
         find.descendant(of: card, matching: find.byType(SectionEditButton)),
       );
 
+      for (final name in ['Selection: attend camp', 'Attend the matches']) {
+        expect(
+          find.descendant(of: card, matching: find.text(name)),
+          findsOneWidget,
+        );
+      }
       expect(
-        find.descendant(
-          of: card,
-          matching: find.text("Club's text: Attend the matches"),
-        ),
-        findsOneWidget,
+        find.descendant(of: card, matching: find.textContaining("Club's")),
+        findsNothing,
       );
       await _tap(
         tester,

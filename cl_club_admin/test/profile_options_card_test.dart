@@ -1,6 +1,8 @@
 // Issue 320: the club's profile options on the Club details page — shown
 // only while the extended profile is on, edited in place with
-// ProfileOptionsForm and saved as the whole document.
+// ProfileOptionsForm and saved as the whole document. Issue 396: the
+// languages are a code and a name each, and the positions are labelled in
+// the club's languages.
 import 'package:cl_club_admin/cl_club_admin.dart';
 import 'package:cl_club_admin/src/constants/profile_options_messages.dart';
 import 'package:cl_club_admin/src/models/profile_options_form_helpers.dart';
@@ -29,7 +31,10 @@ const _stored = ProfileOptions(
     ),
     ProfilePosition(value: 'Goalie', label: {'en': 'Goalie'}),
   ],
-  languages: ['English', 'Marathi'],
+  languages: [
+    ProfileLanguage(code: 'en', name: 'English'),
+    ProfileLanguage(code: 'mr', name: 'Marathi'),
+  ],
 );
 
 /// Serves [stored] and records each save, or refuses it with [refuseWith].
@@ -58,6 +63,7 @@ Future<_StubOptions> _pump(
   WidgetTester tester, {
   bool extendedProfile = true,
   Widget? librarySection,
+  Widget? labelsSection,
 }) async {
   await tester.binding.setSurfaceSize(const Size(1100, 5000));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -76,6 +82,7 @@ Future<_StubOptions> _pump(
       child: ClubIdentityView(
         currentUser: adminViewer(superAdmin: true),
         librarySection: librarySection,
+        labelsSection: labelsSection,
       ),
     ),
   );
@@ -91,6 +98,24 @@ Finder _inCard(Finder matching) => find.descendant(
 Finder _field(String id) =>
     find.byWidgetPredicate((w) => w is ShadFormBuilderField && w.id == id);
 
+/// Adds a language named [name] with [code] in the open editor.
+Future<void> _addLanguage(
+  WidgetTester tester,
+  String name,
+  String code,
+) async {
+  await tester.tap(_inCard(find.text('Add language')));
+  await tester.pumpAndSettle();
+  final inputs = find.descendant(
+    of: _field(ProfileOptionsFormFields.languagesId),
+    matching: find.byType(EditableText),
+  );
+  final count = inputs.evaluate().length;
+  await tester.enterText(inputs.at(count - 2), name);
+  await tester.enterText(inputs.at(count - 1), code);
+  await tester.pump();
+}
+
 void main() {
   group('Issue 399: the Library card passed in by the screen', () {
     const library = SizedBox(key: ValueKey('library'), height: 40);
@@ -102,6 +127,22 @@ void main() {
         tester.getTopLeft(find.byKey(const ValueKey('library'))).dy,
         greaterThan(
           tester.getBottomLeft(find.byKey(ProfileOptionsCard.cardKey)).dy,
+        ),
+      );
+    });
+
+    testWidgets('Issue 396: the Labels card follows the Library card', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        librarySection: library,
+        labelsSection: const SizedBox(key: ValueKey('labels'), height: 40),
+      );
+      expect(
+        tester.getTopLeft(find.byKey(const ValueKey('labels'))).dy,
+        greaterThan(
+          tester.getBottomLeft(find.byKey(const ValueKey('library'))).dy,
         ),
       );
     });
@@ -141,16 +182,24 @@ void main() {
       expect(_inCard(find.text('English, Marathi')), findsOneWidget);
     });
 
-    testWidgets('Issue 320: the editor labels positions in English, '
-        'Marathi and Hindi', (tester) async {
+    testWidgets("Issue 396: the editor labels positions in the club's "
+        'languages, and in one added there', (tester) async {
       await _pump(tester);
 
       await tester.tap(_inCard(find.byType(SectionEditButton)));
       await tester.pumpAndSettle();
 
-      for (final name in ['English', 'Marathi', 'Hindi']) {
-        expect(_inCard(find.text(name)), findsWidgets);
-      }
+      expect(_inCard(find.text('English (en)')), findsOneWidget);
+      expect(_inCard(find.text('Marathi')), findsWidgets);
+      expect(_inCard(find.text('Hindi')), findsNothing);
+
+      await _addLanguage(tester, 'Hindi', 'hi');
+      await tester.pumpAndSettle();
+      expect(
+        _inCard(find.text('Hindi')),
+        findsNWidgets(3),
+        reason: 'its name input and a label on each of the two positions',
+      );
     });
 
     testWidgets('Issue 320: an added language is saved with the rest of the '
@@ -159,23 +208,17 @@ void main() {
 
       await tester.tap(_inCard(find.byType(SectionEditButton)));
       await tester.pumpAndSettle();
-      await tester.tap(_inCard(find.text('Add language')));
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        find
-            .descendant(
-              of: _field(ProfileOptionsFormFields.languagesId),
-              matching: find.byType(EditableText),
-            )
-            .last,
-        'Tamil',
-      );
-      await tester.pump();
+      await _addLanguage(tester, 'Tamil', 'ta');
       await tester.tap(_inCard(find.widgetWithText(ShadButton, 'Save')));
       await tester.pumpAndSettle();
 
       expect(stub.saves, [
-        _stored.copyWith(languages: ['English', 'Marathi', 'Tamil']),
+        _stored.copyWith(
+          languages: [
+            ..._stored.languages,
+            const ProfileLanguage(code: 'ta', name: 'Tamil'),
+          ],
+        ),
       ]);
       expect(find.text(ProfileOptionsMessages.saved), findsOneWidget);
     });
@@ -239,18 +282,7 @@ void main() {
 
       await tester.tap(_inCard(find.byType(SectionEditButton)));
       await tester.pumpAndSettle();
-      await tester.tap(_inCard(find.text('Add language')));
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        find
-            .descendant(
-              of: _field(ProfileOptionsFormFields.languagesId),
-              matching: find.byType(EditableText),
-            )
-            .last,
-        'Tamil',
-      );
-      await tester.pump();
+      await _addLanguage(tester, 'Tamil', 'ta');
       await tester.tap(_inCard(find.widgetWithText(ShadButton, 'Save')));
       await tester.pumpAndSettle();
 

@@ -92,6 +92,9 @@ const _kMemberPhone = '7400534101';
 const _kGuardian = 'Appjourney Guardian';
 const _kPosition = 'workflow_appjourney_forward';
 const _kLanguage = 'workflow_appjourney Marathi';
+
+/// [_kLanguage]'s code among the club's languages (Issue 396).
+const _kLanguageCode = 'x-wfjourny';
 const _kEditedFirstName = 'Appjourneyed';
 const _kEmergencyName = 'Appjourney Emergency';
 const _kEmergencyPhone = '7400534103';
@@ -646,7 +649,10 @@ void main() {
             ...saved.positions,
             const ProfilePosition(value: _kPosition, label: {'en': 'Forward'}),
           ],
-          languages: [...saved.languages, _kLanguage],
+          languages: [
+            ...saved.languages,
+            const ProfileLanguage(code: _kLanguageCode, name: _kLanguage),
+          ],
         ),
       );
     } finally {

@@ -14,10 +14,11 @@ class ProfileLanguagesField extends ShadFormBuilderField<List<Object?>> {
     super.initialValue,
     super.validator,
     super.enabled,
+    super.onChanged,
     super.key,
   }) : super(
          builder: (state) => ProfileLanguagesEditor(
-           initialNames: ProfileOptionsFormValues.languages(state.value),
+           initialLanguages: ProfileOptionsFormValues.languages(state.value),
            enabled: state.widget.enabled,
            onChanged: state.didChange,
          ),

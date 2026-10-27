@@ -15,6 +15,8 @@ class _FakeCapabilities extends Fake implements CapabilitiesSource {
       Capabilities(applications: applications);
 }
 
+final DateTime _epoch = DateTime.utc(2026, 10);
+
 ApplicationTemplate _template(
   int id, {
   ApplicationStatus status = ApplicationStatus.draft,
@@ -159,12 +161,21 @@ class _FakeApplications extends Fake implements ApplicationSource {
   @override
   Future<ApplicationLabels> getLabels() async {
     labelReads++;
-    return const ApplicationLabels(
-      languages: ['en', 'mr'],
-      labels: {
-        'field.full_name': {'en': 'Full name'},
-      },
-    );
+    return ApplicationLabels(languages: const ['en', 'mr'], labels: labels);
+  }
+
+  Map<String, Map<String, String>> labels = {
+    'field.full_name': {'en': 'Full name'},
+    'field.address': {'en': 'Address', 'mr': 'पत्ता'},
+  };
+
+  @override
+  Future<ApplicationLabel> updateLabel(String key, ApplicationText text) async {
+    calls.add('update label $key');
+    final failure = failWith;
+    if (failure != null) throw failure;
+    labels = {...labels, key: text.texts};
+    return ApplicationLabel(key: key, text: text);
   }
 
   @override
@@ -210,15 +221,18 @@ class _FakeApplications extends Fake implements ApplicationSource {
   @override
   Future<ApplicationClauseLibrary> getClauses() async {
     clauseReads++;
-    return const ApplicationClauseLibrary(
-      languages: ['en'],
-      choices: {},
+    return ApplicationClauseLibrary(
+      languages: const ['en'],
+      choices: const {},
       clauses: [
         ApplicationClause(
-          source: ApplicationClauseSource.builtin,
+          id: 9,
           key: 'rule.fee',
           kind: ApplicationClauseKind.rule,
-          text: ApplicationText({'en': 'Fee {fee}'}),
+          name: 'Rule: fee',
+          text: const ApplicationText({'en': 'Fee {fee}'}),
+          createdAtUtc: _epoch,
+          updatedAtUtc: _epoch,
         ),
       ],
     );
@@ -502,7 +516,7 @@ void main() {
       final labels = await c.read(applicationLabelsProvider.future);
       final clauses = await c.read(applicationClausesProvider.future);
       expect(labels.languages, ['en', 'mr']);
-      expect(clauses.builtinClause('rule.fee')?.text.texts, {
+      expect(clauses.clauseWithKey('rule.fee')?.text.texts, {
         'en': 'Fee {fee}',
       });
     });
@@ -527,6 +541,58 @@ void main() {
       await c.read(applicationLabelsProvider.future);
       await c.read(applicationClausesProvider.future);
       expect(source.labelReads + source.clauseReads, 0);
+    });
+  });
+
+  group('Issue 396: the club edits its labels', () {
+    test('Issue 396: updateLabel folds the stored label in, the others '
+        'kept, with no reload', () async {
+      final source = _FakeApplications();
+      final c = await _container(source);
+      await c.read(applicationLabelsProvider.future);
+
+      final stored = await c
+          .read(applicationLabelsProvider.notifier)
+          .updateLabel(
+            'field.full_name',
+            const ApplicationText({'en': 'Name', 'mr': 'नाव'}),
+          );
+
+      expect(stored.key, 'field.full_name');
+      final labels = c.read(applicationLabelsProvider).value!;
+      expect(labels.labels['field.full_name'], {'en': 'Name', 'mr': 'नाव'});
+      expect(labels.labels['field.address'], {'en': 'Address', 'mr': 'पत्ता'});
+      expect(labels.languages, ['en', 'mr']);
+      expect(source.calls, ['update label field.full_name']);
+      expect(source.labelReads, 1, reason: 'the answer is folded in');
+    });
+
+    test('Issue 396: a refused label edit is rethrown and changes '
+        'nothing', () async {
+      final source = _FakeApplications()
+        ..failWith = const ApplicationLanguageNotOfferedException(
+          message: 'not offered',
+          languages: ['ta'],
+        );
+      final c = await _container(source);
+      await c.read(applicationLabelsProvider.future);
+
+      await expectLater(
+        c
+            .read(applicationLabelsProvider.notifier)
+            .updateLabel(
+              'field.full_name',
+              const ApplicationText({'en': 'Name', 'ta': 'x'}),
+            ),
+        throwsA(isA<ApplicationLanguageNotOfferedException>()),
+      );
+      expect(
+        c.read(applicationLabelsProvider).value!.labels['field.full_name'],
+        {
+          'en': 'Full name',
+        },
+      );
+      expect(source.labelReads, 1, reason: 'a 4xx refusal does not reload');
     });
   });
 }

@@ -1,7 +1,9 @@
 // Issue 389: the Library card: the club's own texts, added in a dialog,
 // edited in place and deleted after asking; gaps are kept as written.
 // Issue 399: the card is shown on Club details (passed in by its screen)
-// and renders nothing while applications are off.
+// and renders nothing while applications are off. Issue 396: it lists every
+// text, the seeded built-in clauses among them, each editable and
+// deletable alike.
 import 'package:cl_club_applications/cl_club_applications.dart';
 import 'package:cl_club_applications/src/constants/application_library_strings.dart';
 import 'package:cl_club_applications/src/constants/application_view_strings.dart';
@@ -205,6 +207,121 @@ void main() {
       expect(library.calls, ['delete 7']);
       expect(_textCard(7), findsNothing);
       expect(find.text(ApplicationLibraryStrings.empty), findsOneWidget);
+    });
+  });
+
+  group("Issue 396: every library text is the club's", () {
+    testWidgets('Issue 396: a seeded built-in clause is listed like a text '
+        'the club wrote, editable and deletable, and the intro says so', (
+      tester,
+    ) async {
+      final seeded = ApplicationSamples.libraryText(
+        id: 3,
+        key: 'rule.fee',
+        name: 'Fee',
+        kind: ApplicationClauseKind.rule,
+        heading: const ApplicationText({'en': 'Fee'}),
+        text: const ApplicationText({'en': 'A fee of {amount} is payable.'}),
+      );
+      final library = await _pump(
+        tester,
+        texts: {3: seeded, 7: ApplicationSamples.libraryText()},
+      );
+
+      expect(find.text(ApplicationLibraryStrings.intro), findsOneWidget);
+      expect(ApplicationLibraryStrings.intro, isNot(contains('built-in')));
+      for (final id in [3, 7]) {
+        expect(
+          find.descendant(
+            of: _textCard(id),
+            matching: find.byType(SectionEditButton),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          _button(_textCard(id), ApplicationLibraryStrings.delete),
+          findsOneWidget,
+        );
+      }
+
+      await _tap(
+        tester,
+        find.descendant(
+          of: _textCard(3),
+          matching: find.byType(SectionEditButton),
+        ),
+      );
+      await tester.enterText(_input(_textCard(3), 0), 'Camp fee');
+      await tester.pump();
+      await _tap(tester, _button(_textCard(3), ApplicationViewStrings.save));
+      expect(library.calls, ['update 3 kind,name,heading,text']);
+    });
+
+    testWidgets('Issue 396: a text in a language the club does not offer '
+        'is refused inline in the form', (tester) async {
+      final library = await _pump(tester)
+        ..failWith = const ApplicationLanguageNotOfferedException(
+          message: 'not offered',
+          languages: ['hi'],
+        );
+      final card = _textCard(7);
+      await _tap(
+        tester,
+        find.descendant(of: card, matching: find.byType(SectionEditButton)),
+      );
+      await tester.enterText(_input(card, 0), 'Other');
+      await tester.pump();
+      await _tap(tester, _button(card, ApplicationViewStrings.save));
+      expect(library.calls, hasLength(1));
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.text(
+            ApplicationViewStrings.languageNotOffered(['Hindi']),
+          ),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Issue 396: Add text refused for a language the club does '
+        'not offer says so in the dialog, which stays open', (tester) async {
+      final library = await _pump(tester, texts: const {})
+        ..failWith = const ApplicationLanguageNotOfferedException(
+          message: 'not offered',
+          languages: ['hi'],
+        );
+      await _tap(
+        tester,
+        find.widgetWithText(ShadButton, ApplicationLibraryStrings.add),
+      );
+      final dialog = find.byType(ShadDialog);
+      final select = find.descendant(
+        of: dialog,
+        matching: find.byWidgetPredicate(
+          (w) => w.runtimeType.toString().startsWith('ShadSelect<'),
+        ),
+      );
+      await tester.tapAt(tester.getTopLeft(select) + const Offset(24, 16));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Note').last);
+      await tester.pumpAndSettle();
+      await tester.enterText(_input(dialog, 0), 'Bring kit');
+      await tester.enterText(_input(dialog, 1), 'Bring your kit.');
+      await tester.pump();
+      await _tap(tester, _button(dialog, ApplicationViewStrings.save));
+
+      expect(library.calls, hasLength(1));
+      expect(dialog, findsOneWidget);
+      expect(
+        find.descendant(
+          of: dialog,
+          matching: find.text(
+            ApplicationViewStrings.languageNotOffered(['Hindi']),
+          ),
+        ),
+        findsOneWidget,
+      );
     });
   });
 }

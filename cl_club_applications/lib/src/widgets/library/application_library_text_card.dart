@@ -15,9 +15,11 @@ import '../../constants/application_library_strings.dart';
 import '../../constants/application_view_sizes.dart';
 import '../../constants/application_view_strings.dart';
 import '../../models/application_library_text_form_submit.dart';
+import '../../utils/application_save_refusal.dart';
 import 'application_library_text_read.dart';
 
-/// One of the club's library texts (club_client#389): an
+/// One of the club's library texts (club_client#389), a seeded built-in
+/// clause or one the club wrote alike (club_client#396): an
 /// [EditableSectionCard] titled with its name, showing where it is used and
 /// its text in each language, edited in place with
 /// `ApplicationLibraryTextForm`, and deleted after asking.
@@ -84,8 +86,11 @@ class ApplicationLibraryTextCardState
     } on Object catch (e) {
       if (!mounted) return false;
       final fieldErrors = ApplicationLibraryTextFormSubmit.fieldErrorsFor(e);
+      final language = applicationLanguageRefusal(e);
       if (fieldErrors.isNotEmpty) {
         formKey.currentState?.showErrors(fieldErrors: fieldErrors);
+      } else if (language != null) {
+        formKey.currentState?.showErrors(formError: language);
       } else {
         failed(e);
       }

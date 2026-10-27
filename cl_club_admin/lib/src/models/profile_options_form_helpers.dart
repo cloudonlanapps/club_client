@@ -1,9 +1,13 @@
-import 'package:cl_club_forms/cl_club_forms.dart'
-    show ProfileLabelLanguage, ProfileOptionsFormFields;
+import 'package:cl_club_forms/cl_club_forms.dart' show ProfileOptionsFormFields;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ProfileOptionsNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart'
-    show ProfileOptions, ProfilePosition, SdkErrorCode, ServerException;
+    show
+        ProfileLanguage,
+        ProfileOptions,
+        ProfilePosition,
+        SdkErrorCode,
+        ServerException;
 
 import '../constants/profile_options_messages.dart';
 
@@ -13,14 +17,6 @@ typedef ProfileOptionsFormRefusal = ({
   Map<String, String> fieldErrors,
   String? formError,
 });
-
-/// The languages a position is labelled in on the Club details page: the
-/// languages an application form may print in (club_client#320).
-const List<ProfileLabelLanguage> profileLabelLanguages = [
-  ProfileLabelLanguage(code: 'en', name: 'English'),
-  ProfileLabelLanguage(code: 'mr', name: 'Marathi'),
-  ProfileLabelLanguage(code: 'hi', name: 'Hindi'),
-];
 
 /// The initial values of `ProfileOptionsForm` from the club's [options].
 Map<String, dynamic> buildProfileOptionsFormInitialValues(
@@ -33,11 +29,18 @@ Map<String, dynamic> buildProfileOptionsFormInitialValues(
         ProfileOptionsFormFields.labelKey: position.label,
       },
   ],
-  ProfileOptionsFormFields.languagesId: options.languages,
+  ProfileOptionsFormFields.languagesId: [
+    for (final language in options.languages)
+      {
+        ProfileOptionsFormFields.codeKey: language.code,
+        ProfileOptionsFormFields.nameKey: language.name,
+      },
+  ],
 };
 
-/// SDK adapter of `ProfileOptionsForm` (club_client#320): the form's values
-/// become the club's whole `profile_options` document.
+/// SDK adapter of `ProfileOptionsForm` (club_client#320, #396): the form's
+/// values become the club's whole `profile_options` document, its
+/// languages each a code and a name.
 abstract final class ProfileOptionsFormSubmit {
   /// The options [values] hold, as `ProfileOptionsFormState.validate`
   /// returns them.
@@ -56,7 +59,12 @@ abstract final class ProfileOptionsFormSubmit {
             ),
       ],
       languages: [
-        if (languages is List) ...languages.whereType<String>(),
+        if (languages is List)
+          for (final language in languages.whereType<Map<Object?, Object?>>())
+            ProfileLanguage(
+              code: language[ProfileOptionsFormFields.codeKey]! as String,
+              name: language[ProfileOptionsFormFields.nameKey]! as String,
+            ),
       ],
     );
   }

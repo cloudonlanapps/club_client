@@ -11,8 +11,8 @@ declaration, terms, notes, labels, layout).
 Everything is capability-aware: each view and widget renders nothing unless
 `applicationsProvider` is `true`. SDK access goes through `cl_remote_store`
 (`clApplicationsMasterProvider`, its moves and PDF downloads,
-`applicationLabelsProvider`, `applicationClausesProvider`,
-`clApplicationLibraryMasterProvider`); the forms are the SDK-free
+`applicationLabelsProvider` and its `updateLabel`,
+`applicationClausesProvider`, `clApplicationLibraryMasterProvider`); the forms are the SDK-free
 `Application*Form`s of `cl_club_forms`.
 
 ## Public surface (barrel)
@@ -24,6 +24,7 @@ Everything is capability-aware: each view and widget renders nothing unless
 | `applications/:id` (admin) | `ApplicationView` | `currentUser`, `applicationId`, `onBack`, `onDeleted`, `pdfAction`, `onSaveFile` |
 | profile (injected by the router) | `ProfileApplicationsSection` | `member`, `own`, `pdfAction` |
 | Club details (injected by `ClubIdentityScreen`) | `ApplicationLibrarySection` | — |
+| Club details, after the Library (injected by `ClubIdentityScreen`) | `ApplicationLabelsSection` | — |
 | onboarding's waiting page (injected) | `PublishedApplicationsList` | `currentUser`, `pdfAction`, `onOpenProfile` |
 
 Screens are `MyApplicationsScreen`, `ApplicationsScreen` and
@@ -69,8 +70,7 @@ forms' ids for a schema refusal.
   nothing, a required one (title, footer line, declaration) **Required** in
   the error colour. A line's label is set larger than its value
   (club_client#398).
-- A library text, built-in or the club's, is inserted as written in every
-  print language, gaps included: nothing is filled and no call is made
+- A library text is inserted as written in every print language, gaps included: nothing is filled and no call is made
   (club_client#389). A fact prints wherever its `{name}` stands; the (?) on
   the Facts heading (`ApplicationFactsHelp`) says so, with one example per
   type.
@@ -82,11 +82,34 @@ forms' ids for a schema refusal.
   is `true`; the Applications page lists templates only.
   Add text opens `ApplicationLibraryTextForm` in a dialog; each text's card
   edits it in place and deletes it after asking. The adapter is
-  `ApplicationLibraryTextFormSubmit`. The texts appear in each section's
-  list beside the built-in clauses, marked as the club's.
+  `ApplicationLibraryTextFormSubmit`. The server seeds its built-in clauses
+  into the library once (club_server#133, club_client#396), so the card
+  lists every text and each section's list offers the same texts, by
+  name, with no built-in or club split.
+- The club's languages are Profile options' languages (`{code, name}`,
+  English always): they are the print languages a template may choose, and
+  the languages the labels and library texts are shown and written in
+  (club_client#396). Language names come from `languageNames`, the codes
+  the server knows by name; another code shows as itself.
+- The club's labels are managed in the **Labels** card
+  (`ApplicationLabelsSection`, exported) on Club details, after the
+  Library card (club_client#396), passed in as `labelsSection`: each label
+  by its English text with its text in every club language, a blank one
+  **Required** in the error colour, edited in place with
+  `ApplicationLabelForm` (adapter `ApplicationLabelFormSubmit`, through
+  `applicationLabelsProvider.updateLabel`). The heading card's Missing list
+  names each club label lacking a print language that the template does
+  not override ("Label: Full name — Hindi missing",
+  `applicationLabelGaps`), and a refusal's `labels.<key>` entries name it
+  the same way.
+- A write refused for a language the club does not offer
+  (`ApplicationLanguageNotOfferedException`) shows inline: on the heading
+  card for Finalize, and in the form that sent it (a section, Create, a
+  library text, a label); Import's toast names it
+  (`applicationLanguageRefusal`).
 - What the server refuses about the template on Finalize (incomplete, a
-  gap naming no fact, does not fit, broken reference) shows inline on the
-  heading card; a download refused
+  gap naming no fact, does not fit, a language not offered, broken
+  reference) shows inline on the heading card as "Finalize was refused: …"; a download refused
   for the member (not eligible, no identity document, not published) shows
   under its button. Anything else is a toast with a fixed message.
 - A member's download of their own form (`ApplicationOwnForm`) first asks

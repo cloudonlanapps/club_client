@@ -16,6 +16,7 @@ import '../constants/application_view_sizes.dart';
 import '../constants/application_view_strings.dart';
 import '../models/application_editor_options.dart';
 import '../models/application_form_submit.dart';
+import '../utils/application_save_refusal.dart';
 
 /// Opens [ApplicationCreateDialog] and resolves to the new draft's id, or
 /// null when it was cancelled.
@@ -69,8 +70,12 @@ class ApplicationCreateDialogState
       if (!mounted) return;
       setState(() => saving = false);
       final fieldErrors = ApplicationFormSubmit.fieldErrorsFor(e);
-      if (fieldErrors.isNotEmpty) {
-        formKey.currentState?.showErrors(fieldErrors: fieldErrors);
+      final language = applicationLanguageRefusal(e);
+      if (fieldErrors.isNotEmpty || language != null) {
+        formKey.currentState?.showErrors(
+          fieldErrors: fieldErrors,
+          formError: language,
+        );
         return;
       }
       ShadToaster.of(context).show(

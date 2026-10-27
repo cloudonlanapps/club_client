@@ -38,14 +38,30 @@ abstract final class ProfileOptionsFormValidators {
     };
   }
 
-  /// Every language has a name, no two the same.
-  static String? languages(List<Object?>? names) {
-    final seen = <String>{};
-    for (final raw in names ?? const <Object?>[]) {
-      final name = ProfileOptionsFormValues.text(raw).trim();
+  /// A language code as the server takes one (club_server#133):
+  /// `mr`, `kok`, `pt-br`, `x-<name>`; `x` alone is not one.
+  static final RegExp languageCode = RegExp(
+    r'^(?:[a-z]{2,3}|x)(?:-[a-z0-9]{1,8})*$',
+  );
+
+  /// Every language has a name and a language code, no two names and no
+  /// two codes the same (club_client#396).
+  static String? languages(List<Object?>? rows) {
+    final names = <String>{};
+    final codes = <String>{};
+    for (final l in ProfileOptionsFormValues.languagesOut(rows)) {
+      final name = l[ProfileOptionsFormFields.nameKey]!;
+      final code = l[ProfileOptionsFormFields.codeKey]!;
       if (name.isEmpty) return ProfileOptionsFormStrings.languageNameRequired;
-      if (!seen.add(name.toLowerCase())) {
+      if (!names.add(name.toLowerCase())) {
         return ProfileOptionsFormStrings.languageTwice(name);
+      }
+      if (code.isEmpty) return ProfileOptionsFormStrings.languageCodeRequired;
+      if (code == 'x' || !languageCode.hasMatch(code)) {
+        return ProfileOptionsFormStrings.languageCodeInvalid(code);
+      }
+      if (!codes.add(code)) {
+        return ProfileOptionsFormStrings.languageCodeTwice(code);
       }
     }
     return null;

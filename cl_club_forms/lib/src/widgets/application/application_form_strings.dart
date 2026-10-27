@@ -38,9 +38,6 @@ abstract final class ApplicationFormStrings {
       'Tap a text to add it as written, in each print language. A {name} '
       'in it prints the fact of that name; edit it like any other text.';
 
-  /// The mark of a club library text named [name] in a section's list.
-  static String clubText(String name) => "Club's text: $name";
-
   /// Label of a library text's kind (club_client#389).
   static const String libraryKind = 'Used for';
 

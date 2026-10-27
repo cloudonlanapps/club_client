@@ -31,7 +31,6 @@ export 'src/models/form_translated_text.dart' show FormTranslatedText;
 export 'src/models/marketing_list_column.dart' show MarketingListColumn;
 export 'src/models/one_off_schedule_data.dart' show OneOffScheduleData;
 export 'src/models/one_off_schedule_value.dart' show OneOffScheduleValue;
-export 'src/models/profile_label_language.dart' show ProfileLabelLanguage;
 export 'src/models/profile_position_option.dart' show ProfilePositionOption;
 export 'src/models/programme_schedule_adjust_value.dart'
     show ProgrammeScheduleAdjustValue;
@@ -88,6 +87,10 @@ export 'src/widgets/application/application_selections_form.dart'
     show ApplicationSelectionsForm, ApplicationSelectionsFormState;
 export 'src/widgets/application/application_terms_form.dart'
     show ApplicationTermsForm, ApplicationTermsFormState;
+export 'src/widgets/application/library/application_label_form.dart'
+    show ApplicationLabelForm, ApplicationLabelFormState;
+export 'src/widgets/application/library/application_label_form_fields.dart'
+    show ApplicationLabelFormFields;
 export 'src/widgets/application/library/application_library_text_form.dart'
     show ApplicationLibraryTextForm, ApplicationLibraryTextFormState;
 export 'src/widgets/application/library/application_library_text_form_fields.dart'

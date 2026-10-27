@@ -23,6 +23,7 @@ import '../constants/application_view_strings.dart';
 import '../models/application_editor_options.dart';
 import '../models/application_form_submit.dart';
 import '../models/application_section.dart';
+import '../utils/application_label_gaps.dart';
 import '../utils/application_places.dart';
 import '../utils/application_title.dart';
 import '../widgets/application_export_button.dart';
@@ -172,6 +173,12 @@ class ApplicationEditorBody extends StatelessWidget {
                     ApplicationViewStrings.languageName(code),
                 ],
               ),
+            // The club's labels, as Finalize checks them (club_client#396).
+            for (final gap in applicationLabelGaps(options.labels, json))
+              ApplicationViewStrings.missingLabel(gap.name, [
+                for (final code in gap.languages)
+                  ApplicationViewStrings.languageName(code),
+              ]),
           ]
         : const <String>[];
     // Gaps naming no fact are checked from the template alone, as Save

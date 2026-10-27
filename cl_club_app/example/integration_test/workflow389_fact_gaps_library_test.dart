@@ -317,7 +317,8 @@ void main() {
     await tapSectionPencil(tester, _section('selections'));
     final clubRow = find.descendant(
       of: _section('selections'),
-      matching: find.byKey(ValueKey<String>('club.$textId')),
+      // Every library text is offered by its id (Issue 396).
+      matching: find.byKey(ValueKey<String>('$textId')),
     );
     await waitFor(
       tester,
@@ -327,7 +328,7 @@ void main() {
     expect(
       find.descendant(of: clubRow, matching: find.textContaining(_kTextName)),
       findsOneWidget,
-      reason: "a club text is marked as the club's, with its name",
+      reason: 'a library text is shown with its name',
     );
     tester
         .widget<GestureDetector>(

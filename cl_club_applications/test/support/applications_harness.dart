@@ -203,6 +203,39 @@ class FakeApplicationLibraryMaster extends ClApplicationLibraryMasterNotifier {
 }
 
 /// A member's identity documents with no server.
+/// The club's labels, edited in memory (club_client#396): each edit is
+/// recorded and stored, or refused with [failWith].
+class FakeApplicationLabels extends ApplicationLabelsNotifier {
+  FakeApplicationLabels([this.initial = ApplicationSamples.labels]);
+
+  /// The labels the provider starts with.
+  final ApplicationLabels initial;
+
+  /// The edits made, in order.
+  final List<String> calls = [];
+
+  /// What an edit throws, when set.
+  Exception? failWith;
+
+  @override
+  Future<ApplicationLabels> build() async => initial;
+
+  @override
+  Future<ApplicationLabel> updateLabel(String key, ApplicationText text) async {
+    calls.add('update $key ${text.texts}');
+    final failure = failWith;
+    if (failure != null) throw failure;
+    final current = state.requireValue;
+    state = AsyncData(
+      ApplicationLabels(
+        languages: current.languages,
+        labels: {...current.labels, key: text.texts},
+      ),
+    );
+    return ApplicationLabel(key: key, text: text);
+  }
+}
+
 class FakeIdentityDocs extends ClIdentityDocsMasterNotifier {
   FakeIdentityDocs(this.links);
 
@@ -256,6 +289,7 @@ Future<void> pumpApplications(
   UserPrivate? currentUser,
   bool extendedProfile = false,
   FakeApplicationLibraryMaster? library,
+  FakeApplicationLabels? labels,
 }) async {
   await tester.binding.setSurfaceSize(const Size(1200, 3000));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -272,7 +306,7 @@ Future<void> pumpApplications(
           () => library ?? FakeApplicationLibraryMaster(),
         ),
         applicationLabelsProvider.overrideWith(
-          (ref) async => ApplicationSamples.labels,
+          () => labels ?? FakeApplicationLabels(),
         ),
         applicationClausesProvider.overrideWith(
           (ref) async => ApplicationSamples.clauses,

@@ -25,7 +25,7 @@ const _stored = ProfileOptions(
   positions: [
     ProfilePosition(value: 'Goalie', label: {'en': 'Goalie'}),
   ],
-  languages: ['English'],
+  languages: [ProfileLanguage(code: 'en', name: 'English')],
 );
 
 /// Holds each save until the test ends it.
@@ -77,19 +77,17 @@ Future<_PendingOptions> _saveThenLeave(WidgetTester tester) async {
   await tester.pumpAndSettle();
   await tester.tap(_inCard(find.text('Add language')));
   await tester.pumpAndSettle();
-  await tester.enterText(
-    find
-        .descendant(
-          of: find.byWidgetPredicate(
-            (w) =>
-                w is ShadFormBuilderField &&
-                w.id == ProfileOptionsFormFields.languagesId,
-          ),
-          matching: find.byType(EditableText),
-        )
-        .last,
-    'Tamil',
+  final inputs = find.descendant(
+    of: find.byWidgetPredicate(
+      (w) =>
+          w is ShadFormBuilderField &&
+          w.id == ProfileOptionsFormFields.languagesId,
+    ),
+    matching: find.byType(EditableText),
   );
+  // The new language's name and code, its two inputs (Issue 396).
+  await tester.enterText(inputs.first, 'Tamil');
+  await tester.enterText(inputs.last, 'ta');
   await tester.pump();
   await tester.tap(_inCard(find.widgetWithText(ShadButton, 'Save')));
   await tester.pump();

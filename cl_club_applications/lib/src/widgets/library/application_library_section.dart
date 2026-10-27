@@ -17,9 +17,10 @@ import '../../models/application_editor_options.dart';
 import 'application_library_text_card.dart';
 import 'application_library_text_dialog.dart';
 
-/// The **Library** card (club_client#389): the club's own texts, oldest
-/// first, each edited in place and deleted from its card, and **Add text**.
-/// Every application's sections offer them beside the built-in clauses.
+/// The **Library** card (club_client#389, #396): every text of the club's
+/// library, the seeded built-in clauses among them, oldest first, each
+/// edited in place and deleted from its card, and **Add text**. Every
+/// application's sections offer the same texts.
 /// Shown on Club details after Profile options, passed in by its screen;
 /// renders nothing unless the server offers applications.
 class ApplicationLibrarySection extends ConsumerWidget {

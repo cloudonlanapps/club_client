@@ -1,16 +1,17 @@
 import 'package:club_sdk_2/club_sdk_2.dart' show ApplicationClauseKind;
 
-/// What the club's library of application texts says (club_client#389):
-/// the Library section of the admin's Applications page and its dialog.
+/// What the club's library of application texts says (club_client#389,
+/// #396): the Library card on Club details and its dialog.
 abstract final class ApplicationLibraryStrings {
   /// The section's heading.
   static const String title = 'Library';
 
   /// What the library is for.
   static const String intro =
-      "The club's own texts, offered beside the built-in ones under each "
-      'section of every application. A {name} in a text prints the fact of '
-      'that name of the application it is pasted into.';
+      "The club's texts, offered under each section of every application. "
+      'The texts the server starts with are here too: edit or delete any '
+      'of them like a text you added. A {name} in a text prints the fact '
+      'of that name of the application it is pasted into.';
 
   /// The add button and the dialog's title.
   static const String add = 'Add text';

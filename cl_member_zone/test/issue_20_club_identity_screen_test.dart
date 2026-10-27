@@ -30,13 +30,25 @@ class _StubClubIdentity extends ClClubIdentityMasterNotifier {
 
 class _StubProfileOptions extends ProfileOptionsNotifier {
   @override
-  Future<ProfileOptions> build() async =>
-      const ProfileOptions(positions: [], languages: ['English']);
+  Future<ProfileOptions> build() async => const ProfileOptions(
+    positions: [],
+    languages: [ProfileLanguage(code: 'en', name: 'English')],
+  );
 }
 
 class _StubLibrary extends ClApplicationLibraryMasterNotifier {
   @override
   Future<Map<int, ApplicationLibraryText>> build() async => const {};
+}
+
+class _StubLabels extends ApplicationLabelsNotifier {
+  @override
+  Future<ApplicationLabels> build() async => const ApplicationLabels(
+    languages: ['en', 'mr'],
+    labels: {
+      'field.full_name': {'en': 'Full name'},
+    },
+  );
 }
 
 /// The screen for [user]; with [applications] and [extendedProfile] given,
@@ -59,9 +71,7 @@ Widget _wrap(
       ),
       profileOptionsProvider.overrideWith(_StubProfileOptions.new),
       clApplicationLibraryMasterProvider.overrideWith(_StubLibrary.new),
-      applicationLabelsProvider.overrideWith(
-        (ref) async => emptyApplicationLabels,
-      ),
+      applicationLabelsProvider.overrideWith(_StubLabels.new),
     ],
   ],
   child: ShadApp(
@@ -70,6 +80,7 @@ Widget _wrap(
 );
 
 const Key _library = ValueKey('application.library');
+const Key _labels = ValueKey('application.labels');
 const Key _profileOptions = ValueKey('clubIdentity.section.profileOptions');
 
 void main() {
@@ -140,6 +151,50 @@ void main() {
       expect(find.byKey(_profileOptions), findsOneWidget);
       expect(find.byKey(_library), findsNothing);
       expect(find.text('Add text'), findsNothing);
+    });
+  });
+
+  group('Issue 396: the Labels card on Club details', () {
+    testWidgets('Issue 396: shows after the Library card while applications '
+        'are on, a blank translation Required', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1100, 4000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        _wrap(
+          _user(superAdmin: true),
+          applications: true,
+          extendedProfile: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(_labels), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byKey(_labels)).dy,
+        greaterThan(tester.getBottomLeft(find.byKey(_library)).dy),
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(_labels),
+          matching: find.text('Required'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Issue 396: shows nothing while applications are off', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1100, 4000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        _wrap(
+          _user(superAdmin: true),
+          applications: false,
+          extendedProfile: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(_labels), findsNothing);
     });
   });
 }

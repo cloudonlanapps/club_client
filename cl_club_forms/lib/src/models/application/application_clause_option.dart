@@ -2,10 +2,10 @@ import 'package:flutter/foundation.dart';
 
 import 'application_clause_kind.dart';
 
-/// A library text, as an application's editor offers it (club_client#336,
-/// #389): a built-in clause of the server's library or one of the club's
-/// own texts, written in each language with its `{fact}` gaps. Tapping it
-/// pastes the text as written. Form-local; the host passes the list.
+/// A text of the club's library, as an application's editor offers it
+/// (club_client#336, #389, #396), written in each language with its
+/// `{fact}` gaps. Tapping it pastes the text as written. Form-local; the
+/// host passes the list.
 @immutable
 class ApplicationClauseOption {
   const ApplicationClauseOption({
@@ -14,11 +14,10 @@ class ApplicationClauseOption {
     required this.text,
     this.heading = const {},
     this.name,
-    this.club = false,
   });
 
-  /// What tells it apart from the others in the list: a built-in clause's
-  /// key (`rule.matches`), or the host's id of a club text.
+  /// What tells it apart from the others in the list: the host's id of
+  /// the text.
   final String id;
 
   /// Where it may be used.
@@ -30,11 +29,8 @@ class ApplicationClauseOption {
   /// The text, by language code, with its gaps in braces.
   final Map<String, String> text;
 
-  /// A club text's short name; null for a built-in clause.
+  /// The text's short name, shown above it; null for none.
   final String? name;
-
-  /// Whether it is one of the club's own texts rather than a built-in one.
-  final bool club;
 
   /// This option with only those languages of [codes] that have text, each
   /// trimmed: what is pasted into a template printing in [codes].
@@ -51,7 +47,6 @@ class ApplicationClauseOption {
       text: pick(text),
       heading: pick(heading),
       name: name,
-      club: club,
     );
   }
 
@@ -62,7 +57,6 @@ class ApplicationClauseOption {
           other.id == id &&
           other.kind == kind &&
           other.name == name &&
-          other.club == club &&
           mapEquals(other.heading, heading) &&
           mapEquals(other.text, text);
 
@@ -71,7 +65,6 @@ class ApplicationClauseOption {
     id,
     kind,
     name,
-    club,
     Object.hashAllUnordered(
       heading.entries.map((e) => Object.hash(e.key, e.value)),
     ),

@@ -27,6 +27,7 @@ Future<FakeApplicationsMaster> _pump(
   ApplicationContent? content,
   List<String>? names,
   Future<bool> Function(String fileName, Uint8List bytes)? onSaveFile,
+  FakeApplicationLabels? labels,
 }) async {
   final master = FakeApplicationsMaster({
     5: ApplicationSamples.template(
@@ -46,9 +47,21 @@ Future<FakeApplicationsMaster> _pump(
       onSaveFile: onSaveFile ?? (_, _) async => true,
     ),
     master: master,
+    labels: labels,
   );
   return master;
 }
+
+/// The samples' labels and one more, Address, written in English alone.
+FakeApplicationLabels _labelsLackingMarathi() => FakeApplicationLabels(
+  ApplicationLabels(
+    languages: const ['en', 'mr', 'hi'],
+    labels: {
+      ...ApplicationSamples.labels.labels,
+      'field.address': const {'en': 'Address'},
+    },
+  ),
+);
 
 /// The icon button of the heading card's Preview or blank form ([name]).
 ShadIconButton _icon(WidgetTester tester, String name) => tester.widget(
@@ -291,8 +304,65 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         find.text(
-          'Save was refused: these texts are missing or lack a language. '
+          'Finalize was refused: these texts are missing or lack a language. '
           'Footer line: Marathi; Note 2: English, Marathi.',
+        ),
+        findsOneWidget,
+      );
+      expect(master.calls, ['save 5']);
+    });
+
+    testWidgets('Issue 396: a club label lacking a print language is in the '
+        'Missing list, by name, and Finalize is greyed out', (tester) async {
+      final master = await _pump(tester, labels: _labelsLackingMarathi());
+      expect(find.text(ApplicationViewStrings.missingIntro), findsOneWidget);
+      expect(find.text('Label: Address — Marathi missing'), findsOneWidget);
+      expect(
+        find.textContaining('Label: Full name'),
+        findsNothing,
+        reason: 'the template overrides it',
+      );
+      expect(_step(tester, 'save').enabled, isFalse);
+      expect(master.calls, isEmpty);
+    });
+
+    testWidgets('Issue 396: a refusal listing a club label names it', (
+      tester,
+    ) async {
+      final master = await _pump(tester)
+        ..failWith = const ApplicationIncompleteException(
+          message: 'incomplete',
+          missing: [
+            ApplicationMissingText(
+              field: 'labels.field.full_name',
+              languages: ['mr'],
+            ),
+          ],
+        );
+      _step(tester, 'save').onPressed!();
+      await tester.pumpAndSettle();
+      expect(
+        find.text(
+          'Finalize was refused: these texts are missing or lack a language. '
+          'Label: Full name — Marathi.',
+        ),
+        findsOneWidget,
+      );
+      expect(master.calls, ['save 5']);
+    });
+
+    testWidgets('Issue 396: a print language the club no longer offers is '
+        'said inline on Finalize', (tester) async {
+      final master = await _pump(tester)
+        ..failWith = const ApplicationLanguageNotOfferedException(
+          message: 'not offered',
+          languages: ['mr'],
+        );
+      _step(tester, 'save').onPressed!();
+      await tester.pumpAndSettle();
+      expect(
+        find.text(
+          ApplicationViewStrings.finalizeLanguageNotOffered(['Marathi']),
         ),
         findsOneWidget,
       );
@@ -344,6 +414,44 @@ void main() {
       expect(master.calls, [
         'update 5 languages,organisation,title,subtitle,formFooter',
       ]);
+    });
+
+    testWidgets('Issue 396: a section saved with a language the club does '
+        'not offer says so inline in the form', (tester) async {
+      final master = await _pump(tester)
+        ..failWith = const ApplicationLanguageNotOfferedException(
+          message: 'not offered',
+          languages: ['mr'],
+        );
+      final card = find.byKey(const ValueKey('application.section.heading'));
+      await tester.tap(
+        find.descendant(of: card, matching: find.byType(SectionEditButton)),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.descendant(of: card, matching: _input('Trial')),
+        'Trial 2027',
+      );
+      await tester.tap(
+        find.descendant(
+          of: card,
+          matching: find.widgetWithText(
+            ShadButton,
+            ApplicationViewStrings.save,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(master.calls, hasLength(1));
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.text(
+            ApplicationViewStrings.languageNotOffered(['Marathi']),
+          ),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('Issue 321: a value the server refuses shows on its field', (

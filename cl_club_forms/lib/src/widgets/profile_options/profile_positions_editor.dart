@@ -15,7 +15,10 @@ import 'profile_position_row.dart';
 ///
 /// It reports the whole list through [onChanged] on every edit, each
 /// position shaped as `ProfileOptionsFormValues.position` holds it; the
-/// list is seeded once from [initialRows].
+/// list is seeded once from [initialRows]. When [labelLanguages] changes
+/// (a language added or removed in the same form, club_client#396), each
+/// position gets an empty label in a new language, and keeps, unshown, its
+/// label in a removed one.
 class ProfilePositionsEditor extends StatefulWidget {
   const ProfilePositionsEditor({
     required this.labelLanguages,
@@ -61,6 +64,16 @@ class ProfilePositionsEditorState extends State<ProfilePositionsEditor> {
   void initState() {
     super.initState();
     widget.initialRows.forEach(addRowFrom);
+  }
+
+  @override
+  void didUpdateWidget(ProfilePositionsEditor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    for (final row in labels.values) {
+      for (final language in widget.labelLanguages) {
+        row.putIfAbsent(language.code, TextEditingController.new);
+      }
+    }
   }
 
   @override

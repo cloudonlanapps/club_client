@@ -50,8 +50,10 @@ class BackgroundCardState extends ConsumerState<BackgroundCard> {
   @override
   Widget build(BuildContext context) {
     final user = widget.user;
-    final languages =
-        ref.watch(profileOptionsProvider).valueOrNull?.languages ?? const [];
+    final options = ref.watch(profileOptionsProvider).valueOrNull;
+    final languages = options == null
+        ? const <String>[]
+        : profileLanguageNames(options);
     final rows = <Widget?>[
       profileDetailRow(
         context,

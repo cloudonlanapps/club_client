@@ -12,6 +12,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../constants/application_view_sizes.dart';
 import '../constants/application_view_strings.dart';
 import '../models/application_template_file.dart';
+import '../utils/application_save_refusal.dart';
 import '../widgets/admin_application_list.dart';
 import '../widgets/application_create_dialog.dart';
 import '../widgets/application_page.dart';
@@ -62,10 +63,15 @@ class ApplicationsView extends ConsumerWidget {
           .read(clApplicationsMasterProvider.notifier)
           .createApplication(content);
       onOpen(created.id);
-    } on Object {
+    } on Object catch (e) {
+      // A print language the club does not offer is named (club_client#396);
+      // any other refusal is a fixed message.
       toaster.show(
-        const ShadToast.destructive(
-          description: Text(ApplicationViewStrings.importFailed),
+        ShadToast.destructive(
+          description: Text(
+            applicationLanguageRefusal(e) ??
+                ApplicationViewStrings.importFailed,
+          ),
         ),
       );
     }

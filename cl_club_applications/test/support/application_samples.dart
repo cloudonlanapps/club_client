@@ -91,65 +91,66 @@ abstract final class ApplicationSamples {
     },
   );
 
-  /// The clauses list: the built-in clauses, then a club text.
-  static const ApplicationClauseLibrary clauses = ApplicationClauseLibrary(
-    languages: ['en', 'mr', 'hi'],
-    choices: {
+  /// The clauses list (club_client#396): every text the club's, the
+  /// built-in ones seeded with their key, the club's own with none.
+  static final ApplicationClauseLibrary clauses = ApplicationClauseLibrary(
+    languages: const ['en', 'mr', 'hi'],
+    choices: const {
       'on_ice': {'en': 'on-ice', 'mr': 'बर्फावर'},
     },
     clauses: [
-      ApplicationClause(
-        source: ApplicationClauseSource.builtin,
+      libraryText(
+        id: 1,
         key: 'header.camp',
+        name: 'Header: camp',
         kind: ApplicationClauseKind.header,
-        gaps: {'dates': ApplicationFactType.dateRange},
-        text: ApplicationText({'en': 'Camp: {dates}', 'mr': 'शिबिर: {dates}'}),
+        text: const ApplicationText({
+          'en': 'Camp: {dates}',
+          'mr': 'शिबिर: {dates}',
+        }),
       ),
-      ApplicationClause(
-        source: ApplicationClauseSource.builtin,
+      libraryText(
+        id: 2,
         key: 'declaration.camp',
+        name: 'Declaration: camp',
         kind: ApplicationClauseKind.declaration,
-        text: ApplicationText({
+        text: const ApplicationText({
           'en': 'I declare the above is true.',
           'mr': 'मी घोषित करतो.',
         }),
       ),
-      ApplicationClause(
-        source: ApplicationClauseSource.builtin,
+      libraryText(
+        id: 3,
         key: 'rule.fee',
+        name: 'Fee',
         kind: ApplicationClauseKind.rule,
-        gaps: {'amount': ApplicationFactType.amount},
-        heading: ApplicationText({'en': 'Fee', 'mr': 'शुल्क'}),
-        text: ApplicationText({
+        heading: const ApplicationText({'en': 'Fee', 'mr': 'शुल्क'}),
+        text: const ApplicationText({
           'en': 'A fee of {amount} is payable.',
           'mr': '{amount} शुल्क.',
         }),
       ),
-      ApplicationClause(
-        source: ApplicationClauseSource.builtin,
+      libraryText(
+        id: 4,
         key: 'selection.attend_camp',
-        kind: ApplicationClauseKind.selection,
-        gaps: {'dates': ApplicationFactType.dateRange},
-        text: ApplicationText({
+        name: 'Selection: attend camp',
+        text: const ApplicationText({
           'en': 'I will attend the camp {dates}.',
           'mr': '{dates}',
         }),
       ),
-      ApplicationClause(
-        source: ApplicationClauseSource.builtin,
+      libraryText(
+        id: 5,
         key: 'note.follow_rules',
+        name: 'Note: follow rules',
         kind: ApplicationClauseKind.note,
-        text: ApplicationText({
+        text: const ApplicationText({
           'en': 'Follow the rules above.',
           'mr': 'नियम पाळा.',
         }),
       ),
-      ApplicationClause(
-        source: ApplicationClauseSource.club,
-        id: 7,
-        name: 'Attend the matches',
-        kind: ApplicationClauseKind.selection,
-        text: ApplicationText({
+      libraryText(
+        text: const ApplicationText({
           'en': 'I will play the matches on {match_dates}.',
           'mr': 'मी {match_dates} रोजी सामने खेळेन.',
           'hi': 'मैं {match_dates} को खेलूँगा।',
@@ -161,6 +162,7 @@ abstract final class ApplicationSamples {
   /// One of the club's library texts.
   static ApplicationLibraryText libraryText({
     int id = 7,
+    String? key,
     String name = 'Attend the matches',
     ApplicationClauseKind kind = ApplicationClauseKind.selection,
     ApplicationText? heading,
@@ -170,6 +172,7 @@ abstract final class ApplicationSamples {
     }),
   }) => ApplicationLibraryText(
     id: id,
+    key: key,
     kind: kind,
     name: name,
     heading: heading,

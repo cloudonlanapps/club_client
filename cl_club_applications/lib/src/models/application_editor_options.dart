@@ -7,9 +7,7 @@ import 'package:cl_club_forms/cl_club_forms.dart'
         ApplicationFormFields,
         ApplicationLabelOption,
         ApplicationLanguageOption;
-import 'package:club_sdk_2/club_sdk_2.dart'
-    as sdk
-    show ApplicationClauseKind, ApplicationClauseSource;
+import 'package:club_sdk_2/club_sdk_2.dart' as sdk show ApplicationClauseKind;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show ApplicationClause, ApplicationClauseLibrary, ApplicationLabels;
 import 'package:flutter/foundation.dart';
@@ -59,23 +57,18 @@ class ApplicationEditorOptions {
         name: ApplicationViewStrings.languageNames[code] ?? code,
       );
 
-  /// The prefix of a club text's id among the forms' options.
-  static const String clubIdPrefix = 'club.';
-
-  /// An entry of the clauses list in the forms' type (club_client#389): a
-  /// built-in clause by its key, a club text by [clubIdPrefix] and its id,
-  /// with its name; its text and heading as written.
-  static ApplicationClauseOption clause(ApplicationClause clause) {
-    final club = clause.source == sdk.ApplicationClauseSource.club;
-    return ApplicationClauseOption(
-      id: club ? '$clubIdPrefix${clause.id}' : clause.key ?? '',
-      kind: kindOf(clause.kind),
-      text: clause.text.texts,
-      heading: clause.heading?.texts ?? const {},
-      name: clause.name,
-      club: club,
-    );
-  }
+  /// An entry of the clauses list in the forms' type (club_client#389,
+  /// #396): every entry is one of the club's library texts, the seeded
+  /// built-in ones among them, by its id, with its name; its text and
+  /// heading as written.
+  static ApplicationClauseOption clause(ApplicationClause clause) =>
+      ApplicationClauseOption(
+        id: '${clause.id}',
+        kind: kindOf(clause.kind),
+        text: clause.text.texts,
+        heading: clause.heading?.texts ?? const {},
+        name: clause.name,
+      );
 
   /// The SDK's [kind] as the forms name it; a kind the forms do not know
   /// is taken for a note.
@@ -86,7 +79,7 @@ class ApplicationEditorOptions {
   /// The languages a template may print in, English first.
   final List<ApplicationLanguageOption> languageOptions;
 
-  /// The library texts: the built-in clauses, then the club's texts.
+  /// The club's library texts, in the library's order.
   final List<ApplicationClauseOption> clauses;
 
   /// The choices a `choices` fact may name.

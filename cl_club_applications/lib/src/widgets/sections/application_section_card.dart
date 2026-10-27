@@ -11,6 +11,7 @@ import '../../constants/application_view_strings.dart';
 import '../../models/application_editor_options.dart';
 import '../../models/application_form_submit.dart';
 import '../../models/application_section.dart';
+import '../../utils/application_save_refusal.dart';
 import '../../utils/application_section_lines.dart';
 import '../../utils/application_text_reader.dart';
 import '../application_facts_help.dart';
@@ -23,8 +24,9 @@ import 'application_section_specs.dart';
 /// section's fields alone.
 ///
 /// Editable only while the template is a draft ([canEdit]). A value the
-/// server refuses shows on its field; a template no longer a draft is said
-/// inline in the form, and the list reloads; anything else is a toast.
+/// server refuses shows on its field; a template no longer a draft, or a
+/// language the club does not offer (club_client#396), is said inline in
+/// the form, and the list reloads; anything else is a toast.
 class ApplicationSectionCard extends ConsumerStatefulWidget {
   const ApplicationSectionCard({
     required this.template,
@@ -83,8 +85,11 @@ class ApplicationSectionCardState
     } on Object catch (e) {
       if (!mounted) return false;
       final fieldErrors = ApplicationFormSubmit.fieldErrorsFor(e);
+      final language = applicationLanguageRefusal(e);
       if (fieldErrors.isNotEmpty) {
         spec.showErrors(formKey, fieldErrors: fieldErrors);
+      } else if (language != null) {
+        spec.showErrors(formKey, formError: language);
       } else if (ApplicationFormSubmit.isNotDraft(e)) {
         spec.showErrors(
           formKey,

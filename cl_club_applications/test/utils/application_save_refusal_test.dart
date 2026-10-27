@@ -17,7 +17,7 @@ void main() {
 
       expect(
         message,
-        'Save was refused: these texts are missing or lack a language. '
+        'Finalize was refused: these texts are missing or lack a language. '
         'Title: English.',
       );
       expect(message, isNot(contains('Marathi')));
@@ -29,7 +29,7 @@ void main() {
           ApplicationMissingText(field: 'title', languages: ['en']),
           ApplicationMissingText(field: 'declaration', languages: ['mr']),
         ]),
-        'Save was refused: these texts are missing or lack a language. '
+        'Finalize was refused: these texts are missing or lack a language. '
         'Title: English; Declaration: Marathi.',
       );
     });
@@ -46,7 +46,7 @@ void main() {
             languages: ['xx'],
           ),
         ]),
-        'Save was refused: these texts are missing or lack a language. '
+        'Finalize was refused: these texts are missing or lack a language. '
         'Footer line: English, Marathi; Term 2 heading: Marathi; '
         'Selection 1: Hindi; Label dob: xx.',
       );
@@ -77,7 +77,7 @@ void main() {
             ],
           ),
         ),
-        'Save was refused: these gaps name no fact. '
+        'Finalize was refused: these gaps name no fact. '
         'Selection 2 (Marathi): no fact named match_date; '
         'Item 1, line 2 (English): no fact named venue2.',
       );
@@ -87,6 +87,70 @@ void main() {
       expect(
         applicationSaveRefusal(
           const ApplicationUnknownFactException(message: 'raw'),
+        ),
+        isNull,
+      );
+    });
+  });
+
+  group("Issue 396: the club's labels and languages", () {
+    const labels = {
+      'field.full_name': {'en': 'Full name', 'mr': 'पूर्ण नाव'},
+    };
+
+    test('Issue 396: a label lacking a language is named by its English '
+        'text', () {
+      expect(
+        applicationSaveRefusal(
+          const ApplicationIncompleteException(
+            message: 'raw',
+            missing: [
+              ApplicationMissingText(field: 'title', languages: ['hi']),
+              ApplicationMissingText(
+                field: 'labels.field.full_name',
+                languages: ['hi'],
+              ),
+              ApplicationMissingText(
+                field: 'labels.field.unknown',
+                languages: ['hi', 'mr'],
+              ),
+            ],
+          ),
+          labels: labels,
+        ),
+        'Finalize was refused: these texts are missing or lack a language. '
+        'Title: Hindi; Label: Full name — Hindi; '
+        'Label: field.unknown — Hindi, Marathi.',
+      );
+    });
+
+    test('Issue 396: a print language the club does not offer is said '
+        'inline, by name', () {
+      const error = ApplicationLanguageNotOfferedException(
+        message: 'raw',
+        languages: ['hi', 'x-klingon'],
+      );
+      expect(
+        applicationSaveRefusal(error),
+        'Finalize was refused: the club does not offer Hindi, x-klingon. '
+        'Add them in Profile options on Club details, or remove them from '
+        'the print languages.',
+      );
+      expect(
+        applicationLanguageRefusal(error),
+        'The club does not offer Hindi, x-klingon. Add them in Profile '
+        'options on Club details, or leave them out.',
+      );
+    });
+
+    test('Issue 396: another failure is not a language refusal', () {
+      expect(
+        applicationLanguageRefusal(
+          const ServerException(
+            statusCode: 500,
+            code: 'INTERNAL_ERROR',
+            message: 'down',
+          ),
         ),
         isNull,
       );

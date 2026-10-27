@@ -1,5 +1,5 @@
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show clApplicationsMasterProvider;
+    show applicationLabelsProvider, clApplicationsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show ApplicationStatus, ApplicationTemplate;
 import 'package:flutter/widgets.dart';
@@ -107,7 +107,11 @@ class ApplicationStateCardState extends ConsumerState<ApplicationStateCard> {
       if (step == ApplicationStep.delete) widget.onDeleted();
     } on Object catch (e) {
       if (!mounted) return;
-      final message = applicationSaveRefusal(e);
+      final message = applicationSaveRefusal(
+        e,
+        labels:
+            ref.read(applicationLabelsProvider).valueOrNull?.labels ?? const {},
+      );
       if (message != null) {
         setState(() => refusal = message);
       } else if (applicationChangedMeanwhile(e)) {

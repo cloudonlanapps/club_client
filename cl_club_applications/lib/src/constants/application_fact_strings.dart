@@ -73,10 +73,10 @@ abstract final class ApplicationFactStrings {
   /// Facts, or change the text.
   static const String unknownIntro = 'Unknown facts:';
 
-  /// Save refused by the server for gaps naming no fact ([gaps], each a
+  /// Finalize refused by the server for gaps naming no fact ([gaps], each a
   /// [unknownFact] line, joined by `; `).
   static String refused(String gaps) =>
-      'Save was refused: these gaps name no fact. $gaps.';
+      'Finalize was refused: these gaps name no fact. $gaps.';
 
   /// Separates the gaps of a refusal.
   static const String separator = '; ';

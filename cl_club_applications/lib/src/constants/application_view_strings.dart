@@ -136,11 +136,11 @@ abstract final class ApplicationViewStrings {
   static const String changedMeanwhile =
       'This application was changed elsewhere and has been reloaded.';
 
-  /// Save refused: [texts] are missing or lack print languages, each
+  /// Finalize refused: [texts] are missing or lack print languages, each
   /// named with the ones it lacks ([incompleteText]), joined by
   /// [incompleteSeparator] (club_client#338).
   static String incomplete(String texts) =>
-      'Save was refused: these texts are missing or lack a language. '
+      'Finalize was refused: these texts are missing or lack a language. '
       '$texts.';
 
   /// One incomplete text of a save refusal: the text at [place] and the
@@ -148,12 +148,37 @@ abstract final class ApplicationViewStrings {
   static String incompleteText(String place, String languages) =>
       '$place: $languages';
 
+  /// One club label of a save refusal, or of the Missing list without
+  /// "missing" ([missingLabel]): the label [name]d by its English text and
+  /// the [languages] it lacks (club_client#396).
+  static String incompleteLabel(String name, String languages) =>
+      'Label: $name — $languages';
+
+  /// A club label in the Missing list: [name] lacks [languages].
+  static String missingLabel(String name, List<String> languages) =>
+      '${incompleteLabel(name, languages.join(', '))} missing';
+
+  /// Finalize refused: the club does not offer [languages], named.
+  static String finalizeLanguageNotOffered(List<String> languages) =>
+      'Finalize was refused: the club does not offer ${languages.join(', ')}. '
+      'Add ${_them(languages)} in Profile options on Club details, or remove '
+      '${_them(languages)} from the print languages.';
+
+  /// A write refused: the club does not offer [languages], named.
+  static String languageNotOffered(List<String> languages) =>
+      'The club does not offer ${languages.join(', ')}. '
+      'Add ${_them(languages)} in Profile options on Club details, or leave '
+      '${_them(languages)} out.';
+
+  static String _them(List<String> languages) =>
+      languages.length == 1 ? 'it' : 'them';
+
   /// Separates the incomplete texts of a save refusal.
   static const String incompleteSeparator = '; ';
 
-  /// Save refused: the details do not fit page 1.
+  /// Finalize refused: the details do not fit page 1.
   static String doesNotFit(double? overflowPt) =>
-      'Save was refused: the member’s details do not fit on page 1'
+      'Finalize was refused: the member’s details do not fit on page 1'
       '${overflowPt == null ? '' : ' (over by ${overflowPt.round()} pt)'}. '
       'Remove some age categories.';
 
@@ -283,10 +308,30 @@ abstract final class ApplicationViewStrings {
   };
 
   /// A print language's name by its code; the code itself when unknown.
+  /// The codes the server gives the language names it knows
+  /// (club_server#133), so a language the club adds by one of these names
+  /// is named here too.
   static const Map<String, String> languageNames = {
     'en': 'English',
     'mr': 'Marathi',
     'hi': 'Hindi',
+    'gu': 'Gujarati',
+    'kn': 'Kannada',
+    'kok': 'Konkani',
+    'ta': 'Tamil',
+    'te': 'Telugu',
+    'ml': 'Malayalam',
+    'bn': 'Bengali',
+    'pa': 'Punjabi',
+    'or': 'Odia',
+    'as': 'Assamese',
+    'ur': 'Urdu',
+    'sa': 'Sanskrit',
+    'ne': 'Nepali',
+    'sd': 'Sindhi',
+    'fr': 'French',
+    'de': 'German',
+    'es': 'Spanish',
   };
 
   /// The name of print language [code] as the editor shows it; the code

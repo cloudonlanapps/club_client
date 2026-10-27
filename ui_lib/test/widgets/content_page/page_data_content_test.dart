@@ -36,7 +36,7 @@ Future<void> pumpPage(WidgetTester tester, PageDataContent content) async {
 
 void main() {
   group('Issue 157: PageDataContent navigates through its host', () {
-    testWidgets("Issue 157: a CTA button hands its route to onNavigate", (
+    testWidgets('Issue 157: a CTA button hands its route to onNavigate', (
       tester,
     ) async {
       final routes = <String>[];

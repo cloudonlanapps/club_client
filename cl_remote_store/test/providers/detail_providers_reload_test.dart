@@ -138,7 +138,7 @@ void main() {
     );
 
     test(
-      'Issue 229: an absent event is the master\'s not-found error',
+      "Issue 229: an absent event is the master's not-found error",
       () async {
         final container = ProviderContainer(
           overrides: [clEventsMasterProvider.overrideWith(_Events.new)],

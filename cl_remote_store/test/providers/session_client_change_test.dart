@@ -34,16 +34,15 @@ class _Enrollments extends Fake implements EnrollmentSource {
   }
 }
 
-Enrollment _enrollment(EnrollmentStatus status, {String? reason}) =>
-    Enrollment(
-      id: 1,
-      membername: _member,
-      eventId: _eventId,
-      status: status,
-      isTrial: true,
-      withdrawalReason: reason,
-      createdAtUtc: DateTime.utc(2026),
-    );
+Enrollment _enrollment(EnrollmentStatus status, {String? reason}) => Enrollment(
+  id: 1,
+  membername: _member,
+  eventId: _eventId,
+  status: status,
+  isTrial: true,
+  withdrawalReason: reason,
+  createdAtUtc: DateTime.utc(2026),
+);
 
 /// Which session is signed in; a sign-in or sign-out replaces the client.
 final _sessionProvider = StateProvider<int>((ref) => 0);

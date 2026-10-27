@@ -5,7 +5,7 @@
 /// two clubs share one implementation rather than two copies that drift.
 library;
 
-export 'src/app.dart' show App;
+export 'src/app.dart' show App, memberAppTitle;
 export 'src/club_main.dart' show clubConfigProvider, clubMain;
 export 'src/models/bundled_contact_info.dart' show loadBundledContactInfo;
 export 'src/models/club_config.dart'

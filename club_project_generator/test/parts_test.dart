@@ -208,18 +208,54 @@ void main() {
                 ),
               )
               as Map<String, dynamic>;
-      expect(m['name'], 'A & B <Club>');
-      expect(m['short_name'], 'AB');
+      expect(m['name'], 'AB Member App');
+      expect(m['short_name'], 'Member App');
       expect(m['description'], 'A & B <Club> - Official App');
     });
 
-    test('icons come in every size the page names', () {
+    Map<String, dynamic> manifestOf(Target target) =>
+        json.decode(
+              renderManifest(
+                target: target,
+                names: names,
+                colors: WebColors.neutral,
+              ),
+            )
+            as Map<String, dynamic>;
+
+    test('Issue 367: the app installs as "<shortName> Member App"', () {
+      final m = manifestOf(Target.app);
+      expect(m['name'], 'AB Member App');
+      expect(m['short_name'], 'Member App');
+      expect(m['display'], 'standalone');
+    });
+
+    test('Issue 367: the website keeps its names and is not installable', () {
+      final m = manifestOf(Target.website);
+      expect(m['name'], 'A & B <Club>');
+      expect(m['short_name'], 'AB');
+      expect(m['display'], 'browser');
+    });
+
+    test('Issue 367: each page is titled with its installed name', () {
+      String page(Target target) => renderIndexHtml(
+        apiUrl: api,
+        template: '<title>@@PAGE_NAME@@</title>',
+        target: target,
+        names: names,
+        colors: WebColors.neutral,
+      );
+      expect(page(Target.app), '<title>AB Member App</title>');
+      expect(page(Target.website), '<title>A &amp; B &lt;Club&gt;</title>');
+    });
+
+    test('Issue 367: icons come in every size the page names', () {
       final icons = renderIcons(png(1024, 1024));
       final sizes = {
         for (final e in icons.entries) e.key: img.decodePng(e.value)!.width,
       };
       expect(sizes, {
-        'favicon.png': 16,
+        'favicon.png': 32,
         'icons/Icon-192.png': 192,
         'icons/Icon-512.png': 512,
         'icons/Icon-maskable-192.png': 192,

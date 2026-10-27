@@ -1,18 +1,16 @@
 import 'package:cl_club_applications/cl_club_applications.dart'
     show ApplicationsView;
+import 'package:cl_member_auth/cl_member_auth.dart' show RoleGate;
 import 'package:flutter/widgets.dart';
-import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../widgets/applications_gate.dart';
 
-/// The Applications page at `/memberzone/applications` (club_client#321):
-/// open to every member who reaches the member zone while the server offers
-/// applications. Members download their form; admins manage the templates.
+/// The admin's Applications page at `/memberzone/applications`, under Club
+/// Management (club_client#321, #380): admins only, while the server offers
+/// applications. Members download their forms from `MyApplicationsScreen`.
 class ApplicationsScreen extends StatelessWidget {
   const ApplicationsScreen({
     required this.onOpen,
-    required this.pdfAction,
-    required this.onOpenProfile,
     required this.onHome,
     super.key,
   });
@@ -20,25 +18,13 @@ class ApplicationsScreen extends StatelessWidget {
   /// Opens the template with this id in the editor.
   final ValueChanged<int> onOpen;
 
-  /// What a downloaded form is handed to: shared, saved or opened.
-  final PdfAction pdfAction;
-
-  /// Opens the member's own profile, for a member who says their profile is
-  /// not complete before a download (club_client#340).
-  final VoidCallback onOpenProfile;
-
   /// Leaves a refused route for home.
   final VoidCallback onHome;
 
   @override
   Widget build(BuildContext context) => ApplicationsGate(
-    allow: (_) => true,
+    allow: RoleGate.admin,
     onHome: onHome,
-    builder: (user) => ApplicationsView(
-      currentUser: user,
-      onOpen: onOpen,
-      pdfAction: pdfAction,
-      onOpenProfile: onOpenProfile,
-    ),
+    builder: (user) => ApplicationsView(currentUser: user, onOpen: onOpen),
   );
 }

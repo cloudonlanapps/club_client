@@ -5,41 +5,29 @@ import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../constants/application_view_strings.dart';
 import '../widgets/admin_application_list.dart';
 import '../widgets/application_create_dialog.dart';
 import '../widgets/application_page.dart';
-import '../widgets/published_applications_list.dart';
 
-/// The Applications page at `/memberzone/applications` (club_client#321).
-///
-/// A member sees the published applications, each with Download, and what
-/// to do with the form. An admin sees every template with its state, opens
-/// one on tap, duplicates one, and creates one with **Create application**.
-/// Renders nothing unless the server offers applications.
+/// The admin's Applications page, under Club Management (club_client#321,
+/// #380): every template with its state, opened on tap, duplicated, and
+/// created with **Create application**. Members, admins included, download
+/// their own forms from `MyApplicationsView`. Renders nothing unless the
+/// server offers applications.
 class ApplicationsView extends ConsumerWidget {
   const ApplicationsView({
     required this.currentUser,
     required this.onOpen,
-    required this.pdfAction,
-    required this.onOpenProfile,
     super.key,
   });
 
-  /// The signed-in member.
+  /// The signed-in admin.
   final UserPrivate currentUser;
 
-  /// Opens the template with this id in the editor (admins).
+  /// Opens the template with this id in the editor.
   final ValueChanged<int> onOpen;
-
-  /// What a downloaded form is handed to: shared, saved or opened.
-  final PdfAction pdfAction;
-
-  /// Opens the member's own profile, for a member who says their profile is
-  /// not complete before a download (club_client#340).
-  final VoidCallback onOpenProfile;
 
   /// Creates a draft and opens it.
   Future<void> create(BuildContext context) async {
@@ -49,27 +37,19 @@ class ApplicationsView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    assert(
+      currentUser.isAdmin,
+      'ApplicationsView called for a non-admin. Screen gate failed.',
+    );
     if (ref.watch(applicationsProvider) != true) return const SizedBox.shrink();
-    final admin = currentUser.isAdmin;
     return ApplicationPage(
       heading: ApplicationViewStrings.applications,
-      trailing: admin
-          ? ShadButton(
-              onPressed: () => unawaited(create(context)),
-              leading: const Icon(LucideIcons.plus),
-              child: const Text(ApplicationViewStrings.create),
-            )
-          : null,
-      children: [
-        if (admin)
-          AdminApplicationList(onOpen: onOpen)
-        else
-          PublishedApplicationsList(
-            currentUser: currentUser,
-            pdfAction: pdfAction,
-            onOpenProfile: onOpenProfile,
-          ),
-      ],
+      trailing: ShadButton(
+        onPressed: () => unawaited(create(context)),
+        leading: const Icon(LucideIcons.plus),
+        child: const Text(ApplicationViewStrings.create),
+      ),
+      children: [AdminApplicationList(onOpen: onOpen)],
     );
   }
 }

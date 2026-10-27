@@ -139,7 +139,7 @@ void main() {
       await pumpApplications(
         tester,
         PublishedApplicationsList(
-          currentUser: applicationsUser(),
+          currentUser: eligibleMember(),
           pdfAction: recordingPdfAction(bytes: handed),
           onOpenProfile: () => opened++,
         ),
@@ -163,7 +163,7 @@ void main() {
       await pumpApplications(
         tester,
         ProfileApplicationsSection(
-          member: applicationsUser(),
+          member: eligibleMember(),
           own: true,
           pdfAction: recordingPdfAction(bytes: handed),
         ),
@@ -210,7 +210,7 @@ void main() {
       await pumpApplications(
         tester,
         ProfileApplicationsSection(
-          member: applicationsUser(),
+          member: eligibleMember(),
           own: false,
           pdfAction: recordingPdfAction(),
         ),

@@ -118,8 +118,13 @@ Future<void> _cancelIn(WidgetTester tester, Finder card) async {
   );
 }
 
-/// Opens *Applications* from the sidebar.
-Future<void> _openApplications(WidgetTester tester) async {
+/// Opens *Applications* from the sidebar: the member's own list under
+/// Main, or with [manage] the admin's list under Club Management
+/// (club_client#380).
+Future<void> _openApplications(
+  WidgetTester tester, {
+  bool manage = false,
+}) async {
   await waitFor(
     tester,
     () =>
@@ -130,7 +135,7 @@ Future<void> _openApplications(WidgetTester tester) async {
         find.byTooltip('Open menu').evaluate().isNotEmpty,
     description: 'the Applications sidebar entry',
   );
-  await openSidebarEntry(tester, _kApplications);
+  await openSidebarEntry(tester, _kApplications, last: manage);
 }
 
 void main() {
@@ -180,7 +185,7 @@ void main() {
     await loginViaUi(tester, _kSudoUsername, _kSudoPassword);
 
     // 1. The admin creates a draft.
-    await _openApplications(tester);
+    await _openApplications(tester, manage: true);
     final create = find.widgetWithText(ShadButton, 'Create application');
     await waitFor(
       tester,

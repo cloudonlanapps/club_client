@@ -9,11 +9,13 @@ import 'package:ui_lib/ui_lib.dart' show PdfAction;
 import '../constants/application_view_sizes.dart';
 import '../constants/application_view_strings.dart';
 import '../models/application_download.dart';
+import '../utils/application_eligibility.dart';
 import '../utils/application_title.dart';
 import 'application_download_row.dart';
 
 /// The Applications section of a member's profile (club_client#321): each
-/// published application with a button to download [member]'s form of it.
+/// published application [member] is eligible for (club_client#380), with a
+/// button to download their form of it.
 ///
 /// On one's own profile ([own]) it downloads the signed-in member's form,
 /// after asking whether their profile is complete; **No** only closes the
@@ -46,7 +48,9 @@ class ProfileApplicationsSection extends ConsumerWidget {
     if (ref.watch(applicationsProvider) != true) return const SizedBox.shrink();
     final theme = ShadTheme.of(context);
     final templates = ref.watch(clApplicationsMasterProvider).valueOrNull;
-    final published = publishedApplications(templates?.values ?? const []);
+    final published = publishedApplications(
+      templates?.values ?? const [],
+    ).where((t) => isEligibleFor(t, member)).toList();
     return ShadCard(
       key: cardKey,
       title: Text(

@@ -39,7 +39,10 @@ class AppSidebar extends StatelessWidget {
   /// under Club Management (club_core#174). Unknown counts as off.
   final bool evaluations;
 
-  /// Whether every member gets *Applications* under Main (club_client#321).
+  /// Whether the server offers applications: then every member gets
+  /// *Applications* under Main, to download their forms, and admins get
+  /// *Applications* under Club Management, to manage them (club_client#321,
+  /// #380).
   final bool applications;
 
   final bool isCollapsed;
@@ -103,7 +106,7 @@ class AppSidebar extends StatelessWidget {
       const NavItem(
         icon: LucideIcons.fileText,
         label: 'Applications',
-        destination: SidebarDestination.applications,
+        destination: SidebarDestination.myApplications,
         section: 'Main',
       ),
     const NavItem(
@@ -178,6 +181,14 @@ class AppSidebar extends StatelessWidget {
         destination: SidebarDestination.reviews,
         section: 'Club Management',
         coachOrAdmin: true,
+      ),
+    if (applications)
+      const NavItem(
+        icon: LucideIcons.filePen,
+        label: 'Applications',
+        destination: SidebarDestination.applications,
+        section: 'Club Management',
+        adminOnly: true,
       ),
     NavItem(
       icon: LucideIcons.inbox,

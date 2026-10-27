@@ -351,10 +351,16 @@ disabled.
   their profile page (`/onboarding/profile` while pending, their own
   profile once active), or only closes the question on a profile page. An
   admin's preview, and an admin's download of a member's form, do not ask.
-- **Member zone**: sidebar item **Applications** beside Groups and Events.
-  Members see the published ones with Download; admins see all with their
-  state, Create, the editor, Preview and the state actions (Save, Publish,
-  Unpublish, Revert), as on an evaluation.
+- **Member zone** (club_client#380): two sidebar items named
+  **Applications**, as Reviews has. Under Main, beside Groups and Events,
+  every member (admins included) sees the published ones they are eligible
+  for, each with Download; one whose age categories they don't fit is not
+  listed, and a member with no date of birth is asked to add one. The app
+  works eligibility out itself from the template's age categories (the
+  server's rule, R11); if that proves slow, the server will give it per
+  listed application. Under Club Management, admins only, they see all
+  with their state, Create, the editor, Preview and the state actions
+  (Save, Publish, Unpublish, Revert), as on an evaluation.
 - **Profile**: the three extended sections (hidden when the flag is off) and
   an Applications section to download from — on one's own profile, and for
   admins on any member's.

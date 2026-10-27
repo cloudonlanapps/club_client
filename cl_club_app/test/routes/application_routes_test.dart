@@ -49,6 +49,13 @@ void main() {
       expect(find.byType(ApplicationsScreen), findsOneWidget);
     });
 
+    testWidgets('Issue 380: the mine path mounts MyApplicationsScreen, not '
+        'an editor', (tester) async {
+      await _open(tester, myApplicationsPath);
+      expect(find.byType(MyApplicationsScreen), findsOneWidget);
+      expect(find.byType(ApplicationScreen), findsNothing);
+    });
+
     testWidgets('Issue 321: a template path mounts its ApplicationScreen', (
       tester,
     ) async {

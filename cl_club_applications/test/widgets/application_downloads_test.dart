@@ -190,7 +190,7 @@ void main() {
       await pumpApplications(
         tester,
         ProfileApplicationsSection(
-          member: applicationsUser(),
+          member: eligibleMember(),
           own: true,
           pdfAction: recordingPdfAction(),
         ),
@@ -208,7 +208,7 @@ void main() {
       await pumpApplications(
         tester,
         ProfileApplicationsSection(
-          member: applicationsUser(),
+          member: eligibleMember(),
           own: false,
           pdfAction: recordingPdfAction(),
         ),
@@ -225,7 +225,7 @@ void main() {
       await pumpApplications(
         tester,
         ProfileApplicationsSection(
-          member: applicationsUser(),
+          member: eligibleMember(),
           own: true,
           pdfAction: recordingPdfAction(),
         ),
@@ -233,6 +233,30 @@ void main() {
         enabled: false,
       );
       expect(find.byKey(ProfileApplicationsSection.cardKey), findsNothing);
+    });
+
+    testWidgets('Issue 380: leaves out what the member is not eligible for', (
+      tester,
+    ) async {
+      await pumpApplications(
+        tester,
+        ProfileApplicationsSection(
+          member: applicationsUser().copyWith(
+            dateOfBirthUtc: () => DateTime.utc(2015, 6),
+            gender: () => Gender.female,
+          ),
+          own: false,
+          pdfAction: recordingPdfAction(),
+        ),
+        master: FakeApplicationsMaster(_published()),
+        currentUser: applicationsUser(admin: true),
+      );
+      expect(find.byKey(ProfileApplicationsSection.cardKey), findsOneWidget);
+      expect(find.text('Trial'), findsNothing);
+      expect(
+        find.text(ApplicationViewStrings.nothingToDownload),
+        findsOneWidget,
+      );
     });
   });
 }

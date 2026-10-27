@@ -13,7 +13,7 @@ String memberZoneSidebarRoute(
   SidebarDestination.myCalendar => '/memberzone/my-events/$username/calendar',
   SidebarDestination.myGroups => '/memberzone/my-groups/$username',
   SidebarDestination.myEvents => '/memberzone/my-events/$username',
-  SidebarDestination.applications => applicationsPath,
+  SidebarDestination.myApplications => myApplicationsPath,
   SidebarDestination.myAttendance =>
     '/memberzone/my-events/$username/attendance',
   SidebarDestination.myReviews => '/memberzone/reviews/mine',
@@ -25,6 +25,7 @@ String memberZoneSidebarRoute(
   SidebarDestination.camps => '/memberzone/events/camps',
   SidebarDestination.oneOff => '/memberzone/events/one-off',
   SidebarDestination.reviews => '/memberzone/reviews',
+  SidebarDestination.applications => applicationsPath,
   SidebarDestination.inquiries => '/memberzone/inquiries',
   SidebarDestination.siteMedia => '/memberzone/site-media',
   SidebarDestination.clubDetails => '/memberzone/club-details',

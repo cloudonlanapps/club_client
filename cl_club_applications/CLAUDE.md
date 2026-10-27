@@ -18,12 +18,14 @@ SDK-free `Application*Form`s of `cl_club_forms`.
 
 | Where | Widget | Constructor |
 |---|---|---|
-| `applications` | `ApplicationsView` | `currentUser`, `onOpen(int id)`, `pdfAction`, `onOpenProfile` |
+| `applications/mine` (Main, every member) | `MyApplicationsView` | `currentUser`, `pdfAction`, `onOpenProfile` |
+| `applications` (Club Management, admin) | `ApplicationsView` | `currentUser`, `onOpen(int id)` |
 | `applications/:id` (admin) | `ApplicationView` | `currentUser`, `applicationId`, `onBack`, `onDeleted`, `pdfAction` |
 | profile (injected by the router) | `ProfileApplicationsSection` | `member`, `own`, `pdfAction` |
 | onboarding's waiting page (injected) | `PublishedApplicationsList` | `currentUser`, `pdfAction`, `onOpenProfile` |
 
-Screens are `ApplicationsScreen` and `ApplicationScreen` in `cl_member_zone`;
+Screens are `MyApplicationsScreen`, `ApplicationsScreen` and
+`ApplicationScreen` in `cl_member_zone`;
 the routes and the injections are `cl_club_app`'s `application_routes.dart`.
 
 ## The adapter
@@ -36,6 +38,16 @@ alone (`update<Section>`), mapping the server's field names back to the
 forms' ids for a schema refusal.
 
 ## Rules
+
+- A member is offered only the published applications they are eligible
+  for (club_client#380): `isEligibleFor` (`utils/application_eligibility.dart`)
+  mirrors club_server's `application_rules.fits`, R11. No age categories:
+  everyone; otherwise born on or after / on or before a category's days
+  (each optional, inclusive) and of one of its genders (none = any). No date
+  of birth fits no category, and `PublishedApplicationsList` asks for one.
+  `PublishedApplicationsList` (Main, waiting page) and
+  `ProfileApplicationsSection` both filter. Change the rule here only with
+  the server's.
 
 - Moves the state forbids are greyed out with their reason beside them; Save
   is also greyed out while `ApplicationCompleteness.missingTexts` lists

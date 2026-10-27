@@ -11,6 +11,12 @@ abstract final class ApplicationViewStrings {
   /// A member's list with nothing published.
   static const String noneOpen = 'No applications are open right now.';
 
+  /// A member's list when, without a date of birth, they fit no age
+  /// category (club_client#380).
+  static const String needsDateOfBirth =
+      'Add your date of birth to your profile to see the applications open '
+      'to you.';
+
   /// A member's list without an identity document.
   static const String needsIdentityDocument =
       'Applications are offered once you have uploaded an identity '

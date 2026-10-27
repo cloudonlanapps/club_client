@@ -7,8 +7,6 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../support/application_samples.dart';
 import '../support/applications_harness.dart';
-import '../support/pdf_action.dart';
-import '../support/profile_complete.dart';
 
 Map<int, ApplicationTemplate> _all() => {
   1: ApplicationSamples.template(id: 1),
@@ -33,60 +31,21 @@ Map<int, ApplicationTemplate> _all() => {
 Future<void> _pump(
   WidgetTester tester, {
   required FakeApplicationsMaster master,
-  bool admin = false,
   bool enabled = true,
-  List<MediaLink> documents = const [],
   ValueChanged<int>? onOpen,
 }) => pumpApplications(
   tester,
   ApplicationsView(
-    currentUser: applicationsUser(admin: admin),
+    currentUser: applicationsUser(admin: true),
     onOpen: onOpen ?? (_) {},
-    pdfAction: recordingPdfAction(),
-    onOpenProfile: () {},
   ),
   master: master,
   enabled: enabled,
-  documents: documents,
 );
 
 void main() {
-  group('Issue 321: a member’s Applications page', () {
-    testWidgets('Issue 321: lists the published ones with Download and what '
-        'to do with the form', (tester) async {
-      final master = FakeApplicationsMaster(_all());
-      await _pump(tester, master: master, documents: [identityDocument()]);
-
-      expect(find.text('Season 2026'), findsOneWidget);
-      expect(find.text('Trial'), findsNothing, reason: 'drafts stay hidden');
-      expect(find.text(ApplicationViewStrings.printNote), findsOneWidget);
-      expect(find.text(ApplicationViewStrings.create), findsNothing);
-
-      await tester.tap(find.text(testPdfActionLabel));
-      await answerProfileComplete(tester);
-      expect(master.calls, ['own 2']);
-    });
-
-    testWidgets('Issue 321: without an identity document says why there is '
-        'none', (tester) async {
-      await _pump(tester, master: FakeApplicationsMaster({}));
-      expect(
-        find.text(ApplicationViewStrings.needsIdentityDocument),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('Issue 321: with a document and nothing published says none '
-        'is open', (tester) async {
-      await _pump(
-        tester,
-        master: FakeApplicationsMaster({}),
-        documents: [identityDocument()],
-      );
-      expect(find.text(ApplicationViewStrings.noneOpen), findsOneWidget);
-    });
-
-    testWidgets('Issue 321: renders nothing while applications are off', (
+  group('Issue 321: an admin’s Applications page', () {
+    testWidgets('Issue 380: renders nothing while applications are off', (
       tester,
     ) async {
       await _pump(
@@ -96,12 +55,10 @@ void main() {
       );
       expect(find.text(ApplicationViewStrings.applications), findsNothing);
     });
-  });
 
-  group('Issue 321: an admin’s Applications page', () {
     testWidgets('Issue 321: lists every template with its state and offers '
         'Create', (tester) async {
-      await _pump(tester, master: FakeApplicationsMaster(_all()), admin: true);
+      await _pump(tester, master: FakeApplicationsMaster(_all()));
 
       expect(find.text('Season 2026'), findsOneWidget);
       expect(find.text('Trial'), findsNWidgets(2));
@@ -122,7 +79,6 @@ void main() {
       await _pump(
         tester,
         master: master,
-        admin: true,
         onOpen: (id) => opened = id,
       );
 
@@ -140,7 +96,6 @@ void main() {
       await _pump(
         tester,
         master: master,
-        admin: true,
         onOpen: (id) => opened = id,
       );
 

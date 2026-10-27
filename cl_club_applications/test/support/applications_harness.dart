@@ -186,6 +186,12 @@ UserPrivate applicationsUser({bool admin = false}) => UserPrivate(
   createdAtUtc: DateTime.utc(2024),
 );
 
+/// [applicationsUser] with a date of birth the samples' "Open" age category
+/// fits, so a published sample is listed for them (club_client#380).
+UserPrivate eligibleMember({bool admin = false}) => applicationsUser(
+  admin: admin,
+).copyWith(dateOfBirthUtc: () => DateTime.utc(2000, 3, 4));
+
 /// Mounts [child] with the applications on (or off, [enabled]), the master
 /// [master], the label catalogue and clause library of the samples,
 /// [documents] as every member's identity documents, [currentUser] as the

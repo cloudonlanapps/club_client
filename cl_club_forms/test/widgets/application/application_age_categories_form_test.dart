@@ -2,12 +2,14 @@
 // form, the member's ticked. Each has a name (English required, the print
 // languages offered), optional first and last birth dates and the genders
 // it takes (none: all).
+import 'package:cl_calendar/cl_calendar.dart' show CLDatePickerFormField;
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../support/account_user_form_harness.dart';
+import '../../support/date_picker_harness.dart';
 import '../../support/form_harness.dart';
 import 'application_form_harness.dart';
 import 'application_samples.dart';
@@ -51,9 +53,11 @@ void main() {
   group('Issue 321: ApplicationAgeCategoriesForm', () {
     testWidgets('Issue 321: a category shows its name per language, its '
         'birth dates and its genders', (tester) async {
-      await _pump(tester, items: [_items().first]);
+      final state = await _pump(tester, items: [_items().first]);
 
-      expect(fieldIds(tester), [_categories]);
+      // The two date fields register with forms of their own.
+      expect(fieldIds(tester), [_categories, '', '']);
+      expect(state.formKey.currentState!.fields.keys, [_categories]);
       expect(rowLabels(tester), [
         'Age categories',
         'Name (English) *',
@@ -114,6 +118,61 @@ void main() {
         'label': {'en': 'Under 12', 'mr': 'बारा वर्षांखालील'},
         'age_limit': false,
         'genders': ['male'],
+      });
+    });
+
+    testWidgets('Issue 388: born on or after and on or before open the '
+        'calendar; the picked day is shown and returned', (tester) async {
+      // Days in May: in the test font a long month name overflows the
+      // header of cl_calendar's popover, which is not this form's to fix.
+      final state = await _pump(
+        tester,
+        items: [
+          {
+            'label': {'en': 'Under 12'},
+            'born_on_or_after': '2007-05-01',
+            'born_on_or_before': '2014-05-31',
+          },
+        ],
+      );
+      expect(find.byType(CLDatePickerFormField), findsNWidgets(2));
+      expect(state.formKey.currentState!.fields.keys, [_categories]);
+
+      await pickDayOn(tester, find.text('1 May 2007'), 20);
+      await pickDayOn(tester, find.text('31 May 2014'), 15);
+
+      expect(find.text('20 May 2007'), findsOneWidget);
+      expect(find.text('15 May 2014'), findsOneWidget);
+      expect((state.validate()![_categories] as List).single, {
+        'label': {'en': 'Under 12'},
+        'age_limit': true,
+        'born_on_or_after': '2007-05-20',
+        'born_on_or_before': '2014-05-15',
+      });
+    });
+
+    testWidgets('Issue 388: the x clears a picked day, and the input shows '
+        'none', (tester) async {
+      final state = await _pump(
+        tester,
+        items: [
+          {
+            'label': {'en': 'Under 12'},
+            'born_on_or_after': '2014-05-01',
+          },
+        ],
+      );
+
+      await pickDayOn(tester, find.text('1 May 2014'), 20);
+      await tapIn(tester, _categories, find.byIcon(LucideIcons.x));
+
+      expect(find.text('20 May 2014'), findsNothing);
+      expect(find.text('Pick a date'), findsNWidgets(2));
+      expect(find.byIcon(LucideIcons.x), findsNothing);
+      await tapIn(tester, _categories, find.text('Age limit applicable'));
+      expect((state.validate()![_categories] as List).single, {
+        'label': {'en': 'Under 12'},
+        'age_limit': false,
       });
     });
 

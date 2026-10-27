@@ -2,12 +2,14 @@
 // typed once and named, each of a type: a name (as typed, or per print
 // language), a day, a range of days, a time, an amount or choices of the
 // library's list. Names are unique, non-empty and identifier-like.
+import 'package:cl_calendar/cl_calendar.dart' show CLDatePickerFormField;
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../support/account_user_form_harness.dart';
+import '../../support/date_picker_harness.dart';
 import '../../support/form_harness.dart';
 import 'application_form_harness.dart';
 import 'application_samples.dart';
@@ -250,6 +252,52 @@ void main() {
     ) async {
       final state = await _pump(tester);
       await expectShowsServerErrors(tester, state, _facts);
+    });
+
+    testWidgets("Issue 388: a day and a range's From and To open the "
+        'calendar; the picked day is shown and returned', (tester) async {
+      // Days in May: in the test font a long month name overflows the
+      // header of cl_calendar's popover, which is not this form's to fix.
+      final state = await _pump(
+        tester,
+        facts: {
+          'camp': {
+            'type': 'date_range',
+            'from': '2026-05-04',
+            'to': '2026-05-08',
+          },
+          'arrive': {'type': 'date', 'value': '2026-05-03'},
+        },
+      );
+      expect(find.byType(CLDatePickerFormField), findsNWidgets(3));
+      expect(state.formKey.currentState!.fields.keys, [_facts]);
+
+      await pickDayOn(tester, find.text('4 May 2026'), 10);
+      await pickDayOn(tester, find.text('8 May 2026'), 20);
+      await pickDayOn(tester, find.text('3 May 2026'), 12);
+
+      expect(find.text('10 May 2026'), findsOneWidget);
+      expect(find.text('20 May 2026'), findsOneWidget);
+      expect(find.text('12 May 2026'), findsOneWidget);
+      expect(state.isDirty, isTrue);
+      expect(state.validate(), {
+        _facts: {
+          'camp': {
+            'type': 'date_range',
+            'from': '2026-05-10',
+            'to': '2026-05-20',
+          },
+          'arrive': {'type': 'date', 'value': '2026-05-12'},
+        },
+      });
+    });
+
+    testWidgets('Issue 388: the date inputs leave the form untouched until '
+        'a day is picked', (tester) async {
+      final state = await _pump(tester);
+
+      expect(state.isDirty, isFalse);
+      expect(state.validate(), {_facts: _all()});
     });
 
     testWidgets('Issue 321: turned off, nothing takes input; it fits a '

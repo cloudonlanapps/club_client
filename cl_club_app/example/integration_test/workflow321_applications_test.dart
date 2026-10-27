@@ -6,9 +6,11 @@
 // (the server decides its layout) and publishes it; a member who has
 // uploaded an identity document finds it under their own *Applications*,
 // with Download, and their form downloads as a PDF; the admin then
-// unpublishes and deletes it through the editor. With applications off (the
-// server offers them only with identity verification), no *Applications*
-// entry appears.
+// unpublishes and deletes it through the editor. Download blank form
+// (club_client#393) is greyed out with its reason on the draft and on
+// once it is published, and gives the blank form as a PDF. With
+// applications off (the server offers them only with identity
+// verification), no *Applications* entry appears.
 //
 // Fixtures (all `workflow321_` prefixed): a member with an identity
 // document, created with the SDK in setUpAll; the admin is the stack's sudo
@@ -70,6 +72,9 @@ Future<SecureClient> _adminClient() async {
 
 /// The step of the State card named [name] (`save`, `publish`, …).
 Finder _step(String name) => find.byKey(ValueKey('application.step.$name'));
+
+/// The editor's Download blank form button (club_client#393).
+Finder _blankForm() => find.widgetWithText(ShadButton, 'Download blank form');
 
 /// The section card of the editor named [name] (`heading`, …).
 Finder _section(String name) =>
@@ -262,6 +267,12 @@ void main() {
       reason: 'a new draft lacks its declaration and footer line',
     );
     expect(tester.widget<ActionButton>(_step('save')).enabled, isFalse);
+    expect(
+      tester.widget<ShadButton>(_blankForm()).enabled,
+      isFalse,
+      reason: 'a draft has no blank form (club_client#393)',
+    );
+    expect(find.text('Save the application first'), findsOneWidget);
 
     // 2. It writes the organisation and the footer line, the first and last
     // texts of the heading section.
@@ -316,6 +327,18 @@ void main() {
       description: 'the application to be published',
     );
     _templateId = _createdId(tester);
+
+    // Download blank form is on for the published application; the bytes it
+    // hands on are the blank form's PDF (club_client#393).
+    expect(tester.widget<ShadButton>(_blankForm()).enabled, isTrue);
+    expect(find.text('Save the application first'), findsNothing);
+    final blank =
+        await container(
+              tester,
+            )
+            .read(clApplicationsMasterProvider.notifier)
+            .downloadBlankForm(_templateId!);
+    expect(String.fromCharCodes(blank.take(4)), '%PDF');
     await logout(tester);
 
     // 5. The member finds it under Applications, with Download.

@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../models/application/application_clause_kind.dart';
@@ -12,6 +13,10 @@ import 'application_text_value_editor.dart';
 ///
 /// The value is an [ApplicationTextValue], not its JSON: `ShadForm` would
 /// merge a map value into the map it started from.
+///
+/// The editor is seeded once; a host that sets the field's value from
+/// outside (an inserted library clause) gives a new `editorKey` with it, so
+/// the editor is seeded again from that value.
 class ApplicationTextValueField
     extends ShadFormBuilderField<ApplicationTextValue?> {
   ApplicationTextValueField({
@@ -21,6 +26,7 @@ class ApplicationTextValueField
     ApplicationClauseKind? clauseKind,
     bool requireEnglish = false,
     bool multiline = false,
+    Key? editorKey,
     super.id,
     super.initialValue,
     super.validator,
@@ -28,6 +34,7 @@ class ApplicationTextValueField
     super.key,
   }) : super(
          builder: (state) => ApplicationTextValueEditor(
+           key: editorKey,
            modes: modes,
            languages: languages,
            sources: sources,

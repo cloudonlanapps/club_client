@@ -95,15 +95,15 @@ abstract final class ApplicationSamples {
     },
     'organisation': {'en': 'Example Club', 'mr': 'उदाहरण क्लब'},
     'title': {'en': 'Training Camp Registration', 'mr': 'शिबिर नोंदणी'},
-    'subtitle': {'fact': 'camp'},
+    'subtitle': {'en': '16–17 November 2026', 'mr': '१६–१७ नोव्हेंबर २०२६'},
     'header': [
-      {'fact': 'venue'},
+      {'en': 'City Rink', 'mr': 'शहर रिंक'},
       [
         {
-          'clause': 'header.camp',
-          'args': {'dates': 'camp'},
+          'en': 'Camp: 16–17 November 2026',
+          'mr': 'शिबिर: १६–१७ नोव्हेंबर २०२६',
         },
-        {'fact': 'phone'},
+        {'en': '555 0100'},
       ],
     ],
     'age_categories': [
@@ -119,16 +119,21 @@ abstract final class ApplicationSamples {
     ],
     'selections': [
       {
-        'clause': 'selection.attend_practice',
-        'args': {'dates': 'camp', 'kinds': 'kinds'},
+        'en':
+            'I will attend the practice sessions (on-ice and inline) from '
+            '16–17 November 2026.',
+        'mr': '१६–१७ नोव्हेंबर २०२६ सराव (बर्फावर आणि इनलाइन).',
       },
     ],
-    'declaration': {'clause': 'declaration.camp'},
+    'declaration': {
+      'en': 'I declare the information above is true.',
+      'mr': 'वरील माहिती खरी असल्याचे मी घोषित करतो.',
+    },
     'form_footer': {'en': 'See you on the ice', 'mr': 'बर्फावर भेटूया'},
     'terms': [
       {
-        'clause': 'rule.fee',
-        'args': {'amount': 'fee'},
+        'heading': {'en': 'Fee', 'mr': 'शुल्क'},
+        'body': {'en': 'A fee of 1500 is payable.', 'mr': '1500 शुल्क.'},
       },
       {
         'heading': {'en': 'Kit', 'mr': 'साहित्य'},
@@ -137,7 +142,7 @@ abstract final class ApplicationSamples {
     ],
     'terms_notes': [
       {
-        'text': {'clause': 'note.follow_rules'},
+        'text': {'en': 'Follow the rules above.', 'mr': 'वरील नियम पाळा.'},
         'attribution': {'en': '— Example Club'},
       },
     ],
@@ -149,6 +154,27 @@ abstract final class ApplicationSamples {
       },
     },
   };
+
+  /// A stand-in for the server's fill (club_client#336): the library
+  /// clause with each gap replaced by the name of the fact that fills it,
+  /// in brackets.
+  static Future<ApplicationClauseFill> fillClause(
+    String clause,
+    Map<String, String> facts,
+  ) async {
+    final option = clauses.where((c) => c.id == clause).firstOrNull;
+    if (option == null) {
+      return const ApplicationClauseRefused('The library has no such clause.');
+    }
+    String fill(String text) => facts.entries.fold(
+      text,
+      (filled, e) => filled.replaceAll('{${e.key}}', '[${e.value}]'),
+    );
+    return ApplicationClauseFilled(
+      text: {for (final e in option.text.entries) e.key: fill(e.value)},
+      heading: {for (final e in option.heading.entries) e.key: fill(e.value)},
+    );
+  }
 
   /// The template's facts, by name and type.
   static Map<String, ApplicationFactType> get facts =>

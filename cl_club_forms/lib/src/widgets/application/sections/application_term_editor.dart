@@ -29,8 +29,8 @@ class ApplicationTermEditor extends StatefulWidget {
 
   /// The ways a term may be given; a new one takes the first.
   // A printed text is a language map only (club_sdk#76): a clause or fact
-  // reference is refused by the server. Inserting a library clause's filled
-  // text is club_client#336.
+  // reference is refused by the server. A library clause is inserted as its
+  // filled text, from the library under the list (club_client#336).
   static const List<ApplicationTextMode> modes = [ApplicationTextMode.custom];
 
   /// The term to start from, as the template's JSON holds it.

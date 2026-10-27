@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import 'application_item_builder.dart';
@@ -15,6 +16,7 @@ class ApplicationItemsField extends ShadFormBuilderField<List<Object?>> {
     required String noun,
     required String addLabel,
     Object? Function()? newItem,
+    Widget Function(ValueChanged<Object?> insert)? insertBuilder,
     super.id,
     super.initialValue,
     super.validator,
@@ -27,6 +29,7 @@ class ApplicationItemsField extends ShadFormBuilderField<List<Object?>> {
            noun: noun,
            addLabel: addLabel,
            newItem: newItem,
+           insertBuilder: insertBuilder,
            enabled: state.widget.enabled,
            onChanged: state.didChange,
          ),

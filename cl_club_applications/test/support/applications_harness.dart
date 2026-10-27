@@ -24,6 +24,12 @@ class FakeApplicationsMaster extends ClApplicationsMasterNotifier {
   /// The failure every write and download throws while set.
   Exception? failWith;
 
+  /// The patch of the last update.
+  ApplicationPatch? lastPatch;
+
+  /// The facts of the last fill, by gap.
+  Map<String, ApplicationFact>? lastFillFacts;
+
   @override
   Future<Map<int, ApplicationTemplate>> build() async => initial;
 
@@ -52,7 +58,34 @@ class FakeApplicationsMaster extends ClApplicationsMasterNotifier {
   Future<ApplicationTemplate> updateApplication(
     int id,
     ApplicationPatch patch,
-  ) async => _write('update $id ${patch.toMap().keys.join(',')}', _held(id));
+  ) async {
+    lastPatch = patch;
+    return _write('update $id ${patch.toMap().keys.join(',')}', _held(id));
+  }
+
+  /// Fills [clause] in English, Marathi and Hindi, a rule with a heading;
+  /// records `fill <clause> <gaps>`.
+  @override
+  Future<ApplicationFilledClause> fillClause(
+    String clause, {
+    Map<String, ApplicationFact> facts = const {},
+  }) async {
+    calls.add('fill $clause ${facts.keys.join(',')}');
+    lastFillFacts = facts;
+    final failure = failWith;
+    if (failure != null) throw failure;
+    return ApplicationFilledClause(
+      clause: clause,
+      heading: clause.startsWith('rule.')
+          ? const ApplicationText({'en': 'Fee', 'mr': 'शुल्क', 'hi': 'शुल्क'})
+          : null,
+      text: ApplicationText({
+        'en': 'Filled $clause.',
+        'mr': 'भरले $clause.',
+        'hi': 'भरा $clause.',
+      }),
+    );
+  }
 
   @override
   Future<ApplicationTemplate> duplicateApplication(int id) async =>

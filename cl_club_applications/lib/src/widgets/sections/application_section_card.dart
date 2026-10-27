@@ -1,3 +1,4 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show ApplicationClauseFill;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clApplicationsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show ApplicationTemplate;
@@ -101,6 +102,18 @@ class ApplicationSectionCardState
     }
   }
 
+  /// Fills a library clause for the form to insert, with the template's
+  /// saved facts.
+  Future<ApplicationClauseFill> fill(
+    String clause,
+    Map<String, String> facts,
+  ) => ApplicationFormSubmit.fillClause(
+    clause: clause,
+    facts: facts,
+    template: widget.template,
+    notifier: ref.read(clApplicationsMasterProvider.notifier),
+  );
+
   @override
   Widget build(BuildContext context) {
     final spec = ApplicationSectionSpecs.of(widget.section);
@@ -117,8 +130,13 @@ class ApplicationSectionCardState
       emptyHint: ApplicationViewStrings.emptySection,
       editMaxWidth: ApplicationViewSizes.editMaxWidth,
       read: ApplicationSectionRead(lines: lines),
-      editBuilder: ({required enabled}) =>
-          spec.build(formKey, widget.json, widget.options, enabled: enabled),
+      editBuilder: ({required enabled}) => spec.build(
+        formKey,
+        widget.json,
+        widget.options,
+        fill: fill,
+        enabled: enabled,
+      ),
       onValidate: () => spec.validate(formKey),
       isDirty: () => spec.isDirty(formKey),
       onSave: save,

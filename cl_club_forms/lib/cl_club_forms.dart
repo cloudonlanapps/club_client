@@ -8,6 +8,12 @@
 // texts the template's JSON holds
 export 'src/models/application/application_choice_option.dart'
     show ApplicationChoiceOption;
+export 'src/models/application/application_clause_fill.dart'
+    show
+        ApplicationClauseFill,
+        ApplicationClauseFilled,
+        ApplicationClauseFiller,
+        ApplicationClauseRefused;
 export 'src/models/application/application_clause_kind.dart'
     show ApplicationClauseKind;
 export 'src/models/application/application_clause_option.dart'

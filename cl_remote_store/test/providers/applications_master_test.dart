@@ -145,6 +145,20 @@ class _FakeApplications extends Fake implements ApplicationSource {
   }
 
   @override
+  Future<ApplicationFilledClause> fillClause(
+    String clause, {
+    Map<String, ApplicationFact> facts = const {},
+  }) async {
+    calls.add('fill $clause ${facts.keys.join(',')}');
+    final failure = failWith;
+    if (failure != null) throw failure;
+    return ApplicationFilledClause(
+      clause: clause,
+      text: const ApplicationText({'en': 'Fee 500', 'mr': 'शुल्क 500'}),
+    );
+  }
+
+  @override
   Future<ApplicationClauseLibrary> getClauses() async {
     clauseReads++;
     return const ApplicationClauseLibrary(
@@ -331,6 +345,40 @@ void main() {
       expect(
         await notifier.downloadMemberForm(4, 'abc', category: 0),
         [3, 4, 3, 0],
+      );
+    });
+  });
+
+  group('Issue 336: fillClause', () {
+    test('Issue 336: fills one clause with the facts given and changes no '
+        'template', () async {
+      final source = _FakeApplications();
+      final c = await _container(source);
+      final before = await c.read(clApplicationsMasterProvider.future);
+      final filled = await c
+          .read(clApplicationsMasterProvider.notifier)
+          .fillClause(
+            'rule.fee',
+            facts: {'amount': const ApplicationFact.amount(500)},
+          );
+      expect(filled.text.texts, {'en': 'Fee 500', 'mr': 'शुल्क 500'});
+      expect(source.calls, ['fill rule.fee amount']);
+      expect(c.read(clApplicationsMasterProvider).value, before);
+      expect(source.lists, 1);
+    });
+
+    test('Issue 336: a refused fill is rethrown as the SDK raised '
+        'it', () async {
+      final source = _FakeApplications()
+        ..failWith = const ServerException(
+          statusCode: 422,
+          code: SdkErrorCode.applicationInvalidReference,
+          message: 'gap amount has no fact',
+        );
+      final c = await _container(source);
+      await expectLater(
+        c.read(clApplicationsMasterProvider.notifier).fillClause('rule.fee'),
+        throwsA(isA<ServerException>()),
       );
     });
   });

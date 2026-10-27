@@ -52,6 +52,20 @@ abstract final class ApplicationFormStrings {
   /// Hint of a clause picker with none chosen.
   static const String chooseClauseHint = 'Pick a clause';
 
+  /// Label of the library clauses a section offers (club_client#336).
+  static const String library = 'From the library';
+
+  /// What tapping a library clause does.
+  static const String libraryHint =
+      "Tap a clause to insert its text, filled with this template's saved "
+      'facts. The text is then edited like any other.';
+
+  /// Shown under the library when [gap] of the tapped clause has no fact of
+  /// its [type] to fill it.
+  static String clauseNeedsFact(String gap, ApplicationFactType type) =>
+      'This clause needs a ${typeName(type)} fact named "$gap". Add it '
+      'under Facts and save, then tap the clause again.';
+
   /// Label of the fact filling [gap], which takes a [type].
   static String gapLabel(String gap, ApplicationFactType type) =>
       '{$gap}: ${typeName(type)}';

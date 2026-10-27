@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../models/application/application_clause_fill.dart';
+import '../../models/application/application_clause_kind.dart';
 import '../../models/application/application_clause_option.dart';
 import '../../models/application/application_fact_type.dart';
 import '../../models/application/application_language_option.dart';
@@ -15,6 +17,7 @@ import 'application_section_contract.dart';
 import 'application_text_sources.dart';
 import 'items/application_items_field.dart';
 import 'sections/application_note_editor.dart';
+import 'text_value/application_clause_library.dart';
 
 /// Pure-UI section editor of the notes boxed under an application's terms
 /// (a reminder, a motto): each a note clause of the library or written in
@@ -30,6 +33,7 @@ class ApplicationNotesForm extends StatefulWidget {
     required this.languages,
     this.facts = const {},
     this.clauses = const [],
+    this.fillClause,
     this.enabled = true,
     super.key,
   });
@@ -45,6 +49,11 @@ class ApplicationNotesForm extends StatefulWidget {
 
   /// The clause library; its notes are offered.
   final List<ApplicationClauseOption> clauses;
+
+  /// Fills a library clause with the template's facts (the host's call);
+  /// with none, the library is not offered. A tapped clause is added as a
+  /// new item holding its filled text (club_client#336).
+  final ApplicationClauseFiller? fillClause;
 
   /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
@@ -85,6 +94,14 @@ class ApplicationNotesFormState extends State<ApplicationNotesForm>
               enabled: widget.enabled,
               noun: ApplicationFormStrings.noteNoun,
               addLabel: ApplicationFormStrings.addNote,
+              insertBuilder: ApplicationClauseLibrary.forItems(
+                clauses: sources.clausesOf(ApplicationClauseKind.note),
+                facts: widget.facts,
+                languages: widget.languages,
+                fill: widget.fillClause,
+                enabled: widget.enabled,
+                item: (filled) => {ApplicationFormFields.textKey: filled.text},
+              ),
               newItem: () => ApplicationNoteEditor.noteOf(null),
               validator: (items) => ApplicationFormValidators.items(
                 items,

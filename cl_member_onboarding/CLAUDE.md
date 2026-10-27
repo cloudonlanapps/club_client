@@ -8,9 +8,9 @@ Onboarding zone for users whose status is `registered` or `pending`. Mounted und
 |---|---|---|
 | `/onboarding/welcome` | `OnboardingWelcomeScreen` | `OnboardingWelcomeView` |
 | `/onboarding/submit-documents` | `OnboardingSubmitDocumentsScreen` | `OnboardingSubmitDocumentsView` |
-| `/onboarding/extended-profile` | `OnboardingExtendedProfileScreen` | `OnboardingExtendedProfileView` |
+| `/onboarding/profile` | `OnboardingProfileScreen` | `OnboardingProfileView` |
 
-`/onboarding/extended-profile` is the optional step after the identity document (#320): a `pending` member, only while `extendedProfileProvider` is true. The sections themselves (`ExtendedProfileSections`, cl_club_members) are passed in by the router, since this package does not depend on cl_club_members. While applications are on, the waiting page lists the published applications with Download, also passed in by the router (#321).
+`/onboarding/profile` is a `pending` member's own profile (club_client#340), open whatever the capabilities say and refused to anyone else with `AccessDeniedView`. It shows the profile's cards, each editable (`OwnProfileCards`, cl_club_members: the extended sections only while `extendedProfileProvider` is true), then the Applications section while `applicationsProvider` is true (`ProfileApplicationsSection`, cl_club_applications). Both are passed in by the router as builders, since this package depends on neither package. While applications are on, the waiting page lists the published applications with Download, also passed in by the router (#321); Download asks whether the profile is complete, and No opens `/onboarding/profile`. After the document is submitted the member lands on the waiting page.
 
 ### `/onboarding/welcome` — three status-driven variants
 
@@ -18,7 +18,7 @@ Onboarding zone for users whose status is `registered` or `pending`. Mounted und
 
 - `registered` + empty `adminReviewNote` → `IntroCard` → Continue → `/onboarding/submit-documents`.
 - `registered` + non-empty `adminReviewNote` → `ReapplyVariant` (registration fields editable, username pinned, banner shows the admin note) → `reapplyForSelf` → Continue → `/onboarding/submit-documents`.
-- `pending` → `SubmittedConfirmation` ("documents submitted, awaiting approval") → Back to sign in (logout).
+- `pending` → `SubmittedConfirmation` ("documents submitted, awaiting approval") → **Update profile** (`/onboarding/profile`, whether or not the extended profile is on) and Back to sign in (logout).
 
 ### `/onboarding/submit-documents`
 
@@ -34,7 +34,8 @@ Each screen watches `authStateProvider`, evaluates its gate via `onboardingGateA
 
 `lib/cl_member_onboarding.dart` exports:
 
-- `OnboardingWelcomeScreen`, `OnboardingSubmitDocumentsScreen` — screens, mounted by `cl_club_app/lib/src/router.dart`.
+- `OnboardingWelcomeScreen`, `OnboardingSubmitDocumentsScreen`, `OnboardingProfileScreen` — screens, mounted by `cl_club_app/lib/src/router.dart`.
+- `allowedOnboardingPaths`, `onboardingFallbackPath` and the path constants — the router's redirect.
 - `OnboardingShell` — shell, used by the `/onboarding/**` `ShellRoute` in `cl_club_app/lib/src/router.dart`.
 
 Views, widgets, providers, and models stay internal.
@@ -45,9 +46,11 @@ Views, widgets, providers, and models stay internal.
 lib/src/
   models/      - OnboardingGate enum + onboardingGateAllows (per-route gate predicate).
   providers/   - clMyIdentityDocSlotsProvider (composes gallery + orphan uploads).
-  screens/     - OnboardingWelcomeScreen, OnboardingSubmitDocumentsScreen
+  screens/     - OnboardingWelcomeScreen, OnboardingSubmitDocumentsScreen,
+                 OnboardingProfileScreen
                  (watch authStateProvider, evaluate gate, wrap view).
-  views/       - OnboardingWelcomeView (three variants), OnboardingSubmitDocumentsView
+  views/       - OnboardingWelcomeView (three variants), OnboardingSubmitDocumentsView,
+                 OnboardingProfileView
                  (presentational; never watch auth).
   widgets/     - OnboardingShell, IntroCard, ReapplyVariant,
                  SubmittedConfirmation, IdentityDocumentsSubmitBody,
@@ -58,7 +61,7 @@ lib/src/
 
 `cl_member_auth`, `cl_remote_store`, `cl_server_config`, `ui_lib`, `club_sdk_2`, `flutter`, `flutter_riverpod`, `shadcn_ui`.
 
-**Forbidden:** `cl_member_zone`, `cl_club_members`, `cl_club_events`, `cl_club_venues`, `cl_calendar`, `go_router`.
+**Forbidden:** `cl_member_zone`, `cl_club_members`, `cl_club_applications`, `cl_club_events`, `cl_club_venues`, `cl_calendar`, `go_router`.
 
 ## Conventions
 

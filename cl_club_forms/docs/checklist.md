@@ -48,9 +48,9 @@ messages, **Reset**, which mounts it afresh, and the light / dark toggle.
 - [ ] User personal details form: shown on a member's profile (`/memberzone/users/:username`) when the pencil on the Personal details card is pressed.
 - [ ] User contact form: shown on a member's profile when the pencil on the Contact card is pressed.
 - [ ] User address form: shown on a member's profile when the pencil on the Address card is pressed.
-- [ ] User sports details form: shown on a member's profile when the pencil on the Sports details card is pressed (extended profile on), and in onboarding's optional extended-profile step.
-- [ ] User background form: shown on a member's profile when the pencil on the Background card is pressed (extended profile on), and in onboarding's optional extended-profile step.
-- [ ] User guardian form: shown on a member's profile when the pencil on the Guardian card is pressed (extended profile on), and in onboarding's optional extended-profile step.
+- [ ] User sports details form: shown on a member's profile when the pencil on the Sports details card is pressed (extended profile on), and on onboarding's profile page (`/onboarding/profile`).
+- [ ] User background form: shown on a member's profile when the pencil on the Background card is pressed (extended profile on), and on onboarding's profile page (`/onboarding/profile`).
+- [ ] User guardian form: shown on a member's profile when the pencil on the Guardian card is pressed (extended profile on), and on onboarding's profile page (`/onboarding/profile`).
 - [ ] Membership date form: shown on a member's profile when an admin presses the pencil on the Account info card (extended profile on).
 
 ## Groups (admin)

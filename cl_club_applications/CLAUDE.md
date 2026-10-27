@@ -18,10 +18,10 @@ SDK-free `Application*Form`s of `cl_club_forms`.
 
 | Where | Widget | Constructor |
 |---|---|---|
-| `applications` | `ApplicationsView` | `currentUser`, `onOpen(int id)`, `pdfAction` |
+| `applications` | `ApplicationsView` | `currentUser`, `onOpen(int id)`, `pdfAction`, `onOpenProfile` |
 | `applications/:id` (admin) | `ApplicationView` | `currentUser`, `applicationId`, `onBack`, `onDeleted`, `pdfAction` |
 | profile (injected by the router) | `ProfileApplicationsSection` | `member`, `own`, `pdfAction` |
-| onboarding's waiting page (injected) | `PublishedApplicationsList` | `currentUser`, `pdfAction` |
+| onboarding's waiting page (injected) | `PublishedApplicationsList` | `currentUser`, `pdfAction`, `onOpenProfile` |
 
 Screens are `ApplicationsScreen` and `ApplicationScreen` in `cl_member_zone`;
 the routes and the injections are `cl_club_app`'s `application_routes.dart`.
@@ -44,3 +44,8 @@ forms' ids for a schema refusal.
   fit, broken reference) shows inline on the State card; a download refused
   for the member (not eligible, no identity document, not published) shows
   under its button. Anything else is a toast with a fixed message.
+- A member's download of their own form (`ApplicationOwnForm`) first asks
+  "Is your profile complete?" (`ProfileCompleteDialog`, club_client#340):
+  Yes downloads, No calls the host's `onOpenProfile`, or only closes the
+  dialog where there is none (the profile section, already on the profile).
+  An admin's preview and a member's form fetched by an admin do not ask.

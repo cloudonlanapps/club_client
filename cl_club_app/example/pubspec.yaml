@@ -46,7 +46,7 @@ dev_dependencies:
   club_sdk_2:
     git:
       url: https://github.com/cloudonlanapps/club_sdk.git
-      ref: 973a3e236742d0dd862cb2add883c7ccbf504b3b
+      ref: 43ea99edc1c5f00bc0e59b1206c0052db86e3896
   flutter_test:
     sdk: flutter
   # The integration tests' cache-busting client (#291).

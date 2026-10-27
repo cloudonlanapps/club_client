@@ -42,6 +42,7 @@ export 'src/screens/group_join_requests_screen.dart'
 export 'src/screens/group_members_screen.dart' show GroupMembersScreen;
 export 'src/screens/groups_screen.dart' show GroupsScreen;
 export 'src/screens/inquiries_screen.dart' show InquiriesScreen;
+export 'src/screens/my_applications_screen.dart' show MyApplicationsScreen;
 export 'src/screens/my_event_details_screen.dart' show MyEventDetailsScreen;
 export 'src/screens/my_events_all_screen.dart' show MyEventsAllScreen;
 export 'src/screens/my_events_attendance_screen.dart'

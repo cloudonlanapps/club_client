@@ -1,19 +1,19 @@
 // workflow_appelig: a member the application does not fit (club_client#341;
-// covers #321 and #324).
+// covers #321, #324 and #380).
 //
 // An application's age categories admit only members born in the last ten
-// years. An active adult member with an identity document finds it under
-// Applications and presses Download: the server refuses their form, and the
-// refusal shows under the button, with no toast and nothing handed to the
-// PDF action. The admin then unpublishes and deletes the application through
-// its editor.
+// years. An active adult member with an identity document opens
+// Applications under Main: the application is not listed for them
+// (club_client#380), with no toast and nothing handed to the PDF action.
+// The admin then finds it under Club Management, and unpublishes and
+// deletes it through its editor.
 //
 // The PDF action is the desktop's viewer on Linux, so the test stands in for
 // it (`debugPdfBytesHandler`, cl_club_app) and checks it is never run.
 //
 // Fixtures (all `workflow_appelig_` prefixed), made with the SDK in setUpAll:
 // the member and their identity document, and the published application
-// with its age category (the refusal under test is the member's, so the
+// with its age category (what is under test is the member's view, so the
 // template is a fixture). The admin is the stack's sudo user.
 //
 // Run (single file, fresh server):
@@ -56,14 +56,16 @@ const _kMemberPwd = 'WorkflowAppeligPwd!2024';
 const _kTitle = 'workflow_appelig Junior trial';
 
 const _kApplications = 'Applications';
-const _kQuestion = 'Is your profile complete?';
-const Key _kYes = ValueKey('application.profileComplete.yes');
 
-/// The refusal of a member no age category fits
-/// (`ApplicationViewStrings.notEligible`).
-const _kNotEligible =
-    'Not eligible for this application: none of its age categories matches '
-    'the date of birth and gender on the profile.';
+/// A member's list with nothing they may download
+/// (`ApplicationViewStrings.noneOpen`).
+const _kNoneOpen = 'No applications are open right now.';
+
+/// What to do with a form, above a member's list
+/// (`ApplicationViewStrings.printNote`).
+const _kPrintNote =
+    'Download your form, print it, affix a passport-size photograph, sign '
+    'it and hand it in.';
 
 late Capabilities _caps;
 
@@ -95,8 +97,13 @@ Future<void> _run(WidgetTester tester, String name) async {
   await settle(tester);
 }
 
-/// Opens *Applications* from the sidebar.
-Future<void> _openApplications(WidgetTester tester) async {
+/// Opens *Applications* from the sidebar: the member's own list under
+/// Main, or with [manage] the admin's list under Club Management
+/// (club_client#380).
+Future<void> _openApplications(
+  WidgetTester tester, {
+  bool manage = false,
+}) async {
   await waitFor(
     tester,
     () =>
@@ -107,7 +114,7 @@ Future<void> _openApplications(WidgetTester tester) async {
         find.byTooltip('Open menu').evaluate().isNotEmpty,
     description: 'the Applications sidebar entry',
   );
-  await openSidebarEntry(tester, _kApplications);
+  await openSidebarEntry(tester, _kApplications, last: manage);
 }
 
 /// A text printed in English only.
@@ -212,8 +219,8 @@ void main() {
     }
   });
 
-  testWidgets('a member no age category fits sees the refusal under '
-      'Download, with no toast and no file', (tester) async {
+  testWidgets('a member no age category fits is not offered the '
+      'application (club_client#380)', (tester) async {
     if (skipUnless(enabled: _caps.applications, feature: 'applications')) {
       return;
     }
@@ -221,63 +228,32 @@ void main() {
     await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
     await ensureLoggedOut(tester);
 
-    // 1. The member finds the application under Applications.
+    // 1. The member opens Applications under Main once it has loaded: the
+    // application is published, but they fit none of its age categories,
+    // so it is not listed and there is nothing to download.
     await loginViaUi(tester, _kMember, _kMemberPwd);
     await _openApplications(tester);
-    final row = find.byKey(ValueKey('application.download.$id'));
-    final download = find.descendant(
-      of: row,
-      matching: find.widgetWithText(ShadButton, 'Download'),
-    );
-    await waitFor(
-      tester,
-      () => download.evaluate().isNotEmpty,
-      description: 'the application with its Download',
-    );
-
-    // 2. Download (Yes to the profile question, which lists the blanks of a
-    // member made without an address) is refused under the button.
-    invokeShadButton(tester, download, reason: 'Download');
-    await settle(tester);
-    final refusal = find.descendant(
-      of: row,
-      matching: find.text(_kNotEligible),
-    );
     await waitFor(
       tester,
       () =>
-          find.text(_kQuestion).evaluate().isNotEmpty ||
-          refusal.evaluate().isNotEmpty,
-      description: 'the profile question or the refusal',
-    );
-    if (find.text(_kQuestion).evaluate().isNotEmpty) {
-      invokeShadButton(tester, find.byKey(_kYes), reason: 'Yes');
-      await settle(tester);
-    }
-    await waitFor(
-      tester,
-      () {
-        final toast = firstErrorToastMessage(tester);
-        if (toast != null) {
-          throw TestFailure('the refusal came as a toast: "$toast"');
-        }
-        return refusal.evaluate().isNotEmpty;
-      },
-      description: 'the not-eligible refusal under Download',
+          find.text(_kNoneOpen).evaluate().isNotEmpty ||
+          find.text(_kPrintNote).evaluate().isNotEmpty,
+      description: 'the member’s Applications list',
     );
     await tester.pump(const Duration(seconds: 1));
+    expect(
+      find.byKey(ValueKey('application.download.$id')),
+      findsNothing,
+      reason: 'an application the member is not eligible for is not listed',
+    );
+    expect(find.text(_kTitle), findsNothing);
     expect(firstErrorToastMessage(tester), isNull, reason: 'no toast');
     expect(_pdfRuns, isEmpty, reason: 'nothing is handed to the PDF action');
-    expect(
-      tester.widget<ShadButton>(download).enabled,
-      isTrue,
-      reason: 'the button is on again after the refusal',
-    );
     await logout(tester);
 
     // 3. Cleanup through the UI: the admin unpublishes and deletes it.
     await loginViaUi(tester, _kSudoUsername, _kSudoPassword);
-    await _openApplications(tester);
+    await _openApplications(tester, manage: true);
     final card = find.byKey(ValueKey('application.row.$id'));
     await waitFor(
       tester,

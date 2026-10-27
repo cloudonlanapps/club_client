@@ -83,8 +83,8 @@ Future<void> _pump(
 const _denied = 'Access Denied';
 
 void main() {
-  Widget list() => ApplicationsScreen(
-    onOpen: (_) {},
+  Widget list() => ApplicationsScreen(onOpen: (_) {}, onHome: () {});
+  Widget mine() => MyApplicationsScreen(
     pdfAction: _pdfAction,
     onOpenProfile: () {},
     onHome: () {},
@@ -98,8 +98,32 @@ void main() {
   );
 
   group('Issue 321: the Applications screens gate', () {
-    testWidgets('Issue 321: any member opens the list', (tester) async {
+    testWidgets('Issue 380: any member opens their own list', (
+      tester,
+    ) async {
+      await _pump(tester, mine(), viewer: _user());
+      expect(find.byType(MyApplicationsView), findsOneWidget);
+    });
+
+    testWidgets('Issue 380: an admin opens their own list too', (
+      tester,
+    ) async {
+      await _pump(tester, mine(), viewer: _user(admin: true));
+      expect(find.byType(MyApplicationsView), findsOneWidget);
+    });
+
+    testWidgets('Issue 380: a member is refused the management list', (
+      tester,
+    ) async {
       await _pump(tester, list(), viewer: _user());
+      expect(find.text(_denied), findsOneWidget);
+      expect(find.byType(ApplicationsView), findsNothing);
+    });
+
+    testWidgets('Issue 380: an admin opens the management list', (
+      tester,
+    ) async {
+      await _pump(tester, list(), viewer: _user(admin: true));
       expect(find.byType(ApplicationsView), findsOneWidget);
     });
 
@@ -114,13 +138,16 @@ void main() {
       expect(find.byType(ApplicationView), findsOneWidget);
     });
 
-    testWidgets('Issue 321: with applications off both refuse', (
+    testWidgets('Issue 321: with applications off all three refuse', (
       tester,
     ) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
       await _pump(
         tester,
         Column(
           children: [
+            Expanded(child: mine()),
             Expanded(child: list()),
             Expanded(child: editor()),
           ],
@@ -128,7 +155,7 @@ void main() {
         viewer: _user(admin: true),
         applications: false,
       );
-      expect(find.text(_denied), findsNWidgets(2));
+      expect(find.text(_denied), findsNWidgets(3));
     });
 
     testWidgets('Issue 321: while the capability is unknown it waits', (
@@ -136,7 +163,7 @@ void main() {
     ) async {
       await _pump(
         tester,
-        list(),
+        mine(),
         viewer: _user(),
         applications: null,
         settle: false,

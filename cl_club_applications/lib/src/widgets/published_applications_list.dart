@@ -12,12 +12,17 @@ import 'package:ui_lib/ui_lib.dart' show PdfAction;
 import '../constants/application_view_sizes.dart';
 import '../constants/application_view_strings.dart';
 import '../models/application_download.dart';
+import '../utils/application_eligibility.dart';
 import '../utils/application_title.dart';
 import 'application_download_row.dart';
 
 /// The published applications [currentUser] may download their own form
 /// of, each with Download, under what to do with it: print it, affix a
 /// passport-size photograph, sign it and hand it in (club_client#321).
+///
+/// Only the ones [currentUser] is eligible for are listed
+/// ([isEligibleFor], club_client#380). A member with no date of birth fits
+/// no age category, and is told to add one.
 ///
 /// The member's Applications page and onboarding's waiting page show it.
 /// Download first asks whether the member's profile is complete; **No**
@@ -57,6 +62,13 @@ class PublishedApplicationsList extends ConsumerWidget {
       );
     }
     final published = publishedApplications(templates.requireValue.values);
+    final open = published
+        .where((t) => isEligibleFor(t, currentUser))
+        .toList();
+    final needsDateOfBirth = hiddenForMissingDateOfBirth(
+      published,
+      currentUser,
+    );
     if (published.isEmpty) {
       final documents = ref.watch(
         clIdentityDocsMasterProvider(currentUser.username),
@@ -69,12 +81,22 @@ class PublishedApplicationsList extends ConsumerWidget {
         style: theme.textTheme.muted,
       );
     }
+    final dateOfBirthNote = Text(
+      ApplicationViewStrings.needsDateOfBirth,
+      style: theme.textTheme.muted,
+    );
+    if (open.isEmpty) {
+      return needsDateOfBirth
+          ? dateOfBirthNote
+          : Text(ApplicationViewStrings.noneOpen, style: theme.textTheme.muted);
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: ApplicationViewSizes.rowGap,
       children: [
         Text(ApplicationViewStrings.printNote, style: theme.textTheme.muted),
-        for (final template in published)
+        if (needsDateOfBirth) dateOfBirthNote,
+        for (final template in open)
           ApplicationDownloadRow(
             key: ValueKey('application.download.${template.id}'),
             title: applicationTitle(template),

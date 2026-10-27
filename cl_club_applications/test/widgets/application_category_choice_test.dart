@@ -180,7 +180,7 @@ void main() {
       await pumpApplications(
         tester,
         ProfileApplicationsSection(
-          member: applicationsUser(),
+          member: eligibleMember(),
           own: false,
           pdfAction: recordingPdfAction(bytes: opened),
         ),

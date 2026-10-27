@@ -82,9 +82,13 @@ BroadcastScope? broadcastScopeFrom(Map<String, String> query) {
   return member!.isEmpty ? null : BroadcastScope.member(member);
 }
 
-/// The Applications page (club_client#321): members download their form,
-/// admins list every template.
+/// The admin's Applications page under Club Management (club_client#321,
+/// #380): every template, to manage.
 const String applicationsPath = '/memberzone/applications';
+
+/// A member's Applications page under Main (club_client#380): the published
+/// applications they are eligible for, to download.
+const String myApplicationsPath = '$applicationsPath/mine';
 
 /// The admin's editor of application template [id].
 String applicationPath(int id) => '$applicationsPath/$id';

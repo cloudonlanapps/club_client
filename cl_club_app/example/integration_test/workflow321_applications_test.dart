@@ -124,8 +124,13 @@ int _createdId(WidgetTester tester) {
       .id;
 }
 
-/// Opens *Applications* from the sidebar.
-Future<void> _openApplications(WidgetTester tester) async {
+/// Opens *Applications* from the sidebar: the member's own list under
+/// Main, or with [manage] the admin's list under Club Management
+/// (club_client#380).
+Future<void> _openApplications(
+  WidgetTester tester, {
+  bool manage = false,
+}) async {
   await waitFor(
     tester,
     () =>
@@ -136,7 +141,7 @@ Future<void> _openApplications(WidgetTester tester) async {
         find.byTooltip('Open menu').evaluate().isNotEmpty,
     description: 'the Applications sidebar entry',
   );
-  await openSidebarEntry(tester, _kApplications);
+  await openSidebarEntry(tester, _kApplications, last: manage);
 }
 
 void main() {
@@ -222,7 +227,7 @@ void main() {
 
     // 1. The admin creates a draft from Applications.
     await loginViaUi(tester, _kSudoUsername, _kSudoPassword);
-    await _openApplications(tester);
+    await _openApplications(tester, manage: true);
     final create = find.widgetWithText(ShadButton, 'Create application');
     await waitFor(
       tester,
@@ -339,7 +344,7 @@ void main() {
 
     // 6. The admin unpublishes and deletes it from the editor.
     await loginViaUi(tester, _kSudoUsername, _kSudoPassword);
-    await _openApplications(tester);
+    await _openApplications(tester, manage: true);
     final card = find.byKey(ValueKey('application.row.$_templateId'));
     await waitFor(
       tester,

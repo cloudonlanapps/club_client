@@ -33,9 +33,16 @@ Future<Finder> revealSidebarEntry(WidgetTester tester, String label) async {
 
 /// Opens the sidebar entry [label], as a tap on it would. The entry closes
 /// the drawer itself when it is in one.
-Future<void> openSidebarEntry(WidgetTester tester, String label) async {
+///
+/// Two entries share a label when Main and Club Management both have one
+/// (Reviews, Applications): [last] opens the Club Management one.
+Future<void> openSidebarEntry(
+  WidgetTester tester,
+  String label, {
+  bool last = false,
+}) async {
   final entry = await revealSidebarEntry(tester, label);
-  tester.widget<SidebarItem>(entry.first).onTap();
+  tester.widget<SidebarItem>(last ? entry.last : entry.first).onTap();
   await settle(tester);
 }
 

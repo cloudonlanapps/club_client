@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'form_address.dart';
 import 'user_form_fields.dart';
 
@@ -137,5 +139,29 @@ class UserFormAssembly {
   static String? maybe(String key, Map<String, dynamic> values) {
     final raw = (values[key] as String?)?.trim();
     return (raw == null || raw.isEmpty) ? null : raw;
+  }
+
+  /// The strings [values] hold for [id], a list field: empty when it holds
+  /// none. The entry is read as any list: `ShadForm.value` deep-copies the
+  /// form's initial values, which turns a typed list into a
+  /// `List<dynamic>`.
+  static List<String> strings(String id, Map<String, dynamic> values) => [
+    ...?(values[id] as List?)?.whereType<String>(),
+  ];
+
+  /// Whether [a] and [b], a form's initial and current values, differ:
+  /// each list entry compared as a set of its elements (the same choices
+  /// ticked, in whatever order), every other entry by `==`. `mapEquals`
+  /// would compare a list by identity, and `ShadForm.value` hands back a
+  /// copy of each, so the forms holding a list field use this for
+  /// `isDirty`.
+  static bool differ(Map<String, dynamic> a, Map<String, dynamic> b) {
+    final keys = {...a.keys, ...b.keys};
+    return keys.any((key) {
+      final x = a[key];
+      final y = b[key];
+      if (x is List && y is List) return !setEquals(x.toSet(), y.toSet());
+      return x != y;
+    });
   }
 }

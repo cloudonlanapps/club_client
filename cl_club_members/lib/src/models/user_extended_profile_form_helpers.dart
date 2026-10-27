@@ -21,17 +21,16 @@ const String profilePositionDisplayLanguage = 'en';
 /// The initial values of the extended profile's section forms
 /// (`UserSportsDetailsForm`, `UserBackgroundForm`, `UserGuardianForm`) from
 /// [user], each text `''` when blank so the forms' dirty check compares like
-/// with like (club_client#320).
+/// with like (club_client#320), and the preferred positions and languages
+/// the member's whole lists (club_client#335).
 Map<String, dynamic> buildUserExtendedProfileFormInitialValues(
   UserPrivate user,
 ) => {
   UserFormFields.clubDistrictId: user.clubDistrict ?? '',
-  UserFormFields.preferredPositionsId:
-      user.preferredPositions.firstOrNull ?? '',
+  UserFormFields.preferredPositionsId: [...user.preferredPositions],
   UserFormFields.pastExperienceId: user.pastExperience ?? '',
   UserFormFields.nationalityId: user.nationality ?? '',
-  UserFormFields.preferredLanguagesId:
-      user.preferredLanguages.firstOrNull ?? '',
+  UserFormFields.preferredLanguagesId: [...user.preferredLanguages],
   UserFormFields.guardianNameId: user.guardian?.name ?? '',
   UserFormFields.guardianRelationId: user.guardian?.relation ?? '',
   UserFormFields.guardianPhoneId: user.guardian?.phone ?? '',
@@ -57,14 +56,8 @@ String profilePositionLabel(ProfileOptions options, String value) =>
 /// each `update<Section>` sends only the fields its section edits, through
 /// the users master; a blank text is sent as null, which clears it.
 abstract final class UserExtendedProfileFormSubmit {
-  /// The list a single-choice select of [values] stands for: the choice
-  /// alone, or empty for none. Choosing several is club_client#335.
-  static List<String> oneOrNone(String id, Map<String, dynamic> values) => [
-    ?UserFormAssembly.maybe(id, values),
-  ];
-
   /// Partial update of the sports details: club or district, preferred
-  /// positions and past experience.
+  /// positions (the ticked ones, empty for none) and past experience.
   static Future<UserPrivate> updateSportsDetails({
     required Map<String, dynamic> values,
     required String username,
@@ -74,7 +67,7 @@ abstract final class UserExtendedProfileFormSubmit {
       username,
       clubDistrict: () =>
           UserFormAssembly.maybe(UserFormFields.clubDistrictId, values),
-      preferredPositions: oneOrNone(
+      preferredPositions: UserFormAssembly.strings(
         UserFormFields.preferredPositionsId,
         values,
       ),
@@ -83,7 +76,8 @@ abstract final class UserExtendedProfileFormSubmit {
     );
   }
 
-  /// Partial update of the background: nationality and preferred languages.
+  /// Partial update of the background: nationality and preferred languages
+  /// (the ticked ones, empty for none).
   static Future<UserPrivate> updateBackground({
     required Map<String, dynamic> values,
     required String username,
@@ -93,7 +87,7 @@ abstract final class UserExtendedProfileFormSubmit {
       username,
       nationality: () =>
           UserFormAssembly.maybe(UserFormFields.nationalityId, values),
-      preferredLanguages: oneOrNone(
+      preferredLanguages: UserFormAssembly.strings(
         UserFormFields.preferredLanguagesId,
         values,
       ),
@@ -149,7 +143,7 @@ abstract final class UserExtendedProfileFormSubmit {
   };
 
   /// What a section editor shows for a refused save, keyed by field id: a
-  /// position or language the club does not offer on that select, a
+  /// position or language the club does not offer on its checkboxes, a
   /// membership date the server does not take on it, and a schema
   /// rejection on the field it names. Empty when [error] names no field.
   static Map<String, String> fieldErrorsFor(ServerException error) {

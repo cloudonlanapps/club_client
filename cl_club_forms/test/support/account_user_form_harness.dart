@@ -94,6 +94,30 @@ Future<void> tapCheckbox(WidgetTester tester, String id) async {
   await tester.pumpAndSettle();
 }
 
+/// Ticks or unticks the box labelled [label] of the checkbox list with
+/// [id] (`UserChoicesField`), as a member does.
+Future<void> tapChoice(WidgetTester tester, String id, String label) async {
+  await tester.tap(
+    find.descendant(
+      of: fieldWithId(id),
+      matching: find.widgetWithText(ShadCheckbox, label),
+    ),
+    warnIfMissed: false,
+  );
+  await tester.pumpAndSettle();
+}
+
+/// Whether the box labelled [label] of the checkbox list with [id] is
+/// ticked.
+bool choiceTicked(WidgetTester tester, String id, String label) => tester
+    .widget<ShadCheckbox>(
+      find.descendant(
+        of: fieldWithId(id),
+        matching: find.widgetWithText(ShadCheckbox, label),
+      ),
+    )
+    .value;
+
 /// Taps the select with [id] where its value shows, as a member does to
 /// open it.
 Future<void> tapSelect(WidgetTester tester, String id) async {

@@ -1,10 +1,12 @@
-// Issue 320, UserBackgroundForm: nationality and preferred language of the
-// extended profile. Both optional; the language select offers the club's
-// languages and a "None" choice, and keeps a language the club no longer
-// lists.
+// Issue 320, UserBackgroundForm: nationality and preferred languages of
+// the extended profile. Both optional; the languages are checkboxes of the
+// club's languages, any number ticked (Issue 335), and a language the club
+// no longer lists stays ticked.
 import 'package:cl_club_forms/cl_club_forms.dart';
+import 'package:cl_club_forms/src/widgets/user_form/user_form_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadCheckbox;
 
 import '../../support/account_user_form_harness.dart';
 import '../../support/form_harness.dart';
@@ -16,7 +18,7 @@ const List<String> _languages = ['English', 'Marathi', 'Hindi'];
 
 Map<String, dynamic> _member() => {
   _nationality: 'Indian',
-  _language: 'Marathi',
+  _language: ['Marathi'],
 };
 
 Widget _form({
@@ -45,11 +47,11 @@ Future<UserBackgroundFormState> _pump(
 
 void main() {
   group('Issue 320: UserBackgroundForm', () {
-    testWidgets('Issue 320: it shows nationality and preferred language, '
+    testWidgets('Issue 320: it shows nationality and preferred languages, '
         'neither required', (tester) async {
       await _pump(tester);
 
-      expect(rowLabels(tester), ['Nationality', 'Preferred language']);
+      expect(rowLabels(tester), ['Nationality', 'Preferred languages']);
       expect(fieldIds(tester), UserFormFields.backgroundIds);
       expectLabelsAreRows(tester);
       expectNoHostChrome(tester);
@@ -65,41 +67,58 @@ void main() {
       expect(values!.keys, UserFormFields.backgroundIds);
     });
 
-    testWidgets('Issue 320: a blank member comes back as empty texts and '
-        'is valid', (tester) async {
+    testWidgets('Issue 335: a blank member comes back as an empty text and '
+        'no language, with the muted line shown', (tester) async {
       final state = await _pump(tester, initialValues: const {});
 
-      expect(find.text('None'), findsOneWidget);
-      expect(state.validate(), {_nationality: '', _language: ''});
+      expect(find.text(UserFormStrings.noLanguageChosen), findsOneWidget);
+      expect(state.validate(), {_nationality: '', _language: <String>[]});
     });
 
-    testWidgets('Issue 320: the select offers None and every language, and '
-        'returns the one picked', (tester) async {
+    testWidgets('Issue 335: a box for every language by name; two ticked '
+        'come back as both', (tester) async {
       final state = await _pump(tester);
 
-      await tapSelect(tester, _language);
-      for (final text in ['None', ..._languages]) {
-        expect(find.text(text), findsWidgets, reason: text);
+      for (final text in _languages) {
+        expect(
+          find.descendant(
+            of: fieldWithId(_language),
+            matching: find.widgetWithText(ShadCheckbox, text),
+          ),
+          findsOneWidget,
+          reason: text,
+        );
       }
-      await tester.tap(find.text('Hindi').last);
-      await tester.pumpAndSettle();
-      expect(state.validate()![_language], 'Hindi');
-      expect(state.isDirty, isTrue);
+      expect(choiceTicked(tester, _language, 'Marathi'), isTrue);
 
-      await pickOption(tester, _language, 'None');
-      expect(state.validate()![_language], '');
+      await tapChoice(tester, _language, 'English');
+      expect(state.validate()![_language], ['English', 'Marathi']);
+      expect(state.isDirty, isTrue);
     });
 
-    testWidgets('Issue 320: a language the club no longer lists shows and '
-        'is kept', (tester) async {
+    testWidgets('Issue 335: none ticked comes back as an empty list', (
+      tester,
+    ) async {
+      final state = await _pump(tester);
+
+      await tapChoice(tester, _language, 'Marathi');
+      expect(find.text(UserFormStrings.noLanguageChosen), findsOneWidget);
+      expect(state.validate()![_language], <String>[]);
+    });
+
+    testWidgets('Issue 335: a language the club no longer lists stays '
+        'ticked and is kept', (tester) async {
       final state = await _pump(
         tester,
-        initialValues: {..._member(), _language: 'Kannada'},
+        initialValues: {
+          ..._member(),
+          _language: ['Kannada'],
+        },
       );
 
-      expect(find.text('Kannada'), findsOneWidget);
+      expect(choiceTicked(tester, _language, 'Kannada'), isTrue);
       expect(state.isDirty, isFalse);
-      expect(state.validate()![_language], 'Kannada');
+      expect(state.validate()![_language], ['Kannada']);
     });
 
     testWidgets('Issue 320: the nationality comes back as typed, and '
@@ -121,14 +140,14 @@ void main() {
       await expectShowsServerErrors(tester, state, _nationality);
     });
 
-    testWidgets('Issue 320: with enabled off every field is off and the '
-        'select does not open', (tester) async {
+    testWidgets('Issue 320: with enabled off every field is off and no '
+        'box ticks', (tester) async {
       final state = await _pump(tester, enabled: false);
 
       expectEveryFieldOff(tester);
       await expectTapsIgnored(tester, [_nationality]);
-      await tapSelect(tester, _language);
-      expect(find.text('Hindi'), findsNothing);
+      await tapChoice(tester, _language, 'Hindi');
+      expect(choiceTicked(tester, _language, 'Hindi'), isFalse);
       expect(state.isDirty, isFalse);
     });
 
@@ -138,7 +157,7 @@ void main() {
       Widget build({required bool enabled}) =>
           _form(key: key, enabled: enabled);
 
-      expect(await expectDrawnOffWhenTurnedOff(tester, build), 2);
+      expect(await expectDrawnOffWhenTurnedOff(tester, build), 4);
       expect(await expectKeyboardIgnoredWhenOff(tester, build), 1);
     });
 

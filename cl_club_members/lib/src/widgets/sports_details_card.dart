@@ -14,9 +14,10 @@ import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'package:ui_lib/ui_lib.dart' show EditableSectionCard;
 
 /// The Sports details section of a member's extended profile
-/// (club_client#320): club or district, preferred position and past
+/// (club_client#320): club or district, preferred positions and past
 /// experience. Edits in place with [UserSportsDetailsForm]; Save sends these
-/// three fields alone. The position reads as the club's English label.
+/// three fields alone. Every chosen position reads, each as the club's
+/// English label (club_client#335).
 class SportsDetailsCard extends ConsumerStatefulWidget {
   const SportsDetailsCard({
     required this.user,
@@ -66,7 +67,7 @@ class SportsDetailsCardState extends ConsumerState<SportsDetailsCard> {
       profileDetailRow(
         context,
         LucideIcons.shield,
-        ExtendedProfileStrings.preferredPosition,
+        ExtendedProfileStrings.preferredPositions,
         user.preferredPositions.isEmpty
             ? null
             : user.preferredPositions

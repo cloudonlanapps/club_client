@@ -15,10 +15,12 @@ import '../utils/application_save_refusal.dart';
 import '../utils/application_title.dart';
 import 'application_download_button.dart';
 import 'application_missing_texts.dart';
+import 'application_publish_id.dart';
 import 'application_step_button.dart';
 
 /// The **State** card of the application editor (club_client#321): the
-/// template's state and stored layout, the moves Save, Publish, Unpublish,
+/// template's state and stored layout, a published template's publish ID
+/// (club_client#339), the moves Save, Publish, Unpublish,
 /// Revert and Delete, and Preview.
 ///
 /// A move the state forbids is greyed out up front with its reason beside
@@ -146,6 +148,9 @@ class ApplicationStateCardState extends ConsumerState<ApplicationStateCard> {
                   : ApplicationViewStrings.layout(layout.name),
               style: theme.textTheme.muted,
             ),
+            if (template.status == ApplicationStatus.published)
+              if (template.publishId case final String id)
+                ApplicationPublishId(publishId: id),
             if (!draft)
               Text(
                 ApplicationViewStrings.revertToEdit,

@@ -130,12 +130,12 @@ void main() {
       expect(opened, isEmpty);
     });
 
-    testWidgets('Issue 343: a member fitting several age categories is '
-        'told so under the button', (tester) async {
+    testWidgets('Issue 337: a category the member does not fit is told '
+        'under the button, not shown the raw error', (tester) async {
       final master = FakeApplicationsMaster(_published())
-        ..failWith = const ApplicationCategoryRequiredException(
+        ..failWith = const ApplicationCategoryNotFittingException(
           message: 'raw server words',
-          categories: [0, 1],
+          categories: [1],
         );
       final opened = <Uint8List>[];
       await pumpApplications(
@@ -150,7 +150,7 @@ void main() {
       await tester.tap(find.text(testPdfActionLabel));
       await answerProfileComplete(tester);
       expect(
-        find.text(ApplicationViewStrings.categoryRequired),
+        find.text(ApplicationViewStrings.categoryNotFitting),
         findsOneWidget,
       );
       expect(find.textContaining('raw server words'), findsNothing);

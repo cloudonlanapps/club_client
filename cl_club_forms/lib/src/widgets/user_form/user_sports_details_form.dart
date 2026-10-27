@@ -9,7 +9,7 @@ import 'user_form_fields.dart';
 import 'user_sports_details_fields.dart';
 
 /// Pure-UI editor for a member's sports details — club or district,
-/// preferred position and past experience (the "Sports details" section
+/// preferred positions and past experience (the "Sports details" section
 /// of the extended profile). Every field may be left blank.
 ///
 /// The form owns no title or buttons: the host drives it through a
@@ -25,8 +25,8 @@ class UserSportsDetailsForm extends StatefulWidget {
   /// Initial values; reads the ids of [UserFormFields.sportsDetailsIds].
   final Map<String, dynamic> initialValues;
 
-  /// The club's positions, offered by the preferred-position select. A
-  /// member's position that is not among them shows and is kept.
+  /// The club's positions, offered as the preferred-positions checkboxes.
+  /// A member's position that is not among them shows ticked and is kept.
   final List<ProfilePositionOption> positions;
 
   /// Whether the fields respond; the host turns it off while it saves.
@@ -37,10 +37,21 @@ class UserSportsDetailsForm extends StatefulWidget {
 }
 
 /// State of [UserSportsDetailsForm]. Its values are the fields of
-/// [UserFormFields.sportsDetailsIds], each a `String` (`''` when blank),
+/// [UserFormFields.sportsDetailsIds], each text a `String` (`''` when
+/// blank) and the preferred positions a `List<String>` (empty for none),
 /// for a partial update.
 class UserSportsDetailsFormState extends State<UserSportsDetailsForm>
     with FormContract<UserSportsDetailsForm> {
+  /// Compares its list field as a set of the ticked values
+  /// (`UserFormAssembly.differ`): `ShadForm.value` hands back a copy of a
+  /// list, which `mapEquals` would always count as changed.
+  @override
+  bool get isDirty {
+    final form = formKey.currentState;
+    return form != null &&
+        UserFormAssembly.differ(form.initialValue, form.value);
+  }
+
   @override
   Map<String, dynamic> assemble(Map<String, dynamic> values) =>
       UserFormAssembly.pick(UserFormFields.sportsDetailsIds, values);

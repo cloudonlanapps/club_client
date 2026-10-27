@@ -33,4 +33,10 @@ abstract final class ProfileOptionsMessages {
   /// A save that failed, or was refused naming nothing the form holds.
   static const String saveFailed =
       "Couldn't save the profile options. Try again.";
+
+  /// The server could not use the options as a whole (422
+  /// `INVALID_PREFERENCE_VALUE`, club_client#334), shown inline in the form.
+  static const String invalidOptions =
+      "These options can't be saved. Each position needs a value and an "
+      'English name, and no position or language may be listed twice.';
 }

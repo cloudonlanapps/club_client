@@ -61,6 +61,16 @@ abstract final class ApplicationViewStrings {
   static const String noLayout =
       'Layout: decided when the application is saved';
 
+  /// A published template's publish ID, printed up the side margin of each
+  /// downloaded form (club_client#339).
+  static String publishId(String id) => 'Publish ID: $id';
+
+  /// The publish ID copied.
+  static const String publishIdCopied = 'Publish ID copied.';
+
+  /// The label of the button that copies the publish ID.
+  static const String copyPublishId = 'Copy publish ID';
+
   /// Read-only outside a draft.
   static const String revertToEdit =
       'Saved and published applications are read-only: revert to a draft to '
@@ -106,16 +116,20 @@ abstract final class ApplicationViewStrings {
   static const String changedMeanwhile =
       'This application was changed elsewhere and has been reloaded.';
 
-  /// Save refused: the first incomplete text, at [place], lacks
-  /// [languages]; [others] more texts are incomplete. Naming each text with
-  /// its own languages is club_client#338.
-  static String incomplete(String place, String languages, int others) =>
-      'Save was refused: $place is missing or lacks $languages'
-      '${switch (others) {
-        0 => '',
-        1 => ', and 1 more text is incomplete',
-        _ => ', and $others more texts are incomplete',
-      }}.';
+  /// Save refused: [texts] are missing or lack print languages, each
+  /// named with the ones it lacks ([incompleteText]), joined by
+  /// [incompleteSeparator] (club_client#338).
+  static String incomplete(String texts) =>
+      'Save was refused: these texts are missing or lack a language. '
+      '$texts.';
+
+  /// One incomplete text of a save refusal: the text at [place] and the
+  /// [languages] it lacks.
+  static String incompleteText(String place, String languages) =>
+      '$place: $languages';
+
+  /// Separates the incomplete texts of a save refusal.
+  static const String incompleteSeparator = '; ';
 
   /// Save refused: the details do not fit page 1.
   static String doesNotFit(double? overflowPt) =>
@@ -136,11 +150,28 @@ abstract final class ApplicationViewStrings {
       'Not eligible for this application: none of its age categories matches '
       'the date of birth and gender on the profile.';
 
-  /// A download refused: the member fits several age categories and the
-  /// form must tick one. Choosing it is club_client#337.
-  static const String categoryRequired =
-      'The member fits more than one age category of this form, and '
-      'choosing which one it ticks is not available yet.';
+  /// A download refused: the age category chosen is not one the member
+  /// fits (club_client#337).
+  static const String categoryNotFitting =
+      'The age category chosen no longer matches the date of birth and '
+      'gender on the profile. Download again to choose another.';
+
+  /// Title of the dialog that asks which age category the form ticks.
+  static const String chooseCategoryTitle = 'Which age category?';
+
+  /// What the dialog that asks for an age category says.
+  static const String chooseCategoryMessage =
+      'The member fits more than one age category of this form. Choose the '
+      'one the form ticks.';
+
+  /// The name of age category [index] when it has none to show.
+  static String categoryNumber(int index) => 'Category ${index + 1}';
+
+  /// The answer that downloads the form with the category chosen.
+  static const String chooseCategoryDownload = 'Download';
+
+  /// The answer that downloads nothing.
+  static const String chooseCategoryCancel = 'Cancel';
 
   /// A download refused: no identity document.
   static const String identityRequired =

@@ -4,12 +4,12 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../models/profile_position_option.dart';
 import '../form/form_body.dart';
 import '../form/labeled_form_row.dart';
+import 'user_choices_field.dart';
 import 'user_form_fields.dart';
 import 'user_form_strings.dart';
-import 'user_optional_choice_field.dart';
 
 /// The sports details of the extended profile: club or district, preferred
-/// position and past experience. Sits inside the embedding form's
+/// positions and past experience. Sits inside the embedding form's
 /// `ShadForm`, which holds the initial values.
 class UserSportsDetailsFields extends StatelessWidget {
   const UserSportsDetailsFields({
@@ -44,10 +44,11 @@ class UserSportsDetailsFields extends StatelessWidget {
           ),
         ),
         LabeledFormRow(
-          label: UserFormStrings.preferredPosition,
-          field: UserOptionalChoiceField(
+          label: UserFormStrings.preferredPositions,
+          field: UserChoicesField(
             id: UserFormFields.preferredPositionsId,
             enabled: enabled,
+            noneTickedHint: UserFormStrings.noPositionChosen,
             options: {
               for (final position in positions) position.value: position.label,
             },

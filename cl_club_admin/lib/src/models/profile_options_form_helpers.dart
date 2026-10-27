@@ -3,7 +3,16 @@ import 'package:cl_club_forms/cl_club_forms.dart'
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ProfileOptionsNotifier, schemaFieldErrors;
 import 'package:club_sdk_2/club_sdk_2.dart'
-    show ProfileOptions, ProfilePosition, ServerException;
+    show ProfileOptions, ProfilePosition, SdkErrorCode, ServerException;
+
+import '../constants/profile_options_messages.dart';
+
+/// What `ProfileOptionsForm` shows for a refused save: messages on the
+/// fields by id, and one for the form as a whole.
+typedef ProfileOptionsFormRefusal = ({
+  Map<String, String> fieldErrors,
+  String? formError,
+});
 
 /// The languages a position is labelled in on the Club details page: the
 /// languages an application form may print in (club_client#320).
@@ -74,4 +83,23 @@ abstract final class ProfileOptionsFormSubmit {
   /// list it names. Empty when [error] names neither.
   static Map<String, String> fieldErrorsFor(ServerException error) =>
       schemaFieldErrors(error, schemaFieldIds);
+
+  /// What the form shows for a save refused with [error], or `null` when
+  /// the refusal names nothing the form holds (the host then toasts a
+  /// fixed message). A document the server cannot use (422
+  /// `INVALID_PREFERENCE_VALUE`, which names no field) shows inline in the
+  /// form; a schema rejection shows on the list it names.
+  static ProfileOptionsFormRefusal? refusal(Object error) {
+    if (error is! ServerException) return null;
+    if (error.code == SdkErrorCode.invalidPreferenceValue) {
+      return (
+        fieldErrors: const {},
+        formError: ProfileOptionsMessages.invalidOptions,
+      );
+    }
+    final fieldErrors = fieldErrorsFor(error);
+    return fieldErrors.isEmpty
+        ? null
+        : (fieldErrors: fieldErrors, formError: null);
+  }
 }

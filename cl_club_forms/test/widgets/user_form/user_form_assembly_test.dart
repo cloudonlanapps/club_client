@@ -304,4 +304,44 @@ void main() {
       expect(UserFormAssembly.maybe('missing', values), isNull);
     });
   });
+
+  group('Issue 335: UserFormAssembly.strings and differ', () {
+    const id = UserFormFields.preferredPositionsId;
+
+    test('Issue 335: strings reads any list of strings, and none as empty', () {
+      expect(
+        UserFormAssembly.strings(id, {
+          id: <dynamic>['Forward', 'Goalie'],
+        }),
+        ['Forward', 'Goalie'],
+      );
+      expect(UserFormAssembly.strings(id, const {}), isEmpty);
+    });
+
+    test('Issue 335: differ compares lists as sets and the rest by ==', () {
+      expect(
+        UserFormAssembly.differ(
+          {
+            id: ['Forward', 'Goalie'],
+            'x': 'a',
+          },
+          {
+            id: <dynamic>['Goalie', 'Forward'],
+            'x': 'a',
+          },
+        ),
+        isFalse,
+      );
+      expect(
+        UserFormAssembly.differ(
+          {
+            id: ['Forward'],
+          },
+          {id: <String>[]},
+        ),
+        isTrue,
+      );
+      expect(UserFormAssembly.differ({'x': 'a'}, {'x': 'b'}), isTrue);
+    });
+  });
 }

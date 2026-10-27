@@ -11,28 +11,13 @@ import 'package:flutter_test/flutter_test.dart';
 import '../support/application_samples.dart';
 import '../support/applications_harness.dart';
 import '../support/pdf_action.dart';
+import '../support/profile_complete.dart';
 
 Map<int, ApplicationTemplate> _published() => {
   4: ApplicationSamples.template(id: 4, status: ApplicationStatus.published),
 };
 
 final Finder _question = find.text(ApplicationViewStrings.profileCompleteTitle);
-
-/// The signed-in member with every printed field filled.
-UserPrivate _complete() => applicationsUser().copyWith(
-  firstName: () => 'Member',
-  lastName: () => 'A',
-  dateOfBirthUtc: () => DateTime.utc(2000, 3, 4),
-  gender: () => Gender.female,
-  phone: () => '+919800000000',
-  email: () => 'member_a@example.com',
-  address: () => const Address(city: 'Pune'),
-  nationality: () => 'Indian',
-  preferredLanguages: const ['Marathi'],
-  clubDistrict: () => 'Pune',
-  preferredPositions: const ['Forward'],
-  pastExperience: () => 'Two seasons',
-);
 
 void main() {
   group('Issue 340: "Is your profile complete?" before a download', () {
@@ -67,7 +52,7 @@ void main() {
           fileName: 'Trial.pdf',
         ),
         master: FakeApplicationsMaster(_published()),
-        currentUser: _complete().copyWith(
+        currentUser: completeProfileUser().copyWith(
           phone: () => ' ',
           address: () => const Address(),
           dateOfBirthUtc: () => null,
@@ -107,7 +92,7 @@ void main() {
           fileName: 'Trial.pdf',
         ),
         master: master,
-        currentUser: _complete(),
+        currentUser: completeProfileUser(),
         extendedProfile: true,
       );
       await tester.tap(find.text(testPdfActionLabel));

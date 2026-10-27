@@ -13,9 +13,10 @@ import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'package:ui_lib/ui_lib.dart' show EditableSectionCard;
 
 /// The Background section of a member's extended profile
-/// (club_client#320): nationality and preferred language. Edits in place
-/// with [UserBackgroundForm], whose language select offers the club's
-/// languages; Save sends these two fields alone.
+/// (club_client#320): nationality and preferred languages, every chosen
+/// one read (club_client#335). Edits in place with [UserBackgroundForm],
+/// whose checkboxes offer the club's languages; Save sends these two
+/// fields alone.
 class BackgroundCard extends ConsumerStatefulWidget {
   const BackgroundCard({required this.user, required this.canEdit, super.key});
 
@@ -61,7 +62,7 @@ class BackgroundCardState extends ConsumerState<BackgroundCard> {
       profileDetailRow(
         context,
         LucideIcons.languages,
-        ExtendedProfileStrings.preferredLanguage,
+        ExtendedProfileStrings.preferredLanguages,
         user.preferredLanguages.isEmpty
             ? null
             : user.preferredLanguages.join(', '),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../constants/form_spacing.dart';
 import '../../../models/application/application_choice_option.dart';
@@ -16,8 +17,11 @@ import '../text_value/application_text_value_editor.dart';
 import 'application_age_category_values.dart';
 
 /// Edits one age category of an application: its name in each print
-/// language, the first and last birth dates it takes (each optional and
-/// cleared by its button) and the genders it takes (none ticked: all).
+/// language, whether an age limit applies and, while it does, the first
+/// and last birth dates it takes (at least one, each cleared by its
+/// button), and the genders it takes (none ticked: all). Unticking the
+/// age limit hides the dates and sends none; ticking it again brings
+/// back the ones picked.
 ///
 /// It reports the category as `ApplicationAgeCategoryValues.category`
 /// shapes it through [onChanged] on every edit; it is seeded once from
@@ -54,6 +58,9 @@ class ApplicationAgeCategoryEditorState
   /// The category's name.
   ApplicationTextValue? label;
 
+  /// Whether the category limits birth dates.
+  bool ageLimit = false;
+
   /// The first birth date; `''` for none.
   String bornOnOrAfter = '';
 
@@ -70,6 +77,7 @@ class ApplicationAgeCategoryEditorState
     label = ApplicationTextValue.fromJson(
       category[ApplicationFormFields.labelKey],
     );
+    ageLimit = category[ApplicationFormFields.ageLimitKey]! as bool;
     bornOnOrAfter =
         category[ApplicationFormFields.bornOnOrAfterKey] as String? ?? '';
     bornOnOrBefore =
@@ -85,6 +93,7 @@ class ApplicationAgeCategoryEditorState
     widget.onChanged(
       ApplicationAgeCategoryValues.build(
         label: name is ApplicationCustomText ? name.text : const {},
+        ageLimit: ageLimit,
         bornOnOrAfter: bornOnOrAfter,
         bornOnOrBefore: bornOnOrBefore,
         genders: genders,
@@ -118,16 +127,24 @@ class ApplicationAgeCategoryEditorState
           enabled: widget.enabled,
           onChanged: (value) => update(() => label = value),
         ),
-        date(
-          ApplicationFormStrings.bornOnOrAfter,
-          bornOnOrAfter,
-          (day) => bornOnOrAfter = day,
+        ShadCheckbox(
+          value: ageLimit,
+          enabled: widget.enabled,
+          label: const Text(ApplicationFormStrings.ageLimitApplicable),
+          onChanged: (ticked) => update(() => ageLimit = ticked),
         ),
-        date(
-          ApplicationFormStrings.bornOnOrBefore,
-          bornOnOrBefore,
-          (day) => bornOnOrBefore = day,
-        ),
+        if (ageLimit) ...[
+          date(
+            ApplicationFormStrings.bornOnOrAfter,
+            bornOnOrAfter,
+            (day) => bornOnOrAfter = day,
+          ),
+          date(
+            ApplicationFormStrings.bornOnOrBefore,
+            bornOnOrBefore,
+            (day) => bornOnOrBefore = day,
+          ),
+        ],
         LabeledFormRow(
           label: ApplicationFormStrings.genders,
           field: ApplicationChoicesInput(

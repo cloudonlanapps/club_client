@@ -8,35 +8,41 @@ abstract final class ApplicationAgeCategoryValues {
   static const List<String> genders = ['male', 'female', 'other'];
 
   /// [json], an age category, as the form holds and returns it: its name
-  /// per language, notes and empty texts left out; its birth dates and
-  /// genders only when it has them.
+  /// per language, notes and empty texts left out; whether it has an age
+  /// limit (given, or else whether it has a birth date); its birth dates
+  /// only while it has one; its genders only when it has them.
   static Map<String, Object?> category(Object? json) {
     final map = json is Map ? json : const <Object?, Object?>{};
     final after = map[ApplicationFormFields.bornOnOrAfterKey];
     final before = map[ApplicationFormFields.bornOnOrBeforeKey];
+    final limit = map[ApplicationFormFields.ageLimitKey];
     final ticked = map[ApplicationFormFields.gendersKey];
     return build(
       label: ApplicationCustomText.fromJson(
         map[ApplicationFormFields.labelKey],
       ).text,
+      ageLimit: limit is bool ? limit : after is String || before is String,
       bornOnOrAfter: after is String ? after : '',
       bornOnOrBefore: before is String ? before : '',
       genders: [if (ticked is List) ...ticked.whereType<String>()],
     );
   }
 
-  /// An age category of [label], birth dates (`''` for none) and
-  /// [genders] (empty for all).
+  /// An age category of [label], with an age limit or not, birth dates
+  /// (`''` for none; left out without [ageLimit]) and [genders] (empty
+  /// for all).
   static Map<String, Object?> build({
     required Map<String, String> label,
+    required bool ageLimit,
     required String bornOnOrAfter,
     required String bornOnOrBefore,
     required List<String> genders,
   }) => {
     ApplicationFormFields.labelKey: label,
-    if (bornOnOrAfter.isNotEmpty)
+    ApplicationFormFields.ageLimitKey: ageLimit,
+    if (ageLimit && bornOnOrAfter.isNotEmpty)
       ApplicationFormFields.bornOnOrAfterKey: bornOnOrAfter,
-    if (bornOnOrBefore.isNotEmpty)
+    if (ageLimit && bornOnOrBefore.isNotEmpty)
       ApplicationFormFields.bornOnOrBeforeKey: bornOnOrBefore,
     if (genders.isNotEmpty) ApplicationFormFields.gendersKey: genders,
   };

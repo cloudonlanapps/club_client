@@ -8,7 +8,7 @@ import 'user_form_assembly.dart';
 import 'user_form_fields.dart';
 
 /// Pure-UI editor for a member's background — nationality and preferred
-/// language (the "Background" section of the extended profile). Both may
+/// languages (the "Background" section of the extended profile). Both may
 /// be left blank.
 ///
 /// The form owns no title or buttons: the host drives it through a
@@ -24,8 +24,9 @@ class UserBackgroundForm extends StatefulWidget {
   /// Initial values; reads the ids of [UserFormFields.backgroundIds].
   final Map<String, dynamic> initialValues;
 
-  /// The club's languages, by name, offered by the preferred-language
-  /// select. A member's language that is not among them shows and is kept.
+  /// The club's languages, by name, offered as the preferred-languages
+  /// checkboxes. A member's language that is not among them shows ticked
+  /// and is kept.
   final List<String> languages;
 
   /// Whether the fields respond; the host turns it off while it saves.
@@ -36,10 +37,21 @@ class UserBackgroundForm extends StatefulWidget {
 }
 
 /// State of [UserBackgroundForm]. Its values are the fields of
-/// [UserFormFields.backgroundIds], each a `String` (`''` when blank), for a
-/// partial update.
+/// [UserFormFields.backgroundIds], the nationality a `String` (`''` when
+/// blank) and the preferred languages a `List<String>` (empty for none),
+/// for a partial update.
 class UserBackgroundFormState extends State<UserBackgroundForm>
     with FormContract<UserBackgroundForm> {
+  /// Compares its list field as a set of the ticked values
+  /// (`UserFormAssembly.differ`): `ShadForm.value` hands back a copy of a
+  /// list, which `mapEquals` would always count as changed.
+  @override
+  bool get isDirty {
+    final form = formKey.currentState;
+    return form != null &&
+        UserFormAssembly.differ(form.initialValue, form.value);
+  }
+
   @override
   Map<String, dynamic> assemble(Map<String, dynamic> values) =>
       UserFormAssembly.pick(UserFormFields.backgroundIds, values);

@@ -19,20 +19,30 @@ abstract final class ApplicationCompleteness {
   /// Where [template], a template's JSON, lacks a text, by its place
   /// (`title`, `terms[1].body`, `terms_notes[0].text`, `selections[2]`), in
   /// the order the form prints them.
-  static List<String> missingTexts(Map<String, Object?> template) {
+  static List<String> missingTexts(Map<String, Object?> template) =>
+      missingLanguages(template).keys.toList();
+
+  /// What [template], a template's JSON, lacks, by place as in
+  /// [missingTexts] and in the same order: the codes of the print
+  /// languages each text is not written in, in the template's print order
+  /// (club_client#387). An empty list is a required text with nothing
+  /// written.
+  static Map<String, List<String>> missingLanguages(
+    Map<String, Object?> template,
+  ) {
     final languages = languagesOf(template);
-    final found = <String>[];
+    final found = <String, List<String>>{};
 
     void need(String place, Object? json) {
       final value = ApplicationTextValue.fromJson(json);
-      if (value != null && !isComplete(value, languages)) {
-        found.add(place);
-      }
+      if (value == null) return;
+      final lacking = lackingLanguages(value, languages);
+      if (lacking.isNotEmpty) found[place] = lacking;
     }
 
     for (final key in requiredTexts) {
       if (ApplicationTextValue.fromJson(template[key]) == null) {
-        found.add(key);
+        found[key] = const [];
       } else {
         need(key, template[key]);
       }
@@ -90,13 +100,23 @@ abstract final class ApplicationCompleteness {
 
   /// Whether [value] prints in every one of [languages].
   static bool isComplete(ApplicationTextValue value, List<String> languages) =>
-      switch (value) {
-        ApplicationJoinedText(:final parts) => parts.every(
-          (part) => isComplete(part, languages),
-        ),
-        ApplicationCustomText(:final text) => languages.every(
-          (code) => text[code]?.isNotEmpty ?? false,
-        ),
-        _ => false,
-      };
+      lackingLanguages(value, languages).isEmpty;
+
+  /// Those of [languages] that [value], or a part of it, is not written
+  /// in, in the order of [languages].
+  static List<String> lackingLanguages(
+    ApplicationTextValue value,
+    List<String> languages,
+  ) => switch (value) {
+    ApplicationJoinedText(:final parts) => [
+      for (final code in languages)
+        if (parts.any((part) => lackingLanguages(part, [code]).isNotEmpty))
+          code,
+    ],
+    ApplicationCustomText(:final text) => [
+      for (final code in languages)
+        if (!(text[code]?.isNotEmpty ?? false)) code,
+    ],
+    _ => languages,
+  };
 }

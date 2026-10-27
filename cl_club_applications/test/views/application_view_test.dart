@@ -95,10 +95,33 @@ void main() {
         find.byKey(const ValueKey('application.state.missing')),
         findsOneWidget,
       );
-      expect(find.text('• Title'), findsOneWidget);
-      expect(find.text('• Footer line'), findsOneWidget);
+      expect(find.text('• Title: Marathi missing'), findsOneWidget);
+      expect(find.text('• Footer line: not written'), findsOneWidget);
       expect(_step(tester, 'save').enabled, isFalse);
       expect(find.text('2 texts missing'), findsOneWidget);
+      expect(master.calls, isEmpty);
+    });
+
+    testWidgets('Issue 387: each missing text names the print languages it '
+        'lacks, or says it is not written', (tester) async {
+      final master = await _pump(
+        tester,
+        content: ApplicationSamples.content.copyWith(
+          languages: const ['en', 'mr', 'hi'],
+          title: () => const ApplicationText({'en': 'Trial'}),
+          declaration: () => null,
+          formFooter: () => const ApplicationText({
+            'en': 'See you',
+            'mr': 'भेटूया',
+          }),
+        ),
+      );
+      expect(find.text(ApplicationViewStrings.missingTitle), findsOneWidget);
+      expect(find.text(ApplicationViewStrings.missingIntro), findsOneWidget);
+      expect(find.text('• Title: Marathi, Hindi missing'), findsOneWidget);
+      expect(find.text('• Declaration: not written'), findsOneWidget);
+      expect(find.text('• Footer line: Hindi missing'), findsOneWidget);
+      expect(_step(tester, 'save').enabled, isFalse);
       expect(master.calls, isEmpty);
     });
 

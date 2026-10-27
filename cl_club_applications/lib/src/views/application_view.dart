@@ -147,8 +147,15 @@ class ApplicationEditorBody extends StatelessWidget {
     final draft = template.status == ApplicationStatus.draft;
     final missing = draft && checkTexts
         ? [
-            for (final place in ApplicationCompleteness.missingTexts(json))
-              ApplicationPlaces.label(place),
+            for (final MapEntry(key: place, value: languages)
+                in ApplicationCompleteness.missingLanguages(json).entries)
+              ApplicationViewStrings.missingText(
+                ApplicationPlaces.label(place),
+                [
+                  for (final code in languages)
+                    ApplicationViewStrings.languageName(code),
+                ],
+              ),
           ]
         : const <String>[];
     return ApplicationPage(

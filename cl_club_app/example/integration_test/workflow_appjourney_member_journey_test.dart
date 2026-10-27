@@ -9,22 +9,25 @@
 // guardian, sports details and background (a position and a language from
 // the club's profile options, sent as lists: club_client#343). Download on
 // the waiting page asks "Is your profile complete?" and lists what is
-// blank, none of those among it; No opens the profile page. There, No
-// only closes the question and Yes downloads. Back on the waiting page, Yes
-// downloads too. The admin approves the member, who signs in again and
-// downloads the form from Applications.
+// blank, the address alone; No opens the profile page. There, No only
+// closes the question and Yes downloads. Back on the waiting page, Yes
+// downloads too.
+//
+// Update profile again: the member changes their name in Personal details,
+// which offers them no date of birth or gender to edit (both stay the
+// admin's: club_server#123), adds an emergency contact under Contact and
+// fills in every part of the address. With nothing the form prints left
+// blank, Download goes ahead with no question, on the profile page and on
+// the waiting page (club_client#353). The admin approves the member, who
+// signs in again and downloads the form from Applications, again with no
+// question.
+//
+// A member who is not yet approved may save every card of their own
+// profile but gender and date of birth (club_server#123).
 //
 // The PDF action is the desktop's viewer on Linux, so the test stands in for
 // it (`debugPdfBytesHandler`, cl_club_app) and checks the bytes each
 // Download hands it.
-//
-// Against club_server main the onboarding profile page saves only the
-// extended cards (Guardian, Sports details, Background) for a pending
-// member, so the "nothing blank, no question" path of #340 cannot be
-// reached here: the server takes only the extended fields from a member who
-// is not active (`check_profile_edit_access`, 403 ACCOUNT_NOT_ACTIVE), so
-// Personal details, contact and address fail with "Could not save" (#340
-// assumed the server takes every card). The address stays blank.
 //
 // The club's profile options are set for the test through the SDK, as the
 // super admin, and put back as they were afterwards.
@@ -43,10 +46,12 @@ import 'package:cl_club_app/src/utils/pdf_actions.dart'
     show debugPdfBytesHandler;
 import 'package:cl_club_forms/cl_club_forms.dart'
     show ApplicationCustomText, SignupGender, UserFormFields;
+import 'package:cl_club_members/src/widgets/address_card.dart';
 import 'package:cl_club_members/src/widgets/background_card.dart';
 import 'package:cl_club_members/src/widgets/guardian_card.dart';
 import 'package:cl_club_members/src/widgets/personal_details_card.dart';
 import 'package:cl_club_members/src/widgets/sports_details_card.dart';
+import 'package:cl_club_members/src/widgets/user_contact_info_card.dart';
 import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_member_zone/src/widgets/sidebar/sidebar_item.dart'
     show SidebarItem;
@@ -87,6 +92,14 @@ const _kMemberPhone = '7400534101';
 const _kGuardian = 'Appjourney Guardian';
 const _kPosition = 'workflow_appjourney_forward';
 const _kLanguage = 'workflow_appjourney Marathi';
+const _kEditedFirstName = 'Appjourneyed';
+const _kEmergencyName = 'Appjourney Emergency';
+const _kEmergencyPhone = '7400534103';
+const _kAddrLine1 = '12 workflow_appjourney Road';
+const _kAddrLine2 = 'Near the rink';
+const _kCity = 'Pune';
+const _kState = 'Maharashtra';
+const _kPincode = '411001';
 
 const _kTitle = 'workflow_appjourney Trial';
 const _kOrganisation = 'workflow_appjourney Skating Club';
@@ -98,8 +111,9 @@ const _kQuestion = 'Is your profile complete?';
 const Key _kYes = ValueKey('application.profileComplete.yes');
 const Key _kNo = ValueKey('application.profileComplete.no');
 
-/// The printed fields still blank once the member has filled in the cards
-/// a pending member may save: the address (club_client#340).
+/// The printed fields still blank once the member has filled in the
+/// extended cards: the address, which they fill in later (club_client#340,
+/// #353).
 const _kBlankAfterProfile = ['Address'];
 
 /// The printed fields the member fills in on the profile page, which the
@@ -506,6 +520,42 @@ Future<void> _editCard(
   );
 }
 
+/// Whether the editor open in [card] has a field the member could change
+/// gender or date of birth with.
+bool _offersGenderOrDateOfBirth(Finder card) => find
+    .descendant(
+      of: card,
+      matching: find.byWidgetPredicate(
+        (w) =>
+            w is ShadFormBuilderField &&
+            (w.id == UserFormFields.genderId ||
+                w.id == UserFormFields.dateOfBirthUtcId),
+      ),
+    )
+    .evaluate()
+    .isNotEmpty;
+
+/// Presses Download inside [scope] and checks the form downloads as run
+/// [n] with no "Is your profile complete?" question (club_client#353).
+Future<void> _downloadWithNoQuestion(
+  WidgetTester tester,
+  Finder scope,
+  int n,
+) async {
+  await _pressDownload(tester, scope);
+  expect(
+    find.text(_kQuestion),
+    findsNothing,
+    reason: 'Issue 353: nothing blank, so no question',
+  );
+  await _expectPdfRun(tester, n);
+  expect(
+    find.text(_kQuestion),
+    findsNothing,
+    reason: 'Issue 353: nothing blank, so no question',
+  );
+}
+
 /// The onboarding shell's back arrow.
 Future<void> _back(WidgetTester tester) async {
   final back = find.widgetWithIcon(IconButton, LucideIcons.arrowLeft);
@@ -784,6 +834,98 @@ void main() {
     await _waitForQuestion(tester);
     await _answer(tester, _kYes);
     await _expectPdfRun(tester, 2);
+
+    // 7. Update profile again: the member changes their name, adds an
+    // emergency contact and fills in the address; Personal details offers
+    // no date of birth or gender to edit. With nothing blank, Download goes
+    // ahead with no question on the profile page and on the waiting page.
+    invokeShadButton(
+      tester,
+      find.widgetWithText(ShadButton, 'Update profile'),
+      reason: 'Update profile',
+    );
+    await settle(tester);
+    await waitFor(
+      tester,
+      () => _profilePage.evaluate().isNotEmpty,
+      description: 'the onboarding profile page',
+    );
+    final signedUp = _me(tester);
+    final personal = _card(PersonalDetailsCard);
+    await _editCard(tester, personal, UserFormFields.firstNameId);
+    expect(
+      _offersGenderOrDateOfBirth(personal),
+      isFalse,
+      reason: 'Issue 353: gender and date of birth stay protected',
+    );
+    await enterTextById(tester, UserFormFields.firstNameId, _kEditedFirstName);
+    await _saveCard(tester, personal);
+    await waitFor(
+      tester,
+      () => _me(tester).firstName == _kEditedFirstName,
+      description: 'the changed first name to reach the session',
+    );
+    expect(_me(tester).gender, signedUp.gender);
+    expect(_me(tester).dateOfBirthUtc, signedUp.dateOfBirthUtc);
+
+    final contact = _card(UserContactInfoCard);
+    await _editCard(tester, contact, UserFormFields.emergencyContactNameId);
+    await enterTextById(
+      tester,
+      UserFormFields.emergencyContactNameId,
+      _kEmergencyName,
+    );
+    await enterTextById(
+      tester,
+      UserFormFields.emergencyContactPhoneId,
+      _kEmergencyPhone,
+    );
+    await _setCardValues(tester, contact, {
+      UserFormFields.emergencyContactRelationId: 'Parent',
+    });
+    await _saveCard(tester, contact);
+    await waitFor(
+      tester,
+      () => _me(tester).emergencyContact?.contains(_kEmergencyName) ?? false,
+      description: 'the emergency contact to reach the session',
+    );
+
+    final address = _card(AddressCard);
+    await _editCard(tester, address, UserFormFields.addrLine1Id);
+    await enterTextById(tester, UserFormFields.addrLine1Id, _kAddrLine1);
+    await enterTextById(tester, UserFormFields.addrLine2Id, _kAddrLine2);
+    await enterTextById(tester, UserFormFields.cityId, _kCity);
+    await enterTextById(tester, UserFormFields.pincodeId, _kPincode);
+    await _setCardValues(tester, address, {
+      UserFormFields.stateId: _kState,
+    });
+    await _saveCard(tester, address);
+    await waitFor(
+      tester,
+      () => _me(tester).address?.pincode == _kPincode,
+      description: 'the address to reach the session',
+    );
+    final saved = _me(tester).address!;
+    expect(
+      [
+        saved.addrLine1,
+        saved.addrLine2,
+        saved.city,
+        saved.state,
+        saved.pincode,
+      ],
+      [_kAddrLine1, _kAddrLine2, _kCity, _kState, _kPincode],
+    );
+
+    await waitFor(
+      tester,
+      () => _downloadButtonIn(_profileSection).evaluate().isNotEmpty,
+      description: 'the Applications section of the profile page',
+    );
+    await _downloadWithNoQuestion(tester, _profileSection, 3);
+    await _back(tester);
+    await _waitForWaitingPage(tester, id);
+    await _downloadWithNoQuestion(tester, _row(id), 4);
     invokeShadButton(
       tester,
       find.widgetWithText(ShadButton, 'Back to sign in'),
@@ -796,13 +938,13 @@ void main() {
     );
     await settle(tester);
 
-    // 7. The admin approves the member.
+    // 8. The admin approves the member.
     await loginViaUi(tester, _kSudoUsername, _kSudoPassword);
     await _approveViaUi(tester);
     await logout(tester);
 
-    // 8. The member signs in again and downloads the form from
-    // Applications.
+    // 9. The member signs in again and downloads the form from
+    // Applications, with no question.
     await loginViaUi(tester, _kMember, _kMemberPwd);
     expect(_me(tester).status, UserStatus.active);
     await _openApplications(tester);
@@ -811,13 +953,10 @@ void main() {
       () => _downloadButtonIn(_row(id)).evaluate().isNotEmpty,
       description: 'the application on the member Applications page',
     );
-    await _pressDownload(tester, _row(id));
-    await _waitForQuestion(tester);
-    await _answer(tester, _kYes);
-    await _expectPdfRun(tester, 3);
+    await _downloadWithNoQuestion(tester, _row(id), 5);
     await logout(tester);
 
-    // 9. Cleanup through the UI: the application, then the member.
+    // 10. Cleanup through the UI: the application, then the member.
     await loginViaUi(tester, _kSudoUsername, _kSudoPassword);
     await _deleteApplicationViaUi(tester, id);
     await softDeleteUserViaUi(tester, _kMember);

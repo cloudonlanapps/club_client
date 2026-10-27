@@ -12,7 +12,10 @@ const _stored = ProfileOptions(
       label: {'en': 'Forward', 'mr': 'फॉरवर्ड'},
     ),
   ],
-  languages: ['English', 'Marathi'],
+  languages: [
+    ProfileLanguage(code: 'en', name: 'English'),
+    ProfileLanguage(code: 'mr', name: 'Marathi'),
+  ],
 );
 
 class _FakeCapabilities extends Fake implements CapabilitiesSource {
@@ -103,13 +106,26 @@ UserInfo _viewer() => const UserInfo(
   roles: UserRoles(),
 );
 
+/// Counts its builds: a reload of the labels shows as one more.
+class _CountingLabels extends ApplicationLabelsNotifier {
+  int builds = 0;
+
+  @override
+  Future<ApplicationLabels> build() async {
+    builds++;
+    return emptyApplicationLabels;
+  }
+}
+
 ProviderContainer _container(
   _FakeUsers users, {
   bool extendedProfile = true,
   bool signedIn = true,
+  List<Override> overrides = const [],
 }) {
   final c = ProviderContainer(
     overrides: [
+      ...overrides,
       secureClientProvider.overrideWith(
         (ref) async => fakeSecureClient(
           users: users,
@@ -183,7 +199,12 @@ void main() {
         await c.read(capabilitiesProvider.future);
         await c.read(profileOptionsProvider.future);
 
-        const edited = ProfileOptions(languages: ['Tamil']);
+        const edited = ProfileOptions(
+          languages: [
+            ProfileLanguage(code: 'en', name: 'English'),
+            ProfileLanguage(code: 'ta', name: 'Tamil'),
+          ],
+        );
         final stored = await c
             .read(profileOptionsProvider.notifier)
             .save(edited);
@@ -209,7 +230,11 @@ void main() {
       await expectLater(
         c
             .read(profileOptionsProvider.notifier)
-            .save(const ProfileOptions(languages: ['x'])),
+            .save(
+              const ProfileOptions(
+                languages: [ProfileLanguage(code: 'x', name: 'x')],
+              ),
+            ),
         throwsA(isA<ServerException>()),
       );
       expect(c.read(profileOptionsProvider).value, _stored);
@@ -245,6 +270,45 @@ void main() {
         expect(updated.clubDistrict, 'Pune');
       },
     );
+  });
+
+  group("Issue 396: the languages are the applications' languages", () {
+    test('Issue 396: a saved edit reloads the labels and the clauses, '
+        "which carry the club's languages", () async {
+      final labels = _CountingLabels();
+      var clauseBuilds = 0;
+      final users = _FakeUsers();
+      final c = _container(
+        users,
+        overrides: [
+          applicationLabelsProvider.overrideWith(() => labels),
+          applicationClausesProvider.overrideWith((ref) async {
+            clauseBuilds++;
+            return emptyApplicationClauses;
+          }),
+        ],
+      );
+      await c.read(capabilitiesProvider.future);
+      await c.read(profileOptionsProvider.future);
+      await c.read(applicationLabelsProvider.future);
+      await c.read(applicationClausesProvider.future);
+
+      await c
+          .read(profileOptionsProvider.notifier)
+          .save(
+            const ProfileOptions(
+              languages: [
+                ProfileLanguage(code: 'en', name: 'English'),
+                ProfileLanguage(code: 'hi', name: 'Hindi'),
+              ],
+            ),
+          );
+      await c.read(applicationLabelsProvider.future);
+      await c.read(applicationClausesProvider.future);
+
+      expect(labels.builds, 2);
+      expect(clauseBuilds, 2);
+    });
   });
 }
 

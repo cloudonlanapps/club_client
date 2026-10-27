@@ -27,7 +27,10 @@ export 'src/models/site_media_slot.dart' show SiteMediaSlot;
 export 'src/providers/application_clauses.dart'
     show applicationClausesProvider, emptyApplicationClauses;
 export 'src/providers/application_labels.dart'
-    show applicationLabelsProvider, emptyApplicationLabels;
+    show
+        ApplicationLabelsNotifier,
+        applicationLabelsProvider,
+        emptyApplicationLabels;
 export 'src/providers/application_library_master.dart'
     show ClApplicationLibraryMasterNotifier, clApplicationLibraryMasterProvider;
 export 'src/providers/applications_master.dart'

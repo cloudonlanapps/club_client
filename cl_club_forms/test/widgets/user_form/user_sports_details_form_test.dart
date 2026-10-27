@@ -1,10 +1,13 @@
 // Issue 320, UserSportsDetailsForm: the sports details of the extended
-// profile. Every field is optional; the position select offers the club's
-// positions and a "None" choice, and keeps a position the club no longer
-// lists. Its values are its fields as typed: the host's adapter trims.
+// profile. Every field is optional; the positions are checkboxes of the
+// club's positions, any number ticked (Issue 335), and a position the club
+// no longer lists stays ticked. Its values are its fields as typed: the
+// host's adapter trims.
 import 'package:cl_club_forms/cl_club_forms.dart';
+import 'package:cl_club_forms/src/widgets/user_form/user_form_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadCheckbox;
 
 import '../../support/account_user_form_harness.dart';
 import '../../support/form_harness.dart';
@@ -21,7 +24,7 @@ const List<ProfilePositionOption> _positions = [
 
 Map<String, dynamic> _member() => {
   _club: 'Pune District',
-  _position: 'Defense',
+  _position: ['Defense'],
   _experience: 'Two seasons of club hockey',
 };
 
@@ -53,13 +56,13 @@ Future<UserSportsDetailsFormState> _pump(
 
 void main() {
   group('Issue 320: UserSportsDetailsForm', () {
-    testWidgets('Issue 320: it shows club or district, preferred position '
+    testWidgets('Issue 320: it shows club or district, preferred positions '
         'and past experience, none required', (tester) async {
       await _pump(tester);
 
       expect(rowLabels(tester), [
         'Club / District',
-        'Preferred position',
+        'Preferred positions',
         'Past experience',
       ]);
       expect(fieldIds(tester), UserFormFields.sportsDetailsIds);
@@ -78,41 +81,71 @@ void main() {
       expect(values!.keys, UserFormFields.sportsDetailsIds);
     });
 
-    testWidgets('Issue 320: a blank member comes back as empty texts and '
-        'is valid', (tester) async {
+    testWidgets('Issue 335: a blank member comes back as empty texts and '
+        'no position, with the muted line shown', (tester) async {
       final state = await _pump(tester, initialValues: const {});
 
-      expect(find.text('None'), findsOneWidget);
-      expect(state.validate(), {_club: '', _position: '', _experience: ''});
+      expect(find.text(UserFormStrings.noPositionChosen), findsOneWidget);
+      expect(state.validate(), {
+        _club: '',
+        _position: <String>[],
+        _experience: '',
+      });
     });
 
-    testWidgets('Issue 320: the select offers None and every position by '
-        'its label, and returns the value', (tester) async {
+    testWidgets('Issue 335: a box for every position by its label; two '
+        'ticked come back as both values', (tester) async {
       final state = await _pump(tester);
 
-      await tapSelect(tester, _position);
-      for (final text in ['None', 'Forward', 'Defence', 'Goalkeeper']) {
-        expect(find.text(text), findsWidgets, reason: text);
+      for (final text in ['Forward', 'Defence', 'Goalkeeper']) {
+        expect(
+          find.descendant(
+            of: fieldWithId(_position),
+            matching: find.widgetWithText(ShadCheckbox, text),
+          ),
+          findsOneWidget,
+          reason: text,
+        );
       }
-      await tester.tap(find.text('Goalkeeper').last);
-      await tester.pumpAndSettle();
-      expect(state.validate()![_position], 'Goalie');
+      expect(choiceTicked(tester, _position, 'Defence'), isTrue);
+      expect(find.text(UserFormStrings.noPositionChosen), findsNothing);
+
+      await tapChoice(tester, _position, 'Goalkeeper');
+      expect(state.validate()![_position], ['Defense', 'Goalie']);
       expect(state.isDirty, isTrue);
 
-      await pickOption(tester, _position, 'None');
-      expect(state.validate()![_position], '');
+      await tapChoice(tester, _position, 'Goalkeeper');
+      expect(state.isDirty, isFalse);
     });
 
-    testWidgets('Issue 320: a position the club no longer lists shows and '
-        'is kept', (tester) async {
+    testWidgets('Issue 335: none ticked comes back as an empty list', (
+      tester,
+    ) async {
+      final state = await _pump(tester);
+
+      await tapChoice(tester, _position, 'Defence');
+      expect(find.text(UserFormStrings.noPositionChosen), findsOneWidget);
+      expect(state.validate()![_position], <String>[]);
+      expect(state.isDirty, isTrue);
+    });
+
+    testWidgets('Issue 335: a position the club no longer lists stays '
+        'ticked and is kept', (tester) async {
       final state = await _pump(
         tester,
-        initialValues: {..._member(), _position: 'Centre'},
+        initialValues: {
+          ..._member(),
+          _position: ['Centre', 'Forward'],
+        },
       );
 
-      expect(find.text('Centre'), findsOneWidget);
+      expect(choiceTicked(tester, _position, 'Centre'), isTrue);
+      expect(choiceTicked(tester, _position, 'Forward'), isTrue);
       expect(state.isDirty, isFalse);
-      expect(state.validate()![_position], 'Centre');
+      expect(state.validate()![_position], ['Centre', 'Forward']);
+
+      await tapChoice(tester, _position, 'Goalkeeper');
+      expect(state.validate()![_position], ['Forward', 'Goalie', 'Centre']);
     });
 
     testWidgets('Issue 320: what is typed comes back as typed, multi-line '
@@ -160,14 +193,14 @@ void main() {
       await expectShowsServerErrors(tester, state, _club);
     });
 
-    testWidgets('Issue 320: with enabled off every field is off and the '
-        'select does not open', (tester) async {
+    testWidgets('Issue 320: with enabled off every field is off and no '
+        'box ticks', (tester) async {
       final state = await _pump(tester, enabled: false);
 
       expectEveryFieldOff(tester);
       await expectTapsIgnored(tester, [_club, _experience]);
-      await tapSelect(tester, _position);
-      expect(find.text('Goalkeeper'), findsNothing);
+      await tapChoice(tester, _position, 'Goalkeeper');
+      expect(choiceTicked(tester, _position, 'Goalkeeper'), isFalse);
       expect(state.isDirty, isFalse);
     });
 
@@ -177,7 +210,7 @@ void main() {
       Widget build({required bool enabled}) =>
           _form(key: key, enabled: enabled);
 
-      expect(await expectDrawnOffWhenTurnedOff(tester, build), 3);
+      expect(await expectDrawnOffWhenTurnedOff(tester, build), 5);
       expect(await expectKeyboardIgnoredWhenOff(tester, build), 2);
     });
 

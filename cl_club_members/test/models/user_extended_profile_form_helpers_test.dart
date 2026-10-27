@@ -91,21 +91,22 @@ UserPrivate _member() => UserPrivate(
 
 void main() {
   group('Issue 320: buildUserExtendedProfileFormInitialValues', () {
-    test('Issue 320: reads every extended field of the member, the first '
-        'of each list', () {
+    test('Issue 335: reads every extended field of the member, each list '
+        'whole', () {
       expect(buildUserExtendedProfileFormInitialValues(_member()), {
         UserFormFields.clubDistrictId: 'Pune',
-        UserFormFields.preferredPositionsId: 'Forward',
+        UserFormFields.preferredPositionsId: ['Forward', 'Goalie'],
         UserFormFields.pastExperienceId: 'School team',
         UserFormFields.nationalityId: 'Indian',
-        UserFormFields.preferredLanguagesId: 'Marathi',
+        UserFormFields.preferredLanguagesId: ['Marathi'],
         UserFormFields.guardianNameId: 'Asha',
         UserFormFields.guardianRelationId: 'Mother',
         UserFormFields.guardianPhoneId: '+91 98',
       });
     });
 
-    test('Issue 320: a blank member reads as empty texts', () {
+    test('Issue 335: a blank member reads as empty texts and empty '
+        'lists', () {
       final blank = UserPrivate(
         username: 'x',
         displayName: 'x',
@@ -114,10 +115,10 @@ void main() {
         roles: const UserRoles(),
         createdAtUtc: DateTime.utc(2024),
       );
-      expect(
-        buildUserExtendedProfileFormInitialValues(blank).values.toSet(),
-        {''},
-      );
+      final values = buildUserExtendedProfileFormInitialValues(blank);
+      expect(values[UserFormFields.preferredPositionsId], isEmpty);
+      expect(values[UserFormFields.preferredLanguagesId], isEmpty);
+      expect(values.values.where((value) => value is! List).toSet(), {''});
     });
   });
 
@@ -138,13 +139,13 @@ void main() {
   });
 
   group('Issue 320: UserExtendedProfileFormSubmit sends only its section', () {
-    test('Issue 320: updateSportsDetails sends its three fields, blank as '
-        'null', () async {
+    test('Issue 335: updateSportsDetails sends its three fields, blank as '
+        'null and both ticked positions', () async {
       final users = _RecordingUsers();
       await UserExtendedProfileFormSubmit.updateSportsDetails(
         values: const {
           UserFormFields.clubDistrictId: ' Mumbai ',
-          UserFormFields.preferredPositionsId: 'Goalie',
+          UserFormFields.preferredPositionsId: ['Forward', 'Goalie'],
           UserFormFields.pastExperienceId: '',
         },
         username: 'robin',
@@ -152,18 +153,18 @@ void main() {
       );
       expect(users.sent.single, {
         'clubDistrict': 'Mumbai',
-        'preferredPositions': ['Goalie'],
+        'preferredPositions': ['Forward', 'Goalie'],
         'pastExperience': null,
       });
     });
 
-    test('Issue 320: updateBackground sends nationality and language '
-        'alone', () async {
+    test('Issue 335: updateBackground sends nationality and languages '
+        'alone, none ticked as an empty list', () async {
       final users = _RecordingUsers();
       await UserExtendedProfileFormSubmit.updateBackground(
         values: const {
           UserFormFields.nationalityId: 'Indian',
-          UserFormFields.preferredLanguagesId: '',
+          UserFormFields.preferredLanguagesId: <dynamic>[],
         },
         username: 'robin',
         notifier: users,
@@ -225,6 +226,42 @@ void main() {
     });
   });
 
+  group('Issue 335: lists of several values', () {
+    test('Issue 335: two ticked languages are both sent', () async {
+      final users = _RecordingUsers();
+      await UserExtendedProfileFormSubmit.updateBackground(
+        values: const {
+          UserFormFields.nationalityId: '',
+          UserFormFields.preferredLanguagesId: <dynamic>['Marathi', 'Hindi'],
+        },
+        username: 'robin',
+        notifier: users,
+      );
+      expect(users.sent.single, {
+        'nationality': null,
+        'preferredLanguages': ['Marathi', 'Hindi'],
+      });
+    });
+
+    test('Issue 335: the member lists round-trip unchanged through the '
+        'form values', () async {
+      final users = _RecordingUsers();
+      final values = buildUserExtendedProfileFormInitialValues(_member());
+      await UserExtendedProfileFormSubmit.updateSportsDetails(
+        values: values,
+        username: 'robin',
+        notifier: users,
+      );
+      await UserExtendedProfileFormSubmit.updateBackground(
+        values: values,
+        username: 'robin',
+        notifier: users,
+      );
+      expect(users.sent[0]['preferredPositions'], ['Forward', 'Goalie']);
+      expect(users.sent[1]['preferredLanguages'], ['Marathi']);
+    });
+  });
+
   group('Issue 320: UserExtendedProfileFormSubmit.fieldErrorsFor', () {
     test('Issue 320: a position the club does not offer shows on the '
         'position', () {
@@ -267,10 +304,9 @@ void main() {
           ],
         },
       );
-      expect(
-        UserExtendedProfileFormSubmit.fieldErrorsFor(error).keys,
-        [UserFormFields.guardianPhoneId],
-      );
+      expect(UserExtendedProfileFormSubmit.fieldErrorsFor(error).keys, [
+        UserFormFields.guardianPhoneId,
+      ]);
     });
 
     test('Issue 320: a membership date the server does not take shows on '

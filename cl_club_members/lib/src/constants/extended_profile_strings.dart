@@ -23,8 +23,8 @@ abstract final class ExtendedProfileStrings {
   /// Read row: the club or district.
   static const String clubDistrict = 'Club / District';
 
-  /// Read row: the preferred position.
-  static const String preferredPosition = 'Preferred position';
+  /// Read row: the preferred positions.
+  static const String preferredPositions = 'Preferred positions';
 
   /// Read row: the past experience.
   static const String pastExperience = 'Past experience';
@@ -32,8 +32,8 @@ abstract final class ExtendedProfileStrings {
   /// Read row: the nationality.
   static const String nationality = 'Nationality';
 
-  /// Read row: the preferred language.
-  static const String preferredLanguage = 'Preferred language';
+  /// Read row: the preferred languages.
+  static const String preferredLanguages = 'Preferred languages';
 
   /// Read row: the guardian's name.
   static const String guardianName = 'Name';

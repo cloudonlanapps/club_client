@@ -69,9 +69,11 @@ here; **tier is dropped**, and #3 is closed once this issue is filed.
 ### 1.2 Club-set choices
 
 A system preference `profile_options`, admin-editable (validated on write),
-edited in the app's Club Details page. A position carries its name in each
-language a form may print it in; a language is just its name (it has no tie
-to the form's languages).
+edited in the app's Club Details page. The languages are the club's
+languages (club_server#133, club_client#396): each a code and a name,
+English (`en`) always first and never removed. A member chooses a language
+by its name; the codes are also the languages an application may print in,
+and a position carries its label in each of them.
 
 ```json
 {
@@ -80,13 +82,15 @@ to the form's languages).
     {"value": "Defense", "label": {"en": "Defense", "mr": "डिफेन्स", "hi": "डिफ़ेंस"}},
     {"value": "Goalie",  "label": {"en": "Goalie",  "mr": "गोलकीपर", "hi": "गोलकीपर"}}
   ],
-  "languages": ["English", "Marathi", "Hindi", "Tamil"]
+  "languages": [{"code": "en", "name": "English"}, {"code": "mr", "name": "Marathi"},
+                {"code": "hi", "name": "Hindi"}]
 }
 ```
 
 The server checks a member's `preferred_position` / `preferred_language`
 against the list when it is **written**; a value whose option is removed later
-stays as it is and still prints.
+stays as it is and still prints. A member's `preferred_languages` hold
+names, so they are kept as they were when the codes came in.
 
 ### 1.3 Membership date
 
@@ -109,7 +113,7 @@ text sits in JSON columns, so no further table is needed.
 
 | field | notes |
 |---|---|
-| `languages` | `["en"]` or `["en", <one other>]`, e.g. `["en", "mr"]`; the other must be a language of the label catalogue |
+| `languages` | `["en"]` or `["en", <one other>]`, e.g. `["en", "mr"]`; the other must be one of the club's languages (§1.2); any other is refused as not offered |
 | `organisation` | the top line: the organisation the form is addressed to |
 | `title` | e.g. "Training Camp & Selection Trial — Registration Form" |
 | `subtitle` | optional, e.g. the affiliation line |
@@ -161,24 +165,31 @@ draft or saved template can be deleted (soft).
 
 The form's fixed wording — section headings, field labels ("Full name",
 "Date of birth" …), Male / Female / Other, the photo box, signature lines —
-comes from a label catalogue that ships with the server, with English,
-Marathi and Hindi for every label. These are the languages a template can
-print in today; adding one means adding its text for every label.
+is the club's labels (club_server#133, club_client#396): seeded once from
+the catalogue that ships with the server, then club data, each shown in the
+club's languages and edited in the **Labels** card of Club details, after
+the Library card. A language added in Profile options shows each label's
+text in it blank (Required, in the error colour) until written there;
+Finalize lists a label lacking a print language ("Label: Full name —
+Hindi missing") and the server refuses it (`labels.<key>`). A language
+removed is hidden, and its texts come back if it is added again.
 
-The editor pre-fills each label from the catalogue for the chosen languages;
-an admin who changes one stores it in `label_overrides`.
+The editor pre-fills each label for the chosen languages; an admin who
+changes one for a single template stores it in `label_overrides`, which
+then prints instead of the club's label.
 
 #### 2.2.1 The clause library
 
-Rules, declarations, header items, selections and closing notes come from a
-library: the built-in clauses that ship with the server (prototype:
-`clauses.json`), each a sentence written in English, Marathi and Hindi with
-gaps for facts, and the club's own library texts (#389), which an admin
-adds, edits and deletes in the **Library** card of Club details, after
-Profile options (#399): a kind (header, selection, declaration, rule, note), a short
-name, its text in each language with gaps allowed, and a heading for a
-rule. `GET /v1/applications/clauses` lists both, each with its `source`
-(`builtin` with its `key`, `club` with its `id`).
+Rules, declarations, header items, selections and closing notes come from
+the club's library (#389, #396): club texts an admin adds, edits and
+deletes in the **Library** card of Club details, after Profile options
+(#399), each a kind (header, selection, declaration, rule, note), a short
+name, its text in each of the club's languages with gaps allowed, and a
+heading for a rule. The built-in clauses that ship with the server
+(prototype: `clauses.json`) are seeded into it once (club_server#133), each
+keeping its `key`; after that they are ordinary texts, edited and deleted
+like any other. `GET /v1/applications/clauses` lists the same texts as the
+library.
 
 ```json
 "rule.matches": {"kind": "rule", "gaps": {"dates": "date_range", "venue": "name"},
@@ -188,7 +199,7 @@ rule. `GET /v1/applications/clauses` lists both, each with its `source`
 ```
 
 The editor lists the library's texts of each kind under a section's list,
-the club's marked as the club's; tapping one inserts it **as written**, in
+each by its name, with no built-in or club split; tapping one inserts it **as written**, in
 every print language, gaps included (`from {dates} at {venue}`), as a new
 item that is then edited like any other: the admin renames a gap to the
 fact it means (`{dates}` → `{match_dates}`), so two facts of one type can
@@ -338,8 +349,9 @@ goes to the app's `PdfAction` as "<title> - blank form.pdf".
 | POST | `/v1/applications/{id}/save` · `/publish` · `/unpublish` · `/revert` | admin, the moves of §2.1.1 |
 | GET | `/v1/applications/{id}/preview` | admin, any state: the sample member's form |
 | GET | `/v1/applications/{id}/blank-form` | admin, saved or published: the form printed blank |
-| GET | `/v1/applications/labels` | admin: the label catalogue, to pre-fill the editor |
-| GET | `/v1/applications/clauses` | admin: the built-in clauses and the club's library texts, for the editor's lists |
+| GET | `/v1/applications/labels` | admin: the club's labels in its languages, to pre-fill the editor and for the Labels card |
+| PATCH | `/v1/applications/labels/{key}` | admin: one label's text (English required) |
+| GET | `/v1/applications/clauses` | admin: the club's library texts (the seeded built-ins among them), for the editor's lists |
 | GET / POST | `/v1/applications/library` | admin: the club's library texts; add one |
 | GET / PATCH / DELETE | `/v1/applications/library/{id}` | admin: one library text |
 | POST | `/v1/applications/{id}/duplicate` | admin: a new draft copied from any application |
@@ -350,7 +362,8 @@ goes to the app's `PdfAction` as "<title> - blank form.pdf".
 New error codes: application not found / not published, not eligible,
 template incomplete (names the texts missing a language), unknown fact
 (names each gap naming no fact, by place and language), library text not
-found, form does not fit,
+found, label not found, language not offered (names the codes; shown inline
+on the heading card and in the form that sent it), form does not fit,
 invalid state move, identity document required (existing), applications
 disabled.
 

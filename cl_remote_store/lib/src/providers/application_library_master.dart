@@ -11,7 +11,8 @@ import 'package:meta/meta.dart';
 
 /// Master provider for the club's library of application texts
 /// (club_client#389, club_server#126): club-wide texts an admin pastes into
-/// any template as written, beside the server's built-in clauses. Keyed by
+/// any template as written, the server's built-in clauses among them, seeded
+/// once (club_server#133, club_client#396). Keyed by
 /// id, oldest first.
 ///
 /// An admin's alone. Empty, with no server call, while

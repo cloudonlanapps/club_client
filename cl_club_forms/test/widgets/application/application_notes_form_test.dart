@@ -29,8 +29,6 @@ Widget _form({
         ],
   },
   languages: ApplicationSamples.printLanguages,
-  facts: ApplicationSamples.facts,
-  clauses: ApplicationSamples.clauses,
   enabled: enabled,
 );
 

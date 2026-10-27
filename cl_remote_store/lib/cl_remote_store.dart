@@ -28,6 +28,8 @@ export 'src/providers/application_clauses.dart'
     show applicationClausesProvider, emptyApplicationClauses;
 export 'src/providers/application_labels.dart'
     show applicationLabelsProvider, emptyApplicationLabels;
+export 'src/providers/application_library_master.dart'
+    show ClApplicationLibraryMasterNotifier, clApplicationLibraryMasterProvider;
 export 'src/providers/applications_master.dart'
     show ClApplicationsMasterNotifier, clApplicationsMasterProvider;
 export 'src/providers/attendances_master.dart';

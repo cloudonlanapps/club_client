@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../models/application/application_clause_fill.dart';
 import '../../models/application/application_clause_kind.dart';
 import '../../models/application/application_clause_option.dart';
 import '../../models/application/application_custom_text.dart';
-import '../../models/application/application_fact_type.dart';
 import '../../models/application/application_language_option.dart';
 import '../form/form_body.dart';
 import '../form/form_contract.dart';
@@ -19,11 +17,11 @@ import 'items/application_items_field.dart';
 import 'sections/application_header_item_editor.dart';
 import 'text_value/application_clause_library.dart';
 
-/// Pure-UI section editor of an application's header strip: short items
-/// (the venue, the dates, a phone), each written in each print language;
-/// several may be joined on one line. Items are added, removed and moved;
-/// a header clause of the library tapped under the list is added as its
-/// filled text.
+/// Pure-UI section editor of an application's header strip: short items (the
+/// venue, the dates, a phone), each written in each print language; several may
+/// be joined on one line. Items are added, removed and moved; a header clause
+/// of the library tapped under the list is added as written, `{fact}` gaps
+/// included.
 ///
 /// [initialValues] is the template's JSON, or the part of it this section
 /// holds. The form owns no title or Save button: the host drives it
@@ -32,9 +30,7 @@ class ApplicationHeaderForm extends StatefulWidget {
   const ApplicationHeaderForm({
     required this.initialValues,
     required this.languages,
-    this.facts = const {},
     this.clauses = const [],
-    this.fillClause,
     this.enabled = true,
     super.key,
   });
@@ -45,16 +41,8 @@ class ApplicationHeaderForm extends StatefulWidget {
   /// The print languages, in order.
   final List<ApplicationLanguageOption> languages;
 
-  /// The template's facts: the type of each, by name.
-  final Map<String, ApplicationFactType> facts;
-
-  /// The clause library; its header clauses are offered.
+  /// The library texts; its header clauses are offered.
   final List<ApplicationClauseOption> clauses;
-
-  /// Fills a library clause with the template's facts (the host's call);
-  /// with none, the library is not offered. A tapped clause is added as a
-  /// new item holding its filled text (club_client#336).
-  final ApplicationClauseFiller? fillClause;
 
   /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
@@ -95,11 +83,9 @@ class ApplicationHeaderFormState extends State<ApplicationHeaderForm>
                   widget.clauses,
                   ApplicationClauseKind.header,
                 ),
-                facts: widget.facts,
                 languages: widget.languages,
-                fill: widget.fillClause,
                 enabled: widget.enabled,
-                item: (filled) => filled.text,
+                item: (clause) => clause.text,
               ),
               newItem: () => ApplicationCustomText.none.toJson(),
               validator: (items) => ApplicationFormValidators.items(

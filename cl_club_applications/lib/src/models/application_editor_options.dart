@@ -8,13 +8,16 @@ import 'package:cl_club_forms/cl_club_forms.dart'
         ApplicationLabelOption,
         ApplicationLanguageOption;
 import 'package:club_sdk_2/club_sdk_2.dart'
+    as sdk
+    show ApplicationClauseKind, ApplicationClauseSource;
+import 'package:club_sdk_2/club_sdk_2.dart'
     show ApplicationClause, ApplicationClauseLibrary, ApplicationLabels;
 import 'package:flutter/foundation.dart';
 
 import '../constants/application_view_strings.dart';
 
 /// What the application forms choose from, read from the server's label
-/// catalogue and clause library and put in the forms' own types (form
+/// catalogue and clauses list and put in the forms' own types (form
 /// rule 7).
 @immutable
 class ApplicationEditorOptions {
@@ -37,9 +40,7 @@ class ApplicationEditorOptions {
     ];
     return ApplicationEditorOptions(
       languageOptions: [for (final code in codes) language(code)],
-      clauses: [
-        for (final e in library.clauses.entries) clause(e.key, e.value),
-      ],
+      clauses: [for (final c in library.clauses) clause(c)],
       choices: [
         for (final e in library.choices.entries)
           ApplicationChoiceOption(id: e.key, text: e.value),
@@ -58,28 +59,34 @@ class ApplicationEditorOptions {
         name: ApplicationViewStrings.languageNames[code] ?? code,
       );
 
-  /// The library's clause [id] in the forms' type: a kind the forms do not
-  /// know is taken for a note, a gap of a type they do not know left out.
-  static ApplicationClauseOption clause(String id, ApplicationClause clause) =>
-      ApplicationClauseOption(
-        id: id,
-        kind:
-            ApplicationClauseKind.fromJson(clause.kind) ??
-            ApplicationClauseKind.note,
-        text: clause.text,
-        heading: clause.heading ?? const {},
-        gaps: {
-          for (final e in clause.gaps.entries)
-            if (ApplicationFactType.fromJson(e.value.wireName)
-                case final ApplicationFactType type)
-              e.key: type,
-        },
-      );
+  /// The prefix of a club text's id among the forms' options.
+  static const String clubIdPrefix = 'club.';
+
+  /// An entry of the clauses list in the forms' type (club_client#389): a
+  /// built-in clause by its key, a club text by [clubIdPrefix] and its id,
+  /// with its name; its text and heading as written.
+  static ApplicationClauseOption clause(ApplicationClause clause) {
+    final club = clause.source == sdk.ApplicationClauseSource.club;
+    return ApplicationClauseOption(
+      id: club ? '$clubIdPrefix${clause.id}' : clause.key ?? '',
+      kind: kindOf(clause.kind),
+      text: clause.text.texts,
+      heading: clause.heading?.texts ?? const {},
+      name: clause.name,
+      club: club,
+    );
+  }
+
+  /// The SDK's [kind] as the forms name it; a kind the forms do not know
+  /// is taken for a note.
+  static ApplicationClauseKind kindOf(sdk.ApplicationClauseKind kind) =>
+      ApplicationClauseKind.fromJson(kind.wireName) ??
+      ApplicationClauseKind.note;
 
   /// The languages a template may print in, English first.
   final List<ApplicationLanguageOption> languageOptions;
 
-  /// The clause library, in its order.
+  /// The library texts: the built-in clauses, then the club's texts.
   final List<ApplicationClauseOption> clauses;
 
   /// The choices a `choices` fact may name.

@@ -1,12 +1,11 @@
 import 'package:flutter/foundation.dart';
 
 import 'application_clause_kind.dart';
-import 'application_fact_type.dart';
-import 'application_texts.dart';
 
-/// A clause of the library, as an application's editor offers it: a
-/// sentence in each language with gaps (`{dates}`) that a template fills
-/// with its facts. Form-local; the host passes the library.
+/// A library text, as an application's editor offers it (club_client#336,
+/// #389): a built-in clause of the server's library or one of the club's
+/// own texts, written in each language with its `{fact}` gaps. Tapping it
+/// pastes the text as written. Form-local; the host passes the list.
 @immutable
 class ApplicationClauseOption {
   const ApplicationClauseOption({
@@ -14,60 +13,47 @@ class ApplicationClauseOption {
     required this.kind,
     required this.text,
     this.heading = const {},
-    this.gaps = const {},
+    this.name,
+    this.club = false,
   });
 
-  /// The clause [id] as the library's [json] gives it. A clause of no
-  /// known kind is taken for a note; a gap of no known type is left out.
-  factory ApplicationClauseOption.fromJson(
-    String id,
-    Map<Object?, Object?> json,
-  ) {
-    final gaps = json[gapsKey];
-    return ApplicationClauseOption(
-      id: id,
-      kind:
-          ApplicationClauseKind.fromJson(json[kindKey]) ??
-          ApplicationClauseKind.note,
-      heading: ApplicationTexts.of(json[headingKey]),
-      text: ApplicationTexts.of(json[textKey]),
-      gaps: {
-        if (gaps is Map)
-          for (final entry in gaps.entries)
-            if (entry.key case final String gap)
-              if (ApplicationFactType.fromJson(entry.value)
-                  case final ApplicationFactType type)
-                gap: type,
-      },
-    );
-  }
-
-  /// The key of a clause's kind in the library's JSON.
-  static const String kindKey = 'kind';
-
-  /// The key of a clause's gaps.
-  static const String gapsKey = 'gaps';
-
-  /// The key of a rule's heading.
-  static const String headingKey = 'heading';
-
-  /// The key of a clause's text.
-  static const String textKey = 'text';
-
-  /// The clause's id (`rule.matches`).
+  /// What tells it apart from the others in the list: a built-in clause's
+  /// key (`rule.matches`), or the host's id of a club text.
   final String id;
 
-  /// Where the clause may be used.
+  /// Where it may be used.
   final ApplicationClauseKind kind;
 
   /// A rule's heading, by language code; empty for the other kinds.
   final Map<String, String> heading;
 
-  /// The sentence, by language code, with its gaps in braces.
+  /// The text, by language code, with its gaps in braces.
   final Map<String, String> text;
 
-  /// The type of fact each gap takes, by gap name.
-  final Map<String, ApplicationFactType> gaps;
+  /// A club text's short name; null for a built-in clause.
+  final String? name;
+
+  /// Whether it is one of the club's own texts rather than a built-in one.
+  final bool club;
+
+  /// This option with only those languages of [codes] that have text, each
+  /// trimmed: what is pasted into a template printing in [codes].
+  ApplicationClauseOption only(Iterable<String> codes) {
+    final keep = codes.toSet();
+    Map<String, String> pick(Map<String, String> texts) => {
+      for (final entry in texts.entries)
+        if (keep.contains(entry.key) && entry.value.trim().isNotEmpty)
+          entry.key: entry.value.trim(),
+    };
+    return ApplicationClauseOption(
+      id: id,
+      kind: kind,
+      text: pick(text),
+      heading: pick(heading),
+      name: name,
+      club: club,
+    );
+  }
 
   @override
   bool operator ==(Object other) =>
@@ -75,22 +61,22 @@ class ApplicationClauseOption {
       other is ApplicationClauseOption &&
           other.id == id &&
           other.kind == kind &&
+          other.name == name &&
+          other.club == club &&
           mapEquals(other.heading, heading) &&
-          mapEquals(other.text, text) &&
-          mapEquals(other.gaps, gaps);
+          mapEquals(other.text, text);
 
   @override
   int get hashCode => Object.hash(
     id,
     kind,
+    name,
+    club,
     Object.hashAllUnordered(
       heading.entries.map((e) => Object.hash(e.key, e.value)),
     ),
     Object.hashAllUnordered(
       text.entries.map((e) => Object.hash(e.key, e.value)),
-    ),
-    Object.hashAllUnordered(
-      gaps.entries.map((e) => Object.hash(e.key, e.value)),
     ),
   );
 

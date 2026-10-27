@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show ConfirmDialog, PdfAction;
 
+import '../constants/application_fact_strings.dart';
 import '../constants/application_view_sizes.dart';
 import '../constants/application_view_strings.dart';
 import '../models/application_download.dart';
@@ -17,6 +18,7 @@ import 'application_download_button.dart';
 import 'application_missing_texts.dart';
 import 'application_publish_id.dart';
 import 'application_step_button.dart';
+import 'application_unknown_facts.dart';
 
 /// The **State** card of the application editor (club_client#321): the
 /// template's state and stored layout, a published template's publish ID
@@ -24,7 +26,8 @@ import 'application_step_button.dart';
 /// Revert and Delete, and Preview.
 ///
 /// A move the state forbids is greyed out up front with its reason beside
-/// it; so is Save while the client's check finds texts [missing], which it
+/// it; so is Save while the client's check finds texts [missing], or
+/// `{gap}`s naming no fact ([unknownFacts], club_client#389), which it
 /// lists. What the server refuses about the template on Save shows inline
 /// here, never as a toast.
 class ApplicationStateCard extends ConsumerStatefulWidget {
@@ -33,6 +36,7 @@ class ApplicationStateCard extends ConsumerStatefulWidget {
     required this.missing,
     required this.onDeleted,
     required this.pdfAction,
+    this.unknownFacts = const [],
     super.key,
   });
 
@@ -42,6 +46,10 @@ class ApplicationStateCard extends ConsumerStatefulWidget {
   /// The texts the client's check finds missing, as shown; empty when none
   /// or while the library is not read.
   final List<String> missing;
+
+  /// The `{gap}`s naming no fact of the template, as shown
+  /// (club_client#389); empty when none.
+  final List<String> unknownFacts;
 
   /// Leaves the editor once the template is deleted.
   final VoidCallback onDeleted;
@@ -118,6 +126,9 @@ class ApplicationStateCardState extends ConsumerState<ApplicationStateCard> {
     if (step == ApplicationStep.save && widget.missing.isNotEmpty) {
       return ApplicationViewStrings.textsMissing(widget.missing.length);
     }
+    if (step == ApplicationStep.save && widget.unknownFacts.isNotEmpty) {
+      return ApplicationFactStrings.unknownCount(widget.unknownFacts.length);
+    }
     return null;
   }
 
@@ -158,6 +169,8 @@ class ApplicationStateCardState extends ConsumerState<ApplicationStateCard> {
               ),
             if (draft && widget.missing.isNotEmpty)
               ApplicationMissingTexts(missing: widget.missing),
+            if (draft && widget.unknownFacts.isNotEmpty)
+              ApplicationUnknownFacts(gaps: widget.unknownFacts),
             if (refused != null)
               Text(
                 refused,

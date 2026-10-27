@@ -16,13 +16,12 @@ abstract final class ApplicationSamples {
     ApplicationLanguageOption(code: 'mr', name: 'Marathi'),
   ];
 
-  /// The clause library.
+  /// The library texts: built-in clauses, then a club text.
   static const List<ApplicationClauseOption> clauses = [
     ApplicationClauseOption(
       id: 'header.camp',
       kind: ApplicationClauseKind.header,
       text: {'en': 'Camp: {dates}', 'mr': 'शिबिर: {dates}'},
-      gaps: {'dates': ApplicationFactType.dateRange},
     ),
     ApplicationClauseOption(
       id: 'declaration.camp',
@@ -37,7 +36,6 @@ abstract final class ApplicationSamples {
       kind: ApplicationClauseKind.rule,
       heading: {'en': 'Fee', 'mr': 'शुल्क'},
       text: {'en': 'A fee of {amount} is payable.', 'mr': '{amount} शुल्क.'},
-      gaps: {'amount': ApplicationFactType.amount},
     ),
     ApplicationClauseOption(
       id: 'selection.attend_practice',
@@ -46,15 +44,21 @@ abstract final class ApplicationSamples {
         'en': 'I will attend the practice sessions ({kinds}) from {dates}.',
         'mr': '{dates} सराव ({kinds}).',
       },
-      gaps: {
-        'dates': ApplicationFactType.dateRange,
-        'kinds': ApplicationFactType.choices,
-      },
     ),
     ApplicationClauseOption(
       id: 'note.follow_rules',
       kind: ApplicationClauseKind.note,
       text: {'en': 'Follow the rules above.', 'mr': 'वरील नियम पाळा.'},
+    ),
+    ApplicationClauseOption(
+      id: 'club.1',
+      kind: ApplicationClauseKind.selection,
+      name: 'Attend the matches',
+      club: true,
+      text: {
+        'en': 'I will play the matches on {match_dates} at {venue}.',
+        'mr': 'मी {match_dates} रोजी {venue} येथे सामने खेळेन.',
+      },
     ),
   ];
 
@@ -155,28 +159,14 @@ abstract final class ApplicationSamples {
     },
   };
 
-  /// A stand-in for the server's fill (club_client#336): the library
-  /// clause with each gap replaced by the name of the fact that fills it,
-  /// in brackets.
-  static Future<ApplicationClauseFill> fillClause(
-    String clause,
-    Map<String, String> facts,
-  ) async {
-    final option = clauses.where((c) => c.id == clause).firstOrNull;
-    if (option == null) {
-      return const ApplicationClauseRefused('The library has no such clause.');
-    }
-    String fill(String text) => facts.entries.fold(
-      text,
-      (filled, e) => filled.replaceAll('{${e.key}}', '[${e.value}]'),
-    );
-    return ApplicationClauseFilled(
-      text: {for (final e in option.text.entries) e.key: fill(e.value)},
-      heading: {for (final e in option.heading.entries) e.key: fill(e.value)},
-    );
-  }
-
-  /// The template's facts, by name and type.
-  static Map<String, ApplicationFactType> get facts =>
-      ApplicationFactType.ofFacts(template[ApplicationFormFields.factsId]);
+  /// One of the club's library texts, as its form edits it
+  /// (club_client#389): a selection using the template's `match_dates`.
+  static const Map<String, dynamic> libraryText = {
+    ApplicationLibraryTextFormFields.kindId: ApplicationClauseKind.selection,
+    ApplicationLibraryTextFormFields.nameId: 'Attend the matches',
+    ApplicationLibraryTextFormFields.textId: {
+      'en': 'I will play the matches on {match_dates} at {venue}.',
+      'mr': 'मी {match_dates} रोजी {venue} येथे सामने खेळेन.',
+    },
+  };
 }

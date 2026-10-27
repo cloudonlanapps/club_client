@@ -56,4 +56,40 @@ void main() {
       expect(_refusal(const []), isNull);
     });
   });
+
+  group('Issue 389: the unknown-fact refusal', () {
+    test('Issue 389: each gap is named by place, language and name', () {
+      expect(
+        applicationSaveRefusal(
+          const ApplicationUnknownFactException(
+            message: 'raw',
+            gaps: [
+              ApplicationUnknownGap(
+                place: 'selections[1]',
+                language: 'mr',
+                gap: 'match_date',
+              ),
+              ApplicationUnknownGap(
+                place: 'header[0][1]',
+                language: 'en',
+                gap: 'venue2',
+              ),
+            ],
+          ),
+        ),
+        'Save was refused: these gaps name no fact. '
+        'Selection 2 (Marathi): no fact named match_date; '
+        'Item 1, line 2 (English): no fact named venue2.',
+      );
+    });
+
+    test('Issue 389: a refusal naming no gap is a toast', () {
+      expect(
+        applicationSaveRefusal(
+          const ApplicationUnknownFactException(message: 'raw'),
+        ),
+        isNull,
+      );
+    });
+  });
 }

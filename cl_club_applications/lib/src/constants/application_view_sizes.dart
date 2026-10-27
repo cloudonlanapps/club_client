@@ -35,4 +35,10 @@ abstract final class ApplicationViewSizes {
 
   /// Gap between a greyed-out move and its reason.
   static const double reasonGap = 6;
+
+  /// The width of the Facts help (club_client#389).
+  static const double helpWidth = 360;
+
+  /// The size of the Facts help's (?) icon.
+  static const double helpIcon = 18;
 }

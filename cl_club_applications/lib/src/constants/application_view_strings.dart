@@ -99,17 +99,6 @@ abstract final class ApplicationViewStrings {
   static const String writeFailed =
       'Could not reach the server. Please try again.';
 
-  /// A library clause the server would not fill from the template's facts
-  /// (422 `APPLICATION_INVALID_REFERENCE`, club_client#336).
-  static const String clauseNotFilled =
-      "This clause could not be filled from the template's saved facts. "
-      'Check that each fact it needs is saved with the right type, then tap '
-      'it again.';
-
-  /// A library clause not filled for no reason about the template.
-  static const String clauseFillFailed =
-      'Could not fill this clause. Please try again.';
-
   /// A section saved.
   static String sectionSaved(String section) => '$section updated.';
 
@@ -312,6 +301,10 @@ abstract final class ApplicationViewStrings {
   /// The read mode's row of header item [n] (from 1).
   static String headerItem(int n) => 'Item $n';
 
+  /// Line [line] of header item [n] (both from 1), a header item held as
+  /// lines (club_client#389).
+  static String headerLine(int n, int line) => 'Item $n, line $line';
+
   /// The read mode's row of selection [n] (from 1).
   static String selection(int n) => 'Selection $n';
 
@@ -320,6 +313,9 @@ abstract final class ApplicationViewStrings {
 
   /// The read mode's row of note [n] (from 1).
   static String note(int n) => 'Note $n';
+
+  /// The attribution of note [n] (from 1).
+  static String noteAttribution(int n) => 'Note $n attribution';
 
   /// An age category open to every birth date.
   static const String anyBirthDate = 'Any date of birth';
@@ -350,6 +346,7 @@ abstract final class ApplicationViewStrings {
     'form_footer': 'Footer line',
     'formFooter': 'Footer line',
     'organisation': 'Organisation',
+    'subtitle': 'Subtitle',
   };
 
   /// A line of the client's check: the text at [place] and the print

@@ -1,14 +1,8 @@
-import 'package:cl_club_forms/cl_club_forms.dart'
-    show
-        ApplicationClauseFill,
-        ApplicationClauseFilled,
-        ApplicationClauseRefused,
-        ApplicationFormFields;
+import 'package:cl_club_forms/cl_club_forms.dart' show ApplicationFormFields;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClApplicationsMasterNotifier, schemaFieldErrors;
 import 'package:club_sdk_2/club_sdk_2.dart';
 
-import '../constants/application_view_strings.dart';
 import 'application_form_json.dart';
 import 'application_section.dart';
 
@@ -217,40 +211,6 @@ abstract final class ApplicationFormSubmit {
     values: values,
     notifier: notifier,
   );
-
-  /// Fills library clause [clause] for the editor to insert
-  /// (club_client#336): each gap takes the fact of [template] that [facts]
-  /// names for it (gap → fact name). Gives the filled text in the forms'
-  /// type, or, when the server refuses or cannot be reached, the message
-  /// the form shows under its clause list. The template is not changed.
-  static Future<ApplicationClauseFill> fillClause({
-    required String clause,
-    required Map<String, String> facts,
-    required ApplicationTemplate template,
-    required ClApplicationsMasterNotifier notifier,
-  }) async {
-    final saved = template.content.facts;
-    try {
-      final filled = await notifier.fillClause(
-        clause,
-        facts: {
-          for (final MapEntry(key: gap, value: name) in facts.entries)
-            if (saved[name] case final ApplicationFact fact) gap: fact,
-        },
-      );
-      return ApplicationClauseFilled(
-        text: filled.text.texts,
-        heading: filled.heading?.texts ?? const {},
-      );
-    } on Object catch (e) {
-      return ApplicationClauseRefused(
-        e is ServerException &&
-                e.code == SdkErrorCode.applicationInvalidReference
-            ? ApplicationViewStrings.clauseNotFilled
-            : ApplicationViewStrings.clauseFillFailed,
-      );
-    }
-  }
 
   /// What a schema refusal puts on the form's fields; empty when [error]
   /// is about nothing the form holds.

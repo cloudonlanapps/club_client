@@ -10,10 +10,12 @@ import '../constants/application_view_strings.dart';
 import '../widgets/admin_application_list.dart';
 import '../widgets/application_create_dialog.dart';
 import '../widgets/application_page.dart';
+import '../widgets/library/application_library_section.dart';
 
 /// The admin's Applications page, under Club Management (club_client#321,
 /// #380): every template with its state, opened on tap, duplicated, and
-/// created with **Create application**. Members, admins included, download
+/// created with **Create application**; below them the club's **Library**
+/// of texts (club_client#389). Members, admins included, download
 /// their own forms from `MyApplicationsView`. Renders nothing unless the
 /// server offers applications.
 class ApplicationsView extends ConsumerWidget {
@@ -49,7 +51,10 @@ class ApplicationsView extends ConsumerWidget {
         leading: const Icon(LucideIcons.plus),
         child: const Text(ApplicationViewStrings.create),
       ),
-      children: [AdminApplicationList(onOpen: onOpen)],
+      children: [
+        AdminApplicationList(onOpen: onOpen),
+        const ApplicationLibrarySection(),
+      ],
     );
   }
 }

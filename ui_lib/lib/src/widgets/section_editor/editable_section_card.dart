@@ -36,6 +36,7 @@ class EditableSectionCard<T> extends StatefulWidget {
     required this.onSave,
     this.canEdit = false,
     this.leadingIcon,
+    this.titleTrailing,
     this.isEmpty = false,
     this.emptyHint,
     this.isDirty,
@@ -52,6 +53,10 @@ class EditableSectionCard<T> extends StatefulWidget {
 
   /// Optional leading icon shown before the title.
   final IconData? leadingIcon;
+
+  /// Optional widget at the right end of the title row, in both modes,
+  /// after the edit pencil: a help affordance about the section, say.
+  final Widget? titleTrailing;
 
   /// Read-only content shown when not editing (typically a column of rows).
   final Widget read;
@@ -194,6 +199,10 @@ class _EditableSectionCardState<T> extends State<EditableSectionCard<T>> {
               const Spacer(),
               if (widget.canEdit && !_editing)
                 SectionEditButton(onTap: _enterEdit),
+              if (widget.titleTrailing case final Widget trailing) ...[
+                const SizedBox(width: 8),
+                trailing,
+              ],
             ],
           ),
           const SizedBox(height: 16),

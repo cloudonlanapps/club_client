@@ -41,30 +41,29 @@ void main() {
   });
 
   group('Issue 321: the library and catalogue options', () {
-    test('Issue 321: a clause reads its kind, heading, text and gaps from '
-        'the library, notes left out', () {
-      final clause = ApplicationClauseOption.fromJson('rule.matches', const {
-        'kind': 'rule',
-        'gaps': {'dates': 'date_range', 'venue': 'name'},
-        'heading': {'en': 'Matches', 'mr': 'सामने'},
-        'text': {
-          'en': 'Matches from {dates} at {venue}.',
+    test('Issue 389: a library text pasted into a template keeps its print '
+        'languages alone, as written, gaps included', () {
+      const clause = ApplicationClauseOption(
+        id: 'rule.matches',
+        kind: ApplicationClauseKind.rule,
+        heading: {'en': 'Matches', 'mr': 'सामने', 'hi': ' '},
+        text: {
+          'en': ' Matches from {dates} at {venue}. ',
           'mr': '{dates} {venue}',
-          '_review': ['mr'],
+          'hi': '{dates}',
         },
-      });
+      );
 
-      expect(clause.id, 'rule.matches');
-      expect(clause.kind, ApplicationClauseKind.rule);
-      expect(clause.heading, {'en': 'Matches', 'mr': 'सामने'});
-      expect(clause.text, {
+      final pasted = clause.only(['en', 'mr']);
+
+      expect(pasted.id, 'rule.matches');
+      expect(pasted.kind, ApplicationClauseKind.rule);
+      expect(pasted.heading, {'en': 'Matches', 'mr': 'सामने'});
+      expect(pasted.text, {
         'en': 'Matches from {dates} at {venue}.',
         'mr': '{dates} {venue}',
       });
-      expect(clause.gaps, {
-        'dates': ApplicationFactType.dateRange,
-        'venue': ApplicationFactType.name,
-      });
+      expect(clause.only(['en']).heading, {'en': 'Matches'});
     });
 
     test('Issue 321: every fact type reads and writes its JSON name', () {

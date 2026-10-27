@@ -6,17 +6,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// No library: what [applicationClausesProvider] holds without a call.
 const ApplicationClauseLibrary emptyApplicationClauses =
-    ApplicationClauseLibrary(languages: [], choices: {}, clauses: {});
+    ApplicationClauseLibrary(languages: [], choices: {}, clauses: []);
 
-/// The application clause library (club_client#321): the rules,
-/// declarations, header items, selections and notes a template refers to,
-/// and the choices a `choices` fact may name, for the editor's pickers and
-/// its read-out of a template.
+/// The application clauses list (club_client#321, #389): the server's
+/// built-in rules, declarations, header items, selections and notes, then
+/// the club's own library texts, each as written with its `{gap}`s, for the
+/// editor to paste; and the choices a `choices` fact may name.
 ///
 /// An admin's read alone. While applications are off or unknown
 /// ([applicationsProvider]), or the signed-in user is not an admin, it holds
-/// [emptyApplicationClauses] without a server call. The library ships with
-/// the server, so it is read once per session.
+/// [emptyApplicationClauses] without a server call. The built-in clauses
+/// ship with the server; the club's texts change only through
+/// `clApplicationLibraryMasterProvider`, whose writes reload this list.
 final FutureProvider<ApplicationClauseLibrary> applicationClausesProvider =
     FutureProvider<ApplicationClauseLibrary>((ref) async {
       final enabled = ref.watch(applicationsProvider);

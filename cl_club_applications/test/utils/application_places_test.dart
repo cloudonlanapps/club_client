@@ -21,6 +21,17 @@ void main() {
     );
   });
 
+  test("Issue 389: a line of a header item, a note's attribution and the "
+      'subtitle are named as the editor names them', () {
+    expect(ApplicationPlaces.label('header[0][1]'), 'Item 1, line 2');
+    expect(ApplicationPlaces.label('header[2]'), 'Item 3');
+    expect(
+      ApplicationPlaces.label('terms_notes[1].attribution'),
+      'Note 2 attribution',
+    );
+    expect(ApplicationPlaces.label('subtitle'), 'Subtitle');
+  });
+
   test('Issue 321: the reader reads a text in each language, and a fact '
       'as its value', () {
     final reader = ApplicationTextReader(

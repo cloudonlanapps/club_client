@@ -54,6 +54,7 @@ abstract final class ApplicationEntries {
         languages: ApplicationSamples.printLanguages,
         facts: ApplicationSamples.facts,
         clauses: ApplicationSamples.clauses,
+        fillClause: ApplicationSamples.fillClause,
       ),
     ),
     FormDemoEntry(
@@ -78,6 +79,7 @@ abstract final class ApplicationEntries {
         languages: ApplicationSamples.printLanguages,
         facts: ApplicationSamples.facts,
         clauses: ApplicationSamples.clauses,
+        fillClause: ApplicationSamples.fillClause,
       ),
     ),
     FormDemoEntry(
@@ -91,6 +93,7 @@ abstract final class ApplicationEntries {
         languages: ApplicationSamples.printLanguages,
         facts: ApplicationSamples.facts,
         clauses: ApplicationSamples.clauses,
+        fillClause: ApplicationSamples.fillClause,
       ),
     ),
     FormDemoEntry(
@@ -104,6 +107,7 @@ abstract final class ApplicationEntries {
         languages: ApplicationSamples.printLanguages,
         facts: ApplicationSamples.facts,
         clauses: ApplicationSamples.clauses,
+        fillClause: ApplicationSamples.fillClause,
       ),
     ),
     FormDemoEntry(
@@ -117,6 +121,7 @@ abstract final class ApplicationEntries {
         languages: ApplicationSamples.printLanguages,
         facts: ApplicationSamples.facts,
         clauses: ApplicationSamples.clauses,
+        fillClause: ApplicationSamples.fillClause,
       ),
     ),
     FormDemoEntry(

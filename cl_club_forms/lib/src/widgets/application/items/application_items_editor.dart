@@ -21,6 +21,7 @@ class ApplicationItemsEditor extends StatefulWidget {
     required this.addLabel,
     required this.onChanged,
     this.newItem,
+    this.insertBuilder,
     this.enabled = true,
     super.key,
   });
@@ -42,6 +43,11 @@ class ApplicationItemsEditor extends StatefulWidget {
 
   /// What an added item holds before it is edited; null for nothing.
   final Object? Function()? newItem;
+
+  /// Builds what adds a prepared item under the add button (the clause
+  /// library, club_client#336), handed
+  /// [ApplicationItemsEditorState.insertItem]; nothing there when null.
+  final Widget Function(ValueChanged<Object?> insert)? insertBuilder;
 
   /// Whether the editor takes input.
   final bool enabled;
@@ -81,6 +87,12 @@ class ApplicationItemsEditorState extends State<ApplicationItemsEditor> {
   /// Adds an item.
   void addItem() {
     setState(() => addItemFrom(widget.newItem?.call()));
+    report();
+  }
+
+  /// Appends an item holding [item], leaving the others as they are.
+  void insertItem(Object? item) {
+    setState(() => addItemFrom(item));
     report();
   }
 
@@ -131,6 +143,7 @@ class ApplicationItemsEditorState extends State<ApplicationItemsEditor> {
           enabled: widget.enabled,
           onPressed: addItem,
         ),
+        ?widget.insertBuilder?.call(insertItem),
       ],
     );
   }

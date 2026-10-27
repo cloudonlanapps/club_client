@@ -1,3 +1,4 @@
+import 'package:cl_club_forms/cl_club_forms.dart' show ApplicationClauseFiller;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show ClApplicationsMasterNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart' show ApplicationTemplate;
@@ -15,12 +16,14 @@ typedef ApplicationSectionSave =
     });
 
 /// Builds a section's form: its key, the template as the forms hold it,
-/// what the forms choose from, and whether it responds.
+/// what the forms choose from, how a library clause is filled, and whether
+/// it responds.
 typedef ApplicationSectionFormBuilder =
     Widget Function(
       Key key,
       Map<String, dynamic> template,
       ApplicationEditorOptions options, {
+      required ApplicationClauseFiller fill,
       required bool enabled,
     });
 

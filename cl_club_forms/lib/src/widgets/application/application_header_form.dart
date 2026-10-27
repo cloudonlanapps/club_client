@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../models/application/application_clause_fill.dart';
 import '../../models/application/application_clause_kind.dart';
 import '../../models/application/application_clause_option.dart';
 import '../../models/application/application_custom_text.dart';
@@ -17,6 +18,7 @@ import 'application_section_contract.dart';
 import 'application_text_sources.dart';
 import 'items/application_items_field.dart';
 import 'sections/application_header_item_editor.dart';
+import 'text_value/application_clause_library.dart';
 
 /// Pure-UI section editor of an application's header strip: short items
 /// (the venue, the dates, a phone), each a header clause of the library
@@ -33,6 +35,7 @@ class ApplicationHeaderForm extends StatefulWidget {
     required this.languages,
     this.facts = const {},
     this.clauses = const [],
+    this.fillClause,
     this.enabled = true,
     super.key,
   });
@@ -48,6 +51,11 @@ class ApplicationHeaderForm extends StatefulWidget {
 
   /// The clause library; its header clauses are offered.
   final List<ApplicationClauseOption> clauses;
+
+  /// Fills a library clause with the template's facts (the host's call);
+  /// with none, the library is not offered. A tapped clause is added as a
+  /// new item holding its filled text (club_client#336).
+  final ApplicationClauseFiller? fillClause;
 
   /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
@@ -87,6 +95,14 @@ class ApplicationHeaderFormState extends State<ApplicationHeaderForm>
               enabled: widget.enabled,
               noun: ApplicationFormStrings.headerItemNoun,
               addLabel: ApplicationFormStrings.addHeaderItem,
+              insertBuilder: ApplicationClauseLibrary.forItems(
+                clauses: sources.clausesOf(ApplicationClauseKind.header),
+                facts: widget.facts,
+                languages: widget.languages,
+                fill: widget.fillClause,
+                enabled: widget.enabled,
+                item: (filled) => filled.text,
+              ),
               newItem: () => ApplicationCustomText.none.toJson(),
               validator: (items) => ApplicationFormValidators.items(
                 items,

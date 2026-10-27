@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../models/application/application_clause_fill.dart';
 import '../../models/application/application_clause_kind.dart';
 import '../../models/application/application_clause_option.dart';
 import '../../models/application/application_custom_text.dart';
@@ -18,6 +19,7 @@ import 'application_section_contract.dart';
 import 'application_text_mode.dart';
 import 'application_text_sources.dart';
 import 'items/application_items_field.dart';
+import 'text_value/application_clause_library.dart';
 import 'text_value/application_text_value_editor.dart';
 
 /// Pure-UI section editor of an application's additional selections: the
@@ -35,14 +37,15 @@ class ApplicationSelectionsForm extends StatefulWidget {
     required this.languages,
     this.facts = const {},
     this.clauses = const [],
+    this.fillClause,
     this.enabled = true,
     super.key,
   });
 
   /// The modes a selection may take; a new one takes the first.
   // A printed text is a language map only (club_sdk#76): a clause or fact
-  // reference is refused by the server. Inserting a library clause's filled
-  // text is club_client#336.
+  // reference is refused by the server. A library clause is inserted as its
+  // filled text, from the library under the list (club_client#336).
   static const List<ApplicationTextMode> modes = [ApplicationTextMode.custom];
 
   /// What to start from, as the template's JSON holds it.
@@ -56,6 +59,11 @@ class ApplicationSelectionsForm extends StatefulWidget {
 
   /// The clause library; its selection clauses are offered.
   final List<ApplicationClauseOption> clauses;
+
+  /// Fills a library clause with the template's facts (the host's call);
+  /// with none, the library is not offered. A tapped clause is added as a
+  /// new item holding its filled text (club_client#336).
+  final ApplicationClauseFiller? fillClause;
 
   /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
@@ -96,6 +104,14 @@ class ApplicationSelectionsFormState extends State<ApplicationSelectionsForm>
               enabled: widget.enabled,
               noun: ApplicationFormStrings.selectionNoun,
               addLabel: ApplicationFormStrings.addSelection,
+              insertBuilder: ApplicationClauseLibrary.forItems(
+                clauses: sources.clausesOf(kind),
+                facts: widget.facts,
+                languages: widget.languages,
+                fill: widget.fillClause,
+                enabled: widget.enabled,
+                item: (filled) => filled.text,
+              ),
               newItem: () => ApplicationCustomText.none.toJson(),
               validator: (items) => ApplicationFormValidators.items(
                 items,

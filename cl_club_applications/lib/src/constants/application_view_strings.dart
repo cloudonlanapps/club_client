@@ -93,6 +93,17 @@ abstract final class ApplicationViewStrings {
   static const String writeFailed =
       'Could not reach the server. Please try again.';
 
+  /// A library clause the server would not fill from the template's facts
+  /// (422 `APPLICATION_INVALID_REFERENCE`, club_client#336).
+  static const String clauseNotFilled =
+      "This clause could not be filled from the template's saved facts. "
+      'Check that each fact it needs is saved with the right type, then tap '
+      'it again.';
+
+  /// A library clause not filled for no reason about the template.
+  static const String clauseFillFailed =
+      'Could not fill this clause. Please try again.';
+
   /// A section saved.
   static String sectionSaved(String section) => '$section updated.';
 

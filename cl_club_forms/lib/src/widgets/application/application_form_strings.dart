@@ -1,3 +1,4 @@
+import '../../models/application/application_clause_kind.dart';
 import '../../models/application/application_fact_type.dart';
 
 /// Labels, hints and messages of the application forms.
@@ -29,19 +30,60 @@ abstract final class ApplicationFormStrings {
   /// Label of the declaration.
   static const String declaration = 'Declaration';
 
-  /// Label of the library clauses a section offers (club_client#336).
+  /// Label of the library texts a section offers (club_client#336, #389).
   static const String library = 'From the library';
 
-  /// What tapping a library clause does.
+  /// What tapping a library text does.
   static const String libraryHint =
-      "Tap a clause to insert its text, filled with this template's saved "
-      'facts. The text is then edited like any other.';
+      'Tap a text to add it as written, in each print language. A {name} '
+      'in it prints the fact of that name; edit it like any other text.';
 
-  /// Shown under the library when [gap] of the tapped clause has no fact of
-  /// its [type] to fill it.
-  static String clauseNeedsFact(String gap, ApplicationFactType type) =>
-      'This clause needs a ${typeName(type)} fact named "$gap". Add it '
-      'under Facts and save, then tap the clause again.';
+  /// The mark of a club library text named [name] in a section's list.
+  static String clubText(String name) => "Club's text: $name";
+
+  /// Label of a library text's kind (club_client#389).
+  static const String libraryKind = 'Used for';
+
+  /// Placeholder of a library text's kind.
+  static const String libraryKindPlaceholder = 'Pick where it is used';
+
+  /// Label of a library text's name.
+  static const String libraryName = 'Name';
+
+  /// Label of a library text's heading, a term's alone.
+  static const String libraryHeading = 'Heading';
+
+  /// Label of a library text's text.
+  static const String libraryText = 'Text';
+
+  /// What a library text may hold.
+  static const String libraryTextHint =
+      'Write it in each language you need. A {name} prints the fact of that '
+      'name of the template it is pasted into.';
+
+  /// Refusal of a library text with no kind.
+  static const String libraryKindRequired = 'Pick where the text is used';
+
+  /// Refusal of a library text with no name.
+  static const String libraryNameRequired = 'Give the text a name';
+
+  /// Refusal of a library text's name longer than [max] characters.
+  static String libraryNameTooLong(int max) =>
+      'Keep the name to $max characters';
+
+  /// Refusal of a library text with no text.
+  static const String libraryTextRequired =
+      'Write the text in one language '
+      'at least';
+
+  /// The name of a library text's [kind], as shown.
+  static String kindName(ApplicationClauseKind kind) => switch (kind) {
+    ApplicationClauseKind.header => 'Header item',
+    ApplicationClauseKind.selection => 'Selection',
+    ApplicationClauseKind.declaration => 'Declaration',
+    ApplicationClauseKind.rule => 'Term',
+    ApplicationClauseKind.note => 'Note',
+  };
 
   /// The name of a fact [type], as shown.
   static String typeName(ApplicationFactType type) => switch (type) {

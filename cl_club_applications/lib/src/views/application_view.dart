@@ -1,4 +1,5 @@
-import 'package:cl_club_forms/cl_club_forms.dart' show ApplicationCompleteness;
+import 'package:cl_club_forms/cl_club_forms.dart'
+    show ApplicationCompleteness, ApplicationFactGaps;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         applicationClausesProvider,
@@ -15,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show PdfAction, TitleRow;
 
+import '../constants/application_fact_strings.dart';
 import '../constants/application_view_strings.dart';
 import '../models/application_editor_options.dart';
 import '../models/application_form_submit.dart';
@@ -158,11 +160,24 @@ class ApplicationEditorBody extends StatelessWidget {
               ),
           ]
         : const <String>[];
+    // Gaps naming no fact are checked from the template alone, as Save
+    // checks them (club_client#389).
+    final unknownFacts = draft
+        ? [
+            for (final gap in ApplicationFactGaps.unknown(json))
+              ApplicationFactStrings.unknownFact(
+                ApplicationPlaces.label(gap.place),
+                ApplicationViewStrings.languageName(gap.language),
+                gap.name,
+              ),
+          ]
+        : const <String>[];
     return ApplicationPage(
       children: [
         ApplicationStateCard(
           template: template,
           missing: missing,
+          unknownFacts: unknownFacts,
           onDeleted: onDeleted,
           pdfAction: pdfAction,
         ),

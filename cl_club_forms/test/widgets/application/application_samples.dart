@@ -16,22 +16,12 @@ abstract final class ApplicationSamples {
     ApplicationLanguageOption(code: 'mr', name: 'Marathi'),
   ];
 
-  /// A template's facts, by name.
-  static const Map<String, ApplicationFactType> facts = {
-    'venue': ApplicationFactType.name,
-    'phone': ApplicationFactType.name,
-    'camp': ApplicationFactType.dateRange,
-    'trial': ApplicationFactType.dateRange,
-    'fee': ApplicationFactType.amount,
-  };
-
-  /// The clause library.
+  /// The library texts.
   static const List<ApplicationClauseOption> clauses = [
     ApplicationClauseOption(
       id: 'header.camp',
       kind: ApplicationClauseKind.header,
       text: {'en': 'Camp: {dates}', 'mr': 'शिबिर: {dates}'},
-      gaps: {'dates': ApplicationFactType.dateRange},
     ),
     ApplicationClauseOption(
       id: 'declaration.camp',
@@ -43,7 +33,6 @@ abstract final class ApplicationSamples {
       kind: ApplicationClauseKind.rule,
       heading: {'en': 'Fee', 'mr': 'शुल्क'},
       text: {'en': 'A fee of {amount} is payable.', 'mr': '{amount} शुल्क.'},
-      gaps: {'amount': ApplicationFactType.amount},
     ),
     ApplicationClauseOption(
       id: 'rule.camp',
@@ -53,16 +42,11 @@ abstract final class ApplicationSamples {
         'en': 'A camp runs {dates} at {venue}.',
         'mr': '{dates} {venue} येथे शिबिर.',
       },
-      gaps: {
-        'dates': ApplicationFactType.dateRange,
-        'venue': ApplicationFactType.name,
-      },
     ),
     ApplicationClauseOption(
       id: 'selection.attend_camp',
       kind: ApplicationClauseKind.selection,
       text: {'en': 'I will attend the camp {dates}.', 'mr': '{dates} शिबिर.'},
-      gaps: {'dates': ApplicationFactType.dateRange},
     ),
     ApplicationClauseOption(
       id: 'note.follow_rules',

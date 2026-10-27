@@ -5,7 +5,7 @@ import '../models/form_demo_group.dart';
 import 'application_samples.dart';
 
 /// The forms of an application template: creating a draft, then one per
-/// section.
+/// section; and the club's library text.
 abstract final class ApplicationEntries {
   /// The entries, in the order shown.
   static List<FormDemoEntry> get all => [
@@ -51,9 +51,7 @@ abstract final class ApplicationEntries {
         key: key,
         initialValues: ApplicationSamples.template,
         languages: ApplicationSamples.printLanguages,
-        facts: ApplicationSamples.facts,
         clauses: ApplicationSamples.clauses,
-        fillClause: ApplicationSamples.fillClause,
       ),
     ),
     FormDemoEntry(
@@ -76,9 +74,7 @@ abstract final class ApplicationEntries {
         key: key,
         initialValues: ApplicationSamples.template,
         languages: ApplicationSamples.printLanguages,
-        facts: ApplicationSamples.facts,
         clauses: ApplicationSamples.clauses,
-        fillClause: ApplicationSamples.fillClause,
       ),
     ),
     FormDemoEntry(
@@ -90,9 +86,7 @@ abstract final class ApplicationEntries {
         key: key,
         initialValues: ApplicationSamples.template,
         languages: ApplicationSamples.printLanguages,
-        facts: ApplicationSamples.facts,
         clauses: ApplicationSamples.clauses,
-        fillClause: ApplicationSamples.fillClause,
       ),
     ),
     FormDemoEntry(
@@ -104,9 +98,7 @@ abstract final class ApplicationEntries {
         key: key,
         initialValues: ApplicationSamples.template,
         languages: ApplicationSamples.printLanguages,
-        facts: ApplicationSamples.facts,
         clauses: ApplicationSamples.clauses,
-        fillClause: ApplicationSamples.fillClause,
       ),
     ),
     FormDemoEntry(
@@ -118,9 +110,7 @@ abstract final class ApplicationEntries {
         key: key,
         initialValues: ApplicationSamples.template,
         languages: ApplicationSamples.printLanguages,
-        facts: ApplicationSamples.facts,
         clauses: ApplicationSamples.clauses,
-        fillClause: ApplicationSamples.fillClause,
       ),
     ),
     FormDemoEntry(
@@ -133,6 +123,17 @@ abstract final class ApplicationEntries {
         initialValues: ApplicationSamples.template,
         labels: ApplicationSamples.labels,
         languages: ApplicationSamples.printLanguages,
+      ),
+    ),
+    FormDemoEntry(
+      id: 'application-library-text',
+      title: 'Application library text form',
+      group: FormDemoGroup.applications,
+      formType: ApplicationLibraryTextForm,
+      builder: (key) => ApplicationLibraryTextForm(
+        key: key,
+        initialValues: ApplicationSamples.libraryText,
+        languages: ApplicationSamples.languageOptions,
       ),
     ),
   ];

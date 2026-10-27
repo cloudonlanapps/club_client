@@ -1,4 +1,3 @@
-import 'package:cl_club_forms/cl_club_forms.dart' show ApplicationClauseFill;
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clApplicationsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show ApplicationTemplate;
@@ -14,6 +13,7 @@ import '../../models/application_form_submit.dart';
 import '../../models/application_section.dart';
 import '../../utils/application_section_lines.dart';
 import '../../utils/application_text_reader.dart';
+import '../application_facts_help.dart';
 import 'application_section_read.dart';
 import 'application_section_specs.dart';
 
@@ -102,18 +102,6 @@ class ApplicationSectionCardState
     }
   }
 
-  /// Fills a library clause for the form to insert, with the template's
-  /// saved facts.
-  Future<ApplicationClauseFill> fill(
-    String clause,
-    Map<String, String> facts,
-  ) => ApplicationFormSubmit.fillClause(
-    clause: clause,
-    facts: facts,
-    template: widget.template,
-    notifier: ref.read(clApplicationsMasterProvider.notifier),
-  );
-
   @override
   Widget build(BuildContext context) {
     final spec = ApplicationSectionSpecs.of(widget.section);
@@ -125,6 +113,9 @@ class ApplicationSectionCardState
     return EditableSectionCard<Map<String, dynamic>>(
       key: ValueKey(widget.section.cardKey),
       title: widget.section.title,
+      titleTrailing: widget.section == ApplicationSection.facts
+          ? const ApplicationFactsHelp()
+          : null,
       canEdit: widget.canEdit,
       isEmpty: lines.isEmpty,
       emptyHint: ApplicationViewStrings.emptySection,
@@ -134,7 +125,6 @@ class ApplicationSectionCardState
         formKey,
         widget.json,
         widget.options,
-        fill: fill,
         enabled: enabled,
       ),
       onValidate: () => spec.validate(formKey),

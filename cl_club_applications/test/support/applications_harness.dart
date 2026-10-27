@@ -29,9 +29,6 @@ class FakeApplicationsMaster extends ClApplicationsMasterNotifier {
   /// The patch of the last update.
   ApplicationPatch? lastPatch;
 
-  /// The facts of the last fill, by gap.
-  Map<String, ApplicationFact>? lastFillFacts;
-
   /// The age categories the member fits; null for one or none.
   List<int>? fitting;
 
@@ -66,30 +63,6 @@ class FakeApplicationsMaster extends ClApplicationsMasterNotifier {
   ) async {
     lastPatch = patch;
     return _write('update $id ${patch.toMap().keys.join(',')}', _held(id));
-  }
-
-  /// Fills [clause] in English, Marathi and Hindi, a rule with a heading;
-  /// records `fill <clause> <gaps>`.
-  @override
-  Future<ApplicationFilledClause> fillClause(
-    String clause, {
-    Map<String, ApplicationFact> facts = const {},
-  }) async {
-    calls.add('fill $clause ${facts.keys.join(',')}');
-    lastFillFacts = facts;
-    final failure = failWith;
-    if (failure != null) throw failure;
-    return ApplicationFilledClause(
-      clause: clause,
-      heading: clause.startsWith('rule.')
-          ? const ApplicationText({'en': 'Fee', 'mr': 'शुल्क', 'hi': 'शुल्क'})
-          : null,
-      text: ApplicationText({
-        'en': 'Filled $clause.',
-        'mr': 'भरले $clause.',
-        'hi': 'भरा $clause.',
-      }),
-    );
   }
 
   @override
@@ -153,6 +126,79 @@ class FakeApplicationsMaster extends ClApplicationsMasterNotifier {
   }) => _form('member $id $username', category);
 }
 
+/// The club's library of texts with no server (club_client#389): it holds
+/// [initial], records every call in [calls] and, while [failWith] is set,
+/// throws it from every write.
+class FakeApplicationLibraryMaster extends ClApplicationLibraryMasterNotifier {
+  FakeApplicationLibraryMaster([this.initial = const {}]);
+
+  /// What the master loads.
+  final Map<int, ApplicationLibraryText> initial;
+
+  /// Every call, in order: `create selection Name`, `update 7 kind,name`, ….
+  final List<String> calls = [];
+
+  /// The failure every write throws while set.
+  Exception? failWith;
+
+  /// The input of the last create.
+  ApplicationLibraryTextInput? lastInput;
+
+  /// The patch of the last update.
+  ApplicationLibraryTextPatch? lastPatch;
+
+  @override
+  Future<Map<int, ApplicationLibraryText>> build() async => initial;
+
+  void _fail() {
+    final failure = failWith;
+    if (failure != null) throw failure;
+  }
+
+  @override
+  Future<ApplicationLibraryText> createLibraryText(
+    ApplicationLibraryTextInput input,
+  ) async {
+    calls.add('create ${input.kind.wireName} ${input.name}');
+    lastInput = input;
+    _fail();
+    final text = ApplicationSamples.libraryText(
+      id: 70,
+      name: input.name,
+      kind: input.kind,
+      heading: input.heading,
+      text: input.text,
+    );
+    replaceLocally(text);
+    return text;
+  }
+
+  @override
+  Future<ApplicationLibraryText> updateLibraryText(
+    int id,
+    ApplicationLibraryTextPatch patch,
+  ) async {
+    calls.add('update $id ${patch.toMap().keys.join(',')}');
+    lastPatch = patch;
+    _fail();
+    final text = state.requireValue[id]!.copyWith(
+      name: patch.name,
+      kind: patch.kind,
+      text: patch.text,
+      heading: patch.heading,
+    );
+    replaceLocally(text);
+    return text;
+  }
+
+  @override
+  Future<void> deleteLibraryText(int id) async {
+    calls.add('delete $id');
+    _fail();
+    state = AsyncData({...state.requireValue}..remove(id));
+  }
+}
+
 /// A member's identity documents with no server.
 class FakeIdentityDocs extends ClIdentityDocsMasterNotifier {
   FakeIdentityDocs(this.links);
@@ -193,7 +239,8 @@ UserPrivate eligibleMember({bool admin = false}) => applicationsUser(
 ).copyWith(dateOfBirthUtc: () => DateTime.utc(2000, 3, 4));
 
 /// Mounts [child] with the applications on (or off, [enabled]), the master
-/// [master], the label catalogue and clause library of the samples,
+/// [master], the club's [library] of texts (empty by default), the label
+/// catalogue and clauses list of the samples,
 /// [documents] as every member's identity documents, [currentUser] as the
 /// signed-in member (by default [applicationsUser], whose profile is blank)
 /// and the extended profile on or off ([extendedProfile]).
@@ -205,6 +252,7 @@ Future<void> pumpApplications(
   List<MediaLink> documents = const [],
   UserPrivate? currentUser,
   bool extendedProfile = false,
+  FakeApplicationLibraryMaster? library,
 }) async {
   await tester.binding.setSurfaceSize(const Size(1200, 3000));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -217,6 +265,9 @@ Future<void> pumpApplications(
         ),
         extendedProfileProvider.overrideWithValue(extendedProfile),
         clApplicationsMasterProvider.overrideWith(() => master),
+        clApplicationLibraryMasterProvider.overrideWith(
+          () => library ?? FakeApplicationLibraryMaster(),
+        ),
         applicationLabelsProvider.overrideWith(
           (ref) async => ApplicationSamples.labels,
         ),

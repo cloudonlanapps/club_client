@@ -70,9 +70,10 @@ class ClApplicationsMasterNotifier
       writeApplication((source) => source.duplicateApplication(id));
 
   /// Draft → saved: refused when incomplete
-  /// (`ApplicationIncompleteException`), when a text names an unknown
-  /// clause or fact (`APPLICATION_INVALID_REFERENCE`) or when the form does
-  /// not fit (`ApplicationDoesNotFitException`). Admin only.
+  /// (`ApplicationIncompleteException`), when a `{gap}` names no fact of
+  /// the template (`ApplicationUnknownFactException`, club_client#389), when
+  /// the template cannot be drawn (`APPLICATION_INVALID_REFERENCE`) or when
+  /// the form does not fit (`ApplicationDoesNotFitException`). Admin only.
   Future<ApplicationTemplate> saveApplication(int id) =>
       writeApplication((source) => source.saveApplication(id));
 
@@ -120,20 +121,6 @@ class ClApplicationsMasterNotifier
   }) => readPdf(
     (source) => source.downloadMemberForm(id, username, category: category),
   );
-
-  /// Library clause [clause] with each gap filled from [facts] (gap →
-  /// fact), in every library language, for the editor to insert as written
-  /// text (club_client#336). A read: no template changes, here or on the
-  /// server. A gap without a fact, a fact for no gap or of the wrong type,
-  /// or an unknown clause is 422 `APPLICATION_INVALID_REFERENCE`, thrown as
-  /// the SDK raised it. Admin only.
-  Future<ApplicationFilledClause> fillClause(
-    String clause, {
-    Map<String, ApplicationFact> facts = const {},
-  }) async {
-    final client = await ref.read(secureClientProvider.future);
-    return client.applications.fillClause(clause, facts: facts);
-  }
 
   /// Replaces or adds [template] in the local map.
   void replaceLocally(ApplicationTemplate template) {

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../models/application/application_clause_fill.dart';
 import '../../models/application/application_clause_kind.dart';
 import '../../models/application/application_clause_option.dart';
-import '../../models/application/application_fact_type.dart';
 import '../../models/application/application_language_option.dart';
 import '../../models/application/application_text_value.dart';
 import '../form/form_body.dart';
@@ -20,7 +18,8 @@ import 'text_value/application_text_value_field.dart';
 /// Pure-UI section editor of an application's declaration, printed above
 /// the signatures, written in each print language. Tapping a declaration
 /// clause of the library (one per noun: a camp, a championship, a trial)
-/// puts its filled text there, to be edited like typed text.
+/// puts its text there as written, `{fact}` gaps included, to be edited
+/// like typed text.
 ///
 /// [initialValues] is the template's JSON, or the part of it this section
 /// holds. The form owns no title or Save button: the host drives it
@@ -29,9 +28,7 @@ class ApplicationDeclarationForm extends StatefulWidget {
   const ApplicationDeclarationForm({
     required this.initialValues,
     required this.languages,
-    this.facts = const {},
     this.clauses = const [],
-    this.fillClause,
     this.enabled = true,
     super.key,
   });
@@ -42,16 +39,8 @@ class ApplicationDeclarationForm extends StatefulWidget {
   /// The print languages, in order.
   final List<ApplicationLanguageOption> languages;
 
-  /// The template's facts: the type of each, by name.
-  final Map<String, ApplicationFactType> facts;
-
-  /// The clause library; its declarations are offered.
+  /// The library texts; its declarations are offered.
   final List<ApplicationClauseOption> clauses;
-
-  /// Fills a library clause with the template's facts (the host's call);
-  /// with none, the library is not offered. A tapped clause's filled text
-  /// becomes the declaration (club_client#336).
-  final ApplicationClauseFiller? fillClause;
 
   /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
@@ -71,12 +60,12 @@ class ApplicationDeclarationFormState extends State<ApplicationDeclarationForm>
   /// is seeded again from each.
   int inserted = 0;
 
-  /// Makes [filled] the declaration.
-  void insert(ApplicationClauseFilled filled) {
+  /// Makes [clause]'s text, as written, the declaration.
+  void insert(ApplicationClauseOption clause) {
     setState(() => inserted++);
     formKey.currentState?.setFieldValue(
       ApplicationFormFields.declarationId,
-      ApplicationTextValue.fromJson(filled.text),
+      ApplicationTextValue.fromJson(clause.text),
     );
   }
 
@@ -89,7 +78,6 @@ class ApplicationDeclarationFormState extends State<ApplicationDeclarationForm>
 
   @override
   Widget build(BuildContext context) {
-    final fill = widget.fillClause;
     final library = ApplicationClauseLibrary.ofKind(
       widget.clauses,
       ApplicationClauseKind.declaration,
@@ -117,12 +105,10 @@ class ApplicationDeclarationFormState extends State<ApplicationDeclarationForm>
                   ApplicationFormValidators.text(value, required: true),
             ),
           ),
-          if (fill != null && library.isNotEmpty)
+          if (library.isNotEmpty)
             ApplicationClauseLibrary(
               clauses: library,
-              facts: widget.facts,
               languages: widget.languages,
-              fill: fill,
               enabled: widget.enabled,
               onInsert: insert,
             ),

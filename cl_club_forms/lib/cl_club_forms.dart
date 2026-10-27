@@ -8,12 +8,6 @@
 // texts the template's JSON holds
 export 'src/models/application/application_choice_option.dart'
     show ApplicationChoiceOption;
-export 'src/models/application/application_clause_fill.dart'
-    show
-        ApplicationClauseFill,
-        ApplicationClauseFilled,
-        ApplicationClauseFiller,
-        ApplicationClauseRefused;
 export 'src/models/application/application_clause_kind.dart'
     show ApplicationClauseKind;
 export 'src/models/application/application_clause_option.dart'
@@ -76,6 +70,8 @@ export 'src/widgets/application/application_create_form.dart'
     show ApplicationCreateForm, ApplicationCreateFormState;
 export 'src/widgets/application/application_declaration_form.dart'
     show ApplicationDeclarationForm, ApplicationDeclarationFormState;
+export 'src/widgets/application/application_fact_gaps.dart'
+    show ApplicationFactGaps;
 export 'src/widgets/application/application_facts_form.dart'
     show ApplicationFactsForm, ApplicationFactsFormState;
 export 'src/widgets/application/application_form_fields.dart'
@@ -92,6 +88,10 @@ export 'src/widgets/application/application_selections_form.dart'
     show ApplicationSelectionsForm, ApplicationSelectionsFormState;
 export 'src/widgets/application/application_terms_form.dart'
     show ApplicationTermsForm, ApplicationTermsFormState;
+export 'src/widgets/application/library/application_library_text_form.dart'
+    show ApplicationLibraryTextForm, ApplicationLibraryTextFormState;
+export 'src/widgets/application/library/application_library_text_form_fields.dart'
+    show ApplicationLibraryTextFormFields;
 // Club identity section forms (pure UI, no SDK / no Riverpod): the club's
 // details, its contact block and its address, translatable fields as
 // FormTranslatedText; and the one-field form that adds a language to

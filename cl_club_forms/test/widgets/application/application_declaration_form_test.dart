@@ -23,8 +23,6 @@ Widget _form({
   key: key,
   initialValues: initialValues,
   languages: ApplicationSamples.printLanguages,
-  facts: ApplicationSamples.facts,
-  clauses: ApplicationSamples.clauses,
   enabled: enabled,
 );
 

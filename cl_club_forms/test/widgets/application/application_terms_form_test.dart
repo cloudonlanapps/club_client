@@ -32,8 +32,6 @@ Widget _form({
   key: key,
   initialValues: {_terms: items ?? _items()},
   languages: ApplicationSamples.printLanguages,
-  facts: ApplicationSamples.facts,
-  clauses: ApplicationSamples.clauses,
   enabled: enabled,
 );
 

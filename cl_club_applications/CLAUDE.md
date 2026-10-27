@@ -11,8 +11,9 @@ declaration, terms, notes, labels, layout).
 Everything is capability-aware: each view and widget renders nothing unless
 `applicationsProvider` is `true`. SDK access goes through `cl_remote_store`
 (`clApplicationsMasterProvider`, its moves and PDF downloads,
-`applicationLabelsProvider`, `applicationClausesProvider`); the forms are the
-SDK-free `Application*Form`s of `cl_club_forms`.
+`applicationLabelsProvider`, `applicationClausesProvider`,
+`clApplicationLibraryMasterProvider`); the forms are the SDK-free
+`Application*Form`s of `cl_club_forms`.
 
 ## Public surface (barrel)
 
@@ -51,9 +52,23 @@ forms' ids for a schema refusal.
 
 - Moves the state forbids are greyed out with their reason beside them; Save
   is also greyed out while `ApplicationCompleteness.missingTexts` lists
-  texts, which the State card shows.
-- What the server refuses about the template on Save (incomplete, does not
-  fit, broken reference) shows inline on the State card; a download refused
+  texts, or `ApplicationFactGaps.unknown` lists `{gap}`s naming no fact
+  (club_client#389), which the State card shows by place and language
+  ("Selection 2 (Marathi): no fact named match_date").
+- A library text, built-in or the club's, is inserted as written in every
+  print language, gaps included: nothing is filled and no call is made
+  (club_client#389). A fact prints wherever its `{name}` stands; the (?) on
+  the Facts heading (`ApplicationFactsHelp`) says so, with one example per
+  type.
+- The club's library texts are managed in the **Library** section of
+  `ApplicationsView`, below the templates (`ApplicationLibrarySection`):
+  Add text opens `ApplicationLibraryTextForm` in a dialog; each text's card
+  edits it in place and deletes it after asking. The adapter is
+  `ApplicationLibraryTextFormSubmit`. The texts appear in each section's
+  list beside the built-in clauses, marked as the club's.
+- What the server refuses about the template on Save (incomplete, a gap
+  naming no fact, does not fit, broken reference) shows inline on the State
+  card; a download refused
   for the member (not eligible, no identity document, not published) shows
   under its button. Anything else is a toast with a fixed message.
 - A member's download of their own form (`ApplicationOwnForm`) first asks

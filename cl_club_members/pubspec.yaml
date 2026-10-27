@@ -22,7 +22,7 @@ dependencies:
   club_sdk_2:
     git:
       url: https://github.com/cloudonlanapps/club_sdk.git
-      ref: be5d638d4affd6e454dd4776ecca3477ec607ee4
+      ref: 6523257ee80b0a759ace815fc6f0b53e828629c9
   flutter:
     sdk: flutter
   flutter_riverpod: 2.6.1

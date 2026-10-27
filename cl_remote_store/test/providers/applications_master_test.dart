@@ -27,6 +27,22 @@ ApplicationTemplate _template(
   updatedAtUtc: DateTime.utc(2026, 10),
 );
 
+ApplicationLibraryText _libraryText(
+  int id, {
+  required String name,
+  ApplicationClauseKind kind = ApplicationClauseKind.selection,
+  ApplicationText text = const ApplicationText({
+    'en': 'I will play on {match_dates}.',
+  }),
+}) => ApplicationLibraryText(
+  id: id,
+  kind: kind,
+  name: name,
+  text: text,
+  createdAtUtc: DateTime.utc(2026, 10),
+  updatedAtUtc: DateTime.utc(2026, 10),
+);
+
 class _FakeApplications extends Fake implements ApplicationSource {
   final Map<int, ApplicationTemplate> stored = {
     1: _template(1),
@@ -35,6 +51,10 @@ class _FakeApplications extends Fake implements ApplicationSource {
   int lists = 0;
   int labelReads = 0;
   int clauseReads = 0;
+  int libraryReads = 0;
+  final Map<int, ApplicationLibraryText> library = {
+    3: _libraryText(3, name: 'Matches'),
+  };
   final List<String> calls = [];
   Exception? failWith;
 
@@ -145,17 +165,43 @@ class _FakeApplications extends Fake implements ApplicationSource {
   }
 
   @override
-  Future<ApplicationFilledClause> fillClause(
-    String clause, {
-    Map<String, ApplicationFact> facts = const {},
-  }) async {
-    calls.add('fill $clause ${facts.keys.join(',')}');
+  Future<List<ApplicationLibraryText>> listLibraryTexts() async {
+    libraryReads++;
+    return library.values.toList();
+  }
+
+  @override
+  Future<ApplicationLibraryText> createLibraryText(
+    ApplicationLibraryTextInput input,
+  ) async {
+    calls.add('create text ${input.kind.wireName}');
     final failure = failWith;
     if (failure != null) throw failure;
-    return ApplicationFilledClause(
-      clause: clause,
-      text: const ApplicationText({'en': 'Fee 500', 'mr': 'शुल्क 500'}),
+    return library[5] = _libraryText(
+      5,
+      name: input.name,
+      kind: input.kind,
+      text: input.text,
     );
+  }
+
+  @override
+  Future<ApplicationLibraryText> updateLibraryText(
+    int id,
+    ApplicationLibraryTextPatch patch,
+  ) async {
+    calls.add('update text $id ${patch.toMap().keys.join(',')}');
+    final failure = failWith;
+    if (failure != null) throw failure;
+    return library[id] = library[id]!.copyWith(name: patch.name);
+  }
+
+  @override
+  Future<void> deleteLibraryText(int id) async {
+    calls.add('delete text $id');
+    final failure = failWith;
+    if (failure != null) throw failure;
+    library.remove(id);
   }
 
   @override
@@ -164,9 +210,14 @@ class _FakeApplications extends Fake implements ApplicationSource {
     return const ApplicationClauseLibrary(
       languages: ['en'],
       choices: {},
-      clauses: {
-        'rule.fee': ApplicationClause(kind: 'rule', text: {'en': 'Fee'}),
-      },
+      clauses: [
+        ApplicationClause(
+          source: ApplicationClauseSource.builtin,
+          key: 'rule.fee',
+          kind: ApplicationClauseKind.rule,
+          text: ApplicationText({'en': 'Fee {fee}'}),
+        ),
+      ],
     );
   }
 }
@@ -349,38 +400,89 @@ void main() {
     });
   });
 
-  group('Issue 336: fillClause', () {
-    test('Issue 336: fills one clause with the facts given and changes no '
-        'template', () async {
+  group('Issue 389: clApplicationLibraryMasterProvider', () {
+    test('Issue 389: an admin loads the club library by id', () async {
       final source = _FakeApplications();
       final c = await _container(source);
-      final before = await c.read(clApplicationsMasterProvider.future);
-      final filled = await c
-          .read(clApplicationsMasterProvider.notifier)
-          .fillClause(
-            'rule.fee',
-            facts: {'amount': const ApplicationFact.amount(500)},
-          );
-      expect(filled.text.texts, {'en': 'Fee 500', 'mr': 'शुल्क 500'});
-      expect(source.calls, ['fill rule.fee amount']);
-      expect(c.read(clApplicationsMasterProvider).value, before);
-      expect(source.lists, 1);
+      final map = await c.read(clApplicationLibraryMasterProvider.future);
+      expect(map.keys, [3]);
+      expect(source.libraryReads, 1);
     });
 
-    test('Issue 336: a refused fill is rethrown as the SDK raised '
-        'it', () async {
-      final source = _FakeApplications()
-        ..failWith = const ServerException(
-          statusCode: 422,
-          code: SdkErrorCode.applicationInvalidReference,
-          message: 'gap amount has no fact',
-        );
-      final c = await _container(source);
-      await expectLater(
-        c.read(clApplicationsMasterProvider.notifier).fillClause('rule.fee'),
-        throwsA(isA<ServerException>()),
-      );
+    test('Issue 389: a member, or applications off, loads nothing, with no '
+        'call', () async {
+      final member = _FakeApplications();
+      final c1 = await _container(member, admin: false);
+      expect(await c1.read(clApplicationLibraryMasterProvider.future), isEmpty);
+      final off = _FakeApplications();
+      final c2 = await _container(off, enabled: false);
+      expect(await c2.read(clApplicationLibraryMasterProvider.future), isEmpty);
+      expect(member.libraryReads + off.libraryReads, 0);
     });
+
+    test('Issue 389: create, update and delete fold the answer in and reload '
+        'the clauses list', () async {
+      final source = _FakeApplications();
+      final c = await _container(source);
+      await c.read(clApplicationLibraryMasterProvider.future);
+      await c.read(applicationClausesProvider.future);
+      final notifier = c.read(clApplicationLibraryMasterProvider.notifier);
+
+      await notifier.createLibraryText(
+        const ApplicationLibraryTextInput(
+          kind: ApplicationClauseKind.note,
+          name: 'Bring kit',
+          text: ApplicationText({'en': 'Bring your kit on {trial}.'}),
+        ),
+      );
+      await c.read(applicationClausesProvider.future);
+      await notifier.updateLibraryText(
+        3,
+        const ApplicationLibraryTextPatch(name: 'Attend the matches'),
+      );
+      await c.read(applicationClausesProvider.future);
+      await notifier.deleteLibraryText(5);
+      await c.read(applicationClausesProvider.future);
+
+      final map = c.read(clApplicationLibraryMasterProvider).value!;
+      expect(map.keys, [3]);
+      expect(map[3]!.name, 'Attend the matches');
+      expect(source.calls, [
+        'create text note',
+        'update text 3 name',
+        'delete text 5',
+      ]);
+      expect(source.clauseReads, 4, reason: 'each write reloads the clauses');
+      expect(source.libraryReads, 1, reason: 'the answers are folded in');
+    });
+
+    test(
+      'Issue 389: a refused write is rethrown and changes nothing',
+      () async {
+        final source = _FakeApplications()
+          ..failWith = const ServerException(
+            statusCode: 422,
+            code: SdkErrorCode.validationError,
+            message: 'name too long',
+          );
+        final c = await _container(source);
+        await c.read(clApplicationLibraryMasterProvider.future);
+        await expectLater(
+          c
+              .read(clApplicationLibraryMasterProvider.notifier)
+              .updateLibraryText(
+                3,
+                const ApplicationLibraryTextPatch(name: 'x'),
+              ),
+          throwsA(isA<ServerException>()),
+        );
+        expect(
+          c.read(clApplicationLibraryMasterProvider).value![3]!.name,
+          'Matches',
+        );
+        expect(source.libraryReads, 1, reason: 'a 4xx refusal does not reload');
+      },
+    );
   });
 
   group('Issue 321: the label catalogue and clause library', () {
@@ -390,7 +492,9 @@ void main() {
       final labels = await c.read(applicationLabelsProvider.future);
       final clauses = await c.read(applicationClausesProvider.future);
       expect(labels.languages, ['en', 'mr']);
-      expect(clauses.clauses.keys, ['rule.fee']);
+      expect(clauses.builtinClause('rule.fee')?.text.texts, {
+        'en': 'Fee {fee}',
+      });
     });
 
     test('Issue 321: a member reads neither, with no call', () async {

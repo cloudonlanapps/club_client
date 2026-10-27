@@ -62,9 +62,7 @@ class PublishedApplicationsList extends ConsumerWidget {
       );
     }
     final published = publishedApplications(templates.requireValue.values);
-    final open = published
-        .where((t) => isEligibleFor(t, currentUser))
-        .toList();
+    final open = published.where((t) => isEligibleFor(t, currentUser)).toList();
     final needsDateOfBirth = hiddenForMissingDateOfBirth(
       published,
       currentUser,

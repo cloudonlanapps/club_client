@@ -12,13 +12,12 @@ abstract final class ApplicationSectionSpecs {
       switch (section) {
         ApplicationSection.heading =>
           TypedApplicationSectionSpec<ApplicationHeadingFormState>(
-            build: (key, t, o, {required fill, required enabled}) =>
-                ApplicationHeadingForm(
-                  key: key,
-                  initialValues: t,
-                  languageOptions: o.languageOptions,
-                  enabled: enabled,
-                ),
+            build: (key, t, o, {required enabled}) => ApplicationHeadingForm(
+              key: key,
+              initialValues: t,
+              languageOptions: o.languageOptions,
+              enabled: enabled,
+            ),
             save: ApplicationFormSubmit.updateHeading,
             onValidate: (s) => s.validate(),
             onIsDirty: (s) => s.isDirty,
@@ -27,14 +26,13 @@ abstract final class ApplicationSectionSpecs {
           ),
         ApplicationSection.facts =>
           TypedApplicationSectionSpec<ApplicationFactsFormState>(
-            build: (key, t, o, {required fill, required enabled}) =>
-                ApplicationFactsForm(
-                  key: key,
-                  initialValues: t,
-                  languages: o.printLanguages(t),
-                  choices: o.choices,
-                  enabled: enabled,
-                ),
+            build: (key, t, o, {required enabled}) => ApplicationFactsForm(
+              key: key,
+              initialValues: t,
+              languages: o.printLanguages(t),
+              choices: o.choices,
+              enabled: enabled,
+            ),
             save: ApplicationFormSubmit.updateFacts,
             onValidate: (s) => s.validate(),
             onIsDirty: (s) => s.isDirty,
@@ -43,16 +41,13 @@ abstract final class ApplicationSectionSpecs {
           ),
         ApplicationSection.header =>
           TypedApplicationSectionSpec<ApplicationHeaderFormState>(
-            build: (key, t, o, {required fill, required enabled}) =>
-                ApplicationHeaderForm(
-                  key: key,
-                  initialValues: t,
-                  languages: o.printLanguages(t),
-                  facts: o.factTypes(t),
-                  clauses: o.clauses,
-                  fillClause: fill,
-                  enabled: enabled,
-                ),
+            build: (key, t, o, {required enabled}) => ApplicationHeaderForm(
+              key: key,
+              initialValues: t,
+              languages: o.printLanguages(t),
+              clauses: o.clauses,
+              enabled: enabled,
+            ),
             save: ApplicationFormSubmit.updateHeader,
             onValidate: (s) => s.validate(),
             onIsDirty: (s) => s.isDirty,
@@ -61,7 +56,7 @@ abstract final class ApplicationSectionSpecs {
           ),
         ApplicationSection.ageCategories =>
           TypedApplicationSectionSpec<ApplicationAgeCategoriesFormState>(
-            build: (key, t, o, {required fill, required enabled}) =>
+            build: (key, t, o, {required enabled}) =>
                 ApplicationAgeCategoriesForm(
                   key: key,
                   initialValues: t,
@@ -76,16 +71,13 @@ abstract final class ApplicationSectionSpecs {
           ),
         ApplicationSection.selections =>
           TypedApplicationSectionSpec<ApplicationSelectionsFormState>(
-            build: (key, t, o, {required fill, required enabled}) =>
-                ApplicationSelectionsForm(
-                  key: key,
-                  initialValues: t,
-                  languages: o.printLanguages(t),
-                  facts: o.factTypes(t),
-                  clauses: o.clauses,
-                  fillClause: fill,
-                  enabled: enabled,
-                ),
+            build: (key, t, o, {required enabled}) => ApplicationSelectionsForm(
+              key: key,
+              initialValues: t,
+              languages: o.printLanguages(t),
+              clauses: o.clauses,
+              enabled: enabled,
+            ),
             save: ApplicationFormSubmit.updateSelections,
             onValidate: (s) => s.validate(),
             onIsDirty: (s) => s.isDirty,
@@ -94,14 +86,12 @@ abstract final class ApplicationSectionSpecs {
           ),
         ApplicationSection.declaration =>
           TypedApplicationSectionSpec<ApplicationDeclarationFormState>(
-            build: (key, t, o, {required fill, required enabled}) =>
+            build: (key, t, o, {required enabled}) =>
                 ApplicationDeclarationForm(
                   key: key,
                   initialValues: t,
                   languages: o.printLanguages(t),
-                  facts: o.factTypes(t),
                   clauses: o.clauses,
-                  fillClause: fill,
                   enabled: enabled,
                 ),
             save: ApplicationFormSubmit.updateDeclaration,
@@ -112,16 +102,13 @@ abstract final class ApplicationSectionSpecs {
           ),
         ApplicationSection.terms =>
           TypedApplicationSectionSpec<ApplicationTermsFormState>(
-            build: (key, t, o, {required fill, required enabled}) =>
-                ApplicationTermsForm(
-                  key: key,
-                  initialValues: t,
-                  languages: o.printLanguages(t),
-                  facts: o.factTypes(t),
-                  clauses: o.clauses,
-                  fillClause: fill,
-                  enabled: enabled,
-                ),
+            build: (key, t, o, {required enabled}) => ApplicationTermsForm(
+              key: key,
+              initialValues: t,
+              languages: o.printLanguages(t),
+              clauses: o.clauses,
+              enabled: enabled,
+            ),
             save: ApplicationFormSubmit.updateTerms,
             onValidate: (s) => s.validate(),
             onIsDirty: (s) => s.isDirty,
@@ -130,16 +117,13 @@ abstract final class ApplicationSectionSpecs {
           ),
         ApplicationSection.notes =>
           TypedApplicationSectionSpec<ApplicationNotesFormState>(
-            build: (key, t, o, {required fill, required enabled}) =>
-                ApplicationNotesForm(
-                  key: key,
-                  initialValues: t,
-                  languages: o.printLanguages(t),
-                  facts: o.factTypes(t),
-                  clauses: o.clauses,
-                  fillClause: fill,
-                  enabled: enabled,
-                ),
+            build: (key, t, o, {required enabled}) => ApplicationNotesForm(
+              key: key,
+              initialValues: t,
+              languages: o.printLanguages(t),
+              clauses: o.clauses,
+              enabled: enabled,
+            ),
             save: ApplicationFormSubmit.updateNotes,
             onValidate: (s) => s.validate(),
             onIsDirty: (s) => s.isDirty,
@@ -148,14 +132,13 @@ abstract final class ApplicationSectionSpecs {
           ),
         ApplicationSection.labels =>
           TypedApplicationSectionSpec<ApplicationLabelsFormState>(
-            build: (key, t, o, {required fill, required enabled}) =>
-                ApplicationLabelsForm(
-                  key: key,
-                  initialValues: t,
-                  labels: o.labels,
-                  languages: o.printLanguages(t),
-                  enabled: enabled,
-                ),
+            build: (key, t, o, {required enabled}) => ApplicationLabelsForm(
+              key: key,
+              initialValues: t,
+              labels: o.labels,
+              languages: o.printLanguages(t),
+              enabled: enabled,
+            ),
             save: ApplicationFormSubmit.updateLabels,
             onValidate: (s) => s.validate(),
             onIsDirty: (s) => s.isDirty,

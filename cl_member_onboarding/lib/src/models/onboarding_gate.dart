@@ -1,5 +1,9 @@
 import 'package:club_sdk_2/club_sdk_2.dart';
 
+/// What an onboarding screen tells a member its gate refuses, under
+/// `AccessDeniedView`'s own title (club_client#328).
+const onboardingStepClosedMessage = "This step isn't open to you right now.";
+
 /// Which user states are allowed to view a given onboarding screen.
 ///
 /// Package-private — only the screens inside `cl_member_onboarding`

@@ -1,5 +1,6 @@
 import 'package:cl_member_auth/cl_member_auth.dart';
 import 'package:cl_member_onboarding/cl_member_onboarding.dart';
+import 'package:cl_member_onboarding/src/models/onboarding_gate.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,14 +46,14 @@ Widget _harness({required UserPrivate user}) {
 
 void main() {
   group('Issue 433: OnboardingSubmitDocumentsScreen gate', () {
-    testWidgets('denies pending users with ErrorView', (tester) async {
+    testWidgets('denies pending users with AccessDeniedView', (tester) async {
       await tester.pumpWidget(
         _harness(
           user: _user(status: UserStatus.pending),
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Not available'), findsOneWidget);
+      expect(find.byType(AccessDeniedView), findsOneWidget);
     });
 
     testWidgets('denies registered users with a note', (tester) async {
@@ -65,7 +66,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Not available'), findsOneWidget);
+      expect(find.byType(AccessDeniedView), findsOneWidget);
     });
 
     // Positive-path (gate passes) is exercised end-to-end via the host
@@ -73,14 +74,35 @@ void main() {
     // `serverConfigProvider` which this widget-level harness doesn't
     // override, so we only assert the deny branches here.
 
-    testWidgets('denies active users with ErrorView', (tester) async {
+    testWidgets('denies active users with AccessDeniedView', (tester) async {
       await tester.pumpWidget(
         _harness(
           user: _user(status: UserStatus.active),
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Not available'), findsOneWidget);
+      expect(find.byType(AccessDeniedView), findsOneWidget);
     });
   });
+
+  testWidgets(
+    'Issue 328: a registered member with an admin review note is refused '
+    'with AccessDeniedView and the onboarding message',
+    (tester) async {
+      await tester.pumpWidget(
+        _harness(
+          user: _user(
+            status: UserStatus.registered,
+            adminReviewNote: 'please fix x',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AccessDeniedView), findsOneWidget);
+      expect(find.text(AccessDeniedView.title), findsOneWidget);
+      expect(find.text(onboardingStepClosedMessage), findsOneWidget);
+      expect(find.text('Not available'), findsNothing);
+    },
+  );
 }

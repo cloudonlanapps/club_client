@@ -26,7 +26,7 @@ Onboarding zone for users whose status is `registered` or `pending`. Mounted und
 
 ## Screens and shell
 
-Each screen watches `authStateProvider`, evaluates its gate via `onboardingGateAllows`, and renders `ErrorView` (tone: neutral) on failure. The screen then forwards `currentUser` + navigation callbacks to its same-named view. The view is presentational and never watches auth.
+Each screen watches `authStateProvider`, evaluates its gate via `onboardingGateAllows`, and refuses with `AccessDeniedView` (cl_member_auth) and the onboarding message `onboardingStepClosedMessage` when it fails (#328). The screen then forwards `currentUser` + navigation callbacks to its same-named view. The view is presentational and never watches auth.
 
 `OnboardingShell` wraps both screens via the `ShellRoute` in `cl_club_app/lib/src/router.dart`. It owns the chrome (Scaffold, app bar, footer) and **does not gate** — gating is the screen's job. Active users never reach these routes because the host router redirect bounces them before the shell is mounted.
 

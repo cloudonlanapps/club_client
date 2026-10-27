@@ -62,24 +62,6 @@ void main() {
       expect(find.text('Text from'), findsNothing);
     });
 
-    testWidgets('Issue 321: a clause with a gap left open is refused', (
-      tester,
-    ) async {
-      final state = await _pump(
-        tester,
-        items: [
-          {'clause': 'selection.attend_camp'},
-        ],
-      );
-
-      expect(state.validate(), isNull);
-      await tester.pump();
-      expect(
-        messageOn(_selections, 'Selection 1: Choose a fact for {dates}'),
-        findsOneWidget,
-      );
-    });
-
     testWidgets('Issue 321: an added selection written here comes back '
         'last', (tester) async {
       final state = await _pump(tester);

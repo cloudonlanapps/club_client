@@ -88,11 +88,6 @@ class ApplicationEditorOptions {
   /// The label catalogue, in its order.
   final List<ApplicationLabelOption> labels;
 
-  /// The library's clauses by id.
-  Map<String, ApplicationClauseOption> get clausesById => {
-    for (final c in clauses) c.id: c,
-  };
-
   /// The print languages of [template], the forms' JSON, each named.
   List<ApplicationLanguageOption> printLanguages(
     Map<String, dynamic> template,

@@ -14,15 +14,14 @@ import 'application_form_strings.dart';
 import 'application_form_validators.dart';
 import 'application_form_values.dart';
 import 'application_section_contract.dart';
-import 'application_text_sources.dart';
 import 'items/application_items_field.dart';
 import 'sections/application_note_editor.dart';
 import 'text_value/application_clause_library.dart';
 
 /// Pure-UI section editor of the notes boxed under an application's terms
-/// (a reminder, a motto): each a note clause of the library or written in
-/// each print language, with an optional attribution written here. Notes
-/// are added, removed and moved.
+/// (a reminder, a motto): each written in each print language, with an
+/// optional attribution. Notes are added, removed and moved; a note clause
+/// of the library tapped under the list is added as its filled text.
 ///
 /// [initialValues] is the template's JSON, or the part of it this section
 /// holds. The form owns no title or Save button: the host drives it
@@ -72,10 +71,6 @@ class ApplicationNotesFormState extends State<ApplicationNotesForm>
         ApplicationSectionContract<ApplicationNotesForm> {
   @override
   Widget build(BuildContext context) {
-    final sources = ApplicationTextSources(
-      facts: widget.facts,
-      clauses: widget.clauses,
-    );
     return ShadForm(
       key: formKey,
       initialValue: {
@@ -95,7 +90,10 @@ class ApplicationNotesFormState extends State<ApplicationNotesForm>
               noun: ApplicationFormStrings.noteNoun,
               addLabel: ApplicationFormStrings.addNote,
               insertBuilder: ApplicationClauseLibrary.forItems(
-                clauses: sources.clausesOf(ApplicationClauseKind.note),
+                clauses: ApplicationClauseLibrary.ofKind(
+                  widget.clauses,
+                  ApplicationClauseKind.note,
+                ),
                 facts: widget.facts,
                 languages: widget.languages,
                 fill: widget.fillClause,
@@ -106,14 +104,13 @@ class ApplicationNotesFormState extends State<ApplicationNotesForm>
               validator: (items) => ApplicationFormValidators.items(
                 items,
                 ApplicationFormStrings.noteNoun,
-                (item) => ApplicationFormValidators.note(item, sources),
+                ApplicationFormValidators.note,
               ),
               itemBuilder:
                   ({required initial, required onChanged, required enabled}) =>
                       ApplicationNoteEditor(
                         initial: initial,
                         languages: widget.languages,
-                        sources: sources,
                         enabled: enabled,
                         onChanged: onChanged,
                       ),

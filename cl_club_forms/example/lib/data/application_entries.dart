@@ -28,7 +28,6 @@ abstract final class ApplicationEntries {
         key: key,
         initialValues: ApplicationSamples.template,
         languageOptions: ApplicationSamples.languageOptions,
-        facts: ApplicationSamples.facts,
       ),
     ),
     FormDemoEntry(

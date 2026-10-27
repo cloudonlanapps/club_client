@@ -14,8 +14,6 @@ import 'application_form_fields.dart';
 import 'application_form_strings.dart';
 import 'application_form_validators.dart';
 import 'application_section_contract.dart';
-import 'application_text_mode.dart';
-import 'application_text_sources.dart';
 import 'text_value/application_clause_library.dart';
 import 'text_value/application_text_value_field.dart';
 
@@ -91,13 +89,11 @@ class ApplicationDeclarationFormState extends State<ApplicationDeclarationForm>
 
   @override
   Widget build(BuildContext context) {
-    final sources = ApplicationTextSources(
-      facts: widget.facts,
-      clauses: widget.clauses,
-    );
-    const kind = ApplicationClauseKind.declaration;
     final fill = widget.fillClause;
-    final library = sources.clausesOf(kind);
+    final library = ApplicationClauseLibrary.ofKind(
+      widget.clauses,
+      ApplicationClauseKind.declaration,
+    );
     return ShadForm(
       key: formKey,
       initialValue: {
@@ -113,19 +109,12 @@ class ApplicationDeclarationFormState extends State<ApplicationDeclarationForm>
             field: ApplicationTextValueField(
               id: ApplicationFormFields.declarationId,
               editorKey: ValueKey<int>(inserted),
-              modes: const [ApplicationTextMode.custom],
               languages: widget.languages,
-              sources: sources,
-              clauseKind: kind,
               requireEnglish: true,
               multiline: true,
               enabled: widget.enabled,
-              validator: (value) => ApplicationFormValidators.text(
-                value,
-                sources,
-                required: true,
-                kind: kind,
-              ),
+              validator: (value) =>
+                  ApplicationFormValidators.text(value, required: true),
             ),
           ),
           if (fill != null && library.isNotEmpty)

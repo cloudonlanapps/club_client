@@ -1,42 +1,22 @@
 // Issue 321: what a template still lacks before it can be saved. Save is
 // refused unless the title, the declaration and the footer line are there
 // and every one of them, each term, note and selection has text in every
-// print language; a clause has the text the library gives it, and a fact
-// prints in every language.
+// print language.
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-const Map<String, ApplicationClauseOption> _clauses = {
-  'declaration.camp': ApplicationClauseOption(
-    id: 'declaration.camp',
-    kind: ApplicationClauseKind.declaration,
-    text: {'en': 'I declare.', 'mr': 'मी घोषित करतो.'},
-  ),
-  'rule.fee': ApplicationClauseOption(
-    id: 'rule.fee',
-    kind: ApplicationClauseKind.rule,
-    heading: {'en': 'Fee', 'mr': 'शुल्क'},
-    text: {'en': 'A fee of {amount}.', 'mr': '{amount} शुल्क.'},
-  ),
-  'note.english_only': ApplicationClauseOption(
-    id: 'note.english_only',
-    kind: ApplicationClauseKind.note,
-    text: {'en': 'Only in English.'},
-  ),
-};
 
 Map<String, Object?> _complete() => {
   'languages': ['en', 'mr'],
   'title': {'en': 'Example Club Camp', 'mr': 'उदाहरण शिबिर'},
-  'declaration': {'clause': 'declaration.camp'},
+  'declaration': {'en': 'I declare.', 'mr': 'मी घोषित करतो.'},
   'form_footer': {'en': 'See you there', 'mr': 'भेटूया'},
   'header': [
     {'en': 'City Rink'},
   ],
   'terms': [
     {
-      'clause': 'rule.fee',
-      'args': {'amount': 'fee'},
+      'heading': {'en': 'Fee', 'mr': 'शुल्क'},
+      'body': {'en': 'A fee of ₹500.', 'mr': '₹500 शुल्क.'},
     },
     {
       'heading': {'en': 'Kit', 'mr': 'साहित्य'},
@@ -45,7 +25,7 @@ Map<String, Object?> _complete() => {
   ],
   'terms_notes': [
     {
-      'text': {'fact': 'motto'},
+      'text': {'en': 'Play fair.', 'mr': 'खेळ निष्पक्ष खेळा.'},
       'attribution': {'en': 'Example Club'},
     },
   ],
@@ -59,7 +39,7 @@ void main() {
     test('Issue 321: a complete template lacks nothing; header items and '
         'attributions may stay English only', () {
       expect(
-        ApplicationCompleteness.missingTexts(_complete(), clauses: _clauses),
+        ApplicationCompleteness.missingTexts(_complete()),
         isEmpty,
       );
     });
@@ -69,7 +49,7 @@ void main() {
       expect(
         ApplicationCompleteness.missingTexts({
           'languages': ['en'],
-        }, clauses: _clauses),
+        }),
         ['title', 'declaration', 'form_footer'],
       );
     });
@@ -89,14 +69,16 @@ void main() {
           },
         ]
         ..['terms_notes'] = [
-          {'clause': 'note.english_only'},
+          {
+            'text': {'en': 'Only in English.'},
+          },
         ]
         ..['selections'] = [
           {'en': 'I will attend.'},
         ];
 
       expect(
-        ApplicationCompleteness.missingTexts(template, clauses: _clauses),
+        ApplicationCompleteness.missingTexts(template),
         [
           'title',
           'terms[0].heading',
@@ -107,16 +89,6 @@ void main() {
       );
     });
 
-    test('Issue 321: a clause the library does not have is lacking', () {
-      final template = _complete()
-        ..['declaration'] = {'clause': 'declaration.unknown'};
-
-      expect(
-        ApplicationCompleteness.missingTexts(template, clauses: _clauses),
-        ['declaration'],
-      );
-    });
-
     test('Issue 321: in English alone only what is absent is lacking', () {
       final template = _complete()
         ..['languages'] = ['en']
@@ -124,7 +96,7 @@ void main() {
         ..remove('form_footer');
 
       expect(
-        ApplicationCompleteness.missingTexts(template, clauses: _clauses),
+        ApplicationCompleteness.missingTexts(template),
         ['form_footer'],
       );
     });

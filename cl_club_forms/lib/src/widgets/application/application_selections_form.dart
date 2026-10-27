@@ -16,17 +16,15 @@ import 'application_form_strings.dart';
 import 'application_form_validators.dart';
 import 'application_form_values.dart';
 import 'application_section_contract.dart';
-import 'application_text_mode.dart';
-import 'application_text_sources.dart';
 import 'items/application_items_field.dart';
 import 'text_value/application_clause_library.dart';
 import 'text_value/application_text_value_editor.dart';
 
 /// Pure-UI section editor of an application's additional selections: the
-/// lines printed with an empty checkbox the member ticks by hand, each a
-/// selection clause of the library with its gaps bound to the template's
-/// facts, or written in each print language. Selections are added,
-/// removed and moved.
+/// lines printed with an empty checkbox the member ticks by hand, each
+/// written in each print language. Selections are added, removed and
+/// moved; a selection clause of the library tapped under the list is added
+/// as its filled text.
 ///
 /// [initialValues] is the template's JSON, or the part of it this section
 /// holds. The form owns no title or Save button: the host drives it
@@ -41,12 +39,6 @@ class ApplicationSelectionsForm extends StatefulWidget {
     this.enabled = true,
     super.key,
   });
-
-  /// The modes a selection may take; a new one takes the first.
-  // A printed text is a language map only (club_sdk#76): a clause or fact
-  // reference is refused by the server. A library clause is inserted as its
-  // filled text, from the library under the list (club_client#336).
-  static const List<ApplicationTextMode> modes = [ApplicationTextMode.custom];
 
   /// What to start from, as the template's JSON holds it.
   final Map<String, dynamic> initialValues;
@@ -81,11 +73,6 @@ class ApplicationSelectionsFormState extends State<ApplicationSelectionsForm>
         ApplicationSectionContract<ApplicationSelectionsForm> {
   @override
   Widget build(BuildContext context) {
-    final sources = ApplicationTextSources(
-      facts: widget.facts,
-      clauses: widget.clauses,
-    );
-    const kind = ApplicationClauseKind.selection;
     return ShadForm(
       key: formKey,
       initialValue: {
@@ -105,7 +92,10 @@ class ApplicationSelectionsFormState extends State<ApplicationSelectionsForm>
               noun: ApplicationFormStrings.selectionNoun,
               addLabel: ApplicationFormStrings.addSelection,
               insertBuilder: ApplicationClauseLibrary.forItems(
-                clauses: sources.clausesOf(kind),
+                clauses: ApplicationClauseLibrary.ofKind(
+                  widget.clauses,
+                  ApplicationClauseKind.selection,
+                ),
                 facts: widget.facts,
                 languages: widget.languages,
                 fill: widget.fillClause,
@@ -116,20 +106,12 @@ class ApplicationSelectionsFormState extends State<ApplicationSelectionsForm>
               validator: (items) => ApplicationFormValidators.items(
                 items,
                 ApplicationFormStrings.selectionNoun,
-                (item) => ApplicationFormValidators.text(
-                  item,
-                  sources,
-                  required: true,
-                  kind: kind,
-                ),
+                (item) => ApplicationFormValidators.text(item, required: true),
               ),
               itemBuilder:
                   ({required initial, required onChanged, required enabled}) =>
                       ApplicationTextValueEditor(
-                        modes: ApplicationSelectionsForm.modes,
                         languages: widget.languages,
-                        sources: sources,
-                        clauseKind: kind,
                         requireEnglish: true,
                         initialValue: ApplicationTextValue.fromJson(initial),
                         enabled: enabled,

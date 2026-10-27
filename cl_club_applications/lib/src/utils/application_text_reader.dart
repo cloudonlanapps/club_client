@@ -1,9 +1,6 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
     show
-        ApplicationClauseOption,
-        ApplicationClauseText,
         ApplicationCustomText,
-        ApplicationFactText,
         ApplicationFormFields,
         ApplicationJoinedText,
         ApplicationTextValue;
@@ -12,14 +9,11 @@ import '../constants/application_view_strings.dart';
 import '../models/application_editor_options.dart';
 
 /// Reads an application template's texts as they print, for the editor's
-/// read mode: a clause with its gaps filled by the template's facts, a fact
-/// as its value, custom text as written. A clause the library lacks reads
-/// as its id; a gap with no fact as `{gap}`.
+/// read mode: each text as written, and a fact as its value.
 class ApplicationTextReader {
   /// A reader of [template], the forms' JSON, with the library in
   /// [options].
-  ApplicationTextReader({required this.template, required this.options})
-    : clauses = options.clausesById;
+  ApplicationTextReader({required this.template, required this.options});
 
   /// Separates the parts of a joined text.
   static const String partSeparator = ' · ';
@@ -39,9 +33,6 @@ class ApplicationTextReader {
   /// The library and catalogue.
   final ApplicationEditorOptions options;
 
-  /// The library's clauses by id.
-  final Map<String, ApplicationClauseOption> clauses;
-
   /// The print language codes.
   List<String> get languages => [
     for (final l in options.printLanguages(template)) l.code,
@@ -59,41 +50,11 @@ class ApplicationTextReader {
     return texts.join(languageSeparator);
   }
 
-  /// The heading of a rule clause [json] names, in every print language;
-  /// `''` when it names none.
-  String clauseHeading(Object? json) {
-    final value = ApplicationTextValue.fromJson(json);
-    if (value is! ApplicationClauseText) return '';
-    final heading = clauses[value.clause]?.heading ?? const {};
-    return {
-      for (final code in languages)
-        if (heading[code] ?? heading[ApplicationFormFields.english]
-            case final String text)
-          text,
-    }.join(languageSeparator);
-  }
-
   /// [value] in language [code], English where it has no [code].
   String inLanguage(ApplicationTextValue value, String code) {
     switch (value) {
       case ApplicationCustomText(:final text):
         return text[code] ?? text[ApplicationFormFields.english] ?? '';
-      case ApplicationFactText(:final fact):
-        return fact.isEmpty ? '' : factValue(fact, code);
-      case ApplicationClauseText(:final clause, :final args):
-        final option = clauses[clause];
-        if (option == null) return clause;
-        var text =
-            option.text[code] ??
-            option.text[ApplicationFormFields.english] ??
-            '';
-        for (final gap in option.gaps.keys) {
-          final fact = args[gap];
-          if (fact != null) {
-            text = text.replaceAll('{$gap}', factValue(fact, code));
-          }
-        }
-        return text;
       case ApplicationJoinedText(:final parts):
         return [
           for (final part in parts) inLanguage(part, code),

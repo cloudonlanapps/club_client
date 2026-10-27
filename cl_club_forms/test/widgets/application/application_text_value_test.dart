@@ -1,7 +1,6 @@
 // Issue 321: the form-local types of an application template. A printed
-// text is custom (a text per language), a fact, a library clause with its
-// gaps bound to facts, or several of them joined on one line; each reads
-// and writes the template's JSON.
+// text is custom (a text per language), or several of them joined on one
+// line; each reads and writes the template's JSON.
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -20,52 +19,17 @@ void main() {
       expect(value!.toJson(), {'en': 'Example Club', 'hi': 'उदाहरण क्लब'});
     });
 
-    test('Issue 321: a fact reference names its fact', () {
-      final value = ApplicationTextValue.fromJson({'fact': 'venue'});
-
-      expect(value, const ApplicationFactText('venue'));
-      expect(value!.toJson(), {'fact': 'venue'});
-    });
-
-    test('Issue 321: a clause reference keeps its gap bindings, and writes '
-        'none when it has none', () {
-      final bound = ApplicationTextValue.fromJson({
-        'clause': 'rule.matches',
-        'args': {'dates': 'matches', 'venue': 'venue'},
-      });
-      final plain = ApplicationTextValue.fromJson({'clause': 'note.follow'});
-
-      expect(
-        bound,
-        const ApplicationClauseText('rule.matches', {
-          'dates': 'matches',
-          'venue': 'venue',
-        }),
-      );
-      expect(bound!.toJson(), {
-        'clause': 'rule.matches',
-        'args': {'dates': 'matches', 'venue': 'venue'},
-      });
-      expect(plain!.toJson(), {'clause': 'note.follow'});
-    });
-
     test('Issue 321: a list is a joined line of its parts', () {
       final value = ApplicationTextValue.fromJson([
-        {
-          'clause': 'header.camp',
-          'args': {'dates': 'camp'},
-        },
-        {'fact': 'phone'},
+        {'en': 'Camp: 16–20 Nov'},
+        {'en': 'Phone: 98765 43210'},
       ]);
 
       expect(value, isA<ApplicationJoinedText>());
       expect((value! as ApplicationJoinedText).parts, hasLength(2));
       expect(value.toJson(), [
-        {
-          'clause': 'header.camp',
-          'args': {'dates': 'camp'},
-        },
-        {'fact': 'phone'},
+        {'en': 'Camp: 16–20 Nov'},
+        {'en': 'Phone: 98765 43210'},
       ]);
     });
 

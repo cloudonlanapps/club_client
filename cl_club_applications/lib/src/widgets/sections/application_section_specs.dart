@@ -17,7 +17,6 @@ abstract final class ApplicationSectionSpecs {
                   key: key,
                   initialValues: t,
                   languageOptions: o.languageOptions,
-                  facts: o.factTypes(t),
                   enabled: enabled,
                 ),
             save: ApplicationFormSubmit.updateHeading,

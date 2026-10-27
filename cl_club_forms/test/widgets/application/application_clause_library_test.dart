@@ -84,8 +84,8 @@ Future<void> _tapClause(WidgetTester tester, String text) async {
 /// reference anywhere in it.
 bool _textOnly(Object? value) => switch (value) {
   final Map<Object?, Object?> map =>
-    !map.containsKey(ApplicationTextValue.clauseKey) &&
-        !map.containsKey(ApplicationTextValue.factKey) &&
+    !map.containsKey('clause') &&
+        !map.containsKey('fact') &&
         map.values.every(_textOnly),
   final List<Object?> list => list.every(_textOnly),
   _ => value is String,

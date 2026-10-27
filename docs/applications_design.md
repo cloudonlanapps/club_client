@@ -126,11 +126,11 @@ text sits in JSON columns, so no further table is needed.
 
 | `facts` | the values that change each time, typed once: dates, date ranges, times, amounts, names (venue, city, phone), choices (on-ice / inline) |
 
-Every printed text is either **custom** — a map of language code to text
-(`{"en": "...", "mr": "..."}`), one editor input per print language — or a
-**reference**: a library clause (§2.2.1) whose gaps name facts, or a fact on
-its own. The header, declaration, rules, selections and closing notes are
-normally references; the organisation, title and footer line are custom.
+Every printed text is a map of language code to text (`{"en": "...", "mr":
+"..."}`), one editor input per print language; a header item may be a list
+of them, one per line. The server refuses a `{"clause": …}` or `{"fact": …}`
+reference (club_sdk 1.3.0, #342, #354): a library clause (§2.2.1) is
+inserted as its text, filled from the facts (#336).
 
 #### Duplicate
 
@@ -178,9 +178,14 @@ is a sentence written in English, Marathi and Hindi, with gaps for facts.
            "mr": "{dates} दरम्यान {venue} येथे स्पर्धेचे सामने होतील.", "hi": "…"}}
 ```
 
-A template uses it as `{"clause": "rule.matches", "args": {"dates":
-"matches", "venue": "venue"}}`, naming its facts. One date typed under
-`facts` fills the header, the rules and a selection alike.
+The editor lists the library's clauses of each kind under a section's
+list; tapping one has the server fill its gaps from the template's facts
+(`POST /v1/applications/clauses/fill`) and inserts the filled text, in the
+print languages, as a new item that is then edited like any other. A gap no
+fact of its type fills is said under the list, and nothing is inserted.
+Facts stay on the template for this: one date typed under `facts` fills
+each clause inserted after it. A clause already inserted keeps its text
+when a fact changes.
 
 - **Gaps hold only dates, times, numbers and names — never nouns.** Marathi
   and Hindi inflect a noun inside a sentence (शिबिर → शिबिरातील, स्पर्धा →
@@ -193,14 +198,10 @@ A template uses it as `{"clause": "rule.matches", "args": {"dates":
   day ("6:00 am" / "सकाळी 6:00"); an amount with Indian grouping; choices
   joined with each language's "and". A name prints as typed, or as given for
   a language (`{"en": "Pune", "mr": "पुणे"}`).
-- **Checked on save:** an unknown clause, a missing fact, or a fact of the
-  wrong type for a gap refuses the save, naming it.
-- **Custom clauses** (a rule, selection or note written in each language)
-  stay possible for anything the library lacks; save refuses one missing a
-  print language. A custom clause that keeps coming back is added to the
-  library in a server release.
-- The editor lists the clauses of each kind with their text and gaps, and
-  offers the template's facts of the right type for each gap.
+- **Written text** (a rule, selection or note typed in each language) is
+  there for anything the library lacks; save refuses one missing a print
+  language. One that keeps coming back is added to the library in a server
+  release.
 
 The library's text taken from the club's existing paper form is word for word; each
 clause's `_review` lists what still needs a fluent reader.
@@ -318,7 +319,7 @@ will get.
 | POST | `/v1/applications/{id}/save` · `/publish` · `/unpublish` · `/revert` | admin, the moves of §2.1.1 |
 | GET | `/v1/applications/{id}/preview` | admin, any state: the sample member's form |
 | GET | `/v1/applications/labels` | admin: the label catalogue, to pre-fill the editor |
-| GET | `/v1/applications/clauses` | admin: the clause library, for the editor's pickers |
+| GET | `/v1/applications/clauses` | admin: the clause library, for the editor's lists |
 | POST | `/v1/applications/{id}/duplicate` | admin: a new draft copied from any application |
 | GET | `/v1/applications/{id}/form` | the signed-in member, own form |
 | GET | `/v1/applications/{id}/form/{username}` | admin |

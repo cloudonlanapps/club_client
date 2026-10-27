@@ -15,15 +15,14 @@ import 'application_form_strings.dart';
 import 'application_form_validators.dart';
 import 'application_form_values.dart';
 import 'application_section_contract.dart';
-import 'application_text_sources.dart';
 import 'items/application_items_field.dart';
 import 'sections/application_term_editor.dart';
 import 'text_value/application_clause_library.dart';
 
 /// Pure-UI section editor of an application's terms, printed from page 2:
-/// each a rule clause of the library with its gaps bound to the template's
-/// facts, or a heading and a text written in each print language. Terms
-/// are added, removed and moved.
+/// each a heading and a text written in each print language. Terms are
+/// added, removed and moved; a rule clause of the library tapped under the
+/// list is added as its filled text.
 ///
 /// [initialValues] is the template's JSON, or the part of it this section
 /// holds. The form owns no title or Save button: the host drives it
@@ -64,18 +63,13 @@ class ApplicationTermsForm extends StatefulWidget {
 }
 
 /// State of [ApplicationTermsForm]. Its value is the list of terms under
-/// `termsId`, each as the template holds it: a clause reference, or a
-/// `heading` and a `body`.
+/// `termsId`, each as the template holds it: a `heading` and a `body`.
 class ApplicationTermsFormState extends State<ApplicationTermsForm>
     with
         FormContract<ApplicationTermsForm>,
         ApplicationSectionContract<ApplicationTermsForm> {
   @override
   Widget build(BuildContext context) {
-    final sources = ApplicationTextSources(
-      facts: widget.facts,
-      clauses: widget.clauses,
-    );
     return ShadForm(
       key: formKey,
       initialValue: {
@@ -95,7 +89,10 @@ class ApplicationTermsFormState extends State<ApplicationTermsForm>
               noun: ApplicationFormStrings.termNoun,
               addLabel: ApplicationFormStrings.addTerm,
               insertBuilder: ApplicationClauseLibrary.forItems(
-                clauses: sources.clausesOf(ApplicationClauseKind.rule),
+                clauses: ApplicationClauseLibrary.ofKind(
+                  widget.clauses,
+                  ApplicationClauseKind.rule,
+                ),
                 facts: widget.facts,
                 languages: widget.languages,
                 fill: widget.fillClause,
@@ -110,14 +107,13 @@ class ApplicationTermsFormState extends State<ApplicationTermsForm>
               validator: (items) => ApplicationFormValidators.items(
                 items,
                 ApplicationFormStrings.termNoun,
-                (item) => ApplicationFormValidators.term(item, sources),
+                ApplicationFormValidators.term,
               ),
               itemBuilder:
                   ({required initial, required onChanged, required enabled}) =>
                       ApplicationTermEditor(
                         initial: initial,
                         languages: widget.languages,
-                        sources: sources,
                         enabled: enabled,
                         onChanged: onChanged,
                       ),

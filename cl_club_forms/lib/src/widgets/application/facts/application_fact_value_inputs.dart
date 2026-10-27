@@ -7,8 +7,6 @@ import '../../../models/application/application_fact_type.dart';
 import '../../../models/application/application_language_option.dart';
 import '../../form/labeled_form_row.dart';
 import '../application_form_strings.dart';
-import '../application_text_mode.dart';
-import '../application_text_sources.dart';
 import '../text_value/application_text_value_editor.dart';
 import 'application_choices_input.dart';
 import 'application_date_input.dart';
@@ -53,9 +51,7 @@ class ApplicationFactValueInputs extends StatelessWidget {
         );
     return switch (e.type) {
       ApplicationFactType.name => ApplicationTextValueEditor(
-        modes: const [ApplicationTextMode.custom],
         languages: languages,
-        sources: ApplicationTextSources(),
         requireEnglish: true,
         initialValue: e.nameValue,
         enabled: enabled,

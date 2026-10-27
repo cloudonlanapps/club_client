@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'application_text_value.dart';
 
 /// Several texts printed on one line, as a header item may be: each part is
-/// custom, a fact or a clause.
+/// written in each print language.
 @immutable
 class ApplicationJoinedText extends ApplicationTextValue {
   const ApplicationJoinedText(this.parts);

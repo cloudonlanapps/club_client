@@ -121,24 +121,6 @@ void main() {
       });
     });
 
-    testWidgets('Issue 321: a fact the template does not have is refused', (
-      tester,
-    ) async {
-      final state = await _pump(
-        tester,
-        items: [
-          {'fact': 'city'},
-        ],
-      );
-
-      expect(state.validate(), isNull);
-      await tester.pump();
-      expect(
-        messageOn(_header, 'Item 1: There is no fact "city"'),
-        findsOneWidget,
-      );
-    });
-
     testWidgets('Issue 321: a refusal shows under the list or inline; off, '
         'nothing takes input', (tester) async {
       final state = await _pump(tester);

@@ -1,5 +1,5 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show ApplicationFactType, ApplicationFormFields, ApplicationTextValue;
+    show ApplicationFactType, ApplicationFormFields;
 
 import '../constants/application_view_strings.dart';
 import '../models/application_section.dart';
@@ -136,15 +136,10 @@ abstract final class ApplicationSectionLines {
     Map<Object?, Object?> term,
     ApplicationTextReader reader,
   ) {
-    final isClause = term.containsKey(ApplicationTextValue.clauseKey);
-    final heading = isClause
-        ? reader.clauseHeading(term)
-        : reader.read(term[ApplicationFormFields.headingKey]);
+    final heading = reader.read(term[ApplicationFormFields.headingKey]);
     return (
       label: heading.isEmpty ? ApplicationViewStrings.term(index + 1) : heading,
-      value: reader.read(
-        isClause ? term : term[ApplicationFormFields.bodyKey],
-      ),
+      value: reader.read(term[ApplicationFormFields.bodyKey]),
     );
   }
 

@@ -92,15 +92,33 @@ PdfAction pdfActionOf(
   ),
 };
 
+/// What [appPdfAction] hands a PDF's bytes to in place of the platform,
+/// when set: the UI integration suite's stand-in, so a run on the desktop
+/// never launches the system's PDF viewer and can check the bytes the
+/// button fetched (club_client#341). Null in the app, which then does what
+/// the platform's action does.
+@visibleForTesting
+PdfBytesHandler? debugPdfBytesHandler;
+
+/// [action], handing its bytes to [debugPdfBytesHandler] while one is set.
+PdfAction withDebugPdfBytesHandler(PdfAction action) => PdfAction(
+  label: action.label,
+  icon: action.icon,
+  run: (bytes, fileName) =>
+      (debugPdfBytesHandler ?? action.run)(bytes, fileName),
+);
+
 /// The PDF action of the platform the app runs on, which every PDF button
 /// of the app's packages is given; worked out once, on first use.
-final PdfAction appPdfAction = pdfActionOf(
-  pdfActionKindFor(
-    web: kIsWeb,
-    platform: defaultTargetPlatform,
-    canShareFiles: kIsWeb && pdf_platform.canShareFiles(),
+final PdfAction appPdfAction = withDebugPdfBytesHandler(
+  pdfActionOf(
+    pdfActionKindFor(
+      web: kIsWeb,
+      platform: defaultTargetPlatform,
+      canShareFiles: kIsWeb && pdf_platform.canShareFiles(),
+    ),
+    share: pdf_platform.sharePdfBytes,
+    download: pdf_platform.downloadPdfBytes,
+    open: pdf_platform.openPdfBytes,
   ),
-  share: pdf_platform.sharePdfBytes,
-  download: pdf_platform.downloadPdfBytes,
-  open: pdf_platform.openPdfBytes,
 );

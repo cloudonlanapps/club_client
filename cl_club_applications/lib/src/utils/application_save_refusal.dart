@@ -2,6 +2,7 @@ import 'package:club_sdk_2/club_sdk_2.dart'
     show
         ApplicationDoesNotFitException,
         ApplicationIncompleteException,
+        ApplicationMissingText,
         SdkErrorCode,
         ServerException;
 
@@ -10,18 +11,21 @@ import 'application_places.dart';
 
 /// What the state card shows inline when the server refuses to save a
 /// template for something about the template itself (form rule 20): texts
-/// missing a language, a form that does not fit page 1, a broken clause or
-/// fact reference. Null for any other failure, which is a toast.
+/// missing a language, or a form that does not fit page 1. Null for any
+/// other failure, which is a toast.
 String? applicationSaveRefusal(Object error) => switch (error) {
-  ApplicationIncompleteException(:final missing, :final language) =>
+  ApplicationIncompleteException(
+    missing: [final ApplicationMissingText first, ...final rest],
+  ) =>
     ApplicationViewStrings.incomplete(
-      ApplicationViewStrings.languageNames[language] ?? language ?? '',
-      ApplicationPlaces.join(missing),
+      ApplicationPlaces.label(first.field),
+      first.languages
+          .map((code) => ApplicationViewStrings.languageNames[code] ?? code)
+          .join(', '),
+      rest.length,
     ),
   ApplicationDoesNotFitException(:final overflowPt) =>
     ApplicationViewStrings.doesNotFit(overflowPt),
-  ServerException(code: SdkErrorCode.applicationInvalidReference) =>
-    ApplicationViewStrings.invalidReference,
   _ => null,
 };
 

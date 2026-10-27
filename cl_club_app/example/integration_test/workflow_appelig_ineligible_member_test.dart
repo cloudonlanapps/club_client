@@ -111,7 +111,7 @@ Future<void> _openApplications(WidgetTester tester) async {
 }
 
 /// A text printed in English only.
-ApplicationText _english(String text) => ApplicationText.custom({'en': text});
+ApplicationText _english(String text) => ApplicationText({'en': text});
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -199,7 +199,7 @@ void main() {
         // Only when the UI cleanup did not run to the end.
         final left = await admin.applications.listApplications(limit: 100);
         for (final t in left.items) {
-          if (t.content.title?.texts?['en'] != _kTitle) continue;
+          if (t.content.title?.texts['en'] != _kTitle) continue;
           if (t.status == ApplicationStatus.published) {
             await admin.applications.unpublishApplication(t.id);
           }

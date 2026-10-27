@@ -62,17 +62,11 @@ void main() {
       }
       expect(find.byType(SectionEditButton), findsNWidgets(9));
       expect(
-        find.text('A fee of 500 is payable. / 500 शुल्क.'),
+        find.text('The fee is 500 / ५००'),
         findsOneWidget,
-        reason: 'a clause reads with its facts filled in',
+        reason: 'a text reads in each print language',
       );
-      expect(
-        find.text(
-          'Camp: 1 Nov 2026 – 15 Nov 2026 / शिबिर: 1 Nov 2026 – '
-          '15 Nov 2026',
-        ),
-        findsOneWidget,
-      );
+      expect(find.text('Camp: 1-15 Nov / शिबिर'), findsOneWidget);
       expect(find.text(ApplicationViewStrings.noLayout), findsOneWidget);
     });
 
@@ -94,7 +88,7 @@ void main() {
         tester,
         content: ApplicationSamples.content.copyWith(
           formFooter: () => null,
-          title: () => const ApplicationText.custom({'en': 'Trial'}),
+          title: () => const ApplicationText({'en': 'Trial'}),
         ),
       );
       expect(
@@ -123,14 +117,19 @@ void main() {
       final master = await _pump(tester)
         ..failWith = const ApplicationIncompleteException(
           message: 'incomplete',
-          missing: ['formFooter', 'termsNotes[1].text'],
-          language: 'mr',
+          missing: [
+            ApplicationMissingText(field: 'formFooter', languages: ['mr']),
+            ApplicationMissingText(
+              field: 'termsNotes[1].text',
+              languages: ['en', 'mr'],
+            ),
+          ],
         );
       _step(tester, 'save').onPressed!();
       await tester.pumpAndSettle();
       expect(
         find.text(
-          ApplicationViewStrings.incomplete('Marathi', 'Footer line, Note 2'),
+          ApplicationViewStrings.incomplete('Footer line', 'Marathi', 1),
         ),
         findsOneWidget,
       );

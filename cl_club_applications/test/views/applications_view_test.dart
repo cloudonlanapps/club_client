@@ -16,7 +16,7 @@ Map<int, ApplicationTemplate> _all() => {
     id: 2,
     status: ApplicationStatus.published,
     content: ApplicationSamples.content.copyWith(
-      title: () => const ApplicationText.custom({'en': 'Season 2026'}),
+      title: () => const ApplicationText({'en': 'Season 2026'}),
     ),
   ),
   3: ApplicationSamples.template(

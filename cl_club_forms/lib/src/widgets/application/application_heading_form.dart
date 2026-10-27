@@ -151,10 +151,6 @@ class ApplicationHeadingFormState extends State<ApplicationHeadingForm>
             label: ApplicationFormStrings.subtitle,
             field: text(
               ApplicationFormFields.subtitleId,
-              modes: const [
-                ApplicationTextMode.custom,
-                ApplicationTextMode.fact,
-              ],
             ),
           ),
           LabeledFormRow(

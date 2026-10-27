@@ -70,10 +70,10 @@ class _HeldUsers extends ClUsersMasterNotifier {
     Address? Function()? address,
     bool? isPublicProfile,
     String? Function()? clubDistrict,
-    String? Function()? preferredPosition,
+    List<String>? preferredPositions,
     String? Function()? pastExperience,
     String? Function()? nationality,
-    String? Function()? preferredLanguage,
+    List<String>? preferredLanguages,
     Guardian? Function()? guardian,
     DateTime? Function()? membershipDateUtc,
   }) async {

@@ -1,6 +1,6 @@
 // Issue 321, ApplicationTermsForm: the terms printed from page 2, each a
-// rule clause of the library with its gaps bound to facts, or a heading
-// and a text written in each print language.
+// heading and a text written in each print language (Issue 342: a printed
+// text is text only).
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,8 +15,8 @@ const String _terms = ApplicationFormFields.termsId;
 
 List<Object?> _items() => [
   {
-    'clause': 'rule.fee',
-    'args': {'amount': 'fee'},
+    'heading': {'en': 'Fee', 'mr': 'शुल्क'},
+    'body': {'en': 'A fee of 500 is payable.'},
   },
   {
     'heading': {'en': 'Kit', 'mr': 'साहित्य'},
@@ -48,26 +48,21 @@ Future<ApplicationTermsFormState> _pump(
 
 void main() {
   group('Issue 321: ApplicationTermsForm', () {
-    testWidgets('Issue 321: a rule shows by its heading and text; a term '
-        'written here has a heading and a text per language', (tester) async {
+    testWidgets('Issue 342: each term has a heading and a text per '
+        'language', (tester) async {
       await _pump(tester);
 
       expect(fieldIds(tester), [_terms]);
       expect(rowLabels(tester), [
         'Terms',
-        'Text from',
-        'Clause',
-        '{amount}: amount',
-        'Text from',
-        'Heading (English) *',
-        'Heading (Marathi)',
-        'Text (English) *',
-        'Text (Marathi)',
+        for (var i = 0; i < 2; i++) ...[
+          'Heading (English) *',
+          'Heading (Marathi)',
+          'Text (English) *',
+          'Text (Marathi)',
+        ],
       ]);
-      expect(
-        find.text('Fee — A fee of {amount} is payable.'),
-        findsNWidgets(2),
-      );
+      expect(find.text('A fee of 500 is payable.'), findsOneWidget);
       expectLabelsAreRows(tester);
       expectNoHostChrome(tester, allowedButtonTexts: const {'Add term'});
     });
@@ -80,18 +75,19 @@ void main() {
       expect(state.validate(), {_terms: _items()});
     });
 
-    testWidgets('Issue 321: an added term is a rule clause to choose, or is '
-        'written here', (tester) async {
+    testWidgets('Issue 342: an added term is written here', (tester) async {
       final state = await _pump(tester);
 
       await tapIn(tester, _terms, find.text('Add term'));
       expect(state.validate(), isNull);
       await tester.pump();
-      expect(messageOn(_terms, 'Term 3: Choose a clause'), findsOneWidget);
+      expect(
+        messageOn(_terms, 'Term 3: Heading: Needs text in English'),
+        findsOneWidget,
+      );
 
-      await pickIn(tester, _terms, 4, 'Written here');
-      await typeIn(tester, _terms, 4, 'Travel');
-      await typeIn(tester, _terms, 6, 'Arrange your own travel.');
+      await typeIn(tester, _terms, 8, 'Travel');
+      await typeIn(tester, _terms, 10, 'Arrange your own travel.');
 
       expect(state.isDirty, isTrue);
       expect((state.validate()![_terms] as List).last, {
@@ -100,16 +96,11 @@ void main() {
       });
     });
 
-    testWidgets('Issue 321: only rules are offered', (tester) async {
+    testWidgets('Issue 342: no clause is offered', (tester) async {
       await _pump(tester);
 
-      await openIn(tester, _terms, 1);
-
-      expect(
-        find.text('Camp — A camp runs {dates} at {venue}.'),
-        findsOneWidget,
-      );
-      expect(find.text('Follow the rules above.'), findsNothing);
+      expect(selectsIn(_terms), findsNothing);
+      expect(find.text('Text from'), findsNothing);
     });
 
     testWidgets('Issue 321: a term written here needs its text', (

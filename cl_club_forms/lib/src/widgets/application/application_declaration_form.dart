@@ -3,7 +3,6 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../models/application/application_clause_kind.dart';
 import '../../models/application/application_clause_option.dart';
-import '../../models/application/application_clause_text.dart';
 import '../../models/application/application_fact_type.dart';
 import '../../models/application/application_language_option.dart';
 import '../../models/application/application_text_value.dart';
@@ -79,11 +78,9 @@ class ApplicationDeclarationFormState extends State<ApplicationDeclarationForm>
     return ShadForm(
       key: formKey,
       initialValue: {
-        ApplicationFormFields.declarationId:
-            ApplicationTextValue.fromJson(
-              widget.initialValues[ApplicationFormFields.declarationId],
-            ) ??
-            const ApplicationClauseText(''),
+        ApplicationFormFields.declarationId: ApplicationTextValue.fromJson(
+          widget.initialValues[ApplicationFormFields.declarationId],
+        ),
       },
       child: FormBody(
         error: formError,
@@ -92,10 +89,8 @@ class ApplicationDeclarationFormState extends State<ApplicationDeclarationForm>
             label: ApplicationFormStrings.declaration,
             field: ApplicationTextValueField(
               id: ApplicationFormFields.declarationId,
-              modes: const [
-                ApplicationTextMode.clause,
-                ApplicationTextMode.custom,
-              ],
+              // Written here only: see club_client#336.
+              modes: const [ApplicationTextMode.custom],
               languages: widget.languages,
               sources: sources,
               clauseKind: kind,

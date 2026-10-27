@@ -3,8 +3,7 @@
 ## 1.3.0
 
 Built against club_server 1.3.0. club_sdk_2 is pinned at cloudonlanapps/club_sdk
-b64a0f3 (club_sdk#67), the extended profile and applications commit; the pin
-moves to the SDK's 1.3.0 commit separately.
+be5d638, the SDK's 1.3.0 commit (#343).
 
 - Extended profile, shown while the server reports it on: Sports details,
   Background and Guardian sections on a member's profile, the membership

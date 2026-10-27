@@ -1,5 +1,6 @@
 // Issue 321, ApplicationSelectionsForm: the additional selections a member
-// ticks by hand, each a selection clause of the library or written here.
+// ticks by hand, each written here in each print language (Issue 342: a
+// printed text is text only).
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,10 +14,7 @@ import 'application_section_harness.dart';
 const String _selections = ApplicationFormFields.selectionsId;
 
 List<Object?> _items() => [
-  {
-    'clause': 'selection.attend_camp',
-    'args': {'dates': 'camp'},
-  },
+  {'en': 'I will attend the camp.'},
   {'en': 'I bring my own kit.', 'mr': 'मी माझे साहित्य आणीन.'},
 ];
 
@@ -56,15 +54,12 @@ void main() {
       expectNoHostChrome(tester, allowedButtonTexts: const {'Add selection'});
     });
 
-    testWidgets('Issue 321: only selection clauses are offered', (
-      tester,
-    ) async {
+    testWidgets('Issue 342: no clause is offered: each selection is '
+        'written here', (tester) async {
       await _pump(tester);
 
-      await openIn(tester, _selections, 1);
-
-      expect(find.text('Fee — A fee of {amount} is payable.'), findsNothing);
-      expect(find.text('Camp: {dates}'), findsNothing);
+      expect(selectsIn(_selections), findsNothing);
+      expect(find.text('Text from'), findsNothing);
     });
 
     testWidgets('Issue 321: a clause with a gap left open is refused', (
@@ -90,8 +85,7 @@ void main() {
       final state = await _pump(tester);
 
       await tapIn(tester, _selections, find.text('Add selection'));
-      await pickIn(tester, _selections, 4, 'Written here');
-      await typeIn(tester, _selections, 2, 'I can travel.');
+      await typeIn(tester, _selections, 4, 'I can travel.');
 
       expect(state.isDirty, isTrue);
       expect((state.validate()![_selections] as List).last, {

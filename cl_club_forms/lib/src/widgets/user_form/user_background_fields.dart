@@ -39,7 +39,7 @@ class UserBackgroundFields extends StatelessWidget {
         LabeledFormRow(
           label: UserFormStrings.preferredLanguage,
           field: UserOptionalChoiceField(
-            id: UserFormFields.preferredLanguageId,
+            id: UserFormFields.preferredLanguagesId,
             enabled: enabled,
             options: {for (final language in languages) language: language},
           ),

@@ -65,10 +65,10 @@ class _FakeUsers extends Fake implements UserSource {
     Address? Function()? address,
     bool? isPublicProfile,
     String? Function()? clubDistrict,
-    String? Function()? preferredPosition,
+    List<String>? preferredPositions,
     String? Function()? pastExperience,
     String? Function()? nationality,
-    String? Function()? preferredLanguage,
+    List<String>? preferredLanguages,
     Guardian? Function()? guardian,
     DateTime? Function()? membershipDateUtc,
   }) async {
@@ -76,10 +76,10 @@ class _FakeUsers extends Fake implements UserSource {
       if (firstName != null) 'firstName': firstName(),
       if (phone != null) 'phone': phone(),
       if (clubDistrict != null) 'clubDistrict': clubDistrict(),
-      if (preferredPosition != null) 'preferredPosition': preferredPosition(),
+      'preferredPositions': ?preferredPositions,
       if (pastExperience != null) 'pastExperience': pastExperience(),
       if (nationality != null) 'nationality': nationality(),
-      if (preferredLanguage != null) 'preferredLanguage': preferredLanguage(),
+      'preferredLanguages': ?preferredLanguages,
       if (guardian != null) 'guardian': guardian(),
       if (membershipDateUtc != null) 'membershipDateUtc': membershipDateUtc(),
     });
@@ -229,7 +229,7 @@ void main() {
             .updateUser(
               'viewer',
               clubDistrict: () => 'Pune',
-              preferredPosition: () => 'Forward',
+              preferredPositions: ['Forward'],
               pastExperience: () => null,
               guardian: () => const Guardian(name: 'Asha'),
               membershipDateUtc: () => DateTime.utc(2026, 4),
@@ -237,7 +237,7 @@ void main() {
 
         expect(users.updates.single, {
           'clubDistrict': 'Pune',
-          'preferredPosition': 'Forward',
+          'preferredPositions': ['Forward'],
           'pastExperience': null,
           'guardian': const Guardian(name: 'Asha'),
           'membershipDateUtc': DateTime.utc(2026, 4),

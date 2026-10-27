@@ -92,11 +92,14 @@ class FakeApplicationsMaster extends ClApplicationsMasterNotifier {
   Future<Uint8List> downloadPreview(int id) => _pdf('preview $id');
 
   @override
-  Future<Uint8List> downloadOwnForm(int id) => _pdf('own $id');
+  Future<Uint8List> downloadOwnForm(int id, {int? category}) => _pdf('own $id');
 
   @override
-  Future<Uint8List> downloadMemberForm(int id, String username) =>
-      _pdf('member $id $username');
+  Future<Uint8List> downloadMemberForm(
+    int id,
+    String username, {
+    int? category,
+  }) => _pdf('member $id $username');
 }
 
 /// A member's identity documents with no server.

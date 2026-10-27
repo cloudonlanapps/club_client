@@ -3,7 +3,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../models/application/application_clause_kind.dart';
 import '../../models/application/application_clause_option.dart';
-import '../../models/application/application_clause_text.dart';
+import '../../models/application/application_custom_text.dart';
 import '../../models/application/application_fact_type.dart';
 import '../../models/application/application_language_option.dart';
 import '../form/form_body.dart';
@@ -87,7 +87,7 @@ class ApplicationHeaderFormState extends State<ApplicationHeaderForm>
               enabled: widget.enabled,
               noun: ApplicationFormStrings.headerItemNoun,
               addLabel: ApplicationFormStrings.addHeaderItem,
-              newItem: () => const ApplicationClauseText('').toJson(),
+              newItem: () => ApplicationCustomText.none.toJson(),
               validator: (items) => ApplicationFormValidators.items(
                 items,
                 ApplicationFormStrings.headerItemNoun,

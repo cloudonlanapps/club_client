@@ -1,6 +1,6 @@
-// Issue 321, ApplicationNotesForm: the notes boxed under the terms, each a
-// note clause of the library or written here, with an optional
-// attribution written here.
+// Issue 321, ApplicationNotesForm: the notes boxed under the terms, each
+// written here with an optional attribution (Issue 342: a printed text is
+// text only).
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -24,7 +24,7 @@ Widget _form({
         items ??
         [
           {
-            'text': {'clause': 'note.follow_rules'},
+            'text': {'en': 'Follow the rules above.'},
           },
         ],
   },
@@ -52,8 +52,8 @@ void main() {
       expect(fieldIds(tester), [_notes]);
       expect(rowLabels(tester), [
         'Notes',
-        'Text from',
-        'Clause',
+        'English *',
+        'Marathi',
         'Attribution (English)',
         'Attribution (Marathi)',
       ]);
@@ -66,7 +66,7 @@ void main() {
       final state = await _pump(
         tester,
         items: [
-          {'clause': 'note.follow_rules'},
+          {'en': 'Follow the rules above.'},
           {
             'text': {'en': 'Play fair.', 'mr': 'खिलाडूवृत्ती ठेवा.'},
             'attribution': {'en': '— Example Club'},
@@ -78,7 +78,7 @@ void main() {
       expect(state.validate(), {
         _notes: [
           {
-            'text': {'clause': 'note.follow_rules'},
+            'text': {'en': 'Follow the rules above.'},
           },
           {
             'text': {'en': 'Play fair.', 'mr': 'खिलाडूवृत्ती ठेवा.'},
@@ -93,13 +93,13 @@ void main() {
     ) async {
       final state = await _pump(tester);
 
-      await typeIn(tester, _notes, 0, '— Example Club');
+      await typeIn(tester, _notes, 2, '— Example Club');
 
       expect(state.isDirty, isTrue);
       expect(state.validate(), {
         _notes: [
           {
-            'text': {'clause': 'note.follow_rules'},
+            'text': {'en': 'Follow the rules above.'},
             'attribution': {'en': '— Example Club'},
           },
         ],
@@ -113,7 +113,7 @@ void main() {
         tester,
         items: [
           {
-            'text': {'clause': 'note.follow_rules'},
+            'text': {'en': 'Follow the rules above.'},
             'attribution': {'mr': 'क्लब'},
           },
         ],

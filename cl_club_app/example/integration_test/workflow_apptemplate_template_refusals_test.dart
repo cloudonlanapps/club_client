@@ -5,10 +5,10 @@
 // its reason, and Save too while texts are missing, which the State card
 // lists. A title cleared of its English is refused on its field, and the
 // draft keeps its title and stays a draft. A declaration the server refuses
-// at its schema (a library clause reference: the server keeps custom text
-// only since club_server#107, while the editor still offers clauses, #336)
-// shows the server's reason on the declaration field, with no toast, and
-// nothing is stored. The admin then deletes the draft.
+// at its schema (a text in a language outside the label catalogue, which
+// the editor keeps as it was given, as it keeps any language it does not
+// show) shows the server's reason on the declaration field, with no toast,
+// and nothing is stored. The admin then deletes the draft.
 //
 // Fixtures (all `workflow_apptemplate_` prefixed): the draft, created and
 // deleted through the UI. The admin is the stack's sudo user.
@@ -18,7 +18,7 @@
 //       workflow_apptemplate_template_refusals_test.dart
 
 import 'package:cl_club_forms/cl_club_forms.dart'
-    show ApplicationClauseText, ApplicationFormFields;
+    show ApplicationCustomText, ApplicationFormFields;
 import 'package:cl_member_zone/src/widgets/sidebar/sidebar_item.dart'
     show SidebarItem;
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -50,8 +50,8 @@ const _kSudoPassword = String.fromEnvironment('SUDO_PASSWORD');
 const _kTitle = 'workflow_apptemplate Trial';
 const _kApplications = 'Applications';
 
-/// The declaration clause of the server's library the test refers to.
-const _kClause = 'declaration.trial';
+/// A language code outside the server's label catalogue.
+const _kUnknownLanguage = 'zz';
 
 /// What a printed text without its English is refused with
 /// (`ApplicationFormStrings.englishRequired`).
@@ -83,7 +83,7 @@ ApplicationTemplate _draft(WidgetTester tester) => container(tester)
     .read(clApplicationsMasterProvider)
     .value!
     .values
-    .firstWhere((t) => t.content.title?.texts?['en'] == _kTitle);
+    .firstWhere((t) => t.content.title?.texts['en'] == _kTitle);
 
 /// Presses the Save of the editor open in [card], which the editor or the
 /// server refuses: it stays open, with no toast.
@@ -158,7 +158,7 @@ void main() {
       // Only when the UI cleanup did not run to the end.
       final left = await admin.applications.listApplications(limit: 100);
       for (final t in left.items) {
-        if (t.content.title?.texts?['en'] != _kTitle) continue;
+        if (t.content.title?.texts['en'] != _kTitle) continue;
         if (t.status == ApplicationStatus.published) {
           await admin.applications.unpublishApplication(t.id);
         }
@@ -269,7 +269,7 @@ void main() {
       reason: 'the refusal shows on the title',
     );
     await _cancelIn(tester, heading);
-    expect(_draft(tester).content.title?.texts?['en'], _kTitle);
+    expect(_draft(tester).content.title?.texts['en'], _kTitle);
     expect(_draft(tester).status, ApplicationStatus.draft);
     expect(find.text('Draft'), findsOneWidget);
     expect(tester.widget<ActionButton>(_step('publish')).enabled, isFalse);
@@ -286,9 +286,10 @@ void main() {
               .first,
         )
         .setValue({
-          ApplicationFormFields.declarationId: const ApplicationClauseText(
-            _kClause,
-          ),
+          ApplicationFormFields.declarationId: const ApplicationCustomText({
+            'en': 'workflow_apptemplate: I declare the above is true.',
+            _kUnknownLanguage: 'workflow_apptemplate',
+          }),
         });
     await tester.pump();
     await _saveRefused(tester, declaration);

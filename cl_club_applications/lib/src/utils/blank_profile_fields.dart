@@ -11,15 +11,17 @@ const int guardianAgeLimit = 18;
 /// form (club_server `member_document`).
 ///
 /// Always: first and last name, date of birth, gender, phone, email and
-/// address. While [extendedProfile]: nationality, preferred language, club
-/// district, preferred position, past experience and, for a member under
+/// address. While [extendedProfile]: nationality, preferred languages, club
+/// district, preferred positions, past experience and, for a member under
 /// [guardianAgeLimit] on [today] by date of birth, the guardian. With no
 /// date of birth the date itself is listed and the guardian is not. The
 /// middle name (optional) and the membership date (an admin's) are never
 /// listed.
 ///
-/// A text is blank when null, empty or whitespace; an address when none of
-/// its parts is filled; a guardian when it has neither a name nor a phone.
+/// A text is blank when null, empty or whitespace; a list when it holds no
+/// text that is not blank (an empty list among them); an address when none
+/// of its parts is filled; a guardian when it has neither a name nor a
+/// phone.
 List<String> blankProfileFields(
   UserPrivate user, {
   required bool extendedProfile,
@@ -37,11 +39,11 @@ List<String> blankProfileFields(
     if (extendedProfile) ...[
       if (isBlankText(user.nationality))
         ApplicationViewStrings.fieldNationality,
-      if (isBlankText(user.preferredLanguage))
+      if (user.preferredLanguages.every(isBlankText))
         ApplicationViewStrings.fieldPreferredLanguage,
       if (isBlankText(user.clubDistrict))
         ApplicationViewStrings.fieldClubDistrict,
-      if (isBlankText(user.preferredPosition))
+      if (user.preferredPositions.every(isBlankText))
         ApplicationViewStrings.fieldPreferredPosition,
       if (isBlankText(user.pastExperience))
         ApplicationViewStrings.fieldPastExperience,

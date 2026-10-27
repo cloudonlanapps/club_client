@@ -1,7 +1,7 @@
 // Issue 321, ApplicationHeadingForm: the print languages and the texts at
 // the top and foot of the form. The organisation, title and footer line
-// are written here, one input per print language; the subtitle is written
-// here or is one of the template's facts.
+// are written here, one input per print language, and so is the subtitle,
+// which may be left empty (Issue 342: a printed text is text only).
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,7 +21,7 @@ Map<String, dynamic> _template() => {
   _languages: ['en', 'mr'],
   _organisation: {'en': 'Example Club', 'mr': 'उदाहरण क्लब'},
   _title: {'en': 'Camp Registration', 'mr': 'शिबिर नोंदणी', 'hi': 'पंजीकरण'},
-  _subtitle: {'fact': 'camp'},
+  _subtitle: {'en': 'Summer camp'},
   _footer: {'en': 'See you on the ice'},
 };
 
@@ -68,13 +68,12 @@ void main() {
         'English *',
         'Marathi',
         'Subtitle',
-        'Text from',
-        'Fact',
+        'English',
+        'Marathi',
         'Footer line',
         'English',
         'Marathi',
       ]);
-      expect(find.text('camp (date range)'), findsOneWidget);
       expectLabelsAreRows(tester);
       expectNoHostChrome(tester);
     });
@@ -107,20 +106,19 @@ void main() {
 
       await pickOption(tester, _languages, 'English and Hindi');
 
-      expect(find.text('Hindi'), findsNWidgets(3));
+      expect(find.text('Hindi'), findsNWidgets(4));
       expect(find.text('पंजीकरण'), findsOneWidget);
       expect(state.validate()![_languages], ['en', 'hi']);
     });
 
-    testWidgets('Issue 321: the subtitle may be written here instead, and '
-        'left empty', (tester) async {
+    testWidgets('Issue 342: the subtitle is written here, and may be left '
+        'empty', (tester) async {
       final state = await _pump(tester);
 
-      await pickIn(tester, _subtitle, 0, 'Written here');
-
-      expect(state.validate()![_subtitle], isNull);
       await typeIn(tester, _subtitle, 0, 'Season 2026');
       expect(state.validate()![_subtitle], {'en': 'Season 2026'});
+      await typeIn(tester, _subtitle, 0, '');
+      expect(state.validate()![_subtitle], isNull);
     });
 
     testWidgets('Issue 321: the organisation and title need English', (
@@ -148,7 +146,7 @@ void main() {
         enabled: enabled,
       );
       expect(await expectDrawnOffWhenTurnedOff(tester, build), 9);
-      expect(await expectKeyboardIgnoredWhenOff(tester, build), 6);
+      expect(await expectKeyboardIgnoredWhenOff(tester, build), 8);
       await expectFitsPhone(tester, build(enabled: true));
     });
   });

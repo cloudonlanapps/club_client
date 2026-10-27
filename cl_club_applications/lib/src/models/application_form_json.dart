@@ -238,26 +238,21 @@ abstract final class ApplicationFormJson {
         ApplicationTerm.fromMap(t),
   ];
 
-  /// The notes of [json]. A note whose text is a clause and that has no
-  /// attribution goes as the clause itself, as the SDK reads it back.
+  /// The notes of [json].
   static List<ApplicationTermsNote> notes(Object? json) => [
     if (json is List)
       for (final n in json.whereType<Map<String, dynamic>>()) noteFromForm(n),
   ];
 
-  /// One note as the forms hold it, as the SDK's.
+  /// One note as the forms hold it, as the SDK's: its text, and an
+  /// attribution when it has one. A note that is a bare text, not under
+  /// `text`, is that text.
   static ApplicationTermsNote noteFromForm(Map<String, dynamic> note) {
     final body = note[ApplicationFormFields.textKey];
-    final attribution = text(note[ApplicationFormFields.attributionKey]);
-    if (body is! Map<String, dynamic>) {
-      // A bare clause or text, not under `text`.
-      return ApplicationTermsNote.fromMap(note);
-    }
-    final value = ApplicationText.fromMap(body);
-    if (attribution == null && value.kind == ApplicationTextKind.clause) {
-      return ApplicationTermsNote.clause(value.clauseId!, args: value.args);
-    }
-    return ApplicationTermsNote.custom(text: value, attribution: attribution);
+    return ApplicationTermsNote(
+      text: text(body is Map ? body : note) ?? const ApplicationText({}),
+      attribution: text(note[ApplicationFormFields.attributionKey]),
+    );
   }
 
   /// The label overrides of [json], by label id.

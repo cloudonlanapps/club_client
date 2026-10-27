@@ -63,8 +63,8 @@ abstract final class UserSchemaFields {
   /// The club or district (extended profile, club_client#320).
   static const String clubDistrict = 'clubDistrict';
 
-  /// The preferred position.
-  static const String preferredPosition = 'preferredPosition';
+  /// The preferred positions.
+  static const String preferredPositions = 'preferredPositions';
 
   /// The past experience.
   static const String pastExperience = 'pastExperience';
@@ -72,8 +72,8 @@ abstract final class UserSchemaFields {
   /// The nationality.
   static const String nationality = 'nationality';
 
-  /// The preferred language.
-  static const String preferredLanguage = 'preferredLanguage';
+  /// The preferred languages.
+  static const String preferredLanguages = 'preferredLanguages';
 
   /// The guardian, as a whole.
   static const String guardian = 'guardian';
@@ -115,10 +115,10 @@ abstract final class UserSchemaFields {
     state: UserFormFields.stateId,
     pincode: UserFormFields.pincodeId,
     clubDistrict: UserFormFields.clubDistrictId,
-    preferredPosition: UserFormFields.preferredPositionId,
+    preferredPositions: UserFormFields.preferredPositionsId,
     pastExperience: UserFormFields.pastExperienceId,
     nationality: UserFormFields.nationalityId,
-    preferredLanguage: UserFormFields.preferredLanguageId,
+    preferredLanguages: UserFormFields.preferredLanguagesId,
     guardian: UserFormFields.guardianNameId,
     guardianName: UserFormFields.guardianNameId,
     guardianRelation: UserFormFields.guardianRelationId,

@@ -10,7 +10,7 @@ import '../../support/account_user_form_harness.dart';
 import '../../support/form_harness.dart';
 
 const String _club = UserFormFields.clubDistrictId;
-const String _position = UserFormFields.preferredPositionId;
+const String _position = UserFormFields.preferredPositionsId;
 const String _experience = UserFormFields.pastExperienceId;
 
 const List<ProfilePositionOption> _positions = [

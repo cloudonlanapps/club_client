@@ -23,9 +23,9 @@ UserPrivate complete({DateTime? dateOfBirthUtc}) => UserPrivate(
   email: 'robin@example.com',
   address: const Address(city: 'Pune'),
   nationality: 'Indian',
-  preferredLanguage: 'Marathi',
+  preferredLanguages: const ['Marathi'],
   clubDistrict: 'Pune',
-  preferredPosition: 'Forward',
+  preferredPositions: const ['Forward'],
   pastExperience: 'Two seasons',
   guardian: const Guardian(name: 'Marian'),
 );
@@ -48,11 +48,9 @@ void main() {
       S.fieldEmail: (u) => u.copyWith(email: () => null),
       S.fieldAddress: (u) => u.copyWith(address: () => const Address()),
       S.fieldNationality: (u) => u.copyWith(nationality: () => ' '),
-      S.fieldPreferredLanguage: (u) =>
-          u.copyWith(preferredLanguage: () => null),
+      S.fieldPreferredLanguage: (u) => u.copyWith(preferredLanguages: []),
       S.fieldClubDistrict: (u) => u.copyWith(clubDistrict: () => ''),
-      S.fieldPreferredPosition: (u) =>
-          u.copyWith(preferredPosition: () => null),
+      S.fieldPreferredPosition: (u) => u.copyWith(preferredPositions: []),
       S.fieldPastExperience: (u) => u.copyWith(pastExperience: () => null),
     };
     for (final MapEntry(key: label, value: clear) in cases.entries) {
@@ -95,9 +93,9 @@ void main() {
         'profile is on', () {
       final user = complete(dateOfBirthUtc: DateTime.utc(2015)).copyWith(
         nationality: () => null,
-        preferredLanguage: () => null,
+        preferredLanguages: [],
         clubDistrict: () => null,
-        preferredPosition: () => null,
+        preferredPositions: [],
         pastExperience: () => null,
         guardian: () => null,
       );

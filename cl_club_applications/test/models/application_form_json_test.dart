@@ -68,20 +68,22 @@ void main() {
       expect(content.ageCategories.single.genders, isNull);
     });
 
-    test('Issue 321: a note written as a clause under `text` goes as the '
-        'clause', () {
+    test('Issue 342: a note is its text and attribution as plain text, a '
+        'bare text a note of that text', () {
       final notes = ApplicationFormJson.notes([
-        {
-          'text': {'clause': 'note.follow_rules'},
-        },
+        {'en': 'Follow the rules', 'mr': 'नियम'},
         {
           'text': {'en': 'Be early'},
           'attribution': {'en': 'Coach'},
         },
       ]);
-      expect(notes.first.isClause, isTrue);
-      expect(notes.first.clauseId, 'note.follow_rules');
-      expect(notes.last.text!.texts, {'en': 'Be early'});
+      expect(
+        notes.first,
+        const ApplicationTermsNote(
+          text: ApplicationText({'en': 'Follow the rules', 'mr': 'नियम'}),
+        ),
+      );
+      expect(notes.last.text.texts, {'en': 'Be early'});
       expect(notes.last.attribution!.texts, {'en': 'Coach'});
     });
 
@@ -98,7 +100,7 @@ void main() {
         'title': {'en': 'Trial 2026'},
         'languages': ['en', 'mr'],
       });
-      expect(content.title, const ApplicationText.custom({'en': 'Trial 2026'}));
+      expect(content.title, const ApplicationText({'en': 'Trial 2026'}));
       expect(content.languages, ['en', 'mr']);
     });
   });

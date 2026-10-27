@@ -35,10 +35,10 @@ class _RecordingUsers extends ClUsersMasterNotifier {
     Address? Function()? address,
     bool? isPublicProfile,
     String? Function()? clubDistrict,
-    String? Function()? preferredPosition,
+    List<String>? preferredPositions,
     String? Function()? pastExperience,
     String? Function()? nationality,
-    String? Function()? preferredLanguage,
+    List<String>? preferredLanguages,
     Guardian? Function()? guardian,
     DateTime? Function()? membershipDateUtc,
   }) async {
@@ -62,10 +62,10 @@ class _RecordingUsers extends ClUsersMasterNotifier {
     sent.add({
       if (anyOther) 'other': true,
       if (clubDistrict != null) 'clubDistrict': clubDistrict(),
-      if (preferredPosition != null) 'preferredPosition': preferredPosition(),
+      'preferredPositions': ?preferredPositions,
       if (pastExperience != null) 'pastExperience': pastExperience(),
       if (nationality != null) 'nationality': nationality(),
-      if (preferredLanguage != null) 'preferredLanguage': preferredLanguage(),
+      'preferredLanguages': ?preferredLanguages,
       if (guardian != null) 'guardian': guardian(),
       if (membershipDateUtc != null) 'membershipDateUtc': membershipDateUtc(),
     });
@@ -81,23 +81,24 @@ UserPrivate _member() => UserPrivate(
   roles: const UserRoles(),
   createdAtUtc: DateTime.utc(2024, 6, 15),
   clubDistrict: 'Pune',
-  preferredPosition: 'Forward',
+  preferredPositions: const ['Forward', 'Goalie'],
   pastExperience: 'School team',
   nationality: 'Indian',
-  preferredLanguage: 'Marathi',
+  preferredLanguages: const ['Marathi'],
   guardian: const Guardian(name: 'Asha', relation: 'Mother', phone: '+91 98'),
   membershipDateUtc: DateTime.utc(2025, 4, 2),
 );
 
 void main() {
   group('Issue 320: buildUserExtendedProfileFormInitialValues', () {
-    test('Issue 320: reads every extended field of the member', () {
+    test('Issue 320: reads every extended field of the member, the first '
+        'of each list', () {
       expect(buildUserExtendedProfileFormInitialValues(_member()), {
         UserFormFields.clubDistrictId: 'Pune',
-        UserFormFields.preferredPositionId: 'Forward',
+        UserFormFields.preferredPositionsId: 'Forward',
         UserFormFields.pastExperienceId: 'School team',
         UserFormFields.nationalityId: 'Indian',
-        UserFormFields.preferredLanguageId: 'Marathi',
+        UserFormFields.preferredLanguagesId: 'Marathi',
         UserFormFields.guardianNameId: 'Asha',
         UserFormFields.guardianRelationId: 'Mother',
         UserFormFields.guardianPhoneId: '+91 98',
@@ -143,7 +144,7 @@ void main() {
       await UserExtendedProfileFormSubmit.updateSportsDetails(
         values: const {
           UserFormFields.clubDistrictId: ' Mumbai ',
-          UserFormFields.preferredPositionId: 'Goalie',
+          UserFormFields.preferredPositionsId: 'Goalie',
           UserFormFields.pastExperienceId: '',
         },
         username: 'robin',
@@ -151,7 +152,7 @@ void main() {
       );
       expect(users.sent.single, {
         'clubDistrict': 'Mumbai',
-        'preferredPosition': 'Goalie',
+        'preferredPositions': ['Goalie'],
         'pastExperience': null,
       });
     });
@@ -162,14 +163,14 @@ void main() {
       await UserExtendedProfileFormSubmit.updateBackground(
         values: const {
           UserFormFields.nationalityId: 'Indian',
-          UserFormFields.preferredLanguageId: '',
+          UserFormFields.preferredLanguagesId: '',
         },
         username: 'robin',
         notifier: users,
       );
       expect(users.sent.single, {
         'nationality': 'Indian',
-        'preferredLanguage': null,
+        'preferredLanguages': <String>[],
       });
     });
 
@@ -229,11 +230,11 @@ void main() {
         'position', () {
       const error = InvalidProfileOptionException(
         message: 'raw',
-        field: 'preferredPosition',
+        field: 'preferredPositions',
         value: 'Winger',
       );
       expect(UserExtendedProfileFormSubmit.fieldErrorsFor(error), {
-        UserFormFields.preferredPositionId:
+        UserFormFields.preferredPositionsId:
             ExtendedProfileStrings.optionRefused,
       });
     });
@@ -242,11 +243,11 @@ void main() {
         'language', () {
       const error = InvalidProfileOptionException(
         message: 'raw',
-        field: 'preferredLanguage',
+        field: 'preferredLanguages',
         value: 'Tamil',
       );
       expect(UserExtendedProfileFormSubmit.fieldErrorsFor(error), {
-        UserFormFields.preferredLanguageId:
+        UserFormFields.preferredLanguagesId:
             ExtendedProfileStrings.optionRefused,
       });
     });

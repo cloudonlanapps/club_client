@@ -3,7 +3,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../constants/form_spacing.dart';
 import '../../../models/application/application_clause_kind.dart';
-import '../../../models/application/application_clause_text.dart';
+import '../../../models/application/application_custom_text.dart';
 import '../../../models/application/application_joined_text.dart';
 import '../../../models/application/application_language_option.dart';
 import '../../../models/application/application_text_value.dart';
@@ -32,11 +32,10 @@ class ApplicationHeaderItemEditor extends StatefulWidget {
   });
 
   /// The modes a header text may take; a new one takes the first.
-  static const List<ApplicationTextMode> modes = [
-    ApplicationTextMode.clause,
-    ApplicationTextMode.fact,
-    ApplicationTextMode.custom,
-  ];
+  // A printed text is a language map only (club_sdk#76): a clause or fact
+  // reference is refused by the server. Inserting a library clause's filled
+  // text is club_client#336.
+  static const List<ApplicationTextMode> modes = [ApplicationTextMode.custom];
 
   /// The item to start from, as the template's JSON holds it.
   final Object? initial;
@@ -143,8 +142,7 @@ class ApplicationHeaderItemEditorState
         ApplicationAddButton(
           label: ApplicationFormStrings.addToLine,
           enabled: widget.enabled,
-          onPressed: () =>
-              update(() => addPart(const ApplicationClauseText(''))),
+          onPressed: () => update(() => addPart(ApplicationCustomText.none)),
         ),
       ],
     );

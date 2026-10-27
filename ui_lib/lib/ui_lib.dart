@@ -27,6 +27,9 @@ export 'src/models/page_data.dart' show PageData;
 export 'src/models/page_empty_state_data.dart' show PageEmptyStateData;
 export 'src/models/page_hero_data.dart' show PageHeroData;
 export 'src/models/page_section_header_data.dart' show PageSectionHeaderData;
+// A PDF the app holds, handed to the platform's share, download or viewer
+// (club_client#324): the app chooses it, a package's button shows it.
+export 'src/models/pdf_action.dart' show PdfAction;
 // Theme
 export 'src/theme/custom_colors.dart'
     show FilmRollColorsExtension, darkCustomColors, lightCustomColors;

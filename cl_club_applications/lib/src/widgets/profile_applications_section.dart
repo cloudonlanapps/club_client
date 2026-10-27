@@ -1,11 +1,10 @@
-import 'dart:typed_data';
-
 import 'package:cl_remote_store/cl_remote_store.dart'
     show applicationsProvider, clApplicationsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../constants/application_view_sizes.dart';
 import '../constants/application_view_strings.dart';
@@ -24,7 +23,7 @@ class ProfileApplicationsSection extends ConsumerWidget {
   const ProfileApplicationsSection({
     required this.member,
     required this.own,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     super.key,
   });
 
@@ -37,8 +36,8 @@ class ProfileApplicationsSection extends ConsumerWidget {
   /// Whether [member] is the signed-in member.
   final bool own;
 
-  /// Opens a downloaded form.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What a downloaded form is handed to: shared, saved or opened.
+  final PdfAction pdfAction;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -75,10 +74,7 @@ class ProfileApplicationsSection extends ConsumerWidget {
                   download: own
                       ? ApplicationOwnForm(template.id)
                       : ApplicationMemberForm(template.id, member.username),
-                  label: own
-                      ? ApplicationViewStrings.download
-                      : ApplicationViewStrings.downloadForMember,
-                  onOpenPdfBytes: onOpenPdfBytes,
+                  pdfAction: pdfAction,
                 ),
             ],
           ],

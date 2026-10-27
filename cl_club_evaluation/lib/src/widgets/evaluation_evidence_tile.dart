@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:cl_gallery_viewer/cl_gallery_viewer.dart'
     show GalleryPdfCard, GalleryVideoPlayer;
@@ -11,6 +10,7 @@ import 'package:club_sdk_2/club_sdk_2.dart' show MediaLink;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../constants/evaluation_view_sizes.dart';
 import '../constants/evaluation_view_strings.dart';
@@ -21,13 +21,13 @@ import 'evaluation_evidence_gallery.dart';
 /// card for it — an image, a video with its poster, a PDF with its preview
 /// — with its remove action in the corner. Evidence is private, so every
 /// request carries the session's headers and a PDF is downloaded with the
-/// session and handed to [onOpenPdfBytes] as bytes.
+/// session and handed to [pdfAction].
 class EvaluationEvidenceTile extends ConsumerWidget {
   /// Shows [link], removed by [onRemove].
   const EvaluationEvidenceTile({
     required this.link,
     required this.onRemove,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     super.key,
   });
 
@@ -37,8 +37,8 @@ class EvaluationEvidenceTile extends ConsumerWidget {
   /// Removes the file from the answer.
   final VoidCallback onRemove;
 
-  /// Shows a downloaded PDF, as bytes.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What a downloaded PDF is handed to: shared, saved or opened.
+  final PdfAction pdfAction;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,7 +59,7 @@ class EvaluationEvidenceTile extends ConsumerWidget {
         previewUrl: poster,
         httpHeaders: headers,
         onDownload: () => unawaited(
-          openEvaluationPdf(context, ref, media, onOpenPdfBytes),
+          openEvaluationPdf(context, ref, media, pdfAction),
         ),
       );
     } else if (media.isVideo) {

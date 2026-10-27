@@ -30,12 +30,6 @@ abstract final class ApplicationViewStrings {
   /// A template that is gone or not yours to see.
   static const String notFound = 'This application is not available.';
 
-  /// The download button.
-  static const String download = 'Download';
-
-  /// The admin's download on a member's profile.
-  static const String downloadForMember = 'Download form';
-
   /// The preview button.
   static const String preview = 'Preview';
 

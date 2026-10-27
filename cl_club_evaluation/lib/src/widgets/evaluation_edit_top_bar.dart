@@ -1,11 +1,10 @@
-import 'dart:typed_data';
-
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEvaluationMediaProvider;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show EvaluationStaffView, EvaluationStatus;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import 'evaluation_pdf_download_button.dart';
 import 'evaluation_top_bar.dart';
@@ -18,7 +17,7 @@ class EvaluationEditTopBar extends ConsumerWidget {
   const EvaluationEditTopBar({
     required this.evaluation,
     required this.onBack,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     super.key,
   });
 
@@ -28,8 +27,8 @@ class EvaluationEditTopBar extends ConsumerWidget {
   /// Leaves the editor, without asking.
   final VoidCallback onBack;
 
-  /// Shows the downloaded member copy, as bytes.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What the downloaded member copy is handed to.
+  final PdfAction pdfAction;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,7 +42,7 @@ class EvaluationEditTopBar extends ConsumerWidget {
           ? null
           : EvaluationPdfDownloadButton(
               media: copy.media,
-              onOpenPdfBytes: onOpenPdfBytes,
+              pdfAction: pdfAction,
             ),
     );
   }

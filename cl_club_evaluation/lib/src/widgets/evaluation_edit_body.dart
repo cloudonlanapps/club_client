@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEvaluationsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart'
@@ -8,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ui_lib/ui_lib.dart'
     show EvaluationFillBody, EvaluationFillBodyState, EvaluationLayoutEntry;
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../constants/evaluation_view_sizes.dart';
 import '../constants/evaluation_view_strings.dart';
@@ -34,7 +33,7 @@ class EvaluationEditBody extends ConsumerStatefulWidget {
     required this.onBack,
     required this.onDeleted,
     required this.onTransferred,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     super.key,
   });
 
@@ -53,8 +52,8 @@ class EvaluationEditBody extends ConsumerStatefulWidget {
   /// Called once the evaluation is handed to another coach.
   final VoidCallback onTransferred;
 
-  /// Shows a downloaded PDF as bytes: the member copy or evidence.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What a downloaded PDF — the member copy or evidence — is handed to.
+  final PdfAction pdfAction;
 
   @override
   ConsumerState<EvaluationEditBody> createState() => EvaluationEditBodyState();
@@ -137,7 +136,7 @@ class EvaluationEditBodyState extends ConsumerState<EvaluationEditBody> {
         EvaluationEditTopBar(
           evaluation: e,
           onBack: widget.onBack,
-          onOpenPdfBytes: widget.onOpenPdfBytes,
+          pdfAction: widget.pdfAction,
         ),
         EvaluationHeadCard(
           title: EvaluationNames.person(ref, e.createdFor),
@@ -157,7 +156,7 @@ class EvaluationEditBodyState extends ConsumerState<EvaluationEditBody> {
             evaluationId: e.id,
             itemId: itemId,
             editable: draft,
-            onOpenPdfBytes: widget.onOpenPdfBytes,
+            pdfAction: widget.pdfAction,
           ),
         ),
         EvaluationManagementCard(

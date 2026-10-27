@@ -7,6 +7,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../support/application_samples.dart';
 import '../support/applications_harness.dart';
+import '../support/pdf_action.dart';
 
 Map<int, ApplicationTemplate> _all() => {
   1: ApplicationSamples.template(id: 1),
@@ -40,7 +41,7 @@ Future<void> _pump(
   ApplicationsView(
     currentUser: applicationsUser(admin: admin),
     onOpen: onOpen ?? (_) {},
-    onOpenPdfBytes: (_) {},
+    pdfAction: recordingPdfAction(),
   ),
   master: master,
   enabled: enabled,
@@ -59,7 +60,7 @@ void main() {
       expect(find.text(ApplicationViewStrings.printNote), findsOneWidget);
       expect(find.text(ApplicationViewStrings.create), findsNothing);
 
-      await tester.tap(find.text(ApplicationViewStrings.download));
+      await tester.tap(find.text(testPdfActionLabel));
       await tester.pumpAndSettle();
       expect(master.calls, ['own 2']);
     });

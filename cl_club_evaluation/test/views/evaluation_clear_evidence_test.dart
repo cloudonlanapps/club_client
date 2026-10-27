@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/evaluation_scope.dart';
+import '../support/pdf_action.dart';
 
 /// One Q & A taking evidence.
 final sdk.EvaluationTemplate _template = template(
@@ -41,7 +42,7 @@ Future<StubEvaluations> _pump(
         onBack: () {},
         onDeleted: () {},
         onTransferred: () {},
-        onOpenPdfBytes: (_) {},
+        pdfAction: recordingPdfAction(),
       ),
     ),
   );

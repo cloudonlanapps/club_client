@@ -3,6 +3,7 @@ import 'package:club_sdk_2/club_sdk_2.dart' as sdk;
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/evaluation_scope.dart';
+import '../support/pdf_action.dart';
 
 /// A section of a required labelled rating (a coach note required for its
 /// lowest level) and a yes / no taking evidence, then a required Q & A.
@@ -55,7 +56,7 @@ Future<StubEvaluations> _pump(
         onBack: () {},
         onDeleted: () {},
         onTransferred: () {},
-        onOpenPdfBytes: (_) {},
+        pdfAction: recordingPdfAction(),
       ),
     ),
   );

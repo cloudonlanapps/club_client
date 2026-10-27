@@ -1,11 +1,10 @@
-import 'dart:typed_data';
-
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clMemberEvaluationsProvider, evaluationsProvider;
 import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../constants/evaluation_view_strings.dart';
 import '../widgets/evaluation_message.dart';
@@ -18,7 +17,7 @@ import '../widgets/evaluation_read_content.dart';
 /// viewer, its requests carrying the session's headers; a PDF — the stored
 /// member copy behind the download icon at the top right, or a PDF of
 /// evidence — is private, so it is downloaded with the session and handed
-/// to [onOpenPdfBytes] as bytes. A failed download shows a toast.
+/// to [pdfAction]. A failed download shows a toast.
 ///
 /// Renders nothing unless the server runs evaluations.
 class EvaluationReadView extends ConsumerWidget {
@@ -28,7 +27,7 @@ class EvaluationReadView extends ConsumerWidget {
     required this.username,
     required this.evaluationId,
     required this.onBack,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     super.key,
   });
 
@@ -44,8 +43,8 @@ class EvaluationReadView extends ConsumerWidget {
   /// Leaves the view.
   final VoidCallback onBack;
 
-  /// Shows a downloaded PDF, as bytes.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What a downloaded PDF is handed to: shared, saved or opened.
+  final PdfAction pdfAction;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -67,7 +66,7 @@ class EvaluationReadView extends ConsumerWidget {
           if (review.id == evaluationId) {
             return EvaluationReadContent(
               review: review,
-              onOpenPdfBytes: onOpenPdfBytes,
+              pdfAction: pdfAction,
             );
           }
         }

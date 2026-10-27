@@ -1,8 +1,7 @@
-import 'dart:typed_data';
-
 import 'package:cl_club_applications/cl_club_applications.dart'
     show ApplicationsView;
 import 'package:flutter/widgets.dart';
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../widgets/applications_gate.dart';
 
@@ -12,7 +11,7 @@ import '../widgets/applications_gate.dart';
 class ApplicationsScreen extends StatelessWidget {
   const ApplicationsScreen({
     required this.onOpen,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     required this.onHome,
     super.key,
   });
@@ -20,8 +19,8 @@ class ApplicationsScreen extends StatelessWidget {
   /// Opens the template with this id in the editor.
   final ValueChanged<int> onOpen;
 
-  /// Opens a downloaded form.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What a downloaded form is handed to: shared, saved or opened.
+  final PdfAction pdfAction;
 
   /// Leaves a refused route for home.
   final VoidCallback onHome;
@@ -33,7 +32,7 @@ class ApplicationsScreen extends StatelessWidget {
     builder: (user) => ApplicationsView(
       currentUser: user,
       onOpen: onOpen,
-      onOpenPdfBytes: onOpenPdfBytes,
+      pdfAction: pdfAction,
     ),
   );
 }

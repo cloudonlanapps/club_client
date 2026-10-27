@@ -1,8 +1,7 @@
-import 'dart:typed_data';
-
 import 'package:cl_club_evaluation/cl_club_evaluation.dart'
     show EvaluationReadView;
 import 'package:flutter/widgets.dart';
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../widgets/evaluation_gate.dart';
 
@@ -15,7 +14,7 @@ class MyReviewScreen extends StatelessWidget {
   const MyReviewScreen({
     required this.evaluationId,
     required this.onBack,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     required this.onHome,
     this.username,
     super.key,
@@ -30,9 +29,9 @@ class MyReviewScreen extends StatelessWidget {
   /// Leaves the review.
   final VoidCallback onBack;
 
-  /// Shows a PDF the view downloaded with the session — the stored member
-  /// copy or evidence — as bytes.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What a PDF the view downloaded with the session — the stored member
+  /// copy or evidence — is handed to: shared, saved or opened.
+  final PdfAction pdfAction;
 
   /// Leaves a refused route for home.
   final VoidCallback onHome;
@@ -49,7 +48,7 @@ class MyReviewScreen extends StatelessWidget {
       username: username ?? user.username,
       evaluationId: evaluationId,
       onBack: onBack,
-      onOpenPdfBytes: onOpenPdfBytes,
+      pdfAction: pdfAction,
     ),
   );
 }

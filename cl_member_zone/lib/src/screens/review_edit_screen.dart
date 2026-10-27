@@ -1,8 +1,7 @@
-import 'dart:typed_data';
-
 import 'package:cl_club_evaluation/cl_club_evaluation.dart'
     show EvaluationEditView;
 import 'package:flutter/widgets.dart';
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../widgets/evaluation_gate.dart';
 
@@ -16,7 +15,7 @@ class ReviewEditScreen extends StatelessWidget {
     required this.onBack,
     required this.onDeleted,
     required this.onTransferred,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     required this.onHome,
     super.key,
   });
@@ -33,9 +32,9 @@ class ReviewEditScreen extends StatelessWidget {
   /// Called once the evaluation is handed to another coach.
   final VoidCallback onTransferred;
 
-  /// Shows a PDF the view downloaded with the session — the stored member
-  /// copy or evidence — as bytes.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What a PDF the view downloaded with the session — the stored member
+  /// copy or evidence — is handed to: shared, saved or opened.
+  final PdfAction pdfAction;
 
   /// Leaves a refused route for home.
   final VoidCallback onHome;
@@ -50,7 +49,7 @@ class ReviewEditScreen extends StatelessWidget {
       onBack: onBack,
       onDeleted: onDeleted,
       onTransferred: onTransferred,
-      onOpenPdfBytes: onOpenPdfBytes,
+      pdfAction: pdfAction,
     ),
   );
 }

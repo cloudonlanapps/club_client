@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         applicationsProvider,
@@ -9,6 +7,7 @@ import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../constants/application_view_sizes.dart';
 import '../constants/application_view_strings.dart';
@@ -26,15 +25,15 @@ import 'application_download_row.dart';
 class PublishedApplicationsList extends ConsumerWidget {
   const PublishedApplicationsList({
     required this.currentUser,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     super.key,
   });
 
   /// The signed-in member.
   final UserPrivate currentUser;
 
-  /// Opens a downloaded form.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What a downloaded form is handed to: shared, saved or opened.
+  final PdfAction pdfAction;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -73,7 +72,7 @@ class PublishedApplicationsList extends ConsumerWidget {
             key: ValueKey('application.download.${template.id}'),
             title: applicationTitle(template),
             download: ApplicationOwnForm(template.id),
-            onOpenPdfBytes: onOpenPdfBytes,
+            pdfAction: pdfAction,
           ),
       ],
     );

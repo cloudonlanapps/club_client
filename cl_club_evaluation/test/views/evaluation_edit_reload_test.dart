@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../support/evaluation_scope.dart';
+import '../support/pdf_action.dart';
 
 /// One Q & A, so the test has a text answer to type into.
 final sdk.EvaluationTemplate _template = template(
@@ -72,7 +73,7 @@ void main() {
             onBack: () {},
             onDeleted: () {},
             onTransferred: () {},
-            onOpenPdfBytes: (_) {},
+            pdfAction: recordingPdfAction(),
           ),
         ),
       );
@@ -112,7 +113,7 @@ void main() {
             onBack: () {},
             onDeleted: () {},
             onTransferred: () {},
-            onOpenPdfBytes: (_) {},
+            pdfAction: recordingPdfAction(),
           ),
         ),
       );
@@ -145,7 +146,7 @@ void main() {
           onBack: () {},
           onDeleted: () {},
           onTransferred: () {},
-          onOpenPdfBytes: (_) {},
+          pdfAction: recordingPdfAction(),
         ),
       ),
     );

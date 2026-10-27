@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../support/evaluation_scope.dart';
+import '../support/pdf_action.dart';
 
 sdk.EvaluationMemberView _review({
   int? eventId,
@@ -66,7 +67,7 @@ Future<List<Uint8List>> _pump(
         username: 'ana',
         evaluationId: 1,
         onBack: () {},
-        onOpenPdfBytes: opened.add,
+        pdfAction: recordingPdfAction(bytes: opened),
       ),
     ),
   );

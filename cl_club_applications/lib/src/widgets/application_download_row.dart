@@ -1,21 +1,19 @@
-import 'dart:typed_data';
-
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../constants/application_view_sizes.dart';
-import '../constants/application_view_strings.dart';
 import '../models/application_download.dart';
 import 'application_download_button.dart';
 
 /// One application a member can download: its title and an
-/// [ApplicationDownloadButton] for [download].
+/// [ApplicationDownloadButton] for [download], which hands the PDF to
+/// [pdfAction] named after [title].
 class ApplicationDownloadRow extends StatelessWidget {
   const ApplicationDownloadRow({
     required this.title,
     required this.download,
-    required this.onOpenPdfBytes,
-    this.label = ApplicationViewStrings.download,
+    required this.pdfAction,
     super.key,
   });
 
@@ -25,11 +23,8 @@ class ApplicationDownloadRow extends StatelessWidget {
   /// The PDF the button fetches.
   final ApplicationDownload download;
 
-  /// Opens the downloaded PDF.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
-
-  /// The button's text.
-  final String label;
+  /// What the fetched PDF is handed to.
+  final PdfAction pdfAction;
 
   @override
   Widget build(BuildContext context) {
@@ -43,8 +38,8 @@ class ApplicationDownloadRow extends StatelessWidget {
           ),
           ApplicationDownloadButton(
             download: download,
-            onOpenPdfBytes: onOpenPdfBytes,
-            label: label,
+            pdfAction: pdfAction,
+            fileName: PdfAction.fileNameFor(title),
           ),
         ],
       ),

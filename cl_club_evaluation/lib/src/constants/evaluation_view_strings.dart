@@ -112,9 +112,6 @@ abstract final class EvaluationViewStrings {
   /// Renames a template.
   static const String rename = 'Rename';
 
-  /// Downloads the stored member copy.
-  static const String downloadPdf = 'Download PDF';
-
   /// Opens the template designer pre-filled with a copy of a template.
   static const String duplicate = 'Duplicate';
 

@@ -4,11 +4,15 @@ import 'package:cl_club_applications/cl_club_applications.dart';
 import 'package:cl_club_applications/src/constants/application_view_strings.dart';
 import 'package:cl_club_applications/src/models/application_download.dart';
 import 'package:cl_club_applications/src/widgets/application_download_button.dart';
+import 'package:cl_club_applications/src/widgets/application_download_row.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../support/application_samples.dart';
 import '../support/applications_harness.dart';
+import '../support/pdf_action.dart';
 
 Map<int, ApplicationTemplate> _published() => {
   4: ApplicationSamples.template(id: 4, status: ApplicationStatus.published),
@@ -19,19 +23,85 @@ void main() {
   group('Issue 321: ApplicationDownloadButton', () {
     testWidgets('Issue 321: hands the downloaded bytes on', (tester) async {
       final master = FakeApplicationsMaster(_published());
-      Uint8List? opened;
+      final opened = <Uint8List>[];
       await pumpApplications(
         tester,
         ApplicationDownloadButton(
           download: const ApplicationOwnForm(4),
-          onOpenPdfBytes: (bytes) => opened = bytes,
+          pdfAction: recordingPdfAction(bytes: opened),
+          fileName: 'Trial.pdf',
         ),
         master: master,
       );
-      await tester.tap(find.text(ApplicationViewStrings.download));
+      await tester.tap(find.text(testPdfActionLabel));
       await tester.pumpAndSettle();
       expect(master.calls, ['own 4']);
-      expect(opened, [37, 80, 68, 70]);
+      expect(opened.single, [37, 80, 68, 70]);
+    });
+
+    testWidgets('Issue 324: shows the action’s label and icon and hands it '
+        'the bytes and the file name', (tester) async {
+      final master = FakeApplicationsMaster(_published());
+      final handed = <(Uint8List, String)>[];
+      await pumpApplications(
+        tester,
+        ApplicationDownloadButton(
+          download: const ApplicationOwnForm(4),
+          pdfAction: PdfAction(
+            label: 'Share',
+            icon: LucideIcons.share2,
+            run: (bytes, fileName) async => handed.add((bytes, fileName)),
+          ),
+          fileName: 'Membership form.pdf',
+        ),
+        master: master,
+      );
+      expect(find.byIcon(LucideIcons.share2), findsOneWidget);
+      expect(find.byIcon(LucideIcons.download), findsNothing);
+      await tester.tap(find.text('Share'));
+      await tester.pumpAndSettle();
+      expect(handed.single.$1, [37, 80, 68, 70]);
+      expect(handed.single.$2, 'Membership form.pdf');
+    });
+
+    testWidgets('Issue 324: an action that fails is a fixed toast', (
+      tester,
+    ) async {
+      await pumpApplications(
+        tester,
+        ApplicationDownloadButton(
+          download: const ApplicationOwnForm(4),
+          pdfAction: PdfAction(
+            label: 'Share',
+            icon: LucideIcons.share2,
+            run: (_, _) async => throw StateError('raw platform words'),
+          ),
+          fileName: 'Trial.pdf',
+        ),
+        master: FakeApplicationsMaster(_published()),
+      );
+      await tester.tap(find.text('Share'));
+      await tester.pumpAndSettle();
+      expect(find.text(ApplicationViewStrings.downloadFailed), findsOneWidget);
+      expect(find.textContaining('raw platform words'), findsNothing);
+    });
+
+    testWidgets('Issue 324: a row names the file after the application', (
+      tester,
+    ) async {
+      final names = <String>[];
+      await pumpApplications(
+        tester,
+        ApplicationDownloadRow(
+          title: 'Membership form',
+          download: const ApplicationOwnForm(4),
+          pdfAction: recordingPdfAction(names: names),
+        ),
+        master: FakeApplicationsMaster(_published()),
+      );
+      await tester.tap(find.text(testPdfActionLabel));
+      await tester.pumpAndSettle();
+      expect(names, ['Membership form.pdf']);
     });
 
     testWidgets('Issue 321: a member not eligible is told so under the '
@@ -42,20 +112,21 @@ void main() {
           code: SdkErrorCode.applicationNotEligible,
           message: 'raw server words',
         );
-      Uint8List? opened;
+      final opened = <Uint8List>[];
       await pumpApplications(
         tester,
         ApplicationDownloadButton(
           download: const ApplicationOwnForm(4),
-          onOpenPdfBytes: (bytes) => opened = bytes,
+          pdfAction: recordingPdfAction(bytes: opened),
+          fileName: 'Trial.pdf',
         ),
         master: master,
       );
-      await tester.tap(find.text(ApplicationViewStrings.download));
+      await tester.tap(find.text(testPdfActionLabel));
       await tester.pumpAndSettle();
       expect(find.text(ApplicationViewStrings.notEligible), findsOneWidget);
       expect(find.textContaining('raw server words'), findsNothing);
-      expect(opened, isNull);
+      expect(opened, isEmpty);
     });
 
     testWidgets('Issue 321: any other failure is a fixed toast', (
@@ -71,11 +142,12 @@ void main() {
         tester,
         ApplicationDownloadButton(
           download: const ApplicationOwnForm(4),
-          onOpenPdfBytes: (_) {},
+          pdfAction: recordingPdfAction(),
+          fileName: 'Trial.pdf',
         ),
         master: master,
       );
-      await tester.tap(find.text(ApplicationViewStrings.download));
+      await tester.tap(find.text(testPdfActionLabel));
       await tester.pumpAndSettle();
       expect(find.text(ApplicationViewStrings.downloadFailed), findsOneWidget);
       expect(find.textContaining('raw server words'), findsNothing);
@@ -92,12 +164,12 @@ void main() {
         ProfileApplicationsSection(
           member: applicationsUser(),
           own: true,
-          onOpenPdfBytes: (_) {},
+          pdfAction: recordingPdfAction(),
         ),
         master: master,
       );
       expect(find.text('Trial'), findsOneWidget, reason: 'published only');
-      await tester.tap(find.text(ApplicationViewStrings.download));
+      await tester.tap(find.text(testPdfActionLabel));
       await tester.pumpAndSettle();
       expect(master.calls, ['own 4']);
     });
@@ -110,11 +182,11 @@ void main() {
         ProfileApplicationsSection(
           member: applicationsUser(),
           own: false,
-          onOpenPdfBytes: (_) {},
+          pdfAction: recordingPdfAction(),
         ),
         master: master,
       );
-      await tester.tap(find.text(ApplicationViewStrings.downloadForMember));
+      await tester.tap(find.text(testPdfActionLabel));
       await tester.pumpAndSettle();
       expect(master.calls, ['member 4 member_a']);
     });
@@ -127,7 +199,7 @@ void main() {
         ProfileApplicationsSection(
           member: applicationsUser(),
           own: true,
-          onOpenPdfBytes: (_) {},
+          pdfAction: recordingPdfAction(),
         ),
         master: FakeApplicationsMaster(_published()),
         enabled: false,

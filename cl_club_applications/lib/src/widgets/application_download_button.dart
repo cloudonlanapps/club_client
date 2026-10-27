@@ -1,19 +1,20 @@
-import 'dart:typed_data';
-
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clApplicationsMasterProvider;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../constants/application_view_sizes.dart';
 import '../constants/application_view_strings.dart';
 import '../models/application_download.dart';
 import '../utils/application_download_refusal.dart';
 
-/// Downloads one application PDF — a member's form or an admin's preview
-/// ([download]) — and hands its bytes to [onOpenPdfBytes], which opens them
-/// (the app's `openPdfBytes`).
+/// Fetches one application PDF — a member's form or an admin's preview
+/// ([download]) — and hands its bytes to [pdfAction] as [fileName]: the
+/// app's share, download or viewer, whichever works on the platform
+/// (club_client#324). The button shows the action's icon and, unless
+/// [label] names it otherwise, its label.
 ///
 /// While it downloads the button is off and shows a spinner. A refusal
 /// about the member or the application (not eligible, no identity
@@ -22,19 +23,23 @@ import '../utils/application_download_refusal.dart';
 class ApplicationDownloadButton extends ConsumerStatefulWidget {
   const ApplicationDownloadButton({
     required this.download,
-    required this.onOpenPdfBytes,
-    this.label = ApplicationViewStrings.download,
+    required this.pdfAction,
+    required this.fileName,
+    this.label,
     super.key,
   });
 
   /// The PDF to fetch.
   final ApplicationDownload download;
 
-  /// Opens the downloaded PDF.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What the fetched PDF is handed to.
+  final PdfAction pdfAction;
 
-  /// The button's text.
-  final String label;
+  /// The name the PDF is shared or saved under.
+  final String fileName;
+
+  /// The button's text; the action's label when null.
+  final String? label;
 
   @override
   ConsumerState<ApplicationDownloadButton> createState() =>
@@ -51,7 +56,7 @@ class ApplicationDownloadButtonState
   /// What the server refused, shown under the button; null for nothing.
   String? refusal;
 
-  /// Fetches the PDF and opens it.
+  /// Fetches the PDF and hands it to the action.
   Future<void> run() async {
     if (downloading) return;
     setState(() {
@@ -61,7 +66,7 @@ class ApplicationDownloadButtonState
     try {
       final notifier = ref.read(clApplicationsMasterProvider.notifier);
       final bytes = await widget.download.fetch(notifier);
-      if (mounted) widget.onOpenPdfBytes(bytes);
+      if (mounted) await widget.pdfAction.run(bytes, widget.fileName);
     } on Object catch (e) {
       if (!mounted) return;
       final message = applicationDownloadRefusal(e);
@@ -97,8 +102,8 @@ class ApplicationDownloadButtonState
                   dimension: ApplicationViewSizes.spinner,
                   child: ShadProgress(),
                 )
-              : const Icon(LucideIcons.download),
-          child: Text(widget.label),
+              : Icon(widget.pdfAction.icon),
+          child: Text(widget.label ?? widget.pdfAction.label),
         ),
         if (refused != null)
           ConstrainedBox(

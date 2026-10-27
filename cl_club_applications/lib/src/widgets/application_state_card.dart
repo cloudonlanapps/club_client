@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clApplicationsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart'
@@ -7,13 +5,14 @@ import 'package:club_sdk_2/club_sdk_2.dart'
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ConfirmDialog;
+import 'package:ui_lib/ui_lib.dart' show ConfirmDialog, PdfAction;
 
 import '../constants/application_view_sizes.dart';
 import '../constants/application_view_strings.dart';
 import '../models/application_download.dart';
 import '../models/application_step.dart';
 import '../utils/application_save_refusal.dart';
+import '../utils/application_title.dart';
 import 'application_download_button.dart';
 import 'application_missing_texts.dart';
 import 'application_step_button.dart';
@@ -31,7 +30,7 @@ class ApplicationStateCard extends ConsumerStatefulWidget {
     required this.template,
     required this.missing,
     required this.onDeleted,
-    required this.onOpenPdfBytes,
+    required this.pdfAction,
     super.key,
   });
 
@@ -45,8 +44,8 @@ class ApplicationStateCard extends ConsumerStatefulWidget {
   /// Leaves the editor once the template is deleted.
   final VoidCallback onDeleted;
 
-  /// Opens the preview.
-  final ValueChanged<Uint8List> onOpenPdfBytes;
+  /// What the downloaded preview is handed to: shared, saved or opened.
+  final PdfAction pdfAction;
 
   @override
   ConsumerState<ApplicationStateCard> createState() =>
@@ -176,7 +175,8 @@ class ApplicationStateCardState extends ConsumerState<ApplicationStateCard> {
                   ),
                 ApplicationDownloadButton(
                   download: ApplicationPreview(template.id),
-                  onOpenPdfBytes: widget.onOpenPdfBytes,
+                  pdfAction: widget.pdfAction,
+                  fileName: PdfAction.fileNameFor(applicationTitle(template)),
                   label: ApplicationViewStrings.preview,
                 ),
               ],

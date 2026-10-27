@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:cl_club_applications/cl_club_applications.dart'
     show ProfileApplicationsSection, PublishedApplicationsList;
 import 'package:cl_member_zone/cl_member_zone.dart'
@@ -8,7 +6,7 @@ import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
-import 'utils/open_pdf_bytes.dart';
+import 'utils/pdf_actions.dart';
 import 'utils/router_helpers.dart';
 
 /// The Applications routes under the member-zone shell (club_client#321):
@@ -19,7 +17,7 @@ List<RouteBase> applicationRoutes() => [
     pageBuilder: (context, state) => NoTransitionPage(
       child: ApplicationsScreen(
         onOpen: (id) => context.push(applicationPath(id)),
-        onOpenPdfBytes: (bytes) => unawaited(openPdfBytes(bytes)),
+        pdfAction: appPdfAction,
         onHome: () => context.go('/'),
       ),
     ),
@@ -34,7 +32,7 @@ List<RouteBase> applicationRoutes() => [
           applicationId: id,
           onBack: () => popOrGo(context, applicationsPath),
           onDeleted: () => popOrGo(context, applicationsPath),
-          onOpenPdfBytes: (bytes) => unawaited(openPdfBytes(bytes)),
+          pdfAction: appPdfAction,
           onHome: () => context.go('/'),
         ),
       );
@@ -48,12 +46,12 @@ Widget profileApplicationsSection(UserPrivate member, {required bool own}) =>
     ProfileApplicationsSection(
       member: member,
       own: own,
-      onOpenPdfBytes: (bytes) => unawaited(openPdfBytes(bytes)),
+      pdfAction: appPdfAction,
     );
 
 /// The waiting page's list of the published applications for [user],
 /// injected into onboarding (club_client#321).
 Widget waitingPageApplications(UserPrivate user) => PublishedApplicationsList(
   currentUser: user,
-  onOpenPdfBytes: (bytes) => unawaited(openPdfBytes(bytes)),
+  pdfAction: appPdfAction,
 );

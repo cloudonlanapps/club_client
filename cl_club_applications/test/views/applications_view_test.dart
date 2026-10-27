@@ -129,6 +129,66 @@ void main() {
     });
   });
 
+  group('Issue 396: a language the club does not offer', () {
+    const notOffered = ApplicationLanguageNotOfferedException(
+      message: 'raw server words',
+      languages: ['hi'],
+    );
+
+    testWidgets('Issue 396: Create refused for it says so in the dialog, '
+        'which stays open', (tester) async {
+      final master = FakeApplicationsMaster(_all())..failWith = notOffered;
+      int? opened;
+      await _pump(tester, master: master, onOpen: (id) => opened = id);
+
+      await tester.tap(
+        find.widgetWithText(ShadButton, ApplicationViewStrings.create),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(EditableText).first, 'Camp 2027');
+      await tester.tap(
+        find.widgetWithText(ShadButton, ApplicationViewStrings.save),
+      );
+      await tester.pumpAndSettle();
+
+      expect(master.calls, hasLength(1));
+      expect(find.byType(ShadDialog), findsOneWidget);
+      expect(
+        find.text(ApplicationViewStrings.languageNotOffered(['Hindi'])),
+        findsOneWidget,
+      );
+      expect(opened, isNull);
+    });
+
+    testWidgets('Issue 396: Import refused for it names the language', (
+      tester,
+    ) async {
+      final master = FakeApplicationsMaster(_all())..failWith = notOffered;
+      int? opened;
+      await _pump(
+        tester,
+        master: master,
+        onOpen: (id) => opened = id,
+        onPickJsonFile: () async => utf8.encode(
+          ApplicationTemplateFile.encode(
+            ApplicationSamples.template(
+              id: 2,
+              status: ApplicationStatus.published,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const ValueKey('application.importJson')));
+      await tester.pumpAndSettle();
+      expect(
+        find.text(ApplicationViewStrings.languageNotOffered(['Hindi'])),
+        findsOneWidget,
+      );
+      expect(find.textContaining('raw server words'), findsNothing);
+      expect(opened, isNull);
+    });
+  });
+
   group('Issue 400: Import JSON', () {
     final import = find.byKey(const ValueKey('application.importJson'));
 

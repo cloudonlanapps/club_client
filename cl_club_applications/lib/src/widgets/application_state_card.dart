@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show ConfirmDialog, PdfAction;
 
-import '../constants/application_fact_strings.dart';
 import '../constants/application_view_sizes.dart';
 import '../constants/application_view_strings.dart';
 import '../models/application_download.dart';
@@ -20,16 +19,17 @@ import 'application_publish_id.dart';
 import 'application_step_button.dart';
 import 'application_unknown_facts.dart';
 
-/// The **State** card of the application editor (club_client#321): the
-/// template's state and stored layout, a published template's publish ID
-/// (club_client#339), the moves Save, Publish, Unpublish,
-/// Revert and Delete, Preview, and Download blank form (club_client#393),
-/// greyed out with its reason on a draft.
+/// The heading card of the application editor (club_client#321, #398): the
+/// template's title and state, with Preview and, once finalized, Download
+/// blank form (club_client#393) as icons on the right; a published
+/// template's publish ID (club_client#339); and the moves its state allows
+/// (Finalize, Publish, Unpublish, Revert to draft, Delete).
 ///
-/// A move the state forbids is greyed out up front with its reason beside
-/// it; so is Save while the client's check finds texts [missing], or
+/// A move the state does not allow is not shown. Finalize (the save move)
+/// is greyed out while the client's check finds texts [missing], or
 /// `{gap}`s naming no fact ([unknownFacts], club_client#389), which it
-/// lists. What the server refuses about the template on Save shows inline
+/// lists in the error colour. Delete is an icon at the bottom right.
+/// What the server refuses about the template on Finalize shows inline
 /// here, never as a toast.
 class ApplicationStateCard extends ConsumerStatefulWidget {
   const ApplicationStateCard({
@@ -121,101 +121,118 @@ class ApplicationStateCardState extends ConsumerState<ApplicationStateCard> {
     }
   }
 
-  /// Why [step] is greyed out now, or null when it may run.
-  String? reasonFor(ApplicationStep step) {
-    final blocked = step.blockedBy(widget.template.status);
-    if (blocked != null) return blocked;
-    if (step == ApplicationStep.save && widget.missing.isNotEmpty) {
-      return ApplicationViewStrings.textsMissing(widget.missing.length);
-    }
-    if (step == ApplicationStep.save && widget.unknownFacts.isNotEmpty) {
-      return ApplicationFactStrings.unknownCount(widget.unknownFacts.length);
-    }
-    return null;
-  }
+  /// Whether [step], one the state allows, may run now: Finalize is greyed
+  /// out while the card lists texts missing or gaps naming no fact.
+  bool mayRun(ApplicationStep step) =>
+      step != ApplicationStep.save ||
+      (widget.missing.isEmpty && widget.unknownFacts.isEmpty);
 
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
     final template = widget.template;
     final busy = running != null;
-    final layout = template.layout;
     final refused = refusal;
     final draft = template.status == ApplicationStatus.draft;
+    final title = applicationTitle(template);
+    final status =
+        ApplicationViewStrings.statusLabels[template.status.wireName] ??
+        template.status.wireName;
     return ShadCard(
-      title: Text(ApplicationViewStrings.stateTitle, style: theme.textTheme.h4),
-      child: Padding(
-        padding: const EdgeInsets.only(top: ApplicationViewSizes.smallGap),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: ApplicationViewSizes.smallGap,
-          children: [
-            Text(
-              ApplicationViewStrings.statusLabels[template.status.wireName] ??
-                  template.status.wireName,
-              style: theme.textTheme.large,
-            ),
-            Text(
-              layout == null
-                  ? ApplicationViewStrings.noLayout
-                  : ApplicationViewStrings.layout(layout.name),
-              style: theme.textTheme.muted,
-            ),
-            if (template.status == ApplicationStatus.published)
-              if (template.publishId case final String id)
-                ApplicationPublishId(publishId: id),
-            if (!draft)
-              Text(
-                ApplicationViewStrings.revertToEdit,
-                style: theme.textTheme.muted,
-              ),
-            if (draft && widget.missing.isNotEmpty)
-              ApplicationMissingTexts(missing: widget.missing),
-            if (draft && widget.unknownFacts.isNotEmpty)
-              ApplicationUnknownFacts(gaps: widget.unknownFacts),
-            if (refused != null)
-              Text(
-                refused,
-                key: const ValueKey('application.state.refusal'),
-                style: theme.textTheme.small.copyWith(
-                  color: theme.colorScheme.destructive,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: ApplicationViewSizes.smallGap,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  ApplicationViewStrings.titleWithStatus(title, status),
+                  key: const ValueKey('application.state.title'),
+                  style: theme.textTheme.h4,
                 ),
               ),
-            Wrap(
-              spacing: ApplicationViewSizes.smallGap,
-              runSpacing: ApplicationViewSizes.smallGap,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                for (final step in ApplicationStep.values)
-                  ApplicationStepButton(
-                    step: step,
-                    loading: running == step,
-                    reason: reasonFor(step),
-                    onPressed: busy ? null : () => run(step),
-                  ),
+              ApplicationDownloadButton(
+                key: const ValueKey('application.state.preview'),
+                download: ApplicationPreview(template.id),
+                pdfAction: widget.pdfAction,
+                fileName: PdfAction.fileNameFor(title),
+                label: ApplicationViewStrings.preview,
+                icon: LucideIcons.eye,
+                iconOnly: true,
+              ),
+              if (!draft)
                 ApplicationDownloadButton(
-                  download: ApplicationPreview(template.id),
-                  pdfAction: widget.pdfAction,
-                  fileName: PdfAction.fileNameFor(applicationTitle(template)),
-                  label: ApplicationViewStrings.preview,
-                ),
-                ApplicationDownloadButton(
+                  key: const ValueKey('application.state.blankForm'),
                   download: ApplicationBlankForm(template.id),
                   pdfAction: widget.pdfAction,
                   fileName: PdfAction.fileNameFor(
-                    ApplicationViewStrings.blankFormFileTitle(
-                      applicationTitle(template),
-                    ),
+                    ApplicationViewStrings.blankFormFileTitle(title),
                   ),
                   label: ApplicationViewStrings.blankForm,
-                  reason: draft
-                      ? ApplicationViewStrings.blankFormNeedsSave
-                      : null,
+                  iconOnly: true,
                 ),
-              ],
+            ],
+          ),
+          if (template.status == ApplicationStatus.published)
+            if (template.publishId case final String id)
+              ApplicationPublishId(publishId: id),
+          if (!draft)
+            Text(
+              ApplicationViewStrings.revertToEdit,
+              style: theme.textTheme.muted,
             ),
-          ],
-        ),
+          if (draft && widget.missing.isNotEmpty)
+            ApplicationMissingTexts(missing: widget.missing),
+          if (draft && widget.unknownFacts.isNotEmpty)
+            ApplicationUnknownFacts(gaps: widget.unknownFacts),
+          if (refused != null)
+            Text(
+              refused,
+              key: const ValueKey('application.state.refusal'),
+              style: theme.textTheme.small.copyWith(
+                color: theme.colorScheme.destructive,
+              ),
+            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Wrap(
+                  spacing: ApplicationViewSizes.smallGap,
+                  runSpacing: ApplicationViewSizes.smallGap,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    for (final step in ApplicationStep.values)
+                      if (step != ApplicationStep.delete &&
+                          step.offeredIn(template.status))
+                        ApplicationStepButton(
+                          step: step,
+                          loading: running == step,
+                          enabled: mayRun(step),
+                          onPressed: busy ? null : () => run(step),
+                        ),
+                  ],
+                ),
+              ),
+              if (ApplicationStep.delete.offeredIn(template.status))
+                Semantics(
+                  button: true,
+                  label: ApplicationStep.delete.label,
+                  child: ShadIconButton.ghost(
+                    key: const ValueKey('application.step.delete'),
+                    enabled: !busy,
+                    onPressed: () => run(ApplicationStep.delete),
+                    icon: Icon(
+                      LucideIcons.trash2,
+                      color: theme.colorScheme.destructive,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }

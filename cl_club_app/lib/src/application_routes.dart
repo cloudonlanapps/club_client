@@ -7,7 +7,9 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import 'utils/pdf_actions.dart';
+import 'utils/pick_json_file.dart';
 import 'utils/router_helpers.dart';
+import 'utils/save_file_bytes.dart';
 
 /// The Applications routes under the member-zone shell (club_client#321,
 /// #380): a member's own list, the admin's list of every template, and the
@@ -29,6 +31,7 @@ List<RouteBase> applicationRoutes() => [
     pageBuilder: (context, state) => NoTransitionPage(
       child: ApplicationsScreen(
         onOpen: (id) => context.push(applicationPath(id)),
+        onPickJsonFile: pickJsonFile,
         onHome: () => context.go('/'),
       ),
     ),
@@ -44,6 +47,7 @@ List<RouteBase> applicationRoutes() => [
           onBack: () => popOrGo(context, applicationsPath),
           onDeleted: () => popOrGo(context, applicationsPath),
           pdfAction: appPdfAction,
+          onSaveFile: saveFileBytes,
           onHome: () => context.go('/'),
         ),
       );

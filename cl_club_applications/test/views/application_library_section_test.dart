@@ -1,6 +1,7 @@
-// Issue 389: the Library section of the admin's Applications page: the
-// club's own texts, listed below the templates, added in a dialog, edited
-// in place and deleted after asking; gaps are kept as written.
+// Issue 389: the Library card: the club's own texts, added in a dialog,
+// edited in place and deleted after asking; gaps are kept as written.
+// Issue 399: the card is shown on Club details (passed in by its screen)
+// and renders nothing while applications are off.
 import 'package:cl_club_applications/cl_club_applications.dart';
 import 'package:cl_club_applications/src/constants/application_library_strings.dart';
 import 'package:cl_club_applications/src/constants/application_view_strings.dart';
@@ -16,18 +17,17 @@ import '../support/applications_harness.dart';
 Future<FakeApplicationLibraryMaster> _pump(
   WidgetTester tester, {
   Map<int, ApplicationLibraryText>? texts,
+  bool enabled = true,
 }) async {
   final library = FakeApplicationLibraryMaster(
     texts ?? {7: ApplicationSamples.libraryText()},
   );
   await pumpApplications(
     tester,
-    ApplicationsView(
-      currentUser: applicationsUser(admin: true),
-      onOpen: (_) {},
-    ),
+    const SingleChildScrollView(child: ApplicationLibrarySection()),
     master: FakeApplicationsMaster({1: ApplicationSamples.template(id: 1)}),
     library: library,
+    enabled: enabled,
   );
   return library;
 }
@@ -52,20 +52,21 @@ Finder _input(Finder within, int index) =>
 
 void main() {
   group('Issue 389: the Library section', () {
-    testWidgets('Issue 389: lists each club text below the templates, with '
-        'where it is used and its text in each language', (tester) async {
+    testWidgets('Issue 399: renders nothing while applications are off', (
+      tester,
+    ) async {
+      final library = await _pump(tester, enabled: false);
+      expect(find.byKey(const ValueKey('application.library')), findsNothing);
+      expect(find.text(ApplicationLibraryStrings.add), findsNothing);
+      expect(library.calls, isEmpty);
+    });
+
+    testWidgets('Issue 389: lists each club text, with where it is used and '
+        'its text in each language', (tester) async {
       await _pump(tester);
 
       final section = find.byKey(const ValueKey('application.library'));
       expect(section, findsOneWidget);
-      expect(
-        tester.getTopLeft(section).dy,
-        greaterThan(
-          tester
-              .getBottomLeft(find.byKey(const ValueKey('application.row.1')))
-              .dy,
-        ),
-      );
       final card = _textCard(7);
       expect(
         find.descendant(of: card, matching: find.text('Attend the matches')),

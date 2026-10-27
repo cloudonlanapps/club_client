@@ -69,17 +69,9 @@ abstract final class ApplicationFactStrings {
   static String unknownFact(String place, String language, String gap) =>
       '$place ($language): no fact named $gap';
 
-  /// The heading of the State card's list of gaps naming no fact.
-  static const String unknownTitle = 'Gaps naming no fact';
-
-  /// What the list says.
-  static const String unknownIntro =
-      'Each {name} must name a fact of this application. Add the fact under '
-      'Facts, or change the name in the text:';
-
-  /// Save's reason while gaps name no fact.
-  static String unknownCount(int n) =>
-      n == 1 ? '1 gap names no fact' : '$n gaps name no fact';
+  /// The heading of the list of gaps naming no fact: add the fact under
+  /// Facts, or change the text.
+  static const String unknownIntro = 'Unknown facts:';
 
   /// Save refused by the server for gaps naming no fact ([gaps], each a
   /// [unknownFact] line, joined by `; `).

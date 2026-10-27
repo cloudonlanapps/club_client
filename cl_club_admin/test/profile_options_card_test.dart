@@ -57,6 +57,7 @@ class _StubOptions extends ProfileOptionsNotifier {
 Future<_StubOptions> _pump(
   WidgetTester tester, {
   bool extendedProfile = true,
+  Widget? librarySection,
 }) async {
   await tester.binding.setSurfaceSize(const Size(1100, 5000));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -72,7 +73,10 @@ Future<_StubOptions> _pump(
         ),
         profileOptionsProvider.overrideWith(() => stub),
       ],
-      child: ClubIdentityView(currentUser: adminViewer(superAdmin: true)),
+      child: ClubIdentityView(
+        currentUser: adminViewer(superAdmin: true),
+        librarySection: librarySection,
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -88,6 +92,37 @@ Finder _field(String id) =>
     find.byWidgetPredicate((w) => w is ShadFormBuilderField && w.id == id);
 
 void main() {
+  group('Issue 399: the Library card passed in by the screen', () {
+    const library = SizedBox(key: ValueKey('library'), height: 40);
+
+    testWidgets('Issue 399: follows Profile options', (tester) async {
+      await _pump(tester, librarySection: library);
+      expect(find.byKey(ProfileOptionsCard.cardKey), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byKey(const ValueKey('library'))).dy,
+        greaterThan(
+          tester.getBottomLeft(find.byKey(ProfileOptionsCard.cardKey)).dy,
+        ),
+      );
+    });
+
+    testWidgets('Issue 399: follows the Translations card while the '
+        'extended profile is off', (tester) async {
+      await _pump(tester, extendedProfile: false, librarySection: library);
+      expect(find.byKey(ProfileOptionsCard.cardKey), findsNothing);
+      expect(
+        tester.getTopLeft(find.byKey(const ValueKey('library'))).dy,
+        greaterThan(
+          tester
+              .getBottomLeft(
+                find.byKey(const ValueKey('clubIdentity.section.translations')),
+              )
+              .dy,
+        ),
+      );
+    });
+  });
+
   group('Issue 320: the profile options on Club details', () {
     testWidgets('Issue 320: there is no such section while the extended '
         'profile is off', (tester) async {

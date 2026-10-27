@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cl_remote_store/cl_remote_store.dart'
     show
         applicationLabelsProvider,
+        applicationsProvider,
         clApplicationLibraryMasterProvider,
         emptyApplicationClauses,
         emptyApplicationLabels;
@@ -16,15 +17,17 @@ import '../../models/application_editor_options.dart';
 import 'application_library_text_card.dart';
 import 'application_library_text_dialog.dart';
 
-/// The **Library** section of the admin's Applications page
-/// (club_client#389): the club's own texts, oldest first, each edited in
-/// place and deleted from its card, and **Add text**. Every application's
-/// sections offer them beside the built-in clauses.
+/// The **Library** card (club_client#389): the club's own texts, oldest
+/// first, each edited in place and deleted from its card, and **Add text**.
+/// Every application's sections offer them beside the built-in clauses.
+/// Shown on Club details after Profile options, passed in by its screen;
+/// renders nothing unless the server offers applications.
 class ApplicationLibrarySection extends ConsumerWidget {
   const ApplicationLibrarySection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (ref.watch(applicationsProvider) != true) return const SizedBox.shrink();
     final theme = ShadTheme.of(context);
     final texts = ref.watch(clApplicationLibraryMasterProvider);
     // The catalogue's languages; English alone when it cannot be read.
@@ -58,36 +61,38 @@ class ApplicationLibrarySection extends ConsumerWidget {
         ],
       );
     }
-    return Column(
+    return ShadCard(
       key: const ValueKey('application.library'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: ApplicationViewSizes.smallGap,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                ApplicationLibraryStrings.title,
-                style: theme.textTheme.h4,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: ApplicationViewSizes.smallGap,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  ApplicationLibraryStrings.title,
+                  style: theme.textTheme.h4,
+                ),
               ),
-            ),
-            ShadButton.outline(
-              onPressed: languages == null
-                  ? null
-                  : () => unawaited(
-                      showApplicationLibraryTextDialog(
-                        context,
-                        languages: languages,
+              ShadButton.outline(
+                onPressed: languages == null
+                    ? null
+                    : () => unawaited(
+                        showApplicationLibraryTextDialog(
+                          context,
+                          languages: languages,
+                        ),
                       ),
-                    ),
-              leading: const Icon(LucideIcons.plus),
-              child: const Text(ApplicationLibraryStrings.add),
-            ),
-          ],
-        ),
-        Text(ApplicationLibraryStrings.intro, style: theme.textTheme.muted),
-        body,
-      ],
+                leading: const Icon(LucideIcons.plus),
+                child: const Text(ApplicationLibraryStrings.add),
+              ),
+            ],
+          ),
+          Text(ApplicationLibraryStrings.intro, style: theme.textTheme.muted),
+          body,
+        ],
+      ),
     );
   }
 }

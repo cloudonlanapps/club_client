@@ -7,8 +7,9 @@
 // uploaded an identity document finds it under their own *Applications*,
 // with Download, and their form downloads as a PDF; the admin then
 // unpublishes and deletes it through the editor. Download blank form
-// (club_client#393) is greyed out with its reason on the draft and on
-// once it is published, and gives the blank form as a PDF. With
+// (club_client#393), an icon of the heading card (club_client#398), is
+// hidden on the draft and shown once it is published, and gives the blank
+// form as a PDF. With
 // applications off (the server offers them only with identity
 // verification), no *Applications* entry appears.
 //
@@ -31,8 +32,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton;
 
+import '_helpers/applications.dart';
 import '_helpers/auth.dart';
 import '_helpers/capabilities.dart';
 import '_helpers/editors.dart';
@@ -70,31 +71,23 @@ Future<SecureClient> _adminClient() async {
   return c;
 }
 
-/// The step of the State card named [name] (`save`, `publish`, …).
-Finder _step(String name) => find.byKey(ValueKey('application.step.$name'));
+/// The step of the heading card named [name] (`save`, `publish`, …).
+Finder _step(String name) => applicationStep(name);
 
-/// The editor's Download blank form button (club_client#393).
-Finder _blankForm() => find.widgetWithText(ShadButton, 'Download blank form');
+/// The editor's Download blank form icon (club_client#393, #398).
+Finder _blankForm() =>
+    find.byKey(const ValueKey('application.state.blankForm'));
 
 /// The section card of the editor named [name] (`heading`, …).
 Finder _section(String name) =>
     find.byKey(ValueKey('application.section.$name'));
 
 /// Waits for the step [name] to be enabled, then runs it.
-Future<void> _run(WidgetTester tester, String name) async {
-  await waitFor(
-    tester,
-    () =>
-        _step(name).evaluate().isNotEmpty &&
-        tester.widget<ActionButton>(_step(name)).enabled,
-    description: 'the "$name" step to be enabled',
-  );
-  tester.widget<ActionButton>(_step(name)).onPressed!();
-  await settle(tester);
-}
+Future<void> _run(WidgetTester tester, String name) =>
+    runApplicationStep(tester, name);
 
 /// Saves the inline editor open in section [card]: its own Save, since the
-/// State card has a Save of its own. Fails fast on an error toast.
+/// heading card has moves of its own. Fails fast on an error toast.
 Future<void> _saveSection(WidgetTester tester, Finder card) async {
   invokeShadButton(
     tester,
@@ -266,13 +259,12 @@ void main() {
       findsOneWidget,
       reason: 'a new draft lacks its declaration and footer line',
     );
-    expect(tester.widget<ActionButton>(_step('save')).enabled, isFalse);
+    expect(applicationStepEnabled(tester, 'save'), isFalse);
     expect(
-      tester.widget<ShadButton>(_blankForm()).enabled,
-      isFalse,
-      reason: 'a draft has no blank form (club_client#393)',
+      _blankForm(),
+      findsNothing,
+      reason: 'a draft has no blank form (club_client#393, #398)',
     );
-    expect(find.text('Save the application first'), findsOneWidget);
 
     // 2. It writes the organisation and the footer line, the first and last
     // texts of the heading section.
@@ -309,29 +301,33 @@ void main() {
           .byKey(const ValueKey('application.state.missing'))
           .evaluate()
           .isEmpty,
-      description: 'nothing missing before Save',
+      description: 'nothing missing before Finalize',
     );
 
-    // 4. Save decides the layout; Publish shows it to members.
+    // 4. Finalize decides the layout; Publish shows it to members.
     await _run(tester, 'save');
     await _run(tester, 'publish');
-    expect(
-      find.text('Layout: decided when the application is saved'),
-      findsNothing,
-      reason: 'a saved application shows the layout the server stored',
-    );
-    expect(find.textContaining('Layout: '), findsOneWidget);
     await waitFor(
       tester,
-      () => tester.widget<ActionButton>(_step('unpublish')).enabled,
+      () => applicationStepEnabled(tester, 'unpublish'),
       description: 'the application to be published',
     );
+    expect(find.text('$_kTitle (Published)'), findsOneWidget);
     _templateId = _createdId(tester);
 
     // Download blank form is on for the published application; the bytes it
     // hands on are the blank form's PDF (club_client#393).
-    expect(tester.widget<ShadButton>(_blankForm()).enabled, isTrue);
-    expect(find.text('Save the application first'), findsNothing);
+    expect(
+      tester
+          .widget<ShadIconButton>(
+            find.descendant(
+              of: _blankForm(),
+              matching: find.byType(ShadIconButton),
+            ),
+          )
+          .enabled,
+      isTrue,
+    );
     final blank =
         await container(
               tester,
@@ -378,11 +374,11 @@ void main() {
     await settle(tester);
     await _run(tester, 'unpublish');
     await _run(tester, 'delete');
-    // The confirmation's own Delete is the last one on the page.
+    // The confirmation's Delete: the editor's own is a bin icon.
     final confirm = find.widgetWithText(ShadButton, 'Delete');
     await waitFor(
       tester,
-      () => confirm.evaluate().length > 1,
+      () => confirm.evaluate().isNotEmpty,
       description: 'the delete confirmation',
     );
     tester.widget<ShadButton>(confirm.last).onPressed!();

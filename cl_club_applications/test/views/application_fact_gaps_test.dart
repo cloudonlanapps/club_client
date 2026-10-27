@@ -1,6 +1,6 @@
 // Issue 389: in the editor a library text is pasted as written, gaps
-// included, with no fill call; the State card lists each gap naming no
-// fact and keeps Save off; the server's refusal shows there too; and the
+// included, with no fill call; the heading card lists each gap naming no
+// fact and keeps Finalize off; the server's refusal shows there too; and the
 // Facts heading carries a (?) that explains facts on hover and on tap.
 import 'package:cl_club_applications/cl_club_applications.dart';
 import 'package:cl_club_applications/src/constants/application_fact_strings.dart';
@@ -31,6 +31,7 @@ Future<FakeApplicationsMaster> _pump(
       onBack: () {},
       onDeleted: () {},
       pdfAction: recordingPdfAction(),
+      onSaveFile: (_, _) async => true,
     ),
     master: master,
   );
@@ -72,17 +73,44 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.text('• Selection 2 (English): no fact named match_dates'),
+        find.text('Selection 2 (English): no fact named match_dates'),
         findsOneWidget,
       );
       expect(
-        find.text('• Selection 2 (Marathi): no fact named match_date'),
+        find.text('Selection 2 (Marathi): no fact named match_date'),
         findsOneWidget,
       );
       expect(find.textContaining('named venue'), findsNothing);
       expect(_save(tester).enabled, isFalse);
-      expect(find.text('2 gaps name no fact'), findsOneWidget);
+      expect(find.text('2 gaps name no fact'), findsNothing);
       expect(master.calls, isEmpty);
+    });
+
+    testWidgets('Issue 398: the Unknown facts list is one heading in the '
+        'error colour, its lines smaller', (tester) async {
+      await _pump(
+        tester,
+        content: ApplicationSamples.content.copyWith(
+          formFooter: () => const ApplicationText({
+            'en': 'See you on {match_day}',
+            'mr': '{match_day}',
+          }),
+        ),
+      );
+      final error = ShadTheme.of(
+        tester.element(find.byType(ApplicationView)),
+      ).colorScheme.destructive;
+      final heading = tester.widget<Text>(
+        find.text(ApplicationFactStrings.unknownIntro),
+      );
+      final line = tester.widget<Text>(
+        find.text('Footer line (English): no fact named match_day'),
+      );
+      expect(ApplicationFactStrings.unknownIntro, 'Unknown facts:');
+      expect(heading.style!.color, error);
+      expect(line.style!.color, error);
+      expect(line.style!.fontSize, lessThan(heading.style!.fontSize!));
+      expect(_save(tester).enabled, isFalse);
     });
 
     testWidgets('Issue 389: a template whose gaps all name facts may be '

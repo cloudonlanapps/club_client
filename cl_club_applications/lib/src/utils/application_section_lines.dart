@@ -9,7 +9,10 @@ import 'application_text_reader.dart';
 typedef ApplicationReadLine = ({String label, String value});
 
 /// The read mode of each editor section: its content as it prints, one
-/// line per text, fact or item. A section with nothing in it has no lines.
+/// line per text, fact or item. A list section with nothing in it has no
+/// lines. The fixed texts of Languages and titles, and the declaration,
+/// keep their line while blank, so where each is edited is seen before the
+/// section is opened.
 abstract final class ApplicationSectionLines {
   /// The lines of [section] of the template [reader] reads.
   static List<ApplicationReadLine> of(
@@ -98,11 +101,27 @@ abstract final class ApplicationSectionLines {
             (label: labelName('$key', reader), value: reader.read(value)),
       ],
     };
+    final keepsBlank =
+        section == ApplicationSection.heading ||
+        section == ApplicationSection.declaration;
     return [
       for (final line in lines)
-        if (line.value.isNotEmpty) line,
+        if (keepsBlank || line.value.isNotEmpty) line,
     ];
   }
+
+  /// The labels of [section]'s lines a template must have written before it
+  /// is finalized (`ApplicationCompleteness.requiredTexts`): shown as
+  /// Required while blank.
+  static Set<String> requiredLabels(ApplicationSection section) =>
+      switch (section) {
+        ApplicationSection.heading => {
+          ApplicationViewStrings.title,
+          ApplicationViewStrings.formFooter,
+        },
+        ApplicationSection.declaration => {ApplicationViewStrings.declaration},
+        _ => const {},
+      };
 
   /// An age category's line: its name, and its birth dates and genders.
   static ApplicationReadLine ageCategory(

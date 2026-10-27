@@ -2,14 +2,15 @@
 // (club_client#389, club_server#126).
 //
 // With applications on: the admin adds a selection to the club's Library on
-// *Applications*, with a gap naming a fact the draft lacks; opens a draft
+// *Club details* (club_client#399), with a gap naming a fact the draft
+// lacks; opens, under *Applications*, a draft
 // that already uses one date-range fact in its declaration and has a
 // second; inserts the club text into the selections, as written, gaps
-// included; sees the State card list the gap naming no fact and Save
-// greyed out; adds the fact under Facts; saves. The saved template keeps
-// every gap, so each date-range fact prints in its own section, and its
-// preview downloads as a PDF. The admin then reverts and deletes the draft
-// and deletes the library text, through the UI.
+// included; sees the heading card list the gap naming no fact and
+// Finalize greyed out; adds the fact under Facts; finalizes. The saved
+// template keeps every gap, so each date-range fact prints in its own
+// section, and its preview downloads as a PDF. The admin then reverts
+// and deletes the draft and deletes the library text, through the UI.
 //
 // Fixtures (all `workflow389` prefixed): the draft, created with the SDK in
 // setUpAll; the admin is the stack's sudo user. Everything past setUpAll
@@ -32,8 +33,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton;
 
+import '_helpers/applications.dart';
 import '_helpers/auth.dart';
 import '_helpers/capabilities.dart';
 import '_helpers/editors.dart';
@@ -62,6 +63,9 @@ const _kVenue = 'workflow389 Rink';
 
 const _kApplications = 'Applications';
 
+/// The sidebar entry of Club details, where the Library card is.
+const _kClubDetails = 'Club details';
+
 late Capabilities _caps;
 
 /// The draft created in setUpAll.
@@ -73,33 +77,24 @@ Future<SecureClient> _adminClient() async {
   return c;
 }
 
-/// The step of the State card named [name] (`save`, `revert`, …).
-Finder _step(String name) => find.byKey(ValueKey('application.step.$name'));
+/// The step of the heading card named [name] (`save`, `revert`, …).
+Finder _step(String name) => applicationStep(name);
 
 /// The section card of the editor named [name] (`facts`, …).
 Finder _section(String name) =>
     find.byKey(ValueKey('application.section.$name'));
 
-/// The State card's list of gaps naming no fact.
+/// The heading card's list of gaps naming no fact.
 final Finder _unknownFacts = find.byKey(
   const ValueKey('application.state.unknownFacts'),
 );
 
 /// Waits for the step [name] to be enabled, then runs it.
-Future<void> _run(WidgetTester tester, String name) async {
-  await waitFor(
-    tester,
-    () =>
-        _step(name).evaluate().isNotEmpty &&
-        tester.widget<ActionButton>(_step(name)).enabled,
-    description: 'the "$name" step to be enabled',
-  );
-  tester.widget<ActionButton>(_step(name)).onPressed!();
-  await settle(tester);
-}
+Future<void> _run(WidgetTester tester, String name) =>
+    runApplicationStep(tester, name);
 
 /// Saves the inline editor open in section [card]: its own Save, since the
-/// State card has a Save of its own. Fails fast on an error toast.
+/// heading card has moves of its own. Fails fast on an error toast.
 Future<void> _saveSection(WidgetTester tester, Finder card) async {
   invokeShadButton(
     tester,
@@ -140,10 +135,13 @@ int _libraryTextId(WidgetTester tester) => container(tester)
 /// Confirms the ConfirmDialog that [label] opened: its own button is the
 /// last one with that label on the page.
 Future<void> _confirm(WidgetTester tester, String label) async {
-  final confirm = find.widgetWithText(ShadButton, label);
+  final confirm = find.descendant(
+    of: find.byType(ShadDialog),
+    matching: find.widgetWithText(ShadButton, label),
+  );
   await waitFor(
     tester,
-    () => confirm.evaluate().length > 1,
+    () => confirm.evaluate().isNotEmpty,
     description: 'the "$label" confirmation',
   );
   tester.widget<ShadButton>(confirm.last).onPressed!();
@@ -231,7 +229,7 @@ void main() {
     await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
     await ensureLoggedOut(tester);
 
-    // 1. The admin adds a selection to the club's Library.
+    // 1. The admin adds a selection to the club's Library, on Club details.
     await loginViaUi(tester, _kSudoUsername, _kSudoPassword);
     await waitFor(
       tester,
@@ -243,7 +241,7 @@ void main() {
           find.byTooltip('Open menu').evaluate().isNotEmpty,
       description: 'the Applications sidebar entry',
     );
-    await openSidebarEntry(tester, _kApplications, last: true);
+    await openSidebarEntry(tester, _kClubDetails);
     final library = find.byKey(const ValueKey('application.library'));
     final add = find.descendant(
       of: library,
@@ -299,7 +297,9 @@ void main() {
     );
     final textId = _libraryTextId(tester);
 
-    // 2. It opens the draft and pastes the club text into the selections.
+    // 2. It opens the draft under Applications and pastes the club text
+    // into the selections.
+    await openSidebarEntry(tester, _kApplications, last: true);
     final row = find.byKey(ValueKey('application.row.$_templateId'));
     await waitFor(
       tester,
@@ -349,7 +349,7 @@ void main() {
     );
     await _saveSection(tester, _section('selections'));
 
-    // 3. The State card lists the gap naming no fact; Save is off.
+    // 3. The heading card lists the gap naming no fact; Finalize is off.
     await waitFor(
       tester,
       () => _unknownFacts.evaluate().isNotEmpty,
@@ -364,7 +364,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(tester.widget<ActionButton>(_step('save')).enabled, isFalse);
+    expect(applicationStepEnabled(tester, 'save'), isFalse);
 
     // 4. It adds the fact under Facts, a name.
     await tapSectionPencil(tester, _section('facts'));
@@ -394,14 +394,12 @@ void main() {
       description: 'no gap naming no fact once the fact is added',
     );
 
-    // 5. Save: the saved template keeps every gap, each date-range fact in
+    // 5. Finalize: the saved template keeps every gap, each date-range fact in
     // its own section, and its preview is a PDF.
     await _run(tester, 'save');
     await waitFor(
       tester,
-      () =>
-          _step('revert').evaluate().isNotEmpty &&
-          tester.widget<ActionButton>(_step('revert')).enabled,
+      () => applicationStepEnabled(tester, 'revert'),
       description: 'the draft to be saved',
     );
     final saved = container(
@@ -426,11 +424,12 @@ void main() {
       () => row.evaluate().isEmpty && find.text(_kTitle).evaluate().isEmpty,
       description: 'the deleted draft to leave the list',
     );
+    await openSidebarEntry(tester, _kClubDetails);
     final card = find.byKey(ValueKey('application.library.$textId'));
     await waitFor(
       tester,
       () => card.evaluate().isNotEmpty,
-      description: 'the library text on the Applications page',
+      description: 'the library text on Club details',
     );
     invokeShadButton(
       tester,

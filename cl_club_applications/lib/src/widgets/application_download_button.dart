@@ -56,6 +56,8 @@ class ApplicationDownloadButton extends ConsumerStatefulWidget {
     required this.pdfAction,
     required this.fileName,
     this.label,
+    this.icon,
+    this.iconOnly = false,
     this.onOpenProfile,
     this.reason,
     this.today,
@@ -71,8 +73,17 @@ class ApplicationDownloadButton extends ConsumerStatefulWidget {
   /// The name the PDF is shared or saved under.
   final String fileName;
 
-  /// The button's text; the action's label when null.
+  /// The button's text; the action's label when null. An [iconOnly]
+  /// button carries it as its accessible label.
   final String? label;
+
+  /// The button's icon; the action's when null (download, or share on a
+  /// phone).
+  final IconData? icon;
+
+  /// Whether the button shows its icon alone, as in the editor's heading
+  /// row.
+  final bool iconOnly;
 
   /// Opens the member's profile page when they answer **No** to "Is your
   /// profile complete?"; null only closes the dialog.
@@ -185,10 +196,7 @@ class ApplicationDownloadButtonState
         return ApplicationViewStrings.categoryNumber(index);
       }
       final label = categories[index].label;
-      return [
-        label['en'],
-        ...label.values,
-      ].whereType<String>().firstWhere(
+      return [label['en'], ...label.values].whereType<String>().firstWhere(
         (text) => text.trim().isNotEmpty,
         orElse: () => ApplicationViewStrings.categoryNumber(index),
       );
@@ -211,18 +219,34 @@ class ApplicationDownloadButtonState
           mainAxisSize: MainAxisSize.min,
           spacing: ApplicationViewSizes.reasonGap,
           children: [
-            ShadButton.outline(
-              size: ShadButtonSize.sm,
-              enabled: !downloading && why == null,
-              onPressed: onPressed,
-              leading: downloading
-                  ? const SizedBox.square(
-                      dimension: ApplicationViewSizes.spinner,
-                      child: ShadProgress(),
-                    )
-                  : Icon(widget.pdfAction.icon),
-              child: Text(widget.label ?? widget.pdfAction.label),
-            ),
+            if (widget.iconOnly)
+              Semantics(
+                button: true,
+                label: widget.label ?? widget.pdfAction.label,
+                child: ShadIconButton.ghost(
+                  enabled: !downloading && why == null,
+                  onPressed: onPressed,
+                  icon: downloading
+                      ? const SizedBox.square(
+                          dimension: ApplicationViewSizes.spinner,
+                          child: ShadProgress(),
+                        )
+                      : Icon(widget.icon ?? widget.pdfAction.icon),
+                ),
+              )
+            else
+              ShadButton.outline(
+                size: ShadButtonSize.sm,
+                enabled: !downloading && why == null,
+                onPressed: onPressed,
+                leading: downloading
+                    ? const SizedBox.square(
+                        dimension: ApplicationViewSizes.spinner,
+                        child: ShadProgress(),
+                      )
+                    : Icon(widget.icon ?? widget.pdfAction.icon),
+                child: Text(widget.label ?? widget.pdfAction.label),
+              ),
             if (why != null) Text(why, style: theme.textTheme.muted),
           ],
         ),

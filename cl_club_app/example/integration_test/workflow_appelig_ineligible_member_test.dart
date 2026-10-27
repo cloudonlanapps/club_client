@@ -32,8 +32,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionButton;
 
+import '_helpers/applications.dart';
 import '_helpers/auth.dart';
 import '_helpers/capabilities.dart';
 import '_helpers/forms.dart';
@@ -81,21 +81,9 @@ Future<SecureClient> _adminClient() async {
   return c;
 }
 
-/// The step of the State card named [name] (`unpublish`, `delete`, …).
-Finder _step(String name) => find.byKey(ValueKey('application.step.$name'));
-
 /// Waits for the step [name] to be enabled, then runs it.
-Future<void> _run(WidgetTester tester, String name) async {
-  await waitFor(
-    tester,
-    () =>
-        _step(name).evaluate().isNotEmpty &&
-        tester.widget<ActionButton>(_step(name)).enabled,
-    description: 'the "$name" step to be enabled',
-  );
-  tester.widget<ActionButton>(_step(name)).onPressed!();
-  await settle(tester);
-}
+Future<void> _run(WidgetTester tester, String name) =>
+    runApplicationStep(tester, name);
 
 /// Opens *Applications* from the sidebar: the member's own list under
 /// Main, or with [manage] the admin's list under Club Management
@@ -267,7 +255,7 @@ void main() {
     final confirm = find.widgetWithText(ShadButton, 'Delete');
     await waitFor(
       tester,
-      () => confirm.evaluate().length > 1,
+      () => confirm.evaluate().isNotEmpty,
       description: 'the delete confirmation',
     );
     tester.widget<ShadButton>(confirm.last).onPressed!();

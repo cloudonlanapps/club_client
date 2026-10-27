@@ -41,4 +41,16 @@ abstract final class ApplicationViewSizes {
 
   /// The size of the Facts help's (?) icon.
   static const double helpIcon = 18;
+
+  /// The gap between a check list's heading and its lines.
+  static const double listGap = 2;
+
+  /// How far a check list's lines are set in under its heading.
+  static const double listIndent = 12;
+
+  /// The font size of a check list's lines, smaller than its heading.
+  static const double listFontSize = 12;
+
+  /// The font size of a read line's value, smaller than its label.
+  static const double readValueFontSize = 13;
 }

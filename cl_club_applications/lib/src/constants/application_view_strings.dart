@@ -42,12 +42,31 @@ abstract final class ApplicationViewStrings {
   /// The editor's button for the form printed blank (club_client#393).
   static const String blankForm = 'Download blank form';
 
-  /// Why [blankForm] is greyed out on a draft.
-  static const String blankFormNeedsSave = 'Save the application first';
-
   /// The name the blank form of application [title] is saved under,
   /// before its extension.
   static String blankFormFileTitle(String title) => '$title - blank form';
+
+  /// The editor's button that saves a finalized template as a JSON file,
+  /// to import it on another server.
+  static const String exportJson = 'Export JSON';
+
+  /// A template saved as a file.
+  static const String exported = 'Application exported.';
+
+  /// The file could not be written.
+  static const String exportFailed =
+      'Could not export the application. Please try again.';
+
+  /// The list's button that creates a draft from an exported file.
+  static const String importJson = 'Import JSON';
+
+  /// A file that is not an exported application.
+  static const String importUnreadable =
+      'This file is not an exported application.';
+
+  /// The server refused the imported draft.
+  static const String importFailed =
+      'Could not import the application. Please try again.';
 
   /// The create button and dialog title.
   static const String create = 'Create application';
@@ -67,15 +86,14 @@ abstract final class ApplicationViewStrings {
   /// Joins the parts of a caption.
   static const String separator = ' · ';
 
-  /// The state actions' card.
-  static const String stateTitle = 'State';
+  /// The editor's heading: the template's [title] and its [status]
+  /// ("Camp next month (Draft)").
+  static String titleWithStatus(String title, String status) =>
+      '$title ($status)';
 
-  /// The stored layout, once saved.
-  static String layout(String name) => 'Layout: $name';
-
-  /// A draft has no layout until it is saved.
-  static const String noLayout =
-      'Layout: decided when the application is saved';
+  /// What a blank text of a section's read mode shows when it must be
+  /// written before Finalize.
+  static const String required = 'Required';
 
   /// A published template's publish ID, printed up the side margin of each
   /// downloaded form (club_client#339).
@@ -92,12 +110,9 @@ abstract final class ApplicationViewStrings {
       'Saved and published applications are read-only: revert to a draft to '
       'edit.';
 
-  /// The heading of the client's own check.
-  static const String missingTitle = 'Still missing before it can be saved';
-
-  /// What the client's check lists.
-  static const String missingIntro =
-      'These texts are missing, or are not written in every print language:';
+  /// The heading of what the client's own check lists before Finalize:
+  /// each text missing, or not written in every print language.
+  static const String missingIntro = 'Missing:';
 
   /// A template created.
   static const String created = 'Application created.';
@@ -370,11 +385,4 @@ abstract final class ApplicationViewStrings {
       languages.isEmpty
       ? '$place: not written'
       : '$place: ${languages.join(', ')} missing';
-
-  /// Save's reason while texts are missing.
-  static String textsMissing(int n) =>
-      n == 1 ? '1 text missing' : '$n texts missing';
-
-  /// Marks an item of a list.
-  static const String bullet = '• ';
 }

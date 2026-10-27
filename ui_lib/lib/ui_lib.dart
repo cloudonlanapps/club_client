@@ -38,6 +38,8 @@ export 'src/utils/launch_contact_url.dart' show launchContactUrl;
 // Opening media outside the app
 export 'src/utils/open_pdf_download.dart' show openPdfDownload;
 export 'src/utils/phone_number.dart' show PhoneNumber;
+// A row's initial for `EntityImage.initials` (#331).
+export 'src/utils/text_initial.dart' show textInitial;
 export 'src/widgets/action_button.dart' show ActionButton;
 export 'src/widgets/action_icon.dart' show ActionIcon;
 export 'src/widgets/admin_user_review/admin_user_review_form.dart'

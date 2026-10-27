@@ -91,4 +91,25 @@ void main() {
       expect(find.text('AG'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'Issue 331: a first name starting with an emoji shows the whole emoji '
+    'in the initials',
+    (tester) async {
+      const user = UserInfo(
+        username: 'emojiguy',
+        displayName: '🏒 Puck Guy',
+        firstName: '🏒Puck',
+        lastName: 'guy',
+        status: UserStatus.active,
+        isSuperAdmin: false,
+        roles: UserRoles(),
+      );
+      await tester.pumpWidget(_wrap(user: user, avatarUrl: null));
+      await tester.pumpAndSettle();
+
+      expect(find.text('🏒G'), findsOneWidget);
+      expect(find.textContaining('\uFFFD'), findsNothing);
+    },
+  );
 }

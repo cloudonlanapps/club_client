@@ -3,11 +3,10 @@ import 'package:cl_remote_store/cl_remote_store.dart'
 import 'package:club_sdk_2/club_sdk_2.dart' show EvaluationStaffView;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ui_lib/ui_lib.dart' show EntityCard, EntityImage;
+import 'package:ui_lib/ui_lib.dart' show EntityCard, EntityImage, textInitial;
 
 import '../constants/evaluation_view_strings.dart';
 import '../models/evaluation_period_dates.dart';
-import '../utils/evaluation_initial.dart';
 import '../utils/evaluation_names.dart';
 
 /// One of the coach's evaluations: the member it is about, its template,
@@ -37,7 +36,7 @@ class CoachEvaluationRow extends ConsumerWidget {
       e.periodEndUtc,
     );
     return EntityCard(
-      image: EntityImage.initials(evaluationInitial(member)),
+      image: EntityImage.initials(textInitial(member)),
       title: member,
       caption: [
         ?template,

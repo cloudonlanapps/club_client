@@ -4,7 +4,8 @@ import 'package:club_sdk_2/club_sdk_2.dart' show ApplicationTemplate;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionItem, EntityCard, EntityImage;
+import 'package:ui_lib/ui_lib.dart'
+    show ActionItem, EntityCard, EntityImage, textInitial;
 
 import '../constants/application_view_sizes.dart';
 import '../constants/application_view_strings.dart';
@@ -89,7 +90,9 @@ class AdminApplicationListState extends ConsumerState<AdminApplicationList> {
         for (final template in list)
           EntityCard(
             key: ValueKey('application.row.${template.id}'),
-            image: EntityImage.initials(applicationTitle(template)[0]),
+            image: EntityImage.initials(
+              textInitial(applicationTitle(template)),
+            ),
             title: applicationTitle(template),
             caption: caption(template),
             onTap: () => widget.onOpen(template.id),

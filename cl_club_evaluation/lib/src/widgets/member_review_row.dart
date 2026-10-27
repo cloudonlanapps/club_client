@@ -2,11 +2,10 @@ import 'package:club_sdk_2/club_sdk_2.dart' show EvaluationMemberView;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show EntityCard, EntityImage;
+import 'package:ui_lib/ui_lib.dart' show EntityCard, EntityImage, textInitial;
 
 import '../constants/evaluation_view_strings.dart';
 import '../models/evaluation_period_dates.dart';
-import '../utils/evaluation_initial.dart';
 import '../utils/evaluation_names.dart';
 
 /// One published review in the member's list: its template's name, the
@@ -31,7 +30,7 @@ class MemberReviewRow extends ConsumerWidget {
     );
     final coach = EvaluationNames.person(ref, review.effectiveOwner);
     return EntityCard(
-      image: EntityImage.initials(evaluationInitial(review.template.name)),
+      image: EntityImage.initials(textInitial(review.template.name)),
       title: review.template.name,
       caption: [
         event,

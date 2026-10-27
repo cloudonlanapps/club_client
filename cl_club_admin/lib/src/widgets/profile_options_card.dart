@@ -45,9 +45,9 @@ class ProfileOptionsCardState extends ConsumerState<ProfileOptionsCard> {
   /// Key of the inline form; attached only while the card is being edited.
   final formKey = GlobalKey<ProfileOptionsFormState>();
 
-  /// Stores [values] as the club's options. A refusal naming a list shows
-  /// on it, a document the server cannot use shows inline in the form, and
-  /// any other failure is a toast with a fixed message.
+  /// Stores [values] as the club's options. A document the server cannot
+  /// use shows inline in the form, and any other failure is a toast with a
+  /// fixed message.
   Future<bool> save(Map<String, dynamic> values) async {
     final toaster = ShadToaster.of(context);
     try {

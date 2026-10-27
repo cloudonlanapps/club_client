@@ -144,51 +144,6 @@ void main() {
       ]);
       expect(find.text(ProfileOptionsMessages.saved), findsOneWidget);
     });
-
-    testWidgets('Issue 320: a schema refusal shows on the field it names, '
-        'and the editor stays open', (tester) async {
-      final stub = await _pump(tester)
-        ..refuseWith = const ServerException(
-          statusCode: 422,
-          code: SdkErrorCode.validationError,
-          message: 'raw server text',
-          details: {
-            ServerException.refusedFieldsKey: [
-              {
-                'loc': ['body', 'languages', 1],
-                'msg': 'Value error, a language appears twice',
-              },
-            ],
-          },
-        );
-
-      await tester.tap(_inCard(find.byType(SectionEditButton)));
-      await tester.pumpAndSettle();
-      await tester.tap(_inCard(find.text('Add language')));
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        find
-            .descendant(
-              of: _field(ProfileOptionsFormFields.languagesId),
-              matching: find.byType(EditableText),
-            )
-            .last,
-        'Tamil',
-      );
-      await tester.pump();
-      await tester.tap(_inCard(find.widgetWithText(ShadButton, 'Save')));
-      await tester.pumpAndSettle();
-
-      expect(stub.saves, isEmpty);
-      expect(
-        find.descendant(
-          of: _field(ProfileOptionsFormFields.languagesId),
-          matching: find.text('A language appears twice'),
-        ),
-        findsOneWidget,
-      );
-      expect(find.text('raw server text'), findsNothing);
-    });
   });
 
   group('Issue 334: only the super admin edits the profile options', () {
@@ -302,6 +257,33 @@ void main() {
             statusCode: 403,
             code: 'FORBIDDEN',
             message: 'x',
+          ),
+        ),
+        isNull,
+      );
+    });
+
+    test('Issue 364: a schema refusal of the PATCH body names no list and '
+        'is left to the host', () {
+      // The body is `{"value": …}` with `value: Any` (club_server
+      // schemas/system_preference.py `SystemPreferenceUpdate`), so the only
+      // schema refusal is a body without `value`.
+      expect(
+        ProfileOptionsFormSubmit.refusal(
+          const ServerException(
+            statusCode: 422,
+            code: SdkErrorCode.validationError,
+            message: 'Field required',
+            details: {
+              ServerException.refusedFieldsKey: [
+                {
+                  'type': 'missing',
+                  'loc': ['body', 'value'],
+                  'msg': 'Field required',
+                  'input': <String, Object?>{},
+                },
+              ],
+            },
           ),
         ),
         isNull,

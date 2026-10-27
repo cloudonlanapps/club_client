@@ -21,6 +21,7 @@ Future<FakeApplicationsMaster> _pump(
   WidgetTester tester, {
   ApplicationStatus status = ApplicationStatus.draft,
   ApplicationContent? content,
+  List<String>? names,
 }) async {
   final master = FakeApplicationsMaster({
     5: ApplicationSamples.template(
@@ -36,12 +37,19 @@ Future<FakeApplicationsMaster> _pump(
       applicationId: 5,
       onBack: () {},
       onDeleted: () {},
-      pdfAction: recordingPdfAction(),
+      pdfAction: recordingPdfAction(names: names),
     ),
     master: master,
   );
   return master;
 }
+
+ShadButton _blankForm(WidgetTester tester) => tester.widget(
+  find.ancestor(
+    of: find.text(ApplicationViewStrings.blankForm),
+    matching: find.byType(ShadButton),
+  ),
+);
 
 Finder _input(String text) => find.byWidgetPredicate(
   (w) => w is EditableText && w.controller.text == text,
@@ -287,6 +295,69 @@ void main() {
       await tester.tap(find.text(ApplicationViewStrings.preview));
       await tester.pumpAndSettle();
       expect(master.calls, ['preview 5']);
+    });
+  });
+  group('Issue 393: Download blank form', () {
+    testWidgets('Issue 393: shows beside Preview', (tester) async {
+      await _pump(tester, status: ApplicationStatus.saved);
+      final preview = tester.getRect(find.text(ApplicationViewStrings.preview));
+      final blank = tester.getRect(find.text(ApplicationViewStrings.blankForm));
+      expect(blank.left, greaterThan(preview.right));
+      expect(blank.center.dy, moreOrLessEquals(preview.center.dy, epsilon: 1));
+    });
+
+    testWidgets('Issue 393: greyed out with its reason on a draft', (
+      tester,
+    ) async {
+      final master = await _pump(tester);
+      expect(_blankForm(tester).enabled, isFalse);
+      expect(find.text(ApplicationViewStrings.blankFormNeedsSave), findsOne);
+      await tester.tap(
+        find.text(ApplicationViewStrings.blankForm),
+        warnIfMissed: false,
+      );
+      await tester.pumpAndSettle();
+      expect(master.calls, isEmpty);
+    });
+
+    for (final status in [
+      ApplicationStatus.saved,
+      ApplicationStatus.published,
+    ]) {
+      testWidgets('Issue 393: on for a ${status.wireName} one, handing the '
+          'PDF on named after the application', (tester) async {
+        final names = <String>[];
+        final master = await _pump(tester, status: status, names: names);
+        expect(_blankForm(tester).enabled, isTrue);
+        expect(
+          find.text(ApplicationViewStrings.blankFormNeedsSave),
+          findsNothing,
+        );
+        await tester.tap(find.text(ApplicationViewStrings.blankForm));
+        await tester.pumpAndSettle();
+        expect(master.calls, ['blank 5']);
+        expect(names, ['Trial - blank form.pdf']);
+      });
+    }
+
+    testWidgets('Issue 393: a refusal shows under the button', (tester) async {
+      final master = await _pump(tester, status: ApplicationStatus.saved);
+      master.failWith = const ServerException(
+        statusCode: 422,
+        code: SdkErrorCode.applicationNotSaved,
+        message: 'raw server words',
+      );
+      await tester.tap(find.text(ApplicationViewStrings.blankForm));
+      await tester.pumpAndSettle();
+      expect(find.text(ApplicationViewStrings.notSaved), findsOneWidget);
+      expect(find.textContaining('raw server words'), findsNothing);
+      final refusal = tester.getRect(
+        find.text(ApplicationViewStrings.notSaved),
+      );
+      final button = tester.getRect(
+        find.text(ApplicationViewStrings.blankForm),
+      );
+      expect(refusal.top, greaterThan(button.bottom));
     });
   });
 }

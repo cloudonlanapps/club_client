@@ -43,6 +43,9 @@ import 'profile_complete_dialog.dart';
 /// downloads without asking. The choice is not remembered. The preview is
 /// the server's demo member and never asks.
 ///
+/// Given a [reason], the button is greyed out with it beside it: the
+/// download the state forbids (a draft's blank form, club_client#393).
+///
 /// While it downloads the button is off and shows a spinner. A refusal
 /// about the member or the application (not eligible, no identity
 /// document, no longer published) shows as a clear message under the
@@ -54,6 +57,7 @@ class ApplicationDownloadButton extends ConsumerStatefulWidget {
     required this.fileName,
     this.label,
     this.onOpenProfile,
+    this.reason,
     this.today,
     super.key,
   });
@@ -73,6 +77,10 @@ class ApplicationDownloadButton extends ConsumerStatefulWidget {
   /// Opens the member's profile page when they answer **No** to "Is your
   /// profile complete?"; null only closes the dialog.
   final VoidCallback? onOpenProfile;
+
+  /// Why the download is not allowed now, shown beside the greyed-out
+  /// button; null when it is.
+  final String? reason;
 
   /// Today's date for the guardian's age check; the clock's when null.
   final DateTime Function()? today;
@@ -99,7 +107,7 @@ class ApplicationDownloadButtonState
   /// Asks "Is your profile complete?" when the form is the member's own,
   /// then fetches the PDF and hands it to the action on **Yes**.
   Future<void> onPressed() async {
-    if (downloading) return;
+    if (downloading || widget.reason != null) return;
     if (widget.asksProfileComplete) {
       final blank = blankFields();
       if (blank != null && blank.isEmpty) return run();
@@ -193,22 +201,30 @@ class ApplicationDownloadButtonState
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
     final refused = refusal;
+    final why = widget.reason;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       spacing: ApplicationViewSizes.smallGap,
       children: [
-        ShadButton.outline(
-          size: ShadButtonSize.sm,
-          enabled: !downloading,
-          onPressed: onPressed,
-          leading: downloading
-              ? const SizedBox.square(
-                  dimension: ApplicationViewSizes.spinner,
-                  child: ShadProgress(),
-                )
-              : Icon(widget.pdfAction.icon),
-          child: Text(widget.label ?? widget.pdfAction.label),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: ApplicationViewSizes.reasonGap,
+          children: [
+            ShadButton.outline(
+              size: ShadButtonSize.sm,
+              enabled: !downloading && why == null,
+              onPressed: onPressed,
+              leading: downloading
+                  ? const SizedBox.square(
+                      dimension: ApplicationViewSizes.spinner,
+                      child: ShadProgress(),
+                    )
+                  : Icon(widget.pdfAction.icon),
+              child: Text(widget.label ?? widget.pdfAction.label),
+            ),
+            if (why != null) Text(why, style: theme.textTheme.muted),
+          ],
         ),
         if (refused != null)
           ConstrainedBox(

@@ -23,7 +23,8 @@ import 'application_unknown_facts.dart';
 /// The **State** card of the application editor (club_client#321): the
 /// template's state and stored layout, a published template's publish ID
 /// (club_client#339), the moves Save, Publish, Unpublish,
-/// Revert and Delete, and Preview.
+/// Revert and Delete, Preview, and Download blank form (club_client#393),
+/// greyed out with its reason on a draft.
 ///
 /// A move the state forbids is greyed out up front with its reason beside
 /// it; so is Save while the client's check finds texts [missing], or
@@ -54,7 +55,8 @@ class ApplicationStateCard extends ConsumerStatefulWidget {
   /// Leaves the editor once the template is deleted.
   final VoidCallback onDeleted;
 
-  /// What the downloaded preview is handed to: shared, saved or opened.
+  /// What the downloaded preview and blank form are handed to: shared,
+  /// saved or opened.
   final PdfAction pdfAction;
 
   @override
@@ -196,6 +198,19 @@ class ApplicationStateCardState extends ConsumerState<ApplicationStateCard> {
                   pdfAction: widget.pdfAction,
                   fileName: PdfAction.fileNameFor(applicationTitle(template)),
                   label: ApplicationViewStrings.preview,
+                ),
+                ApplicationDownloadButton(
+                  download: ApplicationBlankForm(template.id),
+                  pdfAction: widget.pdfAction,
+                  fileName: PdfAction.fileNameFor(
+                    ApplicationViewStrings.blankFormFileTitle(
+                      applicationTitle(template),
+                    ),
+                  ),
+                  label: ApplicationViewStrings.blankForm,
+                  reason: draft
+                      ? ApplicationViewStrings.blankFormNeedsSave
+                      : null,
                 ),
               ],
             ),

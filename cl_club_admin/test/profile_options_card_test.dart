@@ -191,10 +191,121 @@ void main() {
     });
   });
 
+  group('Issue 334: only the super admin edits the profile options', () {
+    testWidgets('Issue 334: an admin who is not a super admin sees no edit '
+        'pencil', (tester) async {
+      final viewer = adminViewer();
+      await tester.pumpWidget(
+        adminScope(
+          overrides: [
+            profileOptionsProvider.overrideWith(() => _StubOptions(_stored)),
+          ],
+          child: ProfileOptionsCard(
+            options: _stored,
+            canEdit: viewer.isSuperAdmin,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(_inCard(find.textContaining('Goalie')), findsOneWidget);
+      expect(_inCard(find.byType(SectionEditButton)), findsNothing);
+    });
+
+    testWidgets('Issue 334: a super admin edits a position and saves it', (
+      tester,
+    ) async {
+      final stub = await _pump(tester);
+
+      await tester.tap(_inCard(find.byType(SectionEditButton)));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find
+            .descendant(
+              of: _field(ProfileOptionsFormFields.positionsId),
+              matching: find.byType(EditableText),
+            )
+            .first,
+        'Winger',
+      );
+      await tester.pump();
+      await tester.tap(_inCard(find.widgetWithText(ShadButton, 'Save')));
+      await tester.pumpAndSettle();
+
+      expect(stub.saves, hasLength(1));
+      expect(stub.saves.single.positions.first.value, 'Winger');
+      expect(find.text(ProfileOptionsMessages.saved), findsOneWidget);
+      expect(_inCard(find.byType(SectionEditButton)), findsOneWidget);
+    });
+
+    testWidgets('Issue 334: a document the server cannot use shows inline '
+        'and the editor stays open', (tester) async {
+      final stub = await _pump(tester)
+        ..refuseWith = const ServerException(
+          statusCode: 422,
+          code: SdkErrorCode.invalidPreferenceValue,
+          message: "Preference 'profile_options' must be ...",
+        );
+
+      await tester.tap(_inCard(find.byType(SectionEditButton)));
+      await tester.pumpAndSettle();
+      await tester.tap(_inCard(find.text('Add language')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find
+            .descendant(
+              of: _field(ProfileOptionsFormFields.languagesId),
+              matching: find.byType(EditableText),
+            )
+            .last,
+        'Tamil',
+      );
+      await tester.pump();
+      await tester.tap(_inCard(find.widgetWithText(ShadButton, 'Save')));
+      await tester.pumpAndSettle();
+
+      expect(stub.saves, isEmpty);
+      expect(
+        _inCard(find.text(ProfileOptionsMessages.invalidOptions)),
+        findsOneWidget,
+      );
+      expect(find.text(ProfileOptionsMessages.saveFailed), findsNothing);
+      expect(find.textContaining('must be'), findsNothing);
+      expect(_inCard(find.widgetWithText(ShadButton, 'Save')), findsOneWidget);
+    });
+  });
+
   group('Issue 320: the profile options adapter', () {
     test('Issue 320: the stored options become the form values and back', () {
       final values = buildProfileOptionsFormInitialValues(_stored);
       expect(ProfileOptionsFormSubmit.optionsOf(values), _stored);
+    });
+
+    test('Issue 334: INVALID_PREFERENCE_VALUE is a form-level refusal; '
+        'any other code is left to the host', () {
+      expect(
+        ProfileOptionsFormSubmit.refusal(
+          const ServerException(
+            statusCode: 422,
+            code: SdkErrorCode.invalidPreferenceValue,
+            message: 'x',
+          ),
+        ),
+        (
+          fieldErrors: const <String, String>{},
+          formError: ProfileOptionsMessages.invalidOptions,
+        ),
+      );
+      expect(
+        ProfileOptionsFormSubmit.refusal(
+          const ServerException(
+            statusCode: 403,
+            code: 'FORBIDDEN',
+            message: 'x',
+          ),
+        ),
+        isNull,
+      );
     });
   });
 }

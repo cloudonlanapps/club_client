@@ -95,16 +95,20 @@ abstract final class ApplicationViewStrings {
   static const String changedMeanwhile =
       'This application was changed elsewhere and has been reloaded.';
 
-  /// Save refused: the first incomplete text, at [place], lacks
-  /// [languages]; [others] more texts are incomplete. Naming each text with
-  /// its own languages is club_client#338.
-  static String incomplete(String place, String languages, int others) =>
-      'Save was refused: $place is missing or lacks $languages'
-      '${switch (others) {
-        0 => '',
-        1 => ', and 1 more text is incomplete',
-        _ => ', and $others more texts are incomplete',
-      }}.';
+  /// Save refused: [texts] are missing or lack print languages, each
+  /// named with the ones it lacks ([incompleteText]), joined by
+  /// [incompleteSeparator] (club_client#338).
+  static String incomplete(String texts) =>
+      'Save was refused: these texts are missing or lack a language. '
+      '$texts.';
+
+  /// One incomplete text of a save refusal: the text at [place] and the
+  /// [languages] it lacks.
+  static String incompleteText(String place, String languages) =>
+      '$place: $languages';
+
+  /// Separates the incomplete texts of a save refusal.
+  static const String incompleteSeparator = '; ';
 
   /// Save refused: the details do not fit page 1.
   static String doesNotFit(double? overflowPt) =>

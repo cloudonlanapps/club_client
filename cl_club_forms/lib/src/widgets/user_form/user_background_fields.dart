@@ -3,13 +3,13 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../form/form_body.dart';
 import '../form/labeled_form_row.dart';
+import 'user_choices_field.dart';
 import 'user_form_fields.dart';
 import 'user_form_strings.dart';
-import 'user_optional_choice_field.dart';
 
 /// The background of the extended profile: nationality and preferred
-/// language. Sits inside the embedding form's `ShadForm`, which holds the
-/// initial values.
+/// languages (any number of the club's). Sits inside the embedding form's
+/// `ShadForm`, which holds the initial values.
 class UserBackgroundFields extends StatelessWidget {
   const UserBackgroundFields({
     required this.languages,
@@ -37,10 +37,11 @@ class UserBackgroundFields extends StatelessWidget {
           ),
         ),
         LabeledFormRow(
-          label: UserFormStrings.preferredLanguage,
-          field: UserOptionalChoiceField(
+          label: UserFormStrings.preferredLanguages,
+          field: UserChoicesField(
             id: UserFormFields.preferredLanguagesId,
             enabled: enabled,
+            noneTickedHint: UserFormStrings.noLanguageChosen,
             options: {for (final language in languages) language: language},
           ),
         ),

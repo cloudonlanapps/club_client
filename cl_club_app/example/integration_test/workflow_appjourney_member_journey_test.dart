@@ -711,13 +711,13 @@ void main() {
     await enterTextById(tester, UserFormFields.clubDistrictId, 'Pune');
     await enterTextById(tester, UserFormFields.pastExperienceId, 'Two seasons');
     await _setCardValues(tester, _sportsCard, {
-      UserFormFields.preferredPositionsId: _kPosition,
+      UserFormFields.preferredPositionsId: [_kPosition],
     });
     await _saveCard(tester, _sportsCard);
     await _editCard(tester, _backgroundCard, UserFormFields.nationalityId);
     await enterTextById(tester, UserFormFields.nationalityId, 'Indian');
     await _setCardValues(tester, _backgroundCard, {
-      UserFormFields.preferredLanguagesId: _kLanguage,
+      UserFormFields.preferredLanguagesId: [_kLanguage],
     });
     await _saveCard(tester, _backgroundCard);
     await waitFor(

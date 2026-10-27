@@ -94,23 +94,43 @@ void main() {
 
     test('Issue 61: emptyValues names every field that is not a text, each '
         'a field of UserForm, with its starting value', () {
-      expect(UserFormFields.emptyValues, {
-        UserFormFields.useDefaultPasswordId: true,
-        UserFormFields.useNamePubliclyId: false,
-        UserFormFields.isPublicProfileId: false,
-        UserFormFields.genderId: null,
-        UserFormFields.dateOfBirthUtcId: null,
-        UserFormFields.emergencyContactRelationId: null,
-        UserFormFields.stateId: null,
-        UserFormFields.assignAdminId: false,
-        UserFormFields.assignCoachId: false,
-      });
       expect(
-        UserFormFields.emptyValues.keys.toSet().difference(
-          UserFormFields.userIds.toSet(),
-        ),
+        {
+          for (final entry in UserFormFields.emptyValues.entries)
+            if (UserFormFields.userIds.contains(entry.key))
+              entry.key: entry.value,
+        },
+        {
+          UserFormFields.useDefaultPasswordId: true,
+          UserFormFields.useNamePubliclyId: false,
+          UserFormFields.isPublicProfileId: false,
+          UserFormFields.genderId: null,
+          UserFormFields.dateOfBirthUtcId: null,
+          UserFormFields.emergencyContactRelationId: null,
+          UserFormFields.stateId: null,
+          UserFormFields.assignAdminId: false,
+          UserFormFields.assignCoachId: false,
+        },
+      );
+      expect(
+        UserFormFields.emptyValues.keys.toSet().difference({
+          ...UserFormFields.userIds,
+          ...UserFormFields.sportsDetailsIds,
+          ...UserFormFields.backgroundIds,
+        }),
         isEmpty,
       );
+    });
+
+    test('Issue 335: the preferred positions and languages start as empty '
+        'lists', () {
+      for (final id in [
+        UserFormFields.preferredPositionsId,
+        UserFormFields.preferredLanguagesId,
+      ]) {
+        expect(UserFormFields.emptyValues[id], isA<List<String>>(), reason: id);
+        expect(UserFormFields.emptyValues[id], isEmpty, reason: id);
+      }
     });
 
     test('Issue 61: the limits are the ones the server keeps', () {

@@ -79,9 +79,8 @@ class UserFormFields {
   /// Club or district the member plays for (`String`).
   static const String clubDistrictId = 'clubDistrict';
 
-  /// Preferred positions (`String`, one of the club's positions or `''`,
-  /// for now: the member's list holds it alone; choosing several is
-  /// club_client#335).
+  /// Preferred positions (`List<String>`, values of the club's positions,
+  /// any number; club_client#335).
   static const String preferredPositionsId = 'preferredPositions';
 
   /// Past experience (`String`, multi-line).
@@ -90,9 +89,8 @@ class UserFormFields {
   /// Nationality (`String`).
   static const String nationalityId = 'nationality';
 
-  /// Preferred languages (`String`, one of the club's languages or `''`,
-  /// for now: the member's list holds it alone; choosing several is
-  /// club_client#335).
+  /// Preferred languages (`List<String>`, names of the club's languages,
+  /// any number; club_client#335).
   static const String preferredLanguagesId = 'preferredLanguages';
 
   /// Guardian's name (`String`).
@@ -193,7 +191,8 @@ class UserFormFields {
   ];
 
   /// What a field holds before anything is typed, for the fields that do
-  /// not start as an empty text.
+  /// not start as an empty text: those of `UserForm` and the lists of the
+  /// extended profile's section forms.
   static const Map<String, Object?> emptyValues = {
     useDefaultPasswordId: true,
     useNamePubliclyId: false,
@@ -204,6 +203,8 @@ class UserFormFields {
     stateId: null,
     assignAdminId: false,
     assignCoachId: false,
+    preferredPositionsId: <String>[],
+    preferredLanguagesId: <String>[],
   };
 
   /// Shortest password the server accepts.

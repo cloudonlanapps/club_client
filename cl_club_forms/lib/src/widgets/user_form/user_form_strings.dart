@@ -136,8 +136,11 @@ abstract final class UserFormStrings {
   /// Label of the club-or-district field.
   static const String clubDistrict = 'Club / District';
 
-  /// Label of the preferred-position select.
-  static const String preferredPosition = 'Preferred position';
+  /// Label of the preferred-positions checkboxes.
+  static const String preferredPositions = 'Preferred positions';
+
+  /// Beneath the preferred-positions checkboxes while none is ticked.
+  static const String noPositionChosen = 'No position chosen.';
 
   /// Label of the past-experience field.
   static const String pastExperience = 'Past experience';
@@ -145,11 +148,11 @@ abstract final class UserFormStrings {
   /// Label of the nationality field.
   static const String nationality = 'Nationality';
 
-  /// Label of the preferred-language select.
-  static const String preferredLanguage = 'Preferred language';
+  /// Label of the preferred-languages checkboxes.
+  static const String preferredLanguages = 'Preferred languages';
 
-  /// The choice of a select that leaves its field blank.
-  static const String noChoice = 'None';
+  /// Beneath the preferred-languages checkboxes while none is ticked.
+  static const String noLanguageChosen = 'No language chosen.';
 
   /// Label of the membership-date field.
   static const String membershipDate = 'Membership date';

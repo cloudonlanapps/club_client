@@ -51,6 +51,11 @@ UserPrivate _user({bool admin = false}) => UserPrivate(
   createdAtUtc: DateTime.utc(2024),
 );
 
+class _Labels extends ApplicationLabelsNotifier {
+  @override
+  Future<ApplicationLabels> build() async => emptyApplicationLabels;
+}
+
 Future<void> _pump(
   WidgetTester tester,
   Widget screen, {
@@ -65,9 +70,7 @@ Future<void> _pump(
         applicationsProvider.overrideWithValue(applications),
         clApplicationsMasterProvider.overrideWith(_Applications.new),
         clIdentityDocsMasterProvider.overrideWith(_Docs.new),
-        applicationLabelsProvider.overrideWith(
-          (ref) async => emptyApplicationLabels,
-        ),
+        applicationLabelsProvider.overrideWith(_Labels.new),
         applicationClausesProvider.overrideWith(
           (ref) async => emptyApplicationClauses,
         ),

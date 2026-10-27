@@ -1,6 +1,6 @@
 import 'package:cl_club_admin/cl_club_admin.dart' show ClubIdentityView;
 import 'package:cl_club_applications/cl_club_applications.dart'
-    show ApplicationLibrarySection;
+    show ApplicationLabelsSection, ApplicationLibrarySection;
 import 'package:cl_member_auth/cl_member_auth.dart' show RoleGate;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +28,7 @@ class ClubIdentityScreen extends ConsumerWidget {
           currentUser: currentUser,
           onBack: onBack,
           librarySection: const ApplicationLibrarySection(),
+          labelsSection: const ApplicationLabelsSection(),
         );
       },
     );

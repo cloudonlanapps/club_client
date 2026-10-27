@@ -15,6 +15,7 @@ import '../../constants/application_library_strings.dart';
 import '../../constants/application_view_sizes.dart';
 import '../../constants/application_view_strings.dart';
 import '../../models/application_library_text_form_submit.dart';
+import '../../utils/application_save_refusal.dart';
 
 /// Opens [ApplicationLibraryTextDialog], to add a text written in
 /// [languages] to the club's library.
@@ -73,8 +74,12 @@ class ApplicationLibraryTextDialogState
       if (!mounted) return;
       setState(() => saving = false);
       final fieldErrors = ApplicationLibraryTextFormSubmit.fieldErrorsFor(e);
-      if (fieldErrors.isNotEmpty) {
-        formKey.currentState?.showErrors(fieldErrors: fieldErrors);
+      final language = applicationLanguageRefusal(e);
+      if (fieldErrors.isNotEmpty || language != null) {
+        formKey.currentState?.showErrors(
+          fieldErrors: fieldErrors,
+          formError: language,
+        );
         return;
       }
       ShadToaster.of(context).show(

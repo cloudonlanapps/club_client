@@ -61,6 +61,16 @@ abstract final class ApplicationViewStrings {
   static const String noLayout =
       'Layout: decided when the application is saved';
 
+  /// A published template's publish ID, printed up the side margin of each
+  /// downloaded form (club_client#339).
+  static String publishId(String id) => 'Publish ID: $id';
+
+  /// The publish ID copied.
+  static const String publishIdCopied = 'Publish ID copied.';
+
+  /// The label of the button that copies the publish ID.
+  static const String copyPublishId = 'Copy publish ID';
+
   /// Read-only outside a draft.
   static const String revertToEdit =
       'Saved and published applications are read-only: revert to a draft to '

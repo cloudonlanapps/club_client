@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.3.0
+
+Built against club_server 1.3.0. club_sdk_2 is pinned at cloudonlanapps/club_sdk
+b64a0f3 (club_sdk#67), the extended profile and applications commit; the pin
+moves to the SDK's 1.3.0 commit separately.
+
+- Extended profile, shown while the server reports it on: Sports details,
+  Background and Guardian sections on a member's profile, the membership
+  date on Account info, an optional profile step in onboarding, and the
+  club's positions and languages edited on Club details (#320).
+- Applications, shown while the server reports them on: an admin edits a
+  printable application template section by section with a preview and
+  publishes it; a member downloads their filled form as a PDF from
+  Applications, their profile or the waiting page (#321).
+
 ## 1.2.0
 
 Released with club_server, club_sdk and club_cli 1.2.0. club_sdk_2 is pinned

@@ -1,7 +1,7 @@
 import 'package:cl_club_forms/cl_club_forms.dart'
     show ProfileLabelLanguage, ProfileOptionsFormFields;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show ProfileOptionsNotifier, schemaFieldErrors;
+    show ProfileOptionsNotifier;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show ProfileOptions, ProfilePosition, SdkErrorCode, ServerException;
 
@@ -39,18 +39,6 @@ Map<String, dynamic> buildProfileOptionsFormInitialValues(
 /// SDK adapter of `ProfileOptionsForm` (club_client#320): the form's values
 /// become the club's whole `profile_options` document.
 abstract final class ProfileOptionsFormSubmit {
-  /// The server's name of the positions, as a schema rejection gives it.
-  static const String serverPositions = 'positions';
-
-  /// The server's name of the languages.
-  static const String serverLanguages = 'languages';
-
-  /// The form's field for each part of the document the server can name.
-  static const Map<String, String> schemaFieldIds = {
-    serverPositions: ProfileOptionsFormFields.positionsId,
-    serverLanguages: ProfileOptionsFormFields.languagesId,
-  };
-
   /// The options [values] hold, as `ProfileOptionsFormState.validate`
   /// returns them.
   static ProfileOptions optionsOf(Map<String, dynamic> values) {
@@ -79,27 +67,20 @@ abstract final class ProfileOptionsFormSubmit {
     required ProfileOptionsNotifier notifier,
   }) => notifier.save(optionsOf(values));
 
-  /// What the form shows for a refused save: a schema rejection on the
-  /// list it names. Empty when [error] names neither.
-  static Map<String, String> fieldErrorsFor(ServerException error) =>
-      schemaFieldErrors(error, schemaFieldIds);
-
   /// What the form shows for a save refused with [error], or `null` when
-  /// the refusal names nothing the form holds (the host then toasts a
-  /// fixed message). A document the server cannot use (422
-  /// `INVALID_PREFERENCE_VALUE`, which names no field) shows inline in the
-  /// form; a schema rejection shows on the list it names.
+  /// the refusal is not about the document (the host then toasts a fixed
+  /// message). The document goes as `{"value": …}` of any shape, so the
+  /// server's schema never names a list in it (club_client#364): a
+  /// document it cannot use is refused with 422 `INVALID_PREFERENCE_VALUE`,
+  /// which names no field, and shows inline in the form.
   static ProfileOptionsFormRefusal? refusal(Object error) {
-    if (error is! ServerException) return null;
-    if (error.code == SdkErrorCode.invalidPreferenceValue) {
+    if (error is ServerException &&
+        error.code == SdkErrorCode.invalidPreferenceValue) {
       return (
         fieldErrors: const {},
         formError: ProfileOptionsMessages.invalidOptions,
       );
     }
-    final fieldErrors = fieldErrorsFor(error);
-    return fieldErrors.isEmpty
-        ? null
-        : (fieldErrors: fieldErrors, formError: null);
+    return null;
   }
 }

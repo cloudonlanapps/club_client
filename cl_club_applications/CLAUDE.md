@@ -18,10 +18,10 @@ SDK-free `Application*Form`s of `cl_club_forms`.
 
 | Where | Widget | Constructor |
 |---|---|---|
-| `applications` | `ApplicationsView` | `currentUser`, `onOpen(int id)`, `onOpenPdfBytes(Uint8List)` |
-| `applications/:id` (admin) | `ApplicationView` | `currentUser`, `applicationId`, `onBack`, `onDeleted`, `onOpenPdfBytes` |
-| profile (injected by the router) | `ProfileApplicationsSection` | `member`, `own`, `onOpenPdfBytes` |
-| onboarding's waiting page (injected) | `PublishedApplicationsList` | `currentUser`, `onOpenPdfBytes` |
+| `applications` | `ApplicationsView` | `currentUser`, `onOpen(int id)`, `pdfAction` |
+| `applications/:id` (admin) | `ApplicationView` | `currentUser`, `applicationId`, `onBack`, `onDeleted`, `pdfAction` |
+| profile (injected by the router) | `ProfileApplicationsSection` | `member`, `own`, `pdfAction` |
+| onboarding's waiting page (injected) | `PublishedApplicationsList` | `currentUser`, `pdfAction` |
 
 Screens are `ApplicationsScreen` and `ApplicationScreen` in `cl_member_zone`;
 the routes and the injections are `cl_club_app`'s `application_routes.dart`.

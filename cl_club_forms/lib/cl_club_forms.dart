@@ -14,8 +14,6 @@ export 'src/models/application/application_clause_option.dart'
     show ApplicationClauseOption;
 export 'src/models/application/application_custom_text.dart'
     show ApplicationCustomText;
-export 'src/models/application/application_fact_gap.dart'
-    show ApplicationFactGap;
 export 'src/models/application/application_fact_type.dart'
     show ApplicationFactType;
 export 'src/models/application/application_joined_text.dart'
@@ -94,8 +92,6 @@ export 'src/widgets/application/library/application_library_text_form.dart'
     show ApplicationLibraryTextForm, ApplicationLibraryTextFormState;
 export 'src/widgets/application/library/application_library_text_form_fields.dart'
     show ApplicationLibraryTextFormFields;
-export 'src/widgets/application/library/application_library_text_form_validators.dart'
-    show ApplicationLibraryTextFormValidators;
 // Club identity section forms (pure UI, no SDK / no Riverpod): the club's
 // details, its contact block and its address, translatable fields as
 // FormTranslatedText; and the one-field form that adds a language to

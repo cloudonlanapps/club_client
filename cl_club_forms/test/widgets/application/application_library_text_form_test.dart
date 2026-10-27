@@ -2,6 +2,7 @@
 // where it is used, a short name and its text in each catalogue language,
 // `{fact}` gaps allowed; a term has a heading too.
 import 'package:cl_club_forms/cl_club_forms.dart';
+import 'package:cl_club_forms/src/widgets/application/library/application_library_text_form_validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

@@ -2,6 +2,7 @@
 // it, found as the server's Save finds them (club_server#126), so the
 // State card lists them and keeps Save off.
 import 'package:cl_club_forms/cl_club_forms.dart';
+import 'package:cl_club_forms/src/models/application/application_fact_gap.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// A template using a gap in every text the server checks; `known` is the

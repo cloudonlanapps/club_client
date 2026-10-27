@@ -1,6 +1,9 @@
+import 'package:cl_calendar/cl_calendar.dart' show CLDatePickerFormField;
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:cl_club_forms/src/widgets/event_marketing/event_basic_marketing_form.dart'
     show EventBasicMarketingFormState;
+import 'package:cl_club_forms/src/widgets/event_marketing/event_marketing_details_form.dart'
+    show EventMarketingDetailsFormState;
 import 'package:cl_club_forms/src/widgets/event_marketing/event_marketing_membership_form.dart'
     show EventMarketingMembershipFormState;
 import 'package:cl_club_forms/src/widgets/event_marketing/event_marketing_rows_form.dart'
@@ -8,6 +11,8 @@ import 'package:cl_club_forms/src/widgets/event_marketing/event_marketing_rows_f
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+
+import '../../support/date_picker_harness.dart';
 
 Future<void> _pump(WidgetTester tester, Widget form) async {
   tester.view.physicalSize = const Size(1280, 2400);
@@ -21,7 +26,7 @@ Future<void> _pump(WidgetTester tester, Widget form) async {
   await tester.pumpAndSettle();
 }
 
-const _basic = {
+const Map<String, Object?> _basic = {
   EventBasicMarketingFormFields.shortDescriptionId: ' Five mornings ',
   EventBasicMarketingFormFields.stampId: 'New',
   EventBasicMarketingFormFields.highlightsId: [
@@ -149,6 +154,76 @@ void main() {
       expect(rows.map((row) => row[EventMarketingColumns.titleId]), [
         'Siblings',
       ]);
+    });
+  });
+
+  group('Issue 388: the marketing date cells', () {
+    testWidgets("Issue 388: an offer's Valid until opens the calendar, "
+        'shows and returns the picked day, and its x empties it', (
+      tester,
+    ) async {
+      final key = GlobalKey<EventMarketingRowsFormState>();
+      await _pump(
+        tester,
+        EventMarketingRowsForm(
+          key: key,
+          columns: EventMarketingColumns.offers,
+          addLabel: 'Add offer',
+          initialRows: [
+            {
+              EventMarketingColumns.titleId: 'Early bird',
+              EventMarketingColumns.validUntilId: DateTime(2026, 5, 15),
+            },
+          ],
+        ),
+      );
+      expect(find.byType(CLDatePickerFormField), findsOneWidget);
+      expect(key.currentState!.isDirty, isFalse);
+
+      await pickDayOn(tester, find.text('15 May 2026'), 20);
+
+      expect(find.text('20 May 2026'), findsOneWidget);
+      List<Map<String, Object?>> rows() =>
+          key.currentState!.validate()![EventMarketingRowsFormFields.rowsId]
+              as List<Map<String, Object?>>;
+      final picked =
+          rows().single[EventMarketingColumns.validUntilId]! as DateTime;
+      expect([picked.year, picked.month, picked.day], [2026, 5, 20]);
+
+      await tester.tap(find.byIcon(LucideIcons.x));
+      await tester.pumpAndSettle();
+      expect(find.text('20 May 2026'), findsNothing);
+      expect(find.text('No end'), findsOneWidget);
+      expect(rows().single[EventMarketingColumns.validUntilId], isNull);
+    });
+
+    testWidgets('Issue 388: the registration deadline opens the calendar '
+        'and returns the picked day', (tester) async {
+      final key = GlobalKey<EventMarketingDetailsFormState>();
+      await _pump(
+        tester,
+        EventMarketingDetailsForm(
+          key: key,
+          initialValues: {
+            EventMarketingDetailsFormFields.registrationDeadlineId: DateTime(
+              2026,
+              5,
+              15,
+            ),
+          },
+        ),
+      );
+      expect(find.byType(CLDatePickerFormField), findsOneWidget);
+      expect(key.currentState!.isDirty, isFalse);
+
+      await pickDayOn(tester, find.text('15 May 2026'), 20);
+
+      expect(find.text('20 May 2026'), findsOneWidget);
+      final picked =
+          key.currentState!.validate()![EventMarketingDetailsFormFields
+                  .registrationDeadlineId]!
+              as DateTime;
+      expect([picked.year, picked.month, picked.day], [2026, 5, 20]);
     });
   });
 

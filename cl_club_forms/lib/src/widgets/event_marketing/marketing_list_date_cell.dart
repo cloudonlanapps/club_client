@@ -1,11 +1,12 @@
-import 'package:cl_calendar/cl_calendar.dart' show CLDatePicker;
+import 'package:cl_calendar/cl_calendar.dart' show CLDatePickerFormField;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../form/detached_date_field.dart';
 import 'marketing_date_text.dart';
 
-/// A date cell of a marketing list row: the day, picked from a calendar,
-/// and a button that empties it.
+/// A date cell of a marketing list row: the day, picked on the shared date
+/// field ([CLDatePickerFormField]), and a button that empties it.
 class MarketingListDateCell extends StatelessWidget {
   const MarketingListDateCell({
     required this.value,
@@ -30,28 +31,27 @@ class MarketingListDateCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final day = value;
-    final button = ShadButton.outline(
-      enabled: enabled,
-      leading: const Icon(LucideIcons.calendar, size: 16),
-      // A narrow column shortens the date rather than overflowing.
-      child: Flexible(
-        child: Text(
-          day == null ? placeholder ?? '' : marketingDateText(day),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-    );
+    final theme = ShadTheme.of(context);
     return Row(
       children: [
         Expanded(
-          child: enabled
-              ? CLDatePicker(
-                  initialDate: day,
-                  onDateSelected: onChanged,
-                  child: button,
-                )
-              : button,
+          child: DetachedDateField(
+            value: day,
+            child: CLDatePickerFormField(
+              initialValue: day,
+              enabled: enabled,
+              placeholder: Text(
+                placeholder ?? '',
+                style: theme.textTheme.small.copyWith(
+                  color: theme.colorScheme.mutedForeground,
+                ),
+              ),
+              formatDate: marketingDateText,
+              onChanged: (date) {
+                if (date != null) onChanged(date);
+              },
+            ),
+          ),
         ),
         if (day != null)
           ShadIconButton.ghost(

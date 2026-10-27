@@ -32,7 +32,8 @@ class ProfileOptionsCard extends ConsumerStatefulWidget {
   /// The options the server holds.
   final ProfileOptions options;
 
-  /// Whether the viewer may edit them (an admin).
+  /// Whether the viewer may edit them: only the super admin writes the
+  /// club's profile options (club_server#98).
   final bool canEdit;
 
   @override
@@ -45,7 +46,8 @@ class ProfileOptionsCardState extends ConsumerState<ProfileOptionsCard> {
   final formKey = GlobalKey<ProfileOptionsFormState>();
 
   /// Stores [values] as the club's options. A refusal naming a list shows
-  /// on it; any other failure is a toast with a fixed message.
+  /// on it, a document the server cannot use shows inline in the form, and
+  /// any other failure is a toast with a fixed message.
   Future<bool> save(Map<String, dynamic> values) async {
     final toaster = ShadToaster.of(context);
     try {
@@ -58,9 +60,12 @@ class ProfileOptionsCardState extends ConsumerState<ProfileOptionsCard> {
       );
       return true;
     } on ServerException catch (error) {
-      final fieldErrors = ProfileOptionsFormSubmit.fieldErrorsFor(error);
-      if (fieldErrors.isNotEmpty) {
-        formKey.currentState?.showErrors(fieldErrors: fieldErrors);
+      final refusal = ProfileOptionsFormSubmit.refusal(error);
+      if (refusal != null) {
+        formKey.currentState?.showErrors(
+          fieldErrors: refusal.fieldErrors,
+          formError: refusal.formError,
+        );
       } else {
         toaster.show(
           const ShadToast.destructive(

@@ -113,7 +113,7 @@ class ClubIdentityViewState extends ConsumerState<ClubIdentityView> {
                     if (profileOptions != null)
                       ProfileOptionsCard(
                         options: profileOptions,
-                        canEdit: widget.currentUser.isAdmin,
+                        canEdit: widget.currentUser.isSuperAdmin,
                       ),
                   ],
                 ),

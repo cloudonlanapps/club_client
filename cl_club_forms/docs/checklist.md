@@ -107,15 +107,16 @@ Hosted by the application editor (`/memberzone/applications/:id`, club_client#32
 
 - [ ] Application create form: shown when Create is pressed on the Applications list; the English title and the print languages.
 - [ ] Application heading form: the print languages, organisation, title, subtitle and footer line; picking another language gives every written text its input.
-- [ ] Application facts form: the dates, times, amounts, names and choices the clauses refer to; a type change shows the inputs of the new type.
-- [ ] Application header form: the header strip's items, each a clause, a fact or written here, several joined on one line.
+- [ ] Application facts form: the dates, times, amounts, names and choices a text prints with `{name}`; a type change shows the inputs of the new type.
+- [ ] Application header form: the header strip's items, each a library text or written here, several joined on one line.
 - [ ] Application age categories form: the categories' names, birth dates (each cleared by its x) and genders.
 - [ ] Application selections form: the lines ticked by hand, each a selection clause or written here.
 - [ ] Application declaration form: a declaration clause or written here, in every print language.
 - [ ] Application terms form: each term a rule clause or a heading and text written here.
 - [ ] Application notes form: the notes under the terms, with their attributions.
 - [ ] Application labels form: every standard label in each print language, pre-filled from the catalogue.
-- [ ] A clause picker offers only that section's kind of clause, shows the English text with its gaps, and offers for each gap only the facts of the right type.
+- [ ] A section's library list offers only that section's kind of text, the built-in clauses then the club's (marked as the club's), each with its English text and gaps; tapping one inserts it as written in every print language, gaps included (#389).
+- [ ] Application library text form: shown in a dialog from **Add text** in the Library section of the Applications list (`/memberzone/applications`), and in place on a library text's card when its pencil is pressed; the kind, the name, the text in each language and, for a term, a heading (#389).
 
 ## Evaluations (these stay in `ui_lib`)
 

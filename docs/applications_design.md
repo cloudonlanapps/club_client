@@ -129,8 +129,11 @@ text sits in JSON columns, so no further table is needed.
 Every printed text is a map of language code to text (`{"en": "...", "mr":
 "..."}`), one editor input per print language; a header item may be a list
 of them, one per line. The server refuses a `{"clause": …}` or `{"fact": …}`
-reference (club_sdk 1.3.0, #342, #354): a library clause (§2.2.1) is
-inserted as its text, filled from the facts (#336).
+reference (club_sdk 1.3.0, #342, #354): a library text (§2.2.1) is
+inserted as its text. Any text may hold `{name}` gaps, `name` a lowercase
+letter then lowercase letters, digits or `_` (any other brace text prints
+as written); the server fills each from the fact of that name when it draws
+the PDF, in each print language (#389, club_server#126).
 
 #### Duplicate
 
@@ -146,7 +149,7 @@ The same lifecycle as an evaluation:
 | move | from → to | what happens |
 |---|---|---|
 | create | → draft | editable; not shown to members |
-| save | draft → saved | refused unless complete: title, declaration, footer line, every term, note and selection in every print language (header items and age-category names may stay English only), and the form fits (§2.4). The layout is decided and stored. Read-only from here. |
+| save | draft → saved | refused unless complete: title, declaration, footer line, every term, note and selection in every print language (header items and age-category names may stay English only), every `{gap}` names a fact of the template (`APPLICATION_UNKNOWN_FACT`, by place and language; a line of a multi-line header item is `header[i][j]`), and the form fits (§2.4). The layout is decided and stored. Read-only from here. |
 | publish | saved → published | members see it and can download |
 | unpublish | published → saved | members no longer see it |
 | revert | saved → draft | editable again; the stored layout is dropped |
@@ -168,8 +171,14 @@ an admin who changes one stores it in `label_overrides`.
 #### 2.2.1 The clause library
 
 Rules, declarations, header items, selections and closing notes come from a
-library that ships with the server (prototype: `clauses.json`): each clause
-is a sentence written in English, Marathi and Hindi, with gaps for facts.
+library: the built-in clauses that ship with the server (prototype:
+`clauses.json`), each a sentence written in English, Marathi and Hindi with
+gaps for facts, and the club's own library texts (#389), which an admin
+adds, edits and deletes in the **Library** section of Club Management ›
+Applications: a kind (header, selection, declaration, rule, note), a short
+name, its text in each language with gaps allowed, and a heading for a
+rule. `GET /v1/applications/clauses` lists both, each with its `source`
+(`builtin` with its `key`, `club` with its `id`).
 
 ```json
 "rule.matches": {"kind": "rule", "gaps": {"dates": "date_range", "venue": "name"},
@@ -178,14 +187,17 @@ is a sentence written in English, Marathi and Hindi, with gaps for facts.
            "mr": "{dates} दरम्यान {venue} येथे स्पर्धेचे सामने होतील.", "hi": "…"}}
 ```
 
-The editor lists the library's clauses of each kind under a section's
-list; tapping one has the server fill its gaps from the template's facts
-(`POST /v1/applications/clauses/fill`) and inserts the filled text, in the
-print languages, as a new item that is then edited like any other. A gap no
-fact of its type fills is said under the list, and nothing is inserted.
-Facts stay on the template for this: one date typed under `facts` fills
-each clause inserted after it. A clause already inserted keeps its text
-when a fact changes.
+The editor lists the library's texts of each kind under a section's list,
+the club's marked as the club's; tapping one inserts it **as written**, in
+every print language, gaps included (`from {dates} at {venue}`), as a new
+item that is then edited like any other: the admin renames a gap to the
+fact it means (`{dates}` → `{match_dates}`), so two facts of one type can
+serve two places. Nothing is filled when a text is inserted; a fact's
+value prints wherever its gap stands, so changing a fact changes every
+text using it. The State card lists each gap naming no fact before Save
+("Selection 2 (Marathi): no fact named match_date") and Save stays off
+while there is one; a (?) on the Facts heading explains facts with one
+example of each type.
 
 - **Gaps hold only dates, times, numbers and names — never nouns.** Marathi
   and Hindi inflect a noun inside a sentence (शिबिर → शिबिरातील, स्पर्धा →
@@ -200,8 +212,7 @@ when a fact changes.
   a language (`{"en": "Pune", "mr": "पुणे"}`).
 - **Written text** (a rule, selection or note typed in each language) is
   there for anything the library lacks; save refuses one missing a print
-  language. One that keeps coming back is added to the library in a server
-  release.
+  language. One that keeps coming back is added to the club's library.
 
 The library's text taken from the club's existing paper form is word for word; each
 clause's `_review` lists what still needs a fluent reader.
@@ -319,14 +330,18 @@ will get.
 | POST | `/v1/applications/{id}/save` · `/publish` · `/unpublish` · `/revert` | admin, the moves of §2.1.1 |
 | GET | `/v1/applications/{id}/preview` | admin, any state: the sample member's form |
 | GET | `/v1/applications/labels` | admin: the label catalogue, to pre-fill the editor |
-| GET | `/v1/applications/clauses` | admin: the clause library, for the editor's lists |
+| GET | `/v1/applications/clauses` | admin: the built-in clauses and the club's library texts, for the editor's lists |
+| GET / POST | `/v1/applications/library` | admin: the club's library texts; add one |
+| GET / PATCH / DELETE | `/v1/applications/library/{id}` | admin: one library text |
 | POST | `/v1/applications/{id}/duplicate` | admin: a new draft copied from any application |
 | GET | `/v1/applications/{id}/form` | the signed-in member, own form |
 | GET | `/v1/applications/{id}/form/{username}` | admin |
 | GET / PUT | `/v1/system/preferences/profile_options` | read: members; write: admin |
 
 New error codes: application not found / not published, not eligible,
-template incomplete (names the texts missing a language), form does not fit,
+template incomplete (names the texts missing a language), unknown fact
+(names each gap naming no fact, by place and language), library text not
+found, form does not fit,
 invalid state move, identity document required (existing), applications
 disabled.
 

@@ -18,6 +18,22 @@ Map<int, ApplicationTemplate> _published() => {
 
 final Finder _question = find.text(ApplicationViewStrings.profileCompleteTitle);
 
+/// The signed-in member with every printed field filled.
+UserPrivate _complete() => applicationsUser().copyWith(
+  firstName: () => 'Member',
+  lastName: () => 'A',
+  dateOfBirthUtc: () => DateTime.utc(2000, 3, 4),
+  gender: () => Gender.female,
+  phone: () => '+919800000000',
+  email: () => 'member_a@example.com',
+  address: () => const Address(city: 'Pune'),
+  nationality: () => 'Indian',
+  preferredLanguage: () => 'Marathi',
+  clubDistrict: () => 'Pune',
+  preferredPosition: () => 'Forward',
+  pastExperience: () => 'Two seasons',
+);
+
 void main() {
   group('Issue 340: "Is your profile complete?" before a download', () {
     testWidgets('Issue 340: Download of one’s own form asks first and '
@@ -39,6 +55,67 @@ void main() {
       expect(find.byKey(ProfileCompleteDialog.yesKey), findsOneWidget);
       expect(find.byKey(ProfileCompleteDialog.noKey), findsOneWidget);
       expect(master.calls, isEmpty);
+    });
+
+    testWidgets('Issue 340: the question lists the printed fields blank on '
+        'the profile', (tester) async {
+      await pumpApplications(
+        tester,
+        ApplicationDownloadButton(
+          download: const ApplicationOwnForm(4),
+          pdfAction: recordingPdfAction(),
+          fileName: 'Trial.pdf',
+        ),
+        master: FakeApplicationsMaster(_published()),
+        currentUser: _complete().copyWith(
+          phone: () => ' ',
+          address: () => const Address(),
+          dateOfBirthUtc: () => null,
+          nationality: () => null,
+        ),
+        extendedProfile: true,
+      );
+      await tester.tap(find.text(testPdfActionLabel));
+      await tester.pumpAndSettle();
+
+      expect(_question, findsOneWidget);
+      for (final label in [
+        ApplicationViewStrings.fieldDateOfBirth,
+        ApplicationViewStrings.fieldPhone,
+        ApplicationViewStrings.fieldAddress,
+        ApplicationViewStrings.fieldNationality,
+      ]) {
+        expect(find.text('• $label'), findsOneWidget, reason: label);
+      }
+      expect(find.text('• ${ApplicationViewStrings.fieldEmail}'), findsNothing);
+      expect(
+        find.text('• ${ApplicationViewStrings.fieldGuardian}'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('Issue 340: a complete profile downloads without asking', (
+      tester,
+    ) async {
+      final master = FakeApplicationsMaster(_published());
+      final handed = <Uint8List>[];
+      await pumpApplications(
+        tester,
+        ApplicationDownloadButton(
+          download: const ApplicationOwnForm(4),
+          pdfAction: recordingPdfAction(bytes: handed),
+          fileName: 'Trial.pdf',
+        ),
+        master: master,
+        currentUser: _complete(),
+        extendedProfile: true,
+      );
+      await tester.tap(find.text(testPdfActionLabel));
+      await tester.pumpAndSettle();
+
+      expect(_question, findsNothing);
+      expect(master.calls, ['own 4']);
+      expect(handed, hasLength(1));
     });
 
     testWidgets('Issue 340: Yes downloads and hands the bytes to the PDF '

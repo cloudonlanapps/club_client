@@ -343,7 +343,10 @@ disabled.
   button, and says: print it, affix a passport-size photograph, sign it and
   hand it in. Blank fields are filled in by hand.
 - **Before a download**: a member's Download of their own form first asks
-  "Is your profile complete?" (club_client#340). Yes downloads; No opens
+  "Is your profile complete?" (club_client#340), listing the printed fields
+  blank on their profile (name, date of birth, gender, phone, email,
+  address; with the extended profile on, its fields and, under 18, the
+  guardian); with none blank it downloads without asking. Yes downloads; No opens
   their profile page (`/onboarding/profile` while pending, their own
   profile once active), or only closes the question on a profile page. An
   admin's preview, and an admin's download of a member's form, do not ask.

@@ -45,7 +45,10 @@ forms' ids for a schema refusal.
   for the member (not eligible, no identity document, not published) shows
   under its button. Anything else is a toast with a fixed message.
 - A member's download of their own form (`ApplicationOwnForm`) first asks
-  "Is your profile complete?" (`ProfileCompleteDialog`, club_client#340):
-  Yes downloads, No calls the host's `onOpenProfile`, or only closes the
+  "Is your profile complete?" (`ProfileCompleteDialog`, club_client#340),
+  listing the fields the form prints that are blank on the signed-in
+  member's profile (`blankProfileFields`, read through
+  `currentUserProvider`); with none blank it downloads without asking. Yes
+  downloads, No calls the host's `onOpenProfile`, or only closes the
   dialog where there is none (the profile section, already on the profile).
   An admin's preview and a member's form fetched by an admin do not ask.

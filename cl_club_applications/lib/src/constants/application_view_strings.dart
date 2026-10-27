@@ -137,10 +137,61 @@ abstract final class ApplicationViewStrings {
   /// (club_client#340).
   static const String profileCompleteTitle = 'Is your profile complete?';
 
-  /// Why the question is asked.
+  /// Why the question is asked, above the blank fields.
   static const String profileCompleteMessage =
+      'Your form is printed from your profile, and these details are blank '
+      'on it:';
+
+  /// Why the question is asked when the profile could not be read.
+  static const String profileCompleteUnknown =
       'Your form is printed from your profile. Check that your details are '
       'complete and up to date before you download it.';
+
+  /// Under the blank fields.
+  static const String profileCompleteNote =
+      'They will print blank. Download anyway?';
+
+  // The profile's labels of the fields the form prints (club_client#340),
+  // worded as the profile cards word them.
+
+  /// First name.
+  static const String fieldFirstName = 'First name';
+
+  /// Last name.
+  static const String fieldLastName = 'Last name';
+
+  /// Date of birth.
+  static const String fieldDateOfBirth = 'Date of Birth';
+
+  /// Gender.
+  static const String fieldGender = 'Gender';
+
+  /// Phone.
+  static const String fieldPhone = 'Phone';
+
+  /// Email.
+  static const String fieldEmail = 'Email';
+
+  /// Address.
+  static const String fieldAddress = 'Address';
+
+  /// Nationality (extended profile).
+  static const String fieldNationality = 'Nationality';
+
+  /// Preferred language (extended profile).
+  static const String fieldPreferredLanguage = 'Preferred language';
+
+  /// Club / district (extended profile).
+  static const String fieldClubDistrict = 'Club / District';
+
+  /// Preferred position (extended profile).
+  static const String fieldPreferredPosition = 'Preferred position';
+
+  /// Past experience (extended profile).
+  static const String fieldPastExperience = 'Past experience';
+
+  /// Guardian (extended profile, a member under 18).
+  static const String fieldGuardian = 'Guardian';
 
   /// The answer that downloads the form.
   static const String profileCompleteYes = 'Yes';

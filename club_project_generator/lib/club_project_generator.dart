@@ -31,6 +31,8 @@ export 'src/web_files.dart'
         contentSecurityPolicy,
         decodeBrandIcon,
         indexScript,
+        installedNames,
+        memberAppLabel,
         renderIcons,
         renderIndexHtml,
         renderManifest;

@@ -8,6 +8,11 @@ import 'package:ui_lib/ui_lib.dart'
 import 'club_main.dart' show clubConfigProvider;
 import 'router.dart';
 
+/// The browser tab's title: `<shortName> Member App`, the name the app
+/// installs under (#367).
+String memberAppTitle(ClubBranding branding) =>
+    [branding.shortName, 'Member App'].where((s) => s.isNotEmpty).join(' ');
+
 /// The club app: the router under the club's theme, in the remembered
 /// light / dark mode.
 class App extends ConsumerWidget {
@@ -36,7 +41,7 @@ class App extends ConsumerWidget {
     return ScrollSafeTapOutside(
       child: ShadApp.router(
         routerConfig: router,
-        title: branding.fullName,
+        title: memberAppTitle(branding),
         themeMode: themeMode,
         theme: ShadThemeData(
           brightness: Brightness.light,

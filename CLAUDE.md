@@ -68,7 +68,7 @@ commit and only brand files cross versions. Web only for now.
   club.json              # one file for app and website; no URLs
   contact_info.json
   club_logo.png
-  icon_1024.png          # square, >= 512 px; favicon and web icons come from it
+  icon_1024.png          # square, >= 512 px; the 32 px favicon and web icons come from it
   website/               # needed only for the website target
     app_en.arb           # the site's text
     theme.json
@@ -104,6 +104,12 @@ Rules:
   the brand's About copy (`clubHistoryParagraph1` in `website/app_en.arb`), as
   one plain line of at most 160 characters; a brand without one keeps
   `<fullName> - Official Website` (#29).
+- **Only the app is installable, as `<shortName> Member App` (#367).** The
+  app's manifest names it `<shortName> Member App`, with `Member App` under
+  its icon, and its page and tab carry the same title (`installedNames`;
+  `memberAppTitle` in cl_club_app). The website's manifest is
+  `"display": "browser"`, so a browser does not offer to install it, and it
+  keeps the club's own names.
 - **`club.json` must tolerate both directions.** One brand file is built against
   several club_core branches, so its readers (`ClubConfig`, `SiteConfig`)
   ignore unknown keys, and a key added later must be optional with a default.

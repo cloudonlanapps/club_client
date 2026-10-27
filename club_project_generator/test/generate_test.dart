@@ -74,9 +74,26 @@ void main() {
     }
     expect(
       File(p.join(out, 'web/index.html')).readAsStringSync(),
-      allOf(contains('<title>Example Club</title>'), isNot(contains('@@'))),
+      allOf(contains('<title>EXC Member App</title>'), isNot(contains('@@'))),
     );
   });
+
+  test(
+    'Issue 367: the website is titled with the club and not installable',
+    () async {
+      final out = await run(Target.website);
+      expect(
+        File(p.join(out, 'web/index.html')).readAsStringSync(),
+        allOf(
+          contains('<title>Example Club</title>'),
+          contains(
+            '<meta name="apple-mobile-web-app-title" content="Example Club">',
+          ),
+        ),
+      );
+      expect(readJson(p.join(out, 'web/manifest.json'))['display'], 'browser');
+    },
+  );
 
   test('Issue 315: each target allows its own API origin', () async {
     for (final target in Target.values) {

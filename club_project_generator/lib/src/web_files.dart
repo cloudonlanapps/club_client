@@ -27,6 +27,23 @@ class WebNames {
   final String shortName;
 }
 
+/// What the member app is called under its icon once installed (#367).
+const memberAppLabel = 'Member App';
+
+/// What [target] is called once installed and in its tab (#367): the app is
+/// `<shortName> Member App`, labelled [memberAppLabel] under its icon (the
+/// logo says which club); the website keeps the club's own names.
+({String name, String iconLabel}) installedNames(
+  Target target,
+  WebNames names,
+) => switch (target) {
+  Target.app => (
+    name: '${names.shortName} $memberAppLabel',
+    iconLabel: memberAppLabel,
+  ),
+  Target.website => (name: names.fullName, iconLabel: names.shortName),
+};
+
 /// The page's own script, copied beside index.html from the template. The
 /// page runs no inline script, so its policy needs no `'unsafe-inline'` for
 /// scripts.
@@ -84,6 +101,7 @@ String renderIndexHtml({
   const escape = HtmlEscape();
   final values = {
     'FULL_NAME': escape.convert(names.fullName),
+    'PAGE_NAME': escape.convert(installedNames(target, names).name),
     'SHORT_NAME': escape.convert(names.shortName),
     'DESCRIPTION': escape.convert(
       description ?? defaultDescription(target, names),
@@ -124,11 +142,14 @@ String renderManifest({
     if (maskable) 'purpose': 'maskable',
   };
 
+  final installed = installedNames(target, names);
   final manifest = {
-    'name': names.fullName,
-    'short_name': names.shortName,
+    'name': installed.name,
+    'short_name': installed.iconLabel,
     'start_url': '.',
-    'display': 'standalone',
+    // A browser offers to install only a page that opens in its own window,
+    // so the website, shown as "browser", is not offered (#367).
+    'display': target == Target.app ? 'standalone' : 'browser',
     'background_color': colors.backgroundLight,
     'theme_color': colors.backgroundLight,
     'description': description ?? defaultDescription(target, names),
@@ -174,7 +195,8 @@ Map<String, Uint8List> renderIcons(Uint8List source) {
   final icon192 = sized(192);
   final icon512 = sized(512);
   return {
-    'favicon.png': sized(16),
+    // 32 px: the brands' logos blur at 16 (#367).
+    'favicon.png': sized(32),
     'icons/Icon-192.png': icon192,
     'icons/Icon-512.png': icon512,
     'icons/Icon-maskable-192.png': icon192,

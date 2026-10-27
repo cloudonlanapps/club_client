@@ -271,6 +271,10 @@ abstract final class ApplicationViewStrings {
     'hi': 'Hindi',
   };
 
+  /// The name of print language [code] as the editor shows it; the code
+  /// itself when unknown.
+  static String languageName(String code) => languageNames[code] ?? code;
+
   /// Months as a day is shown (`19 Nov 2026`).
   static const List<String> months = [
     'Jan',
@@ -347,6 +351,14 @@ abstract final class ApplicationViewStrings {
     'formFooter': 'Footer line',
     'organisation': 'Organisation',
   };
+
+  /// A line of the client's check: the text at [place] and the print
+  /// [languages] it lacks, by name; empty when nothing is written
+  /// (club_client#387).
+  static String missingText(String place, List<String> languages) =>
+      languages.isEmpty
+      ? '$place: not written'
+      : '$place: ${languages.join(', ')} missing';
 
   /// Save's reason while texts are missing.
   static String textsMissing(int n) =>

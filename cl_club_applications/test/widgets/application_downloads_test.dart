@@ -130,6 +130,33 @@ void main() {
       expect(opened, isEmpty);
     });
 
+    testWidgets('Issue 343: a member fitting several age categories is '
+        'told so under the button', (tester) async {
+      final master = FakeApplicationsMaster(_published())
+        ..failWith = const ApplicationCategoryRequiredException(
+          message: 'raw server words',
+          categories: [0, 1],
+        );
+      final opened = <Uint8List>[];
+      await pumpApplications(
+        tester,
+        ApplicationDownloadButton(
+          download: const ApplicationOwnForm(4),
+          pdfAction: recordingPdfAction(bytes: opened),
+          fileName: 'Trial.pdf',
+        ),
+        master: master,
+      );
+      await tester.tap(find.text(testPdfActionLabel));
+      await answerProfileComplete(tester);
+      expect(
+        find.text(ApplicationViewStrings.categoryRequired),
+        findsOneWidget,
+      );
+      expect(find.textContaining('raw server words'), findsNothing);
+      expect(opened, isEmpty);
+    });
+
     testWidgets('Issue 321: any other failure is a fixed toast', (
       tester,
     ) async {

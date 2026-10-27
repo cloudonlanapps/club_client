@@ -79,8 +79,10 @@ class UserFormFields {
   /// Club or district the member plays for (`String`).
   static const String clubDistrictId = 'clubDistrict';
 
-  /// Preferred position (`String`, one of the club's positions or `''`).
-  static const String preferredPositionId = 'preferredPosition';
+  /// Preferred positions (`String`, one of the club's positions or `''`,
+  /// for now: the member's list holds it alone; choosing several is
+  /// club_client#335).
+  static const String preferredPositionsId = 'preferredPositions';
 
   /// Past experience (`String`, multi-line).
   static const String pastExperienceId = 'pastExperience';
@@ -88,8 +90,10 @@ class UserFormFields {
   /// Nationality (`String`).
   static const String nationalityId = 'nationality';
 
-  /// Preferred language (`String`, one of the club's languages or `''`).
-  static const String preferredLanguageId = 'preferredLanguage';
+  /// Preferred languages (`String`, one of the club's languages or `''`,
+  /// for now: the member's list holds it alone; choosing several is
+  /// club_client#335).
+  static const String preferredLanguagesId = 'preferredLanguages';
 
   /// Guardian's name (`String`).
   static const String guardianNameId = 'guardianName';
@@ -144,14 +148,14 @@ class UserFormFields {
   /// The fields `UserSportsDetailsForm` edits.
   static const List<String> sportsDetailsIds = [
     clubDistrictId,
-    preferredPositionId,
+    preferredPositionsId,
     pastExperienceId,
   ];
 
   /// The fields `UserBackgroundForm` edits.
   static const List<String> backgroundIds = [
     nationalityId,
-    preferredLanguageId,
+    preferredLanguagesId,
   ];
 
   /// The fields `UserGuardianForm` edits.

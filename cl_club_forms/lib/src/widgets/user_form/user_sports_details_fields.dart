@@ -46,7 +46,7 @@ class UserSportsDetailsFields extends StatelessWidget {
         LabeledFormRow(
           label: UserFormStrings.preferredPosition,
           field: UserOptionalChoiceField(
-            id: UserFormFields.preferredPositionId,
+            id: UserFormFields.preferredPositionsId,
             enabled: enabled,
             options: {
               for (final position in positions) position.value: position.label,

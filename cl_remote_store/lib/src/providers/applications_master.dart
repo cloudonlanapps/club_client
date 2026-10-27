@@ -105,13 +105,21 @@ class ClApplicationsMasterNotifier
       readPdf((source) => source.downloadPreview(id));
 
   /// The signed-in member's own form of published template [id]. A member
-  /// no age category matches is 422 `APPLICATION_NOT_ELIGIBLE`.
-  Future<Uint8List> downloadOwnForm(int id) =>
-      readPdf((source) => source.downloadOwnForm(id));
+  /// no age category matches is 422 `APPLICATION_NOT_ELIGIBLE`; [category]
+  /// is the index of the age category to tick, needed when the member fits
+  /// several (`ApplicationCategoryRequiredException`).
+  Future<Uint8List> downloadOwnForm(int id, {int? category}) =>
+      readPdf((source) => source.downloadOwnForm(id, category: category));
 
-  /// [username]'s form of published template [id]. Admin only.
-  Future<Uint8List> downloadMemberForm(int id, String username) =>
-      readPdf((source) => source.downloadMemberForm(id, username));
+  /// [username]'s form of published template [id]. Admin only. [category]
+  /// is chosen as for [downloadOwnForm].
+  Future<Uint8List> downloadMemberForm(
+    int id,
+    String username, {
+    int? category,
+  }) => readPdf(
+    (source) => source.downloadMemberForm(id, username, category: category),
+  );
 
   /// Replaces or adds [template] in the local map.
   void replaceLocally(ApplicationTemplate template) {

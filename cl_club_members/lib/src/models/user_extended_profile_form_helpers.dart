@@ -26,10 +26,12 @@ Map<String, dynamic> buildUserExtendedProfileFormInitialValues(
   UserPrivate user,
 ) => {
   UserFormFields.clubDistrictId: user.clubDistrict ?? '',
-  UserFormFields.preferredPositionId: user.preferredPosition ?? '',
+  UserFormFields.preferredPositionsId:
+      user.preferredPositions.firstOrNull ?? '',
   UserFormFields.pastExperienceId: user.pastExperience ?? '',
   UserFormFields.nationalityId: user.nationality ?? '',
-  UserFormFields.preferredLanguageId: user.preferredLanguage ?? '',
+  UserFormFields.preferredLanguagesId:
+      user.preferredLanguages.firstOrNull ?? '',
   UserFormFields.guardianNameId: user.guardian?.name ?? '',
   UserFormFields.guardianRelationId: user.guardian?.relation ?? '',
   UserFormFields.guardianPhoneId: user.guardian?.phone ?? '',
@@ -55,8 +57,14 @@ String profilePositionLabel(ProfileOptions options, String value) =>
 /// each `update<Section>` sends only the fields its section edits, through
 /// the users master; a blank text is sent as null, which clears it.
 abstract final class UserExtendedProfileFormSubmit {
+  /// The list a single-choice select of [values] stands for: the choice
+  /// alone, or empty for none. Choosing several is club_client#335.
+  static List<String> oneOrNone(String id, Map<String, dynamic> values) => [
+    ?UserFormAssembly.maybe(id, values),
+  ];
+
   /// Partial update of the sports details: club or district, preferred
-  /// position and past experience.
+  /// positions and past experience.
   static Future<UserPrivate> updateSportsDetails({
     required Map<String, dynamic> values,
     required String username,
@@ -66,14 +74,16 @@ abstract final class UserExtendedProfileFormSubmit {
       username,
       clubDistrict: () =>
           UserFormAssembly.maybe(UserFormFields.clubDistrictId, values),
-      preferredPosition: () =>
-          UserFormAssembly.maybe(UserFormFields.preferredPositionId, values),
+      preferredPositions: oneOrNone(
+        UserFormFields.preferredPositionsId,
+        values,
+      ),
       pastExperience: () =>
           UserFormAssembly.maybe(UserFormFields.pastExperienceId, values),
     );
   }
 
-  /// Partial update of the background: nationality and preferred language.
+  /// Partial update of the background: nationality and preferred languages.
   static Future<UserPrivate> updateBackground({
     required Map<String, dynamic> values,
     required String username,
@@ -83,8 +93,10 @@ abstract final class UserExtendedProfileFormSubmit {
       username,
       nationality: () =>
           UserFormAssembly.maybe(UserFormFields.nationalityId, values),
-      preferredLanguage: () =>
-          UserFormAssembly.maybe(UserFormFields.preferredLanguageId, values),
+      preferredLanguages: oneOrNone(
+        UserFormFields.preferredLanguagesId,
+        values,
+      ),
     );
   }
 
@@ -132,8 +144,8 @@ abstract final class UserExtendedProfileFormSubmit {
   /// The form field of each field the server refuses as not one of the
   /// club's profile options.
   static const Map<String, String> profileOptionFieldIds = {
-    UserSchemaFields.preferredPosition: UserFormFields.preferredPositionId,
-    UserSchemaFields.preferredLanguage: UserFormFields.preferredLanguageId,
+    UserSchemaFields.preferredPositions: UserFormFields.preferredPositionsId,
+    UserSchemaFields.preferredLanguages: UserFormFields.preferredLanguagesId,
   };
 
   /// What a section editor shows for a refused save, keyed by field id: a

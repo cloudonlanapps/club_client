@@ -21,19 +21,22 @@ abstract final class ApplicationSamples {
       'fee': const ApplicationFact.amount(500),
       'kinds': const ApplicationFact.choices(['on_ice']),
     },
-    organisation: const ApplicationText.custom({
+    organisation: const ApplicationText({
       'en': 'Example Skating Club',
       'mr': 'उदाहरण क्लब',
     }),
-    title: const ApplicationText.custom({'en': 'Trial', 'mr': 'चाचणी'}),
-    subtitle: const ApplicationText.fact('venue'),
+    title: const ApplicationText({'en': 'Trial', 'mr': 'चाचणी'}),
+    subtitle: const ApplicationText({
+      'en': 'Northfield Rink',
+      'mr': 'नॉर्थफील्ड',
+    }),
     header: const [
       ApplicationHeaderItem.single(
-        ApplicationText.clause('header.camp', args: {'dates': 'camp'}),
+        ApplicationText({'en': 'Camp: 1-15 Nov', 'mr': 'शिबिर'}),
       ),
       ApplicationHeaderItem.lines([
-        ApplicationText.fact('venue'),
-        ApplicationText.fact('phone'),
+        ApplicationText({'en': 'Northfield Rink', 'mr': 'नॉर्थफील्ड'}),
+        ApplicationText({'en': '98765 43210'}),
       ]),
     ],
     ageCategories: [
@@ -48,23 +51,31 @@ abstract final class ApplicationSamples {
       ),
     ],
     selections: const [
-      ApplicationText.clause('selection.attend_camp', args: {'dates': 'camp'}),
-      ApplicationText.custom({'en': 'I bring my own skates', 'mr': 'स्केट्स'}),
+      ApplicationText({'en': 'I attend the camp', 'mr': 'शिबिर'}),
+      ApplicationText({'en': 'I bring my own skates', 'mr': 'स्केट्स'}),
     ],
-    declaration: const ApplicationText.clause('declaration.camp'),
-    formFooter: const ApplicationText.custom({'en': 'Play fair', 'mr': 'खेळ'}),
+    declaration: const ApplicationText({
+      'en': 'I will attend the camp',
+      'mr': 'मी शिबिरास येईन',
+    }),
+    formFooter: const ApplicationText({'en': 'Play fair', 'mr': 'खेळ'}),
     terms: const [
-      ApplicationTerm.clause('rule.fee', args: {'amount': 'fee'}),
-      ApplicationTerm.custom(
-        heading: ApplicationText.custom({'en': 'Kit', 'mr': 'साहित्य'}),
-        body: ApplicationText.custom({'en': 'Wear a helmet', 'mr': 'हेल्मेट'}),
+      ApplicationTerm(
+        heading: ApplicationText({'en': 'Fee', 'mr': 'शुल्क'}),
+        body: ApplicationText({'en': 'The fee is 500', 'mr': '५००'}),
+      ),
+      ApplicationTerm(
+        heading: ApplicationText({'en': 'Kit', 'mr': 'साहित्य'}),
+        body: ApplicationText({'en': 'Wear a helmet', 'mr': 'हेल्मेट'}),
       ),
     ],
     termsNotes: const [
-      ApplicationTermsNote.clause('note.follow_rules'),
-      ApplicationTermsNote.custom(
-        text: ApplicationText.custom({'en': 'Play hard', 'mr': 'खेळा'}),
-        attribution: ApplicationText.custom({'en': 'A coach'}),
+      ApplicationTermsNote(
+        text: ApplicationText({'en': 'Follow the rules', 'mr': 'नियम'}),
+      ),
+      ApplicationTermsNote(
+        text: ApplicationText({'en': 'Play hard', 'mr': 'खेळा'}),
+        attribution: ApplicationText({'en': 'A coach'}),
       ),
     ],
     labelOverrides: const {

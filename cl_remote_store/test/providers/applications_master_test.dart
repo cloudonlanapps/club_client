@@ -22,7 +22,7 @@ ApplicationTemplate _template(
 }) => ApplicationTemplate(
   id: id,
   status: status,
-  content: ApplicationContent(title: ApplicationText.custom({'en': title})),
+  content: ApplicationContent(title: ApplicationText({'en': title})),
   createdAtUtc: DateTime.utc(2026, 10),
   updatedAtUtc: DateTime.utc(2026, 10),
 );
@@ -120,18 +120,18 @@ class _FakeApplications extends Fake implements ApplicationSource {
   Future<List<int>> downloadPreview(int id) async => [1, id];
 
   @override
-  Future<List<int>> downloadOwnForm(int id) async {
+  Future<List<int>> downloadOwnForm(int id, {int? category}) async {
     final failure = failWith;
     if (failure != null) throw failure;
-    return [2, id];
+    return [2, id, ?category];
   }
 
   @override
-  Future<List<int>> downloadMemberForm(int id, String username) async => [
-    3,
-    id,
-    username.length,
-  ];
+  Future<List<int>> downloadMemberForm(
+    int id,
+    String username, {
+    int? category,
+  }) async => [3, id, username.length, ?category];
 
   @override
   Future<ApplicationLabels> getLabels() async {
@@ -253,7 +253,7 @@ void main() {
         await notifier.updateApplication(
           1,
           ApplicationPatch(
-            title: () => const ApplicationText.custom({'en': 'X'}),
+            title: () => const ApplicationText({'en': 'X'}),
           ),
         );
 
@@ -297,8 +297,9 @@ void main() {
       final source = _FakeApplications()
         ..failWith = const ApplicationIncompleteException(
           message: 'incomplete',
-          missing: ['title'],
-          language: 'mr',
+          missing: [
+            ApplicationMissingText(field: 'title', languages: ['mr']),
+          ],
         );
       final c = await _container(source);
       await c.read(clApplicationsMasterProvider.future);
@@ -320,6 +321,17 @@ void main() {
       expect(await notifier.downloadPreview(4), [1, 4]);
       expect(await notifier.downloadOwnForm(4), [2, 4]);
       expect(await notifier.downloadMemberForm(4, 'abc'), [3, 4, 3]);
+    });
+
+    test('Issue 343: a download passes on the age category it names', () async {
+      final source = _FakeApplications();
+      final c = await _container(source);
+      final notifier = c.read(clApplicationsMasterProvider.notifier);
+      expect(await notifier.downloadOwnForm(4, category: 1), [2, 4, 1]);
+      expect(
+        await notifier.downloadMemberForm(4, 'abc', category: 0),
+        [3, 4, 3, 0],
+      );
     });
   });
 

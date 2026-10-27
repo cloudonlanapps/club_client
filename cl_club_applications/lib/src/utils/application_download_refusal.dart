@@ -14,6 +14,10 @@ String? applicationDownloadRefusal(Object error) {
       ApplicationViewStrings.identityRequired,
     SdkErrorCode.applicationNotPublished ||
     SdkErrorCode.applicationNotFound => ApplicationViewStrings.notPublished,
+    // Asking which category to tick is club_client#337.
+    SdkErrorCode.applicationCategoryRequired ||
+    SdkErrorCode.applicationCategoryNotFitting =>
+      ApplicationViewStrings.categoryRequired,
     _ => null,
   };
 }

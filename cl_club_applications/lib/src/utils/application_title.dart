@@ -7,7 +7,7 @@ import '../constants/application_view_strings.dart';
 /// [template]'s title in English, as its lists show it.
 String applicationTitle(ApplicationTemplate template) {
   final title =
-      template.content.title?.texts?[ApplicationFormFields.english]?.trim() ??
+      template.content.title?.texts[ApplicationFormFields.english]?.trim() ??
       '';
   return title.isEmpty ? ApplicationViewStrings.untitled : title;
 }

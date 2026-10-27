@@ -28,9 +28,9 @@ UserPrivate _complete() => applicationsUser().copyWith(
   email: () => 'member_a@example.com',
   address: () => const Address(city: 'Pune'),
   nationality: () => 'Indian',
-  preferredLanguage: () => 'Marathi',
+  preferredLanguages: const ['Marathi'],
   clubDistrict: () => 'Pune',
-  preferredPosition: () => 'Forward',
+  preferredPositions: const ['Forward'],
   pastExperience: () => 'Two seasons',
 );
 

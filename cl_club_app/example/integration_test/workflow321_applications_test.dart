@@ -119,7 +119,7 @@ int _createdId(WidgetTester tester) {
   final templates = container(tester).read(clApplicationsMasterProvider);
   return templates.value!.values
       .firstWhere(
-        (t) => t.content.title?.texts?['en'] == _kTitle,
+        (t) => t.content.title?.texts['en'] == _kTitle,
       )
       .id;
 }
@@ -199,7 +199,7 @@ void main() {
         // Only when the UI cleanup did not run to the end.
         final left = await admin.applications.listApplications(limit: 100);
         for (final t in left.items) {
-          if (t.content.title?.texts?['en'] != _kTitle) continue;
+          if (t.content.title?.texts['en'] != _kTitle) continue;
           if (t.status == ApplicationStatus.published) {
             await admin.applications.unpublishApplication(t.id);
           }

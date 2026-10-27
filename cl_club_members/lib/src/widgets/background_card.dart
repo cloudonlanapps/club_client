@@ -62,7 +62,9 @@ class BackgroundCardState extends ConsumerState<BackgroundCard> {
         context,
         LucideIcons.languages,
         ExtendedProfileStrings.preferredLanguage,
-        user.preferredLanguage,
+        user.preferredLanguages.isEmpty
+            ? null
+            : user.preferredLanguages.join(', '),
       ),
     ];
     return EditableSectionCard<Map<String, dynamic>>(

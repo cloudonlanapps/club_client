@@ -75,10 +75,10 @@ class _RecordingUsers extends ClUsersMasterNotifier {
     Address? Function()? address,
     bool? isPublicProfile,
     String? Function()? clubDistrict,
-    String? Function()? preferredPosition,
+    List<String>? preferredPositions,
     String? Function()? pastExperience,
     String? Function()? nationality,
-    String? Function()? preferredLanguage,
+    List<String>? preferredLanguages,
     Guardian? Function()? guardian,
     DateTime? Function()? membershipDateUtc,
   }) async {
@@ -90,10 +90,10 @@ class _RecordingUsers extends ClUsersMasterNotifier {
       if (phone != null) 'phone',
       if (address != null) 'address',
       if (clubDistrict != null) 'clubDistrict',
-      if (preferredPosition != null) 'preferredPosition',
+      if (preferredPositions != null) 'preferredPositions',
       if (pastExperience != null) 'pastExperience',
       if (nationality != null) 'nationality',
-      if (preferredLanguage != null) 'preferredLanguage',
+      if (preferredLanguages != null) 'preferredLanguages',
       if (guardian != null) 'guardian',
       if (membershipDateUtc != null) 'membershipDateUtc',
     });
@@ -114,7 +114,7 @@ UserPrivate _user(
   isSuperAdmin: false,
   roles: UserRoles(isAdmin: isAdmin, isCoach: isCoach, isMember: true),
   createdAtUtc: DateTime.utc(2024, 6, 15),
-  preferredPosition: position,
+  preferredPositions: [?position],
   membershipDateUtc: DateTime.utc(2025, 4, 2),
 );
 
@@ -240,7 +240,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(users.sent, [
-        {'clubDistrict', 'preferredPosition', 'pastExperience'},
+        {'clubDistrict', 'preferredPositions', 'pastExperience'},
       ]);
       expect(find.text(ExtendedProfileStrings.sportsDetailsSaved), findsOne);
     });
@@ -250,7 +250,7 @@ void main() {
       final users = _RecordingUsers(
         failure: const InvalidProfileOptionException(
           message: 'raw server text',
-          field: 'preferredPosition',
+          field: 'preferredPositions',
           value: 'Forward',
         ),
       );
@@ -276,7 +276,7 @@ void main() {
 
       expect(
         find.descendant(
-          of: _field(UserFormFields.preferredPositionId),
+          of: _field(UserFormFields.preferredPositionsId),
           matching: find.text(ExtendedProfileStrings.optionRefused),
         ),
         findsOneWidget,

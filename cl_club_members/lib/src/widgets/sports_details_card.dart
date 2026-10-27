@@ -56,7 +56,6 @@ class SportsDetailsCardState extends ConsumerState<SportsDetailsCard> {
     final user = widget.user;
     final options =
         ref.watch(profileOptionsProvider).valueOrNull ?? const ProfileOptions();
-    final position = user.preferredPosition;
     final rows = <Widget?>[
       profileDetailRow(
         context,
@@ -68,7 +67,11 @@ class SportsDetailsCardState extends ConsumerState<SportsDetailsCard> {
         context,
         LucideIcons.shield,
         ExtendedProfileStrings.preferredPosition,
-        position == null ? null : profilePositionLabel(options, position),
+        user.preferredPositions.isEmpty
+            ? null
+            : user.preferredPositions
+                  .map((value) => profilePositionLabel(options, value))
+                  .join(', '),
       ),
       profileDetailRow(
         context,

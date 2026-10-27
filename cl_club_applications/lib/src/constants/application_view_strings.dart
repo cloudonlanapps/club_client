@@ -95,22 +95,22 @@ abstract final class ApplicationViewStrings {
   static const String changedMeanwhile =
       'This application was changed elsewhere and has been reloaded.';
 
-  /// Save refused: texts missing a language.
-  static String incomplete(String language, String places) =>
-      'Save was refused: these texts are missing or lack $language: '
-      '$places.';
+  /// Save refused: the first incomplete text, at [place], lacks
+  /// [languages]; [others] more texts are incomplete. Naming each text with
+  /// its own languages is club_client#338.
+  static String incomplete(String place, String languages, int others) =>
+      'Save was refused: $place is missing or lacks $languages'
+      '${switch (others) {
+        0 => '',
+        1 => ', and 1 more text is incomplete',
+        _ => ', and $others more texts are incomplete',
+      }}.';
 
   /// Save refused: the details do not fit page 1.
   static String doesNotFit(double? overflowPt) =>
       'Save was refused: the member’s details do not fit on page 1'
       '${overflowPt == null ? '' : ' (over by ${overflowPt.round()} pt)'}. '
       'Remove some age categories.';
-
-  /// Save refused: a clause or fact reference is broken.
-  static const String invalidReference =
-      'Save was refused: a text names a clause or fact the application does '
-      'not have, or a fact of the wrong type. Check the facts each clause '
-      'uses.';
 
   /// Delete's confirmation title.
   static const String deleteTitle = 'Delete this application?';
@@ -124,6 +124,12 @@ abstract final class ApplicationViewStrings {
   static const String notEligible =
       'Not eligible for this application: none of its age categories matches '
       'the date of birth and gender on the profile.';
+
+  /// A download refused: the member fits several age categories and the
+  /// form must tick one. Choosing it is club_client#337.
+  static const String categoryRequired =
+      'The member fits more than one age category of this form, and '
+      'choosing which one it ticks is not available yet.';
 
   /// A download refused: no identity document.
   static const String identityRequired =

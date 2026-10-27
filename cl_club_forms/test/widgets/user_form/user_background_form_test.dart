@@ -10,7 +10,7 @@ import '../../support/account_user_form_harness.dart';
 import '../../support/form_harness.dart';
 
 const String _nationality = UserFormFields.nationalityId;
-const String _language = UserFormFields.preferredLanguageId;
+const String _language = UserFormFields.preferredLanguagesId;
 
 const List<String> _languages = ['English', 'Marathi', 'Hindi'];
 

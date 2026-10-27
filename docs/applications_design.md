@@ -199,8 +199,8 @@ library.
 ```
 
 The editor lists the library's texts of each kind under a section's list,
-each by its name, with no built-in or club split; tapping one inserts it **as written**, in
-every print language, gaps included (`from {dates} at {venue}`), as a new
+each by its name, with no built-in or club split; tapping one inserts it
+**as written**, in every print language, gaps included (`from {dates} at {venue}`), as a new
 item that is then edited like any other: the admin renames a gap to the
 fact it means (`{dates}` → `{match_dates}`), so two facts of one type can
 serve two places. Nothing is filled when a text is inserted; a fact's

@@ -9,8 +9,6 @@ import '../../../models/application/application_text_value.dart';
 import '../../form/labeled_form_row.dart';
 import '../application_form_fields.dart';
 import '../application_form_strings.dart';
-import '../application_text_mode.dart';
-import '../application_text_sources.dart';
 import '../facts/application_choices_input.dart';
 import '../facts/application_date_input.dart';
 import '../text_value/application_text_value_editor.dart';
@@ -118,9 +116,7 @@ class ApplicationAgeCategoryEditorState
       spacing: FormSpacing.rowGap,
       children: [
         ApplicationTextValueEditor(
-          modes: const [ApplicationTextMode.custom],
           languages: widget.languages,
-          sources: ApplicationTextSources(),
           label: ApplicationFormStrings.ageCategoryName,
           requireEnglish: true,
           initialValue: label,

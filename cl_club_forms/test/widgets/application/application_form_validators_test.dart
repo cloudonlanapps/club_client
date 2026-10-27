@@ -1,43 +1,11 @@
-// Issue 321: the checks of the application forms. A text needs English
-// when written here; a reference names a fact or clause that exists, of the
-// right kind, with every gap bound to a fact of the gap's type. A fact has
-// an identifier-like name no other fact has and a whole value for its type.
-import 'package:cl_club_forms/cl_club_forms.dart';
+// Issue 321: the checks of the application forms. A text needs English. A
+// fact has an identifier-like name no other fact has and a whole value for
+// its type.
 import 'package:cl_club_forms/src/widgets/application/application_form_validators.dart';
-import 'package:cl_club_forms/src/widgets/application/application_text_sources.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-final ApplicationTextSources _sources = ApplicationTextSources(
-  facts: const {
-    'venue': ApplicationFactType.name,
-    'camp': ApplicationFactType.dateRange,
-  },
-  clauses: const [
-    ApplicationClauseOption(
-      id: 'rule.camp',
-      kind: ApplicationClauseKind.rule,
-      heading: {'en': 'Camp'},
-      text: {'en': 'A camp from {dates} at {venue}.'},
-      gaps: {
-        'dates': ApplicationFactType.dateRange,
-        'venue': ApplicationFactType.name,
-      },
-    ),
-    ApplicationClauseOption(
-      id: 'declaration.camp',
-      kind: ApplicationClauseKind.declaration,
-      text: {'en': 'I declare.'},
-    ),
-  ],
-);
-
 String? _text(Object? json, {bool required = false}) =>
-    ApplicationFormValidators.text(
-      json,
-      _sources,
-      required: required,
-      kind: ApplicationClauseKind.rule,
-    );
+    ApplicationFormValidators.text(json, required: required);
 
 Map<String, Object?> _fact(String name, String type, Map<String, Object?> v) =>
     {'name': name, 'type': type, ...v};
@@ -52,60 +20,13 @@ void main() {
       expect(_text(null), isNull);
     });
 
-    test('Issue 321: a fact reference names a fact there is', () {
-      expect(_text({'fact': 'venue'}), isNull);
-      expect(_text({'fact': ''}), 'Choose a fact');
-      expect(_text({'fact': 'city'}), 'There is no fact "city"');
-    });
-
-    test('Issue 321: a clause is one of the library, of the kind wanted, '
-        'every gap bound to a fact of its type', () {
-      expect(
-        _text({
-          'clause': 'rule.camp',
-          'args': {'dates': 'camp', 'venue': 'venue'},
-        }),
-        isNull,
-      );
-      expect(_text({'clause': ''}), 'Choose a clause');
-      expect(
-        _text({'clause': 'rule.gone'}),
-        'The library has no clause "rule.gone"',
-      );
-      expect(
-        _text({'clause': 'declaration.camp'}),
-        '"declaration.camp" cannot be used here',
-      );
-      expect(
-        _text({
-          'clause': 'rule.camp',
-          'args': {'dates': 'camp'},
-        }),
-        'Choose a fact for {venue}',
-      );
-      expect(
-        _text({
-          'clause': 'rule.camp',
-          'args': {'dates': 'venue', 'venue': 'venue'},
-        }),
-        'The fact "venue" is not a date range, which {dates} needs',
-      );
-      expect(
-        _text({
-          'clause': 'rule.camp',
-          'args': {'dates': 'trial', 'venue': 'venue'},
-        }),
-        'There is no fact "trial"',
-      );
-    });
-
     test('Issue 321: a joined line checks each part', () {
       expect(
         _text([
-          {'fact': 'venue'},
-          {'fact': ''},
+          {'en': 'City Rink'},
+          {'mr': 'शहर'},
         ]),
-        'Choose a fact',
+        'Needs text in English',
       );
     });
   });
@@ -295,31 +216,24 @@ void main() {
       );
     });
 
-    test('Issue 321: a term is a rule clause, or a heading and a text', () {
-      expect(
-        ApplicationFormValidators.term({
-          'clause': 'rule.camp',
-          'args': {'dates': 'camp', 'venue': 'venue'},
-        }, _sources),
-        isNull,
-      );
+    test('Issue 321: a term is a heading and a text', () {
       expect(
         ApplicationFormValidators.term({
           'heading': {'en': 'Kit'},
           'body': {'en': 'Bring a helmet.'},
-        }, _sources),
+        }),
         isNull,
       );
       expect(
         ApplicationFormValidators.term({
           'heading': {'en': 'Kit'},
-        }, _sources),
+        }),
         'Text: Needs text in English',
       );
       expect(
         ApplicationFormValidators.term({
           'body': {'en': 'Bring a helmet.'},
-        }, _sources),
+        }),
         'Heading: Needs text in English',
       );
     });
@@ -329,18 +243,18 @@ void main() {
       expect(
         ApplicationFormValidators.note({
           'text': {'en': 'Play fair.'},
-        }, _sources),
+        }),
         isNull,
       );
       expect(
-        ApplicationFormValidators.note(<String, Object?>{}, _sources),
+        ApplicationFormValidators.note(<String, Object?>{}),
         'Needs text in English',
       );
       expect(
         ApplicationFormValidators.note({
           'text': {'en': 'Play fair.'},
           'attribution': {'mr': 'क्लब'},
-        }, _sources),
+        }),
         'Attribution: Needs text in English',
       );
     });

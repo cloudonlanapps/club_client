@@ -21,8 +21,8 @@ void main() {
     );
   });
 
-  test('Issue 321: the reader fills a clause with its facts in each '
-      'language', () {
+  test('Issue 321: the reader reads a text in each language, and a fact '
+      'as its value', () {
     final reader = ApplicationTextReader(
       template: ApplicationFormJson.fromContent(ApplicationSamples.content),
       options: ApplicationEditorOptions.from(
@@ -31,14 +31,16 @@ void main() {
       ),
     );
     expect(
-      reader.read({
-        'clause': 'header.camp',
-        'args': {'dates': 'camp'},
-      }),
-      'Camp: 1 Nov 2026 – 15 Nov 2026 / शिबिर: 1 Nov 2026 – 15 Nov 2026',
+      reader.read({'en': 'Camp', 'mr': 'शिबिर'}),
+      'Camp / शिबिर',
     );
-    expect(reader.read({'fact': 'venue'}), 'Northfield Rink / नॉर्थफील्ड');
+    expect(
+      reader.read([
+        {'en': 'Camp'},
+        {'en': 'Rink'},
+      ]),
+      'Camp · Rink',
+    );
     expect(reader.factValue('kinds', 'mr'), 'बर्फावर');
-    expect(reader.read({'clause': 'unknown.clause'}), 'unknown.clause');
   });
 }

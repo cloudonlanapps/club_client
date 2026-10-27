@@ -44,11 +44,10 @@ abstract final class ApplicationFormValues {
   static Object? text(Object? json) =>
       ApplicationTextValue.fromJson(json)?.toJson();
 
-  /// A term as the forms hold it: a clause reference as it is, or its
-  /// heading and body as custom text, an empty one left out.
+  /// A term as the forms hold it: its heading and body, an empty one left
+  /// out.
   static Object? term(Object? json) {
     final map = json is Map ? json : const <Object?, Object?>{};
-    if (map.containsKey(ApplicationTextValue.clauseKey)) return text(map);
     return {
       for (final key in [
         ApplicationFormFields.headingKey,

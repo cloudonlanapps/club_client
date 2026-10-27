@@ -15,16 +15,15 @@ import 'application_form_strings.dart';
 import 'application_form_validators.dart';
 import 'application_form_values.dart';
 import 'application_section_contract.dart';
-import 'application_text_sources.dart';
 import 'items/application_items_field.dart';
 import 'sections/application_header_item_editor.dart';
 import 'text_value/application_clause_library.dart';
 
 /// Pure-UI section editor of an application's header strip: short items
-/// (the venue, the dates, a phone), each a header clause of the library
-/// with its gaps bound to the template's facts, a fact, or written in each
-/// print language; several may be joined on one line. Items are added,
-/// removed and moved.
+/// (the venue, the dates, a phone), each written in each print language;
+/// several may be joined on one line. Items are added, removed and moved;
+/// a header clause of the library tapped under the list is added as its
+/// filled text.
 ///
 /// [initialValues] is the template's JSON, or the part of it this section
 /// holds. The form owns no title or Save button: the host drives it
@@ -73,10 +72,6 @@ class ApplicationHeaderFormState extends State<ApplicationHeaderForm>
         ApplicationSectionContract<ApplicationHeaderForm> {
   @override
   Widget build(BuildContext context) {
-    final sources = ApplicationTextSources(
-      facts: widget.facts,
-      clauses: widget.clauses,
-    );
     return ShadForm(
       key: formKey,
       initialValue: {
@@ -96,7 +91,10 @@ class ApplicationHeaderFormState extends State<ApplicationHeaderForm>
               noun: ApplicationFormStrings.headerItemNoun,
               addLabel: ApplicationFormStrings.addHeaderItem,
               insertBuilder: ApplicationClauseLibrary.forItems(
-                clauses: sources.clausesOf(ApplicationClauseKind.header),
+                clauses: ApplicationClauseLibrary.ofKind(
+                  widget.clauses,
+                  ApplicationClauseKind.header,
+                ),
                 facts: widget.facts,
                 languages: widget.languages,
                 fill: widget.fillClause,
@@ -107,19 +105,13 @@ class ApplicationHeaderFormState extends State<ApplicationHeaderForm>
               validator: (items) => ApplicationFormValidators.items(
                 items,
                 ApplicationFormStrings.headerItemNoun,
-                (item) => ApplicationFormValidators.text(
-                  item,
-                  sources,
-                  required: true,
-                  kind: ApplicationClauseKind.header,
-                ),
+                (item) => ApplicationFormValidators.text(item, required: true),
               ),
               itemBuilder:
                   ({required initial, required onChanged, required enabled}) =>
                       ApplicationHeaderItemEditor(
                         initial: initial,
                         languages: widget.languages,
-                        sources: sources,
                         enabled: enabled,
                         onChanged: onChanged,
                       ),

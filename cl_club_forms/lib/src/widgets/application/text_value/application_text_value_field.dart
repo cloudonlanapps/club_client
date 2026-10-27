@@ -1,11 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../../models/application/application_clause_kind.dart';
 import '../../../models/application/application_language_option.dart';
 import '../../../models/application/application_text_value.dart';
-import '../application_text_mode.dart';
-import '../application_text_sources.dart';
 import 'application_text_value_editor.dart';
 
 /// `ShadForm` field holding one printed text of an application, edited by
@@ -20,10 +17,7 @@ import 'application_text_value_editor.dart';
 class ApplicationTextValueField
     extends ShadFormBuilderField<ApplicationTextValue?> {
   ApplicationTextValueField({
-    required List<ApplicationTextMode> modes,
     required List<ApplicationLanguageOption> languages,
-    required ApplicationTextSources sources,
-    ApplicationClauseKind? clauseKind,
     bool requireEnglish = false,
     bool multiline = false,
     Key? editorKey,
@@ -35,10 +29,7 @@ class ApplicationTextValueField
   }) : super(
          builder: (state) => ApplicationTextValueEditor(
            key: editorKey,
-           modes: modes,
            languages: languages,
-           sources: sources,
-           clauseKind: clauseKind,
            requireEnglish: requireEnglish,
            multiline: multiline,
            initialValue: state.value,

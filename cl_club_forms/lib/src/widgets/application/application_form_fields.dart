@@ -11,7 +11,7 @@ abstract final class ApplicationFormFields {
   /// The title: custom text.
   static const String titleId = 'title';
 
-  /// The subtitle: custom text or a fact; optional.
+  /// The subtitle: custom text; optional.
   static const String subtitleId = 'subtitle';
 
   /// The closing line under the signatures: custom text; optional.
@@ -33,8 +33,8 @@ abstract final class ApplicationFormFields {
   /// The declaration above the signatures: a text value.
   static const String declarationId = 'declaration';
 
-  /// The terms (`List<Map>`): each a clause reference, or [headingKey] and
-  /// [bodyKey] as custom text.
+  /// The terms (`List<Map>`): each [headingKey] and [bodyKey] as custom
+  /// text.
   static const String termsId = 'terms';
 
   /// The notes under the terms (`List<Map>`): each [textKey] and, maybe,

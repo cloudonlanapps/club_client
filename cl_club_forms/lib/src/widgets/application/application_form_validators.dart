@@ -1,13 +1,9 @@
-import '../../models/application/application_clause_kind.dart';
-import '../../models/application/application_clause_text.dart';
 import '../../models/application/application_custom_text.dart';
-import '../../models/application/application_fact_text.dart';
 import '../../models/application/application_joined_text.dart';
 import '../../models/application/application_text_value.dart';
 import 'application_fact_validators.dart';
 import 'application_form_fields.dart';
 import 'application_form_strings.dart';
-import 'application_text_sources.dart';
 
 /// Checks of the application forms. Each returns `null` when what it
 /// checks is fine, or the message of its first problem. They check what a
@@ -15,16 +11,9 @@ import 'application_text_sources.dart';
 /// for save (`ApplicationCompleteness`).
 abstract final class ApplicationFormValidators {
   /// A printed text, [json] as the template's JSON holds it or an
-  /// [ApplicationTextValue]: custom text
-  /// needs English; a fact must be one of [sources]; a clause must be one
-  /// of the library, of [kind] when given, with each gap bound to a fact
-  /// of the gap's type. Nothing is fine unless [required].
-  static String? text(
-    Object? json,
-    ApplicationTextSources sources, {
-    bool required = false,
-    ApplicationClauseKind? kind,
-  }) {
+  /// [ApplicationTextValue]: it needs English, each part of a joined line
+  /// too. Nothing is fine unless [required].
+  static String? text(Object? json, {bool required = false}) {
     final value = json is ApplicationTextValue
         ? json
         : ApplicationTextValue.fromJson(json);
@@ -34,52 +23,12 @@ abstract final class ApplicationFormValidators {
         (text[ApplicationFormFields.english] ?? '').isEmpty
             ? ApplicationFormStrings.englishRequired
             : null,
-      ApplicationFactText(:final fact) => factRef(fact, sources),
-      ApplicationClauseText() => clause(value, sources, kind),
       ApplicationJoinedText(:final parts) =>
         parts.isEmpty && required
             ? ApplicationFormStrings.englishRequired
-            : parts
-                  .map((part) => text(part.toJson(), sources, kind: kind))
-                  .nonNulls
-                  .firstOrNull,
+            : parts.map((part) => text(part.toJson())).nonNulls.firstOrNull,
       _ => null,
     };
-  }
-
-  /// A reference to the fact named [fact].
-  static String? factRef(String fact, ApplicationTextSources sources) {
-    if (fact.isEmpty) return ApplicationFormStrings.chooseFact;
-    if (!sources.facts.containsKey(fact)) {
-      return ApplicationFormStrings.noSuchFact(fact);
-    }
-    return null;
-  }
-
-  /// A reference to a clause of [kind], or of any kind when it is null.
-  static String? clause(
-    ApplicationClauseText value,
-    ApplicationTextSources sources,
-    ApplicationClauseKind? kind,
-  ) {
-    if (value.clause.isEmpty) return ApplicationFormStrings.chooseClause;
-    final option = sources.clauses[value.clause];
-    if (option == null) {
-      return ApplicationFormStrings.noSuchClause(value.clause);
-    }
-    if (kind != null && option.kind != kind) {
-      return ApplicationFormStrings.wrongKind(value.clause);
-    }
-    for (final MapEntry(key: gap, value: type) in option.gaps.entries) {
-      final fact = value.args[gap];
-      if (fact == null) return ApplicationFormStrings.gapUnbound(gap);
-      final problem = factRef(fact, sources);
-      if (problem != null) return problem;
-      if (sources.facts[fact] != type) {
-        return ApplicationFormStrings.gapWrongType(gap, fact, type);
-      }
-    }
-    return null;
   }
 
   /// Each of [items] by [each]; the first problem is named by its item's
@@ -138,41 +87,27 @@ abstract final class ApplicationFormValidators {
     return null;
   }
 
-  /// A term: a clause of kind rule, or a custom heading and text, both
-  /// with English.
-  static String? term(Object? item, ApplicationTextSources sources) {
+  /// A term: a heading and a text, both with English.
+  static String? term(Object? item) {
     final map = item is Map ? item : const <Object?, Object?>{};
-    if (map.containsKey(ApplicationTextValue.clauseKey)) {
-      return text(
-        map,
-        sources,
-        required: true,
-        kind: ApplicationClauseKind.rule,
-      );
-    }
     return part(
           ApplicationFormStrings.heading,
-          text(map[ApplicationFormFields.headingKey], sources, required: true),
+          text(map[ApplicationFormFields.headingKey], required: true),
         ) ??
         part(
           ApplicationFormStrings.text,
-          text(map[ApplicationFormFields.bodyKey], sources, required: true),
+          text(map[ApplicationFormFields.bodyKey], required: true),
         );
   }
 
-  /// A note under the terms: its text, a note clause or custom; and its
-  /// attribution, optional, custom.
-  static String? note(Object? item, ApplicationTextSources sources) {
+  /// A note under the terms: its text, with English; and its attribution,
+  /// optional.
+  static String? note(Object? item) {
     final map = item is Map ? item : const <Object?, Object?>{};
-    return text(
-          map[ApplicationFormFields.textKey],
-          sources,
-          required: true,
-          kind: ApplicationClauseKind.note,
-        ) ??
+    return text(map[ApplicationFormFields.textKey], required: true) ??
         part(
           ApplicationFormStrings.attribution,
-          text(map[ApplicationFormFields.attributionKey], sources),
+          text(map[ApplicationFormFields.attributionKey]),
         );
   }
 

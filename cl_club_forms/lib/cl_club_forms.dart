@@ -18,12 +18,8 @@ export 'src/models/application/application_clause_kind.dart'
     show ApplicationClauseKind;
 export 'src/models/application/application_clause_option.dart'
     show ApplicationClauseOption;
-export 'src/models/application/application_clause_text.dart'
-    show ApplicationClauseText;
 export 'src/models/application/application_custom_text.dart'
     show ApplicationCustomText;
-export 'src/models/application/application_fact_text.dart'
-    show ApplicationFactText;
 export 'src/models/application/application_fact_type.dart'
     show ApplicationFactType;
 export 'src/models/application/application_joined_text.dart'

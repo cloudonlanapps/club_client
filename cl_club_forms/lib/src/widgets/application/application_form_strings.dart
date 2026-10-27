@@ -1,5 +1,4 @@
 import '../../models/application/application_fact_type.dart';
-import 'application_text_mode.dart';
 
 /// Labels, hints and messages of the application forms.
 abstract final class ApplicationFormStrings {
@@ -30,28 +29,6 @@ abstract final class ApplicationFormStrings {
   /// Label of the declaration.
   static const String declaration = 'Declaration';
 
-  /// Label of where a text comes from.
-  static const String textFrom = 'Text from';
-
-  /// The name of a text [mode].
-  static String modeName(ApplicationTextMode mode) => switch (mode) {
-    ApplicationTextMode.custom => 'Written here',
-    ApplicationTextMode.fact => 'A fact',
-    ApplicationTextMode.clause => 'A library clause',
-  };
-
-  /// Label of a fact picker.
-  static const String fact = 'Fact';
-
-  /// Hint of a fact picker with none chosen.
-  static const String chooseFactHint = 'Pick a fact';
-
-  /// Label of a clause picker.
-  static const String clause = 'Clause';
-
-  /// Hint of a clause picker with none chosen.
-  static const String chooseClauseHint = 'Pick a clause';
-
   /// Label of the library clauses a section offers (club_client#336).
   static const String library = 'From the library';
 
@@ -66,10 +43,6 @@ abstract final class ApplicationFormStrings {
       'This clause needs a ${typeName(type)} fact named "$gap". Add it '
       'under Facts and save, then tap the clause again.';
 
-  /// Label of the fact filling [gap], which takes a [type].
-  static String gapLabel(String gap, ApplicationFactType type) =>
-      '{$gap}: ${typeName(type)}';
-
   /// The name of a fact [type], as shown.
   static String typeName(ApplicationFactType type) => switch (type) {
     ApplicationFactType.name => 'name',
@@ -79,10 +52,6 @@ abstract final class ApplicationFormStrings {
     ApplicationFactType.amount => 'amount',
     ApplicationFactType.choices => 'choices',
   };
-
-  /// A fact named [name], of [type], as a picker lists it.
-  static String factOption(String name, ApplicationFactType? type) =>
-      type == null ? name : '$name (${typeName(type)})';
 
   /// Label of a fact's name.
   static const String factName = 'Name';
@@ -214,31 +183,6 @@ abstract final class ApplicationFormStrings {
 
   /// Shown when a standard label is emptied.
   static const String labelRequired = 'A label cannot be empty';
-
-  /// Shown when no fact is chosen.
-  static const String chooseFact = 'Choose a fact';
-
-  /// Shown when no clause is chosen.
-  static const String chooseClause = 'Choose a clause';
-
-  /// Shown for a fact the template does not have.
-  static String noSuchFact(String name) => 'There is no fact "$name"';
-
-  /// Shown for a clause the library does not have.
-  static String noSuchClause(String id) => 'The library has no clause "$id"';
-
-  /// Shown for a clause of another kind.
-  static String wrongKind(String id) => '"$id" cannot be used here';
-
-  /// Shown when [gap] has no fact.
-  static String gapUnbound(String gap) => 'Choose a fact for {$gap}';
-
-  /// Shown when [gap] has a [fact] of another type than its [type].
-  static String gapWrongType(
-    String gap,
-    String fact,
-    ApplicationFactType type,
-  ) => 'The fact "$fact" is not a ${typeName(type)}, which {$gap} needs';
 
   /// [message] about the [number]th item called [noun].
   static String aboutItem(String noun, int number, String message) =>

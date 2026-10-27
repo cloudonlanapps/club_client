@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../../../constants/form_spacing.dart';
-import '../../../models/application/application_clause_kind.dart';
 import '../../../models/application/application_custom_text.dart';
 import '../../../models/application/application_language_option.dart';
 import '../../../models/application/application_text_value.dart';
 import '../application_completeness.dart';
 import '../application_form_fields.dart';
 import '../application_form_strings.dart';
-import '../application_text_mode.dart';
-import '../application_text_sources.dart';
 import '../text_value/application_text_value_editor.dart';
 
-/// Edits one note under the terms of an application: its text, a note
-/// clause of the library or written in each print language, and an
-/// optional attribution written here.
+/// Edits one note under the terms of an application: its text and an
+/// optional attribution, each written in each print language.
 ///
 /// It reports the note as the template's JSON holds it, its text under
 /// `text` even when seeded from a bare text, through [onChanged] on every
@@ -23,26 +19,16 @@ class ApplicationNoteEditor extends StatefulWidget {
   const ApplicationNoteEditor({
     required this.initial,
     required this.languages,
-    required this.sources,
     required this.onChanged,
     this.enabled = true,
     super.key,
   });
-
-  /// The ways a note's text may be given; a new one takes the first.
-  // A printed text is a language map only (club_sdk#76): a clause or fact
-  // reference is refused by the server. A library clause is inserted as its
-  // filled text, from the library under the list (club_client#336).
-  static const List<ApplicationTextMode> modes = [ApplicationTextMode.custom];
 
   /// The note to start from, as the template's JSON holds it.
   final Object? initial;
 
   /// The print languages, in order.
   final List<ApplicationLanguageOption> languages;
-
-  /// The facts and clauses a note may name.
-  final ApplicationTextSources sources;
 
   /// Called with the note after every edit.
   final ValueChanged<Object?> onChanged;
@@ -107,10 +93,7 @@ class ApplicationNoteEditorState extends State<ApplicationNoteEditor> {
       spacing: FormSpacing.rowGap,
       children: [
         ApplicationTextValueEditor(
-          modes: ApplicationNoteEditor.modes,
           languages: widget.languages,
-          sources: widget.sources,
-          clauseKind: ApplicationClauseKind.note,
           requireEnglish: true,
           multiline: true,
           initialValue: text,
@@ -118,9 +101,7 @@ class ApplicationNoteEditorState extends State<ApplicationNoteEditor> {
           onChanged: (value) => update(() => text = value),
         ),
         ApplicationTextValueEditor(
-          modes: const [ApplicationTextMode.custom],
           languages: widget.languages,
-          sources: widget.sources,
           label: ApplicationFormStrings.attribution,
           initialValue: attribution,
           enabled: widget.enabled,

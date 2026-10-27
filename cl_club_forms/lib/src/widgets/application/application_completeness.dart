@@ -1,7 +1,4 @@
-import '../../models/application/application_clause_option.dart';
-import '../../models/application/application_clause_text.dart';
 import '../../models/application/application_custom_text.dart';
-import '../../models/application/application_fact_text.dart';
 import '../../models/application/application_joined_text.dart';
 import '../../models/application/application_text_value.dart';
 import 'application_form_fields.dart';
@@ -11,9 +8,6 @@ import 'application_form_fields.dart';
 /// there, and they, each term (heading and body), each note's text and
 /// each selection must have text in every print language. Header items,
 /// attributions and age-category names may stay English only.
-///
-/// A fact prints in every language. A clause has the texts the library
-/// gives it; one the library does not have lacks them all.
 abstract final class ApplicationCompleteness {
   /// The texts that must be there whatever the languages.
   static const List<String> requiredTexts = [
@@ -24,18 +18,14 @@ abstract final class ApplicationCompleteness {
 
   /// Where [template], a template's JSON, lacks a text, by its place
   /// (`title`, `terms[1].body`, `terms_notes[0].text`, `selections[2]`), in
-  /// the order the form prints them. [clauses] is the library, by id.
-  static List<String> missingTexts(
-    Map<String, Object?> template, {
-    required Map<String, ApplicationClauseOption> clauses,
-  }) {
+  /// the order the form prints them.
+  static List<String> missingTexts(Map<String, Object?> template) {
     final languages = languagesOf(template);
     final found = <String>[];
 
-    void need(String place, Object? json, {bool heading = false}) {
+    void need(String place, Object? json) {
       final value = ApplicationTextValue.fromJson(json);
-      if (value != null &&
-          !isComplete(value, languages, clauses, heading: heading)) {
+      if (value != null && !isComplete(value, languages)) {
         found.add(place);
       }
     }
@@ -51,10 +41,7 @@ abstract final class ApplicationCompleteness {
     for (var i = 0; i < terms.length; i++) {
       final term = terms[i];
       final place = '${ApplicationFormFields.termsId}[$i]';
-      if (term is Map && term.containsKey(ApplicationTextValue.clauseKey)) {
-        need('$place.${ApplicationFormFields.headingKey}', term, heading: true);
-        need('$place.${ApplicationFormFields.bodyKey}', term);
-      } else if (term is Map) {
+      if (term is Map) {
         need(
           '$place.${ApplicationFormFields.headingKey}',
           term[ApplicationFormFields.headingKey],
@@ -101,29 +88,15 @@ abstract final class ApplicationCompleteness {
       ? note[ApplicationFormFields.textKey]
       : note;
 
-  /// Whether [value] prints in every one of [languages]: for a clause, its
-  /// text, or its heading when [heading].
-  static bool isComplete(
-    ApplicationTextValue value,
-    List<String> languages,
-    Map<String, ApplicationClauseOption> clauses, {
-    bool heading = false,
-  }) {
-    Map<String, String> texts;
-    switch (value) {
-      case ApplicationFactText():
-        return true;
-      case ApplicationJoinedText(:final parts):
-        return parts.every((part) => isComplete(part, languages, clauses));
-      case ApplicationClauseText(:final clause):
-        final option = clauses[clause];
-        if (option == null) return false;
-        texts = heading ? option.heading : option.text;
-      case ApplicationCustomText(:final text):
-        texts = text;
-      default:
-        return false;
-    }
-    return languages.every((code) => texts[code]?.isNotEmpty ?? false);
-  }
+  /// Whether [value] prints in every one of [languages].
+  static bool isComplete(ApplicationTextValue value, List<String> languages) =>
+      switch (value) {
+        ApplicationJoinedText(:final parts) => parts.every(
+          (part) => isComplete(part, languages),
+        ),
+        ApplicationCustomText(:final text) => languages.every(
+          (code) => text[code]?.isNotEmpty ?? false,
+        ),
+        _ => false,
+      };
 }

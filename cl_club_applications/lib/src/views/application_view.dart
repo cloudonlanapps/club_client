@@ -147,10 +147,7 @@ class ApplicationEditorBody extends StatelessWidget {
     final draft = template.status == ApplicationStatus.draft;
     final missing = draft && checkTexts
         ? [
-            for (final place in ApplicationCompleteness.missingTexts(
-              json,
-              clauses: options.clausesById,
-            ))
+            for (final place in ApplicationCompleteness.missingTexts(json))
               ApplicationPlaces.label(place),
           ]
         : const <String>[];

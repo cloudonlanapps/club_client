@@ -33,7 +33,6 @@ Widget _form({
   key: key,
   initialValues: initialValues ?? _template(),
   languageOptions: ApplicationSamples.languageOptions,
-  facts: ApplicationSamples.facts,
   enabled: enabled,
 );
 

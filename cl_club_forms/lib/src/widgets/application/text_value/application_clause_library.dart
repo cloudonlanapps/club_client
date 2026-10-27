@@ -3,12 +3,13 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../constants/form_spacing.dart';
 import '../../../models/application/application_clause_fill.dart';
+import '../../../models/application/application_clause_kind.dart';
 import '../../../models/application/application_clause_option.dart';
 import '../../../models/application/application_fact_type.dart';
 import '../../../models/application/application_language_option.dart';
 import '../../form/labeled_form_row.dart';
+import '../application_form_fields.dart';
 import '../application_form_strings.dart';
-import 'application_clause_picker.dart';
 
 /// The library clauses a section offers (club_client#336): each a row
 /// showing its English text. Tapping one fills it with the template's
@@ -46,6 +47,23 @@ class ApplicationClauseLibrary extends StatefulWidget {
 
   /// Whether the rows respond.
   final bool enabled;
+
+  /// The clauses of [kind] among [clauses], in the library's order.
+  static List<ApplicationClauseOption> ofKind(
+    List<ApplicationClauseOption> clauses,
+    ApplicationClauseKind kind,
+  ) => [
+    for (final clause in clauses)
+      if (clause.kind == kind) clause,
+  ];
+
+  /// [clause] as a row shows it: its English heading, if any, and text.
+  static String englishOf(ApplicationClauseOption clause) {
+    const en = ApplicationFormFields.english;
+    final text = clause.text[en] ?? clause.id;
+    final heading = clause.heading[en];
+    return heading == null ? text : '$heading — $text';
+  }
 
   /// What an application list puts under its add button: the library's
   /// [clauses], each inserted as a new item made by [item]. Null, so
@@ -133,7 +151,7 @@ class ApplicationClauseLibraryState extends State<ApplicationClauseLibrary> {
           for (final clause in widget.clauses)
             _ClauseRow(
               key: ValueKey<String>(clause.id),
-              text: ApplicationClausePicker.englishOf(clause),
+              text: ApplicationClauseLibrary.englishOf(clause),
               enabled: active,
               onTap: () => tap(clause),
             ),

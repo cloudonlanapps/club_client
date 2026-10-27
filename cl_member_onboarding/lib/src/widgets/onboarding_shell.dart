@@ -18,7 +18,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 /// action. The null-user case (e.g. during sign-out) collapses to a
 /// loading spinner because there is no user-derived title to render.
 ///
-/// Gate evaluation and the "Not available" fail-state live in the
+/// Gate evaluation and the `AccessDeniedView` refusal live in the
 /// screens (`OnboardingWelcomeScreen`, `OnboardingSubmitDocumentsScreen`),
 /// not here. This widget owns chrome only.
 class OnboardingShell extends ConsumerWidget {

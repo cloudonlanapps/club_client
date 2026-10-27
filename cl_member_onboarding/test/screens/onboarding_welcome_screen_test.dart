@@ -1,5 +1,6 @@
 import 'package:cl_member_auth/cl_member_auth.dart';
 import 'package:cl_member_onboarding/cl_member_onboarding.dart';
+import 'package:cl_member_onboarding/src/models/onboarding_gate.dart';
 import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
@@ -64,17 +65,17 @@ void main() {
       await tester.pumpAndSettle();
       // Pending variant renders the SubmittedConfirmation card with this CTA.
       expect(find.text('Back to sign in'), findsOneWidget);
-      expect(find.text('Not available'), findsNothing);
+      expect(find.byType(AccessDeniedView), findsNothing);
     });
 
-    testWidgets('denies active users with ErrorView', (tester) async {
+    testWidgets('denies active users with AccessDeniedView', (tester) async {
       await tester.pumpWidget(
         _harness(
           user: _user(status: UserStatus.active),
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Not available'), findsOneWidget);
+      expect(find.byType(AccessDeniedView), findsOneWidget);
     });
 
     testWidgets('allows registered users with a note (reapply variant)', (
@@ -89,7 +90,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Not available'), findsNothing);
+      expect(find.byType(AccessDeniedView), findsNothing);
       expect(find.text('Could not load this page'), findsNothing);
     });
 
@@ -102,7 +103,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Not available'), findsNothing);
+      expect(find.byType(AccessDeniedView), findsNothing);
       expect(find.text('Welcome aboard - almost!'), findsOneWidget);
     });
   });
@@ -166,4 +167,20 @@ void main() {
       expect(find.text('Back to sign in'), findsOneWidget);
     });
   });
+
+  testWidgets(
+    'Issue 328: an active member is refused with AccessDeniedView and the '
+    'onboarding message',
+    (tester) async {
+      await tester.pumpWidget(
+        _harness(user: _user(status: UserStatus.active)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AccessDeniedView), findsOneWidget);
+      expect(find.text(AccessDeniedView.title), findsOneWidget);
+      expect(find.text(onboardingStepClosedMessage), findsOneWidget);
+      expect(find.text('Not available'), findsNothing);
+    },
+  );
 }

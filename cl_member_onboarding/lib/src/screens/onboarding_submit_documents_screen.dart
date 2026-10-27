@@ -1,8 +1,6 @@
 import 'package:cl_member_auth/cl_member_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ErrorTone, ErrorView;
 
 import '../models/onboarding_gate.dart';
 import '../views/onboarding_submit_documents_view.dart';
@@ -11,8 +9,8 @@ import '../views/onboarding_submit_documents_view.dart';
 /// [OnboardingSubmitDocumentsView].
 ///
 /// Watches [authStateProvider], evaluates the submit-documents gate
-/// (`registered` with no admin note), and renders [ErrorView] when the
-/// gate fails. Forwards [onHome] so the view's error-retry can return
+/// (`registered` with no admin note), and renders [AccessDeniedView]
+/// when the gate fails. Forwards [onHome] so the view's error-retry can return
 /// to the dashboard.
 class OnboardingSubmitDocumentsScreen extends ConsumerWidget {
   const OnboardingSubmitDocumentsScreen({
@@ -29,12 +27,9 @@ class OnboardingSubmitDocumentsScreen extends ConsumerWidget {
       return const Center(child: CircularProgressIndicator());
     }
     if (!onboardingGateAllows(OnboardingGate.registeredNoNote, user)) {
-      return ErrorView(
-        tone: ErrorTone.neutral,
-        icon: LucideIcons.shieldAlert,
-        title: 'Not available',
-        subtitle: "This page isn't available right now.",
+      return AccessDeniedView(
         onHome: onHome,
+        message: onboardingStepClosedMessage,
       );
     }
     return OnboardingSubmitDocumentsView(

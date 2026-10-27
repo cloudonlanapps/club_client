@@ -28,10 +28,10 @@ class ApplicationTermEditor extends StatefulWidget {
   });
 
   /// The ways a term may be given; a new one takes the first.
-  static const List<ApplicationTextMode> modes = [
-    ApplicationTextMode.clause,
-    ApplicationTextMode.custom,
-  ];
+  // A printed text is a language map only (club_sdk#76): a clause or fact
+  // reference is refused by the server. Inserting a library clause's filled
+  // text is club_client#336.
+  static const List<ApplicationTextMode> modes = [ApplicationTextMode.custom];
 
   /// The term to start from, as the template's JSON holds it.
   final Object? initial;
@@ -56,7 +56,7 @@ class ApplicationTermEditor extends StatefulWidget {
 /// each way holds.
 class ApplicationTermEditorState extends State<ApplicationTermEditor> {
   /// The way the term is given now.
-  ApplicationTextMode mode = ApplicationTextMode.clause;
+  ApplicationTextMode mode = ApplicationTermEditor.modes.first;
 
   /// The rule clause.
   ApplicationTextValue? clause;
@@ -121,12 +121,13 @@ class ApplicationTermEditorState extends State<ApplicationTermEditor> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: FormSpacing.rowGap,
       children: [
-        ApplicationTextModeSelect(
-          modes: ApplicationTermEditor.modes,
-          value: mode,
-          enabled: widget.enabled,
-          onChanged: (picked) => update(() => mode = picked),
-        ),
+        if (ApplicationTermEditor.modes.length > 1)
+          ApplicationTextModeSelect(
+            modes: ApplicationTermEditor.modes,
+            value: mode,
+            enabled: widget.enabled,
+            onChanged: (picked) => update(() => mode = picked),
+          ),
         if (mode == ApplicationTextMode.clause)
           ApplicationTextValueEditor(
             modes: const [ApplicationTextMode.clause],

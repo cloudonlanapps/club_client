@@ -1,6 +1,6 @@
-// Issue 321, ApplicationHeaderForm: the short items of the header strip.
-// Each is a fact, a header clause of the library with its gaps bound to
-// facts, or written here; several may be joined on one line.
+// Issue 321, ApplicationHeaderForm: the short items of the header strip,
+// each written here in each print language; several may be joined on one
+// line (Issue 342: a printed text is text only).
 import 'package:cl_club_forms/cl_club_forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,12 +14,9 @@ import 'application_section_harness.dart';
 const String _header = ApplicationFormFields.headerId;
 
 List<Object?> _items() => [
-  {'fact': 'venue'},
+  {'en': 'Northfield Rink'},
   [
-    {
-      'clause': 'header.camp',
-      'args': {'dates': 'camp'},
-    },
+    {'en': 'Camp: 1–15 Nov'},
     {'en': 'Trial: 7–8 Nov'},
   ],
   {'en': 'Open to all'},
@@ -49,16 +46,15 @@ Future<ApplicationHeaderFormState> _pump(
 
 void main() {
   group('Issue 321: ApplicationHeaderForm', () {
-    testWidgets('Issue 321: each item shows where its text comes from, a '
-        'clause its English text and a fact for each gap', (tester) async {
+    testWidgets('Issue 342: each item is written here, a joined line a text '
+        'per part', (tester) async {
       await _pump(tester);
 
       expect(fieldIds(tester), [_header]);
       expect(find.text('Item 3'), findsOneWidget);
-      expect(find.text('venue (name)'), findsOneWidget);
-      expect(find.text('Camp: {dates}'), findsNWidgets(2));
-      expect(find.text('{dates}: date range'), findsOneWidget);
-      expect(find.text('camp (date range)'), findsOneWidget);
+      expect(find.text('Camp: 1–15 Nov'), findsOneWidget);
+      expect(selectsIn(_header), findsNothing);
+      expect(find.text('Text from'), findsNothing);
       expectLabelsAreRows(tester);
       expectNoHostChrome(
         tester,
@@ -74,41 +70,30 @@ void main() {
       expect(state.validate(), {_header: _items()});
     });
 
-    testWidgets('Issue 321: an added item is a clause, which needs choosing '
-        'and its gap a fact of the right type', (tester) async {
+    testWidgets('Issue 342: an added item is written here, and needs '
+        'English', (tester) async {
       final state = await _pump(
         tester,
         items: [
-          {'fact': 'venue'},
+          {'en': 'Northfield Rink'},
         ],
       );
 
       await tapIn(tester, _header, find.text('Add item'));
       expect(state.validate(), isNull);
       await tester.pump();
-      expect(messageOn(_header, 'Item 2: Choose a clause'), findsOneWidget);
-
-      await pickIn(tester, _header, 3, 'Camp: {dates}');
-      expect(state.validate(), isNull);
-      await tester.pump();
       expect(
-        messageOn(_header, 'Item 2: Choose a fact for {dates}'),
+        messageOn(_header, 'Item 2: Needs text in English'),
         findsOneWidget,
       );
 
-      await openIn(tester, _header, 4);
-      expect(find.text('venue (name)'), findsOneWidget);
-      await tester.tap(find.text('trial (date range)').last);
-      await tester.pumpAndSettle();
+      await typeIn(tester, _header, 2, 'Camp: 1–15 Nov');
 
       expect(state.isDirty, isTrue);
       expect(state.validate(), {
         _header: [
-          {'fact': 'venue'},
-          {
-            'clause': 'header.camp',
-            'args': {'dates': 'trial'},
-          },
+          {'en': 'Northfield Rink'},
+          {'en': 'Camp: 1–15 Nov'},
         ],
       });
     });
@@ -124,14 +109,13 @@ void main() {
       );
 
       await tapIn(tester, _header, find.text('Add to this line'));
-      await pickIn(tester, _header, 1, 'A fact');
-      await pickIn(tester, _header, 2, 'phone (name)');
+      await typeIn(tester, _header, 2, 'Under-14');
 
       expect(state.validate(), {
         _header: [
           [
             {'en': 'Open to all'},
-            {'fact': 'phone'},
+            {'en': 'Under-14'},
           ],
         ],
       });

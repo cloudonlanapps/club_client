@@ -13,6 +13,9 @@ class ApplicationCustomText extends ApplicationTextValue {
   factory ApplicationCustomText.fromJson(Object? json) =>
       ApplicationCustomText(ApplicationTexts.of(json));
 
+  /// No text yet: what a new item starts from.
+  static const ApplicationCustomText none = ApplicationCustomText({});
+
   /// The text, by language code, trimmed and none empty.
   final Map<String, String> text;
 

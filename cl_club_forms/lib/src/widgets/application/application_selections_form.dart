@@ -3,7 +3,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../models/application/application_clause_kind.dart';
 import '../../models/application/application_clause_option.dart';
-import '../../models/application/application_clause_text.dart';
+import '../../models/application/application_custom_text.dart';
 import '../../models/application/application_fact_type.dart';
 import '../../models/application/application_language_option.dart';
 import '../../models/application/application_text_value.dart';
@@ -40,10 +40,10 @@ class ApplicationSelectionsForm extends StatefulWidget {
   });
 
   /// The modes a selection may take; a new one takes the first.
-  static const List<ApplicationTextMode> modes = [
-    ApplicationTextMode.clause,
-    ApplicationTextMode.custom,
-  ];
+  // A printed text is a language map only (club_sdk#76): a clause or fact
+  // reference is refused by the server. Inserting a library clause's filled
+  // text is club_client#336.
+  static const List<ApplicationTextMode> modes = [ApplicationTextMode.custom];
 
   /// What to start from, as the template's JSON holds it.
   final Map<String, dynamic> initialValues;
@@ -96,7 +96,7 @@ class ApplicationSelectionsFormState extends State<ApplicationSelectionsForm>
               enabled: widget.enabled,
               noun: ApplicationFormStrings.selectionNoun,
               addLabel: ApplicationFormStrings.addSelection,
-              newItem: () => const ApplicationClauseText('').toJson(),
+              newItem: () => ApplicationCustomText.none.toJson(),
               validator: (items) => ApplicationFormValidators.items(
                 items,
                 ApplicationFormStrings.selectionNoun,

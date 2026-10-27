@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../constants/form_spacing.dart';
 import '../../../models/application/application_clause_kind.dart';
-import '../../../models/application/application_clause_text.dart';
+import '../../../models/application/application_custom_text.dart';
 import '../../../models/application/application_language_option.dart';
 import '../../../models/application/application_text_value.dart';
 import '../application_completeness.dart';
@@ -30,10 +30,10 @@ class ApplicationNoteEditor extends StatefulWidget {
   });
 
   /// The ways a note's text may be given; a new one takes the first.
-  static const List<ApplicationTextMode> modes = [
-    ApplicationTextMode.clause,
-    ApplicationTextMode.custom,
-  ];
+  // A printed text is a language map only (club_sdk#76): a clause or fact
+  // reference is refused by the server. Inserting a library clause's filled
+  // text is club_client#336.
+  static const List<ApplicationTextMode> modes = [ApplicationTextMode.custom];
 
   /// The note to start from, as the template's JSON holds it.
   final Object? initial;
@@ -61,7 +61,7 @@ class ApplicationNoteEditor extends StatefulWidget {
           )
         : null;
     return {
-      ApplicationFormFields.textKey: (text ?? const ApplicationClauseText(''))
+      ApplicationFormFields.textKey: (text ?? ApplicationCustomText.none)
           .toJson(),
       if (attribution != null)
         ApplicationFormFields.attributionKey: attribution.toJson(),

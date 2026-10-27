@@ -2,7 +2,6 @@ import 'package:club_sdk_2/club_sdk_2.dart' show ProfileOptions;
 import 'package:flutter/widgets.dart';
 
 import '../constants/profile_options_messages.dart';
-import '../models/profile_options_form_helpers.dart';
 import 'labeled_value.dart';
 
 /// The club's profile options as the Profile options section reads them:
@@ -17,14 +16,13 @@ class ProfileOptionsReadRows extends StatelessWidget {
   final ProfileOptions options;
 
   /// How [options]' positions read: each by its labels, in the order of
-  /// [profileLabelLanguages], or its value when it has none.
+  /// the club's languages, or its value when it has none.
   String get positionsText {
     if (options.positions.isEmpty) return ProfileOptionsMessages.none;
     return [
       for (final position in options.positions)
         if ([
-              for (final language in profileLabelLanguages)
-                ?position.label[language.code],
+              for (final code in options.codes) ?position.label[code],
             ].join(ProfileOptionsMessages.labelSeparator)
             case final labels when labels.isNotEmpty)
           labels
@@ -48,7 +46,9 @@ class ProfileOptionsReadRows extends StatelessWidget {
           label: ProfileOptionsMessages.languages,
           value: languages.isEmpty
               ? ProfileOptionsMessages.none
-              : languages.join(ProfileOptionsMessages.listSeparator),
+              : [
+                  for (final language in languages) language.name,
+                ].join(ProfileOptionsMessages.listSeparator),
         ),
       ],
     );

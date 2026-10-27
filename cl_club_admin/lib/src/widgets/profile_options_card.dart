@@ -16,9 +16,10 @@ import 'profile_options_read_rows.dart';
 
 /// The Profile options section of the club details screen
 /// (club_client#320): the positions members choose their preferred one
-/// from, each labelled in English, Marathi and Hindi, and the languages.
-/// Shows them; the pencil edits them in place with [ProfileOptionsForm],
-/// and Save stores the whole document.
+/// from, each labelled in the club's languages, and those languages, each a
+/// name a member chooses and a code (club_client#396), which are also the
+/// languages applications print in. Shows them; the pencil edits them in
+/// place with [ProfileOptionsForm], and Save stores the whole document.
 class ProfileOptionsCard extends ConsumerStatefulWidget {
   const ProfileOptionsCard({
     required this.options,
@@ -103,7 +104,6 @@ class ProfileOptionsCardState extends ConsumerState<ProfileOptionsCard> {
         child: ProfileOptionsForm(
           key: formKey,
           initialValues: buildProfileOptionsFormInitialValues(options),
-          labelLanguages: profileLabelLanguages,
           enabled: enabled,
         ),
       ),

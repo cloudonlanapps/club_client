@@ -34,6 +34,7 @@ class ClubIdentityView extends ConsumerStatefulWidget {
     required this.currentUser,
     this.onBack,
     this.librarySection,
+    this.labelsSection,
     super.key,
   });
 
@@ -57,6 +58,10 @@ class ClubIdentityView extends ConsumerStatefulWidget {
   /// in by the screen, so this package does not depend on the applications
   /// package.
   final Widget? librarySection;
+
+  /// The applications' Labels card, shown after the Library card
+  /// (club_client#396); passed in by the screen, as [librarySection] is.
+  final Widget? labelsSection;
 
   @override
   ConsumerState<ClubIdentityView> createState() => ClubIdentityViewState();
@@ -126,6 +131,7 @@ class ClubIdentityViewState extends ConsumerState<ClubIdentityView> {
                         canEdit: widget.currentUser.isSuperAdmin,
                       ),
                     ?widget.librarySection,
+                    ?widget.labelsSection,
                   ],
                 ),
               );

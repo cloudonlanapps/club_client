@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cl_club_applications/cl_club_applications.dart'
     show ApplicationView;
 import 'package:cl_member_auth/cl_member_auth.dart' show RoleGate;
@@ -15,6 +17,7 @@ class ApplicationScreen extends StatelessWidget {
     required this.onBack,
     required this.onDeleted,
     required this.pdfAction,
+    required this.onSaveFile,
     required this.onHome,
     super.key,
   });
@@ -31,6 +34,9 @@ class ApplicationScreen extends StatelessWidget {
   /// What the downloaded preview is handed to: shared, saved or opened.
   final PdfAction pdfAction;
 
+  /// Saves the exported JSON file (Export JSON).
+  final Future<bool> Function(String fileName, Uint8List bytes) onSaveFile;
+
   /// Leaves a refused route for home.
   final VoidCallback onHome;
 
@@ -44,6 +50,7 @@ class ApplicationScreen extends StatelessWidget {
       onBack: onBack,
       onDeleted: onDeleted,
       pdfAction: pdfAction,
+      onSaveFile: onSaveFile,
     ),
   );
 }

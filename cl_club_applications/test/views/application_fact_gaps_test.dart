@@ -31,6 +31,7 @@ Future<FakeApplicationsMaster> _pump(
       onBack: () {},
       onDeleted: () {},
       pdfAction: recordingPdfAction(),
+      onSaveFile: (_, _) async => true,
     ),
     master: master,
   );

@@ -46,6 +46,28 @@ abstract final class ApplicationViewStrings {
   /// before its extension.
   static String blankFormFileTitle(String title) => '$title - blank form';
 
+  /// The editor's button that saves a finalized template as a JSON file,
+  /// to import it on another server.
+  static const String exportJson = 'Export JSON';
+
+  /// A template saved as a file.
+  static const String exported = 'Application exported.';
+
+  /// The file could not be written.
+  static const String exportFailed =
+      'Could not export the application. Please try again.';
+
+  /// The list's button that creates a draft from an exported file.
+  static const String importJson = 'Import JSON';
+
+  /// A file that is not an exported application.
+  static const String importUnreadable =
+      'This file is not an exported application.';
+
+  /// The server refused the imported draft.
+  static const String importFailed =
+      'Could not import the application. Please try again.';
+
   /// The create button and dialog title.
   static const String create = 'Create application';
 

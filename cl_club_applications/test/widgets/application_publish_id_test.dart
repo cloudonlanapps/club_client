@@ -27,6 +27,7 @@ Future<void> _pump(WidgetTester tester, ApplicationStatus status) async {
       onBack: () {},
       onDeleted: () {},
       pdfAction: recordingPdfAction(),
+      onSaveFile: (_, _) async => true,
     ),
     master: master,
   );

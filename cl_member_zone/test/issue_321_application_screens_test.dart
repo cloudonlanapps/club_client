@@ -83,7 +83,11 @@ Future<void> _pump(
 const _denied = 'Access Denied';
 
 void main() {
-  Widget list() => ApplicationsScreen(onOpen: (_) {}, onHome: () {});
+  Widget list() => ApplicationsScreen(
+    onOpen: (_) {},
+    onPickJsonFile: () async => null,
+    onHome: () {},
+  );
   Widget mine() => MyApplicationsScreen(
     pdfAction: _pdfAction,
     onOpenProfile: () {},
@@ -94,6 +98,7 @@ void main() {
     onBack: () {},
     onDeleted: () {},
     pdfAction: _pdfAction,
+    onSaveFile: (_, _) async => true,
     onHome: () {},
   );
 

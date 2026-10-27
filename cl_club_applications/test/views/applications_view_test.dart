@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:cl_club_applications/cl_club_applications.dart';
 import 'package:cl_club_applications/src/constants/application_view_strings.dart';
+import 'package:cl_club_applications/src/models/application_template_file.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,11 +37,13 @@ Future<void> _pump(
   required FakeApplicationsMaster master,
   bool enabled = true,
   ValueChanged<int>? onOpen,
+  Future<Uint8List?> Function()? onPickJsonFile,
 }) => pumpApplications(
   tester,
   ApplicationsView(
     currentUser: applicationsUser(admin: true),
     onOpen: onOpen ?? (_) {},
+    onPickJsonFile: onPickJsonFile ?? () async => null,
   ),
   master: master,
   enabled: enabled,
@@ -120,6 +126,113 @@ void main() {
 
       expect(master.calls, ['create {en: Camp 2027}']);
       expect(opened, 90);
+    });
+  });
+
+  group('Issue 400: Import JSON', () {
+    final import = find.byKey(const ValueKey('application.importJson'));
+
+    /// An exported file of a published template of the samples.
+    Uint8List exported() => utf8.encode(
+      ApplicationTemplateFile.encode(
+        ApplicationSamples.template(id: 2, status: ApplicationStatus.published),
+      ),
+    );
+
+    testWidgets('Issue 400: sits beside Create application', (tester) async {
+      await _pump(tester, master: FakeApplicationsMaster(_all()));
+      final create = find.widgetWithText(
+        ShadButton,
+        ApplicationViewStrings.create,
+      );
+      expect(import, findsOneWidget);
+      expect(
+        tester.getCenter(import).dy,
+        moreOrLessEquals(tester.getCenter(create).dy, epsilon: 1),
+      );
+      expect(
+        tester.getRect(import).right,
+        lessThan(tester.getRect(create).left),
+      );
+    });
+
+    testWidgets('Issue 400: creates a draft from the picked file through the '
+        'master and opens it', (tester) async {
+      final master = FakeApplicationsMaster(_all());
+      int? opened;
+      await _pump(
+        tester,
+        master: master,
+        onOpen: (id) => opened = id,
+        onPickJsonFile: () async => exported(),
+      );
+      await tester.tap(import);
+      await tester.pumpAndSettle();
+      expect(master.calls, ['create {en: Trial, mr: चाचणी}']);
+      final created = master.state.value![90]!;
+      expect(created.status, ApplicationStatus.draft);
+      expect(created.content, ApplicationSamples.content);
+      expect(opened, 90);
+    });
+
+    testWidgets('Issue 400: a cancelled pick does nothing', (tester) async {
+      final master = FakeApplicationsMaster(_all());
+      int? opened;
+      await _pump(
+        tester,
+        master: master,
+        onOpen: (id) => opened = id,
+        onPickJsonFile: () async => null,
+      );
+      await tester.tap(import);
+      await tester.pumpAndSettle();
+      expect(master.calls, isEmpty);
+      expect(opened, isNull);
+    });
+
+    testWidgets('Issue 400: a file that is not an exported application says '
+        'so and creates nothing', (tester) async {
+      final master = FakeApplicationsMaster(_all());
+      int? opened;
+      await _pump(
+        tester,
+        master: master,
+        onOpen: (id) => opened = id,
+        onPickJsonFile: () async =>
+            utf8.encode(jsonEncode({'name': 'a review template'})),
+      );
+      await tester.tap(import);
+      await tester.pumpAndSettle();
+      expect(
+        find.text(ApplicationViewStrings.importUnreadable),
+        findsOneWidget,
+      );
+      expect(master.calls, isEmpty);
+      expect(opened, isNull);
+    });
+
+    testWidgets('Issue 400: a refusal is a fixed message, and nothing opens', (
+      tester,
+    ) async {
+      final master = FakeApplicationsMaster(_all())
+        ..failWith = const ServerException(
+          statusCode: 422,
+          code: SdkErrorCode.validationError,
+          message: 'raw server words',
+        );
+      int? opened;
+      await _pump(
+        tester,
+        master: master,
+        onOpen: (id) => opened = id,
+        onPickJsonFile: () async => exported(),
+      );
+      await tester.tap(import);
+      await tester.pumpAndSettle();
+      expect(find.text(ApplicationViewStrings.importFailed), findsOneWidget);
+      expect(find.textContaining('raw server words'), findsNothing);
+      expect(master.calls, hasLength(1));
+      expect(opened, isNull);
     });
   });
 }

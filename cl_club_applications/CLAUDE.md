@@ -20,8 +20,8 @@ Everything is capability-aware: each view and widget renders nothing unless
 | Where | Widget | Constructor |
 |---|---|---|
 | `applications/mine` (Main, every member) | `MyApplicationsView` | `currentUser`, `pdfAction`, `onOpenProfile` |
-| `applications` (Club Management, admin) | `ApplicationsView` | `currentUser`, `onOpen(int id)` |
-| `applications/:id` (admin) | `ApplicationView` | `currentUser`, `applicationId`, `onBack`, `onDeleted`, `pdfAction` |
+| `applications` (Club Management, admin) | `ApplicationsView` | `currentUser`, `onOpen(int id)`, `onPickJsonFile` |
+| `applications/:id` (admin) | `ApplicationView` | `currentUser`, `applicationId`, `onBack`, `onDeleted`, `pdfAction`, `onSaveFile` |
 | profile (injected by the router) | `ProfileApplicationsSection` | `member`, `own`, `pdfAction` |
 | Club details (injected by `ClubIdentityScreen`) | `ApplicationLibrarySection` | — |
 | onboarding's waiting page (injected) | `PublishedApplicationsList` | `currentUser`, `pdfAction`, `onOpenProfile` |
@@ -104,3 +104,17 @@ forms' ids for a schema refusal.
   PDF goes to the `PdfAction` as "<title> - blank form.pdf". A refusal
   (`APPLICATION_NOT_SAVED`, a template reverted meanwhile) shows under the
   button.
+- A finalized (saved or published) template is carried to another server
+  as a file (club_client#400). **Export JSON**, at the foot of the editor
+  apart from the moves, writes its content alone (texts, facts, age
+  categories, selections, terms, notes, label overrides; never its id,
+  state, layout or dates) as `<title>.json`:
+  `{"format": "club.application", "version": 1, "content": {…}}`
+  (`ApplicationTemplateFile`), and hands it to the router's `onSaveFile`
+  (the app's `saveFileBytes`). **Import JSON**, beside Create application,
+  reads a file from the router's `onPickJsonFile` (the app's
+  `pickJsonFile`; a bare content object is read too) and creates a **new
+  draft** through `clApplicationsMasterProvider`, opened in the editor, so
+  its dates and facts are checked before it is finalized there. A file
+  that is not an exported application says "This file is not an exported
+  application."; a refusal is a fixed toast.

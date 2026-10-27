@@ -1,6 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:cl_club_applications/cl_club_applications.dart';
 import 'package:cl_club_applications/src/constants/application_view_strings.dart';
 import 'package:cl_club_applications/src/models/application_section.dart';
+import 'package:cl_club_applications/src/models/application_template_file.dart';
+import 'package:cl_club_applications/src/widgets/application_state_card.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,6 +26,7 @@ Future<FakeApplicationsMaster> _pump(
   ApplicationStatus status = ApplicationStatus.draft,
   ApplicationContent? content,
   List<String>? names,
+  Future<bool> Function(String fileName, Uint8List bytes)? onSaveFile,
 }) async {
   final master = FakeApplicationsMaster({
     5: ApplicationSamples.template(
@@ -38,6 +43,7 @@ Future<FakeApplicationsMaster> _pump(
       onBack: () {},
       onDeleted: () {},
       pdfAction: recordingPdfAction(names: names),
+      onSaveFile: onSaveFile ?? (_, _) async => true,
     ),
     master: master,
   );
@@ -156,6 +162,7 @@ void main() {
           onBack: () {},
           onDeleted: () => deleted++,
           pdfAction: recordingPdfAction(),
+          onSaveFile: (_, _) async => true,
         ),
         master: master,
       );
@@ -556,6 +563,86 @@ void main() {
       );
       final value = _readValue(tester, 'heading', ApplicationViewStrings.title);
       expect(label.style!.fontSize, greaterThan(value.style!.fontSize!));
+    });
+  });
+
+  group('Issue 400: Export JSON', () {
+    final export = find.byKey(const ValueKey('application.exportJson'));
+
+    testWidgets('Issue 400: not offered on a draft', (tester) async {
+      await _pump(tester);
+      expect(export, findsNothing);
+      expect(find.text(ApplicationViewStrings.exportJson), findsNothing);
+    });
+
+    for (final status in [
+      ApplicationStatus.saved,
+      ApplicationStatus.published,
+    ]) {
+      testWidgets('Issue 400: at the foot of a ${status.wireName} one, apart '
+          'from the moves, it hands the content file named after the '
+          'application to the save', (tester) async {
+        final saved = <(String, Uint8List)>[];
+        await _pump(
+          tester,
+          status: status,
+          onSaveFile: (name, bytes) async {
+            saved.add((name, bytes));
+            return true;
+          },
+        );
+        expect(export, findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(ApplicationStateCard),
+            matching: export,
+          ),
+          findsNothing,
+        );
+        expect(
+          tester.getTopLeft(export).dy,
+          greaterThan(
+            tester
+                .getBottomLeft(
+                  find.byKey(const ValueKey('application.section.labels')),
+                )
+                .dy,
+          ),
+        );
+        await tester.tap(export);
+        await tester.pumpAndSettle();
+        expect(saved, hasLength(1));
+        expect(saved.single.$1, 'Trial.json');
+        expect(
+          ApplicationTemplateFile.decode(saved.single.$2),
+          ApplicationSamples.content,
+        );
+        expect(find.text(ApplicationViewStrings.exported), findsOneWidget);
+      });
+    }
+
+    testWidgets('Issue 400: a cancelled save says nothing', (tester) async {
+      await _pump(
+        tester,
+        status: ApplicationStatus.saved,
+        onSaveFile: (_, _) async => false,
+      );
+      await tester.tap(export);
+      await tester.pumpAndSettle();
+      expect(find.text(ApplicationViewStrings.exported), findsNothing);
+      expect(find.text(ApplicationViewStrings.exportFailed), findsNothing);
+    });
+
+    testWidgets('Issue 400: a failed save is a fixed toast', (tester) async {
+      await _pump(
+        tester,
+        status: ApplicationStatus.saved,
+        onSaveFile: (_, _) async => throw StateError('raw platform words'),
+      );
+      await tester.tap(export);
+      await tester.pumpAndSettle();
+      expect(find.text(ApplicationViewStrings.exportFailed), findsOneWidget);
+      expect(find.textContaining('raw platform words'), findsNothing);
     });
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cl_club_forms/cl_club_forms.dart'
     show ApplicationCompleteness, ApplicationFactGaps;
 import 'package:cl_remote_store/cl_remote_store.dart'
@@ -23,6 +25,7 @@ import '../models/application_form_submit.dart';
 import '../models/application_section.dart';
 import '../utils/application_places.dart';
 import '../utils/application_title.dart';
+import '../widgets/application_export_button.dart';
 import '../widgets/application_page.dart';
 import '../widgets/application_state_card.dart';
 import '../widgets/sections/application_section_card.dart';
@@ -40,6 +43,7 @@ class ApplicationView extends ConsumerWidget {
     required this.onBack,
     required this.onDeleted,
     required this.pdfAction,
+    required this.onSaveFile,
     super.key,
   });
 
@@ -57,6 +61,10 @@ class ApplicationView extends ConsumerWidget {
 
   /// What the downloaded preview is handed to: shared, saved or opened.
   final PdfAction pdfAction;
+
+  /// Saves a file of this name and these bytes (Export JSON); resolves to
+  /// whether it was saved.
+  final Future<bool> Function(String fileName, Uint8List bytes) onSaveFile;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -109,6 +117,7 @@ class ApplicationView extends ConsumerWidget {
             checkTexts: clauses.hasValue,
             onDeleted: onDeleted,
             pdfAction: pdfAction,
+            onSaveFile: onSaveFile,
           ),
         ),
       ],
@@ -116,7 +125,8 @@ class ApplicationView extends ConsumerWidget {
   }
 }
 
-/// The editor's page: the State card and the sections of [template].
+/// The editor's page: the heading card and the sections of [template],
+/// then, once finalized, Export JSON at its foot.
 class ApplicationEditorBody extends StatelessWidget {
   const ApplicationEditorBody({
     required this.template,
@@ -124,6 +134,7 @@ class ApplicationEditorBody extends StatelessWidget {
     required this.checkTexts,
     required this.onDeleted,
     required this.pdfAction,
+    required this.onSaveFile,
     super.key,
   });
 
@@ -142,6 +153,9 @@ class ApplicationEditorBody extends StatelessWidget {
 
   /// What the downloaded preview is handed to: shared, saved or opened.
   final PdfAction pdfAction;
+
+  /// Saves the exported JSON file.
+  final Future<bool> Function(String fileName, Uint8List bytes) onSaveFile;
 
   @override
   Widget build(BuildContext context) {
@@ -188,6 +202,16 @@ class ApplicationEditorBody extends StatelessWidget {
             section: section,
             options: options,
             canEdit: draft,
+          ),
+        // Apart from the moves in the heading card: a finalized template
+        // can be carried to another server as a file.
+        if (!draft)
+          Align(
+            alignment: Alignment.centerRight,
+            child: ApplicationExportButton(
+              template: template,
+              onSaveFile: onSaveFile,
+            ),
           ),
       ],
     );

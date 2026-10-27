@@ -15,8 +15,23 @@ abstract final class ProfileOptionsFormStrings {
   /// Text of the button that adds a language.
   static const String addLanguage = 'Add language';
 
+  /// Label of a language's name.
+  static const String languageName = 'Name';
+
+  /// Label of a language's code.
+  static const String languageCode = 'Code';
+
   /// Hint in an empty language name.
   static const String languagePlaceholder = 'Language name';
+
+  /// Hint in an empty language code.
+  static const String codePlaceholder = 'e.g. hi';
+
+  /// The row of English, always offered: its [name] and [code].
+  static String fixedLanguage(String name, String code) => '$name ($code)';
+
+  /// What the row of English says beside it.
+  static const String fixedLanguageHint = 'Always offered';
 
   /// Shown when a position has no value.
   static const String positionValueRequired = 'Each position needs a value';
@@ -35,4 +50,15 @@ abstract final class ProfileOptionsFormStrings {
 
   /// Shown when a language is listed twice.
   static String languageTwice(String name) => '"$name" is listed twice';
+
+  /// Shown when a language has no code.
+  static const String languageCodeRequired = 'Each language needs a code';
+
+  /// Shown when [code] is not written as a language code.
+  static String languageCodeInvalid(String code) =>
+      '"$code" is not a language code: use lowercase letters, like hi or kok';
+
+  /// Shown when two languages have the code [code].
+  static String languageCodeTwice(String code) =>
+      'The code "$code" is listed twice';
 }

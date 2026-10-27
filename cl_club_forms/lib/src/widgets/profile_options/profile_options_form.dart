@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
@@ -15,9 +16,11 @@ import 'profile_positions_field.dart';
 
 /// Pure-UI editor for the club's choices of the extended profile: the
 /// positions a member may prefer, each with a stored value and a label per
-/// language of [labelLanguages] (English required), and the languages a
-/// member may prefer, by name. Rows are added and removed; positions are
-/// also moved up and down.
+/// language of the club (English required), and the club's languages, each
+/// a name a member may prefer and a code (club_client#396), English first
+/// and fixed. The positions' labels follow the languages as they are
+/// edited. Rows are added and removed; positions are also moved up and
+/// down.
 ///
 /// [initialValues] has the shape [ProfileOptionsFormState.validate]
 /// returns. The form owns no title or Save button: the host drives it
@@ -25,7 +28,6 @@ import 'profile_positions_field.dart';
 class ProfileOptionsForm extends StatefulWidget {
   const ProfileOptionsForm({
     required this.initialValues,
-    required this.labelLanguages,
     this.enabled = true,
     super.key,
   });
@@ -33,11 +35,6 @@ class ProfileOptionsForm extends StatefulWidget {
   /// The options to start from: [ProfileOptionsFormFields.positionsId] and
   /// [ProfileOptionsFormFields.languagesId].
   final Map<String, dynamic> initialValues;
-
-  /// The languages a position gets a label in, in order, each with the
-  /// name shown above its input. A label a position has in another
-  /// language is kept and returned, unshown.
-  final List<ProfileLabelLanguage> labelLanguages;
 
   /// Whether the fields respond; the host turns it off while it saves.
   final bool enabled;
@@ -48,18 +45,41 @@ class ProfileOptionsForm extends StatefulWidget {
 
 /// State of [ProfileOptionsForm]. Its value is
 /// `{positionsId: [{valueKey: String, labelKey: {code: String}}],
-/// languagesId: [String]}`, texts trimmed and empty labels left out.
+/// languagesId: [{codeKey: String, nameKey: String}]}`, texts trimmed,
+/// English first, and empty labels and labels in a language not listed
+/// left out.
 class ProfileOptionsFormState extends State<ProfileOptionsForm>
     with FormContract<ProfileOptionsForm> {
+  /// The languages a position gets a label in: those the languages list
+  /// holds now, each with a code.
+  late List<ProfileLabelLanguage> labelLanguages =
+      ProfileOptionsFormValues.labelLanguages(
+        widget.initialValues[ProfileOptionsFormFields.languagesId],
+      );
+
   @override
-  Map<String, dynamic> assemble(Map<String, dynamic> values) => {
-    ProfileOptionsFormFields.positionsId: ProfileOptionsFormValues.positionsOut(
-      values[ProfileOptionsFormFields.positionsId],
-    ),
-    ProfileOptionsFormFields.languagesId: ProfileOptionsFormValues.languagesOut(
-      values[ProfileOptionsFormFields.languagesId],
-    ),
-  };
+  Map<String, dynamic> assemble(Map<String, dynamic> values) {
+    final languages = values[ProfileOptionsFormFields.languagesId];
+    return {
+      ProfileOptionsFormFields.positionsId:
+          ProfileOptionsFormValues.positionsOut(
+            values[ProfileOptionsFormFields.positionsId],
+            [
+              for (final l in ProfileOptionsFormValues.languagesOut(languages))
+                l[ProfileOptionsFormFields.codeKey]!,
+            ],
+          ),
+      ProfileOptionsFormFields.languagesId:
+          ProfileOptionsFormValues.languagesOut(languages),
+    };
+  }
+
+  /// Follows an edit of the languages with the positions' labels.
+  void languagesChanged(List<Object?>? languages) {
+    final next = ProfileOptionsFormValues.labelLanguages(languages);
+    if (listEquals(next, labelLanguages)) return;
+    setState(() => labelLanguages = next);
+  }
 
   /// Whether anything differs from its initial value. Overridden because
   /// both values are lists, of maps for the positions: an edit gives the
@@ -78,14 +98,16 @@ class ProfileOptionsFormState extends State<ProfileOptionsForm>
 
   @override
   Widget build(BuildContext context) {
-    final languages = widget.labelLanguages;
+    final languages = labelLanguages;
     return ShadForm(
       key: formKey,
       initialValue: {
         ProfileOptionsFormFields.positionsId:
             ProfileOptionsFormValues.positions(
               widget.initialValues[ProfileOptionsFormFields.positionsId],
-              languages,
+              ProfileOptionsFormValues.labelLanguages(
+                widget.initialValues[ProfileOptionsFormFields.languagesId],
+              ),
             ),
         ProfileOptionsFormFields.languagesId:
             ProfileOptionsFormValues.languages(
@@ -109,6 +131,7 @@ class ProfileOptionsFormState extends State<ProfileOptionsForm>
             field: ProfileLanguagesField(
               id: ProfileOptionsFormFields.languagesId,
               enabled: widget.enabled,
+              onChanged: languagesChanged,
               validator: ProfileOptionsFormValidators.languages,
             ),
           ),

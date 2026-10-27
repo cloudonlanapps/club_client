@@ -139,7 +139,7 @@ abstract final class DemoSamples {
   /// The languages a sample member may prefer, by name.
   static const List<String> memberLanguages = ['English', 'Marathi', 'Hindi'];
 
-  /// The languages the sample club labels its positions in.
+  /// The sample club's languages: a code and a name each.
   static const List<ProfileLabelLanguage> labelLanguages = [
     ProfileLabelLanguage(code: 'en', name: 'English'),
     ProfileLabelLanguage(code: 'mr', name: 'Marathi'),
@@ -155,6 +155,12 @@ abstract final class DemoSamples {
           ProfileOptionsFormFields.labelKey: {'en': position.label},
         },
     ],
-    ProfileOptionsFormFields.languagesId: memberLanguages,
+    ProfileOptionsFormFields.languagesId: [
+      for (final language in labelLanguages)
+        {
+          ProfileOptionsFormFields.codeKey: language.code,
+          ProfileOptionsFormFields.nameKey: language.name,
+        },
+    ],
   };
 }

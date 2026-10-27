@@ -54,14 +54,15 @@ void main() {
       );
     });
 
-    test('a pending user sees only the welcome page', () {
+    test('a pending user sees the waiting page and their profile, never '
+        'the document step', () {
       for (final on in [true, false, null]) {
         expect(
           allowedOnboardingPaths(
             _user(UserStatus.pending),
             identityVerification: on,
           ),
-          {onboardingWelcomePath},
+          {onboardingWelcomePath, onboardingProfilePath},
         );
       }
     });

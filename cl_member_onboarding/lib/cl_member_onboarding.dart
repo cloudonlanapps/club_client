@@ -7,12 +7,12 @@ library;
 export 'src/models/onboarding_routes.dart'
     show
         allowedOnboardingPaths,
-        onboardingExtendedProfilePath,
         onboardingFallbackPath,
+        onboardingProfilePath,
         onboardingSubmitDocumentsPath,
         onboardingWelcomePath;
-export 'src/screens/onboarding_extended_profile_screen.dart'
-    show OnboardingExtendedProfileScreen;
+export 'src/screens/onboarding_profile_screen.dart'
+    show OnboardingProfileScreen;
 export 'src/screens/onboarding_submit_documents_screen.dart'
     show OnboardingSubmitDocumentsScreen;
 export 'src/screens/onboarding_welcome_screen.dart'

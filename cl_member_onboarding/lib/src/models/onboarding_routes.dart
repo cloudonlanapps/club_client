@@ -6,9 +6,9 @@ const onboardingWelcomePath = '/onboarding/welcome';
 /// The identity-document step.
 const onboardingSubmitDocumentsPath = '/onboarding/submit-documents';
 
-/// The optional extended-profile step, after the document is submitted
-/// (club_client#320).
-const onboardingExtendedProfilePath = '/onboarding/extended-profile';
+/// A `pending` member's own profile, which they check and correct while they
+/// wait for approval (club_client#340).
+const onboardingProfilePath = '/onboarding/profile';
 
 /// The onboarding paths a signed-in [user] may open, or null when onboarding
 /// does not apply to them (an active member, say).
@@ -19,13 +19,11 @@ const onboardingExtendedProfilePath = '/onboarding/extended-profile';
 /// still unknown (null) the step stays open, as before; the router re-checks
 /// once the capability arrives.
 ///
-/// A `pending` user may also open the optional extended-profile step while
-/// the server reports [extendedProfile] on (club_client#320); not while it
-/// is off or unknown.
+/// A `pending` user may also open their profile page, whatever the server's
+/// capabilities say (club_client#340).
 Set<String>? allowedOnboardingPaths(
   UserPrivate user, {
   required bool? identityVerification,
-  bool? extendedProfile,
 }) {
   switch (user.status) {
     case UserStatus.registered:
@@ -36,10 +34,7 @@ Set<String>? allowedOnboardingPaths(
         if (documentStep) onboardingSubmitDocumentsPath,
       };
     case UserStatus.pending:
-      return {
-        onboardingWelcomePath,
-        if (extendedProfile == true) onboardingExtendedProfilePath,
-      };
+      return {onboardingWelcomePath, onboardingProfilePath};
     case UserStatus.active:
     case UserStatus.blocked:
     case UserStatus.left:
@@ -48,20 +43,8 @@ Set<String>? allowedOnboardingPaths(
 }
 
 /// Where an onboarding [user] goes from [path] when they may not open it
-/// ([allowedOnboardingPaths]): the welcome page, except that a member who
-/// has just submitted their document, and so is `pending` on the document
-/// step, goes on to the optional extended-profile step while
-/// [extendedProfile] is on (club_client#320). Its Continue leads to the
-/// welcome page, which then shows the waiting card.
-String onboardingFallbackPath(
-  UserPrivate user,
-  String path, {
-  required bool? extendedProfile,
-}) {
-  final justSubmitted =
-      user.status == UserStatus.pending &&
-      path == onboardingSubmitDocumentsPath;
-  return justSubmitted && extendedProfile == true
-      ? onboardingExtendedProfilePath
-      : onboardingWelcomePath;
-}
+/// ([allowedOnboardingPaths]): the welcome page. A member who has just
+/// submitted their document is `pending` on the document step, and so lands
+/// on the waiting page (club_client#340).
+String onboardingFallbackPath(UserPrivate user, String path) =>
+    onboardingWelcomePath;

@@ -334,11 +334,22 @@ disabled.
 ## 3. App flow
 
 - **Onboarding** (a member not yet approved cannot reach the member zone):
-  after the identity document is uploaded, a new optional step asks for the
-  extended fields (sports details, background, guardian); each may be left
-  blank. Then the waiting page lists the published applications, each with a
-  Download button, and says: print it, affix a passport-size photograph,
-  sign it and hand it in. Blank fields are filled in by hand.
+  after the identity document is uploaded the member lands on the waiting
+  page. Its **Update profile** opens their own profile at
+  `/onboarding/profile` (club_client#340): the profile's cards, each
+  editable, the extended fields (sports details, background, guardian; each
+  may be left blank) while the flag is on, and the Applications section.
+  The waiting page lists the published applications, each with a Download
+  button, and says: print it, affix a passport-size photograph, sign it and
+  hand it in. Blank fields are filled in by hand.
+- **Before a download**: a member's Download of their own form first asks
+  "Is your profile complete?" (club_client#340), listing the printed fields
+  blank on their profile (name, date of birth, gender, phone, email,
+  address; with the extended profile on, its fields and, under 18, the
+  guardian); with none blank it downloads without asking. Yes downloads; No opens
+  their profile page (`/onboarding/profile` while pending, their own
+  profile once active), or only closes the question on a profile page. An
+  admin's preview, and an admin's download of a member's form, do not ask.
 - **Member zone**: sidebar item **Applications** beside Groups and Events.
   Members see the published ones with Download; admins see all with their
   state, Create, the editor, Preview and the state actions (Save, Publish,
@@ -356,7 +367,7 @@ disabled.
 | 2 | club_server | Applications: model, API, label catalogue, PDF, fonts, capability. Depends on 1. |
 | 3 | club_sdk | Both: models, endpoints, capabilities, error codes, PDF bytes. |
 | 4 | club_cli | Both: `users update` options, `profile-options get/set`, `applications list/show/create/update/delete/duplicate/save/publish/unpublish/revert/preview/labels/clauses/form`. |
-| 5 | club_client | Extended profile: section forms (cl_club_forms), cards, the onboarding step, Club Details options editor. |
+| 5 | club_client | Extended profile: section forms (cl_club_forms), cards, the onboarding step (replaced by onboarding's profile page, club_client#340), Club Details options editor. |
 | 6 | club_client | Applications: new `cl_club_applications` package, sidebar, list / editor / download, profile section, waiting-page list and text. |
 
 ### Client detail (issues 5–6)
@@ -376,8 +387,9 @@ disabled.
 - `cl_member_zone`: `ApplicationsScreen`, `ApplicationScreen`;
   `SidebarDestination.applications`; routes `/memberzone/applications` and
   `/memberzone/applications/:id`.
-- `cl_member_onboarding`: the extended-fields step and the waiting page's
-  application list.
+- `cl_member_onboarding`: the waiting page's application list and a
+  pending member's profile page, which replaced the extended-fields step
+  (club_client#340).
 
 ## 5. Open points from the prototype
 

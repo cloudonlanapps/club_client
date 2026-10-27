@@ -18,6 +18,7 @@ List<RouteBase> applicationRoutes() => [
       child: ApplicationsScreen(
         onOpen: (id) => context.push(applicationPath(id)),
         pdfAction: appPdfAction,
+        onOpenProfile: () => context.push('/memberzone/profile'),
         onHome: () => context.go('/'),
       ),
     ),
@@ -41,7 +42,8 @@ List<RouteBase> applicationRoutes() => [
 ];
 
 /// The profile's Applications section for [member], injected into the
-/// profile views (club_client#321): [own] on one's own profile.
+/// profile views (club_client#321): [own] on one's own profile, where No to
+/// "Is your profile complete?" only closes the question (club_client#340).
 Widget profileApplicationsSection(UserPrivate member, {required bool own}) =>
     ProfileApplicationsSection(
       member: member,
@@ -50,8 +52,13 @@ Widget profileApplicationsSection(UserPrivate member, {required bool own}) =>
     );
 
 /// The waiting page's list of the published applications for [user],
-/// injected into onboarding (club_client#321).
-Widget waitingPageApplications(UserPrivate user) => PublishedApplicationsList(
+/// injected into onboarding (club_client#321). No to "Is your profile
+/// complete?" calls [onOpenProfile] (club_client#340).
+Widget waitingPageApplications(
+  UserPrivate user, {
+  required VoidCallback onOpenProfile,
+}) => PublishedApplicationsList(
   currentUser: user,
   pdfAction: appPdfAction,
+  onOpenProfile: onOpenProfile,
 );

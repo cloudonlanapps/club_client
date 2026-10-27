@@ -24,6 +24,7 @@ class ApplicationsView extends ConsumerWidget {
     required this.currentUser,
     required this.onOpen,
     required this.pdfAction,
+    required this.onOpenProfile,
     super.key,
   });
 
@@ -35,6 +36,10 @@ class ApplicationsView extends ConsumerWidget {
 
   /// What a downloaded form is handed to: shared, saved or opened.
   final PdfAction pdfAction;
+
+  /// Opens the member's own profile, for a member who says their profile is
+  /// not complete before a download (club_client#340).
+  final VoidCallback onOpenProfile;
 
   /// Creates a draft and opens it.
   Future<void> create(BuildContext context) async {
@@ -62,6 +67,7 @@ class ApplicationsView extends ConsumerWidget {
           PublishedApplicationsList(
             currentUser: currentUser,
             pdfAction: pdfAction,
+            onOpenProfile: onOpenProfile,
           ),
       ],
     );

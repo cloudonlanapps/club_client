@@ -20,8 +20,7 @@ import 'package:cl_club_communication/cl_club_communication.dart'
         NotifVenueLink,
         NotificationDeepLink;
 import 'package:cl_club_events/cl_club_events.dart' show MyEventsSection;
-import 'package:cl_club_members/cl_club_members.dart'
-    show ExtendedProfileSections;
+import 'package:cl_club_members/cl_club_members.dart' show OwnProfileCards;
 import 'package:cl_member_auth/cl_member_auth.dart'
     show
         AuthShell,
@@ -32,14 +31,13 @@ import 'package:cl_member_auth/cl_member_auth.dart'
         authStateProvider;
 import 'package:cl_member_onboarding/cl_member_onboarding.dart'
     show
-        OnboardingExtendedProfileScreen,
+        OnboardingProfileScreen,
         OnboardingShell,
         OnboardingSubmitDocumentsScreen,
         OnboardingWelcomeScreen,
         allowedOnboardingPaths,
-        onboardingExtendedProfilePath,
         onboardingFallbackPath,
-        onboardingWelcomePath;
+        onboardingProfilePath;
 import 'package:cl_member_zone/cl_member_zone.dart'
     show
         AdminGroupProfileScreen,
@@ -86,11 +84,7 @@ import 'package:cl_member_zone/cl_member_zone.dart'
         VenueProfileScreen,
         VenuesScreen;
 import 'package:cl_remote_store/cl_remote_store.dart'
-    show
-        AuditLogScope,
-        BroadcastScope,
-        extendedProfileProvider,
-        identityVerificationProvider;
+    show AuditLogScope, BroadcastScope, identityVerificationProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -370,22 +364,14 @@ class RouterRefreshListenable extends ChangeNotifier {
       (_, _) => notifyListeners(),
       fireImmediately: false,
     );
-    // So does the extended-profile step (club_client#320).
-    _extendedSub = ref.listen(
-      extendedProfileProvider,
-      (_, _) => notifyListeners(),
-      fireImmediately: false,
-    );
   }
   late final ProviderSubscription<dynamic> _sub;
   late final ProviderSubscription<dynamic> _capsSub;
-  late final ProviderSubscription<dynamic> _extendedSub;
 
   @override
   void dispose() {
     _sub.close();
     _capsSub.close();
-    _extendedSub.close();
     super.dispose();
   }
 }
@@ -420,22 +406,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Logged in: status-gated routing (see allowedOnboardingPaths). The
       // welcome page is always legal for `registered` and `pending` users;
       // the document step only without an admin review note, and never on
-      // a server that does not verify identity (#84). A member who has just
-      // submitted their document goes on to the optional extended-profile
-      // step while the server has it on (club_client#320).
-      final extendedProfile = ref.read(extendedProfileProvider);
+      // a server that does not verify identity (#84). A `pending` member
+      // may also open their profile page (club_client#340); a member who
+      // has just submitted their document lands on the waiting page.
       final onboarding = allowedOnboardingPaths(
         user,
         identityVerification: ref.read(identityVerificationProvider),
-        extendedProfile: extendedProfile,
       );
       if (onboarding != null) {
         if (onboarding.contains(path)) return null;
-        return onboardingFallbackPath(
-          user,
-          path,
-          extendedProfile: extendedProfile,
-        );
+        return onboardingFallbackPath(user, path);
       }
 
       // Active (or other non-blocking statuses).
@@ -499,16 +479,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           builder: (context, ref, _) {
             final isSubmitDocs =
                 state.matchedLocation == '/onboarding/submit-documents';
-            final isExtendedProfile =
-                state.matchedLocation == onboardingExtendedProfilePath;
+            final isProfile = state.matchedLocation == onboardingProfilePath;
             final isDark = ref.watchIsDark(context);
             return OnboardingShell(
               title: isSubmitDocs
                   ? (_) => 'Upload identity document'
-                  : isExtendedProfile
-                  ? (_) => 'Profile details'
+                  : isProfile
+                  ? (_) => 'Your profile'
                   : (u) => 'Welcome ${u.displayName.toTitleCase()}',
-              onBack: isSubmitDocs || isExtendedProfile
+              onBack: isSubmitDocs || isProfile
                   ? () => context.go('/onboarding/welcome')
                   : null,
               onRefresh: () => ref.invalidate(authStateProvider),
@@ -526,9 +505,11 @@ final routerProvider = Provider<GoRouter>((ref) {
               child: OnboardingWelcomeScreen(
                 onContinue: () => context.go('/onboarding/submit-documents'),
                 onHome: () => context.go('/'),
-                onAddProfileDetails: () =>
-                    context.go(onboardingExtendedProfilePath),
-                applications: waitingPageApplications,
+                onUpdateProfile: () => context.go(onboardingProfilePath),
+                applications: (user) => waitingPageApplications(
+                  user,
+                  onOpenProfile: () => context.go(onboardingProfilePath),
+                ),
               ),
             ),
           ),
@@ -541,16 +522,17 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ),
           ),
-          // The optional extended-profile step, after the document is
-          // submitted (club_client#320). Its sections are the profile's own.
+          // A pending member's own profile (club_client#340): the
+          // profile's own cards, then the Applications section, where No to
+          // "Is your profile complete?" only closes the question.
           GoRoute(
-            path: onboardingExtendedProfilePath,
+            path: onboardingProfilePath,
             pageBuilder: (context, state) => buildTransitionPage(
               key: state.pageKey,
-              child: OnboardingExtendedProfileScreen(
-                sections: (user) =>
-                    ExtendedProfileSections(user: user, canEdit: true),
-                onContinue: () => context.go(onboardingWelcomePath),
+              child: OnboardingProfileScreen(
+                profile: (user) => OwnProfileCards(user: user),
+                applications: (user) =>
+                    profileApplicationsSection(user, own: true),
                 onHome: () => context.go('/'),
               ),
             ),

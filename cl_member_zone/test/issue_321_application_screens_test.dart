@@ -86,6 +86,7 @@ void main() {
   Widget list() => ApplicationsScreen(
     onOpen: (_) {},
     pdfAction: _pdfAction,
+    onOpenProfile: () {},
     onHome: () {},
   );
   Widget editor() => ApplicationScreen(

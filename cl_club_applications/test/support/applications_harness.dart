@@ -133,14 +133,18 @@ UserPrivate applicationsUser({bool admin = false}) => UserPrivate(
 );
 
 /// Mounts [child] with the applications on (or off, [enabled]), the master
-/// [master], the label catalogue and clause library of the samples, and
-/// [documents] as every member's identity documents.
+/// [master], the label catalogue and clause library of the samples,
+/// [documents] as every member's identity documents, [currentUser] as the
+/// signed-in member (by default [applicationsUser], whose profile is blank)
+/// and the extended profile on or off ([extendedProfile]).
 Future<void> pumpApplications(
   WidgetTester tester,
   Widget child, {
   required FakeApplicationsMaster master,
   bool enabled = true,
   List<MediaLink> documents = const [],
+  UserPrivate? currentUser,
+  bool extendedProfile = false,
 }) async {
   await tester.binding.setSurfaceSize(const Size(1200, 3000));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -148,6 +152,10 @@ Future<void> pumpApplications(
     ProviderScope(
       overrides: [
         applicationsProvider.overrideWithValue(enabled),
+        currentUserProvider.overrideWithValue(
+          currentUser ?? applicationsUser(),
+        ),
+        extendedProfileProvider.overrideWithValue(extendedProfile),
         clApplicationsMasterProvider.overrideWith(() => master),
         applicationLabelsProvider.overrideWith(
           (ref) async => ApplicationSamples.labels,

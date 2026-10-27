@@ -16,7 +16,7 @@ enum OnboardingGate {
   /// used by `/onboarding/submit-documents`.
   registeredNoNote,
 
-  /// `status == pending` — used by `/onboarding/extended-profile`.
+  /// `status == pending` — used by `/onboarding/profile`.
   pending,
 }
 

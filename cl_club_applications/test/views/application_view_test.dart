@@ -125,6 +125,43 @@ void main() {
       expect(find.text('Camp: 1-15 Nov / शिबिर'), findsOneWidget);
     });
 
+    testWidgets('Issue 403: a note reads as its text, then its attribution '
+        'on the next line as written; one with none is its text alone', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        content: ApplicationSamples.content.copyWith(
+          termsNotes: const [
+            ApplicationTermsNote(
+              text: ApplicationText({'en': 'Follow the rules'}),
+            ),
+            ApplicationTermsNote(
+              text: ApplicationText({'en': 'Keys to Success'}),
+              attribution: ApplicationText({'en': '— Example Association'}),
+            ),
+            ApplicationTermsNote(
+              text: ApplicationText({'en': 'Play hard'}),
+              attribution: ApplicationText({'en': 'A coach'}),
+            ),
+          ],
+        ),
+      );
+      final notes = ApplicationSection.notes.name;
+      expect(
+        _readValue(tester, notes, ApplicationViewStrings.note(1)).data,
+        'Follow the rules',
+      );
+      expect(
+        _readValue(tester, notes, ApplicationViewStrings.note(2)).data,
+        'Keys to Success\n— Example Association',
+      );
+      expect(
+        _readValue(tester, notes, ApplicationViewStrings.note(3)).data,
+        'Play hard\nA coach',
+      );
+    });
+
     testWidgets('Issue 398: the heading card opens with the title and state, '
         'Preview on the right and no blank form or layout line', (
       tester,

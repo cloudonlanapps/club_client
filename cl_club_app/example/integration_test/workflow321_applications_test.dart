@@ -346,13 +346,7 @@ void main() {
       description: 'the published application in the member list',
     );
     final row = find.byKey(ValueKey('application.download.$_templateId'));
-    expect(
-      find.descendant(
-        of: row,
-        matching: find.widgetWithText(ShadButton, 'Download'),
-      ),
-      findsOneWidget,
-    );
+    expect(pdfActionButtonIn(row), findsOneWidget);
     // The bytes the Download button would open.
     final bytes = await container(
       tester,

@@ -400,19 +400,13 @@ Future<void> _waitForWaitingPage(WidgetTester tester, int id) async {
   );
   await waitFor(
     tester,
-    () => _downloadButtonIn(_row(id)).evaluate().isNotEmpty,
+    () => pdfActionButtonIn(_row(id)).evaluate().isNotEmpty,
     description: 'the application listed on the waiting page',
   );
 }
 
 /// The download row of application [id] in a published list.
 Finder _row(int id) => find.byKey(ValueKey('application.download.$id'));
-
-/// The Download button inside [scope].
-Finder _downloadButtonIn(Finder scope) => find.descendant(
-  of: scope,
-  matching: find.widgetWithText(ShadButton, 'Download'),
-);
 
 /// The Applications section of the onboarding profile page.
 final Finder _profileSection = find.byKey(
@@ -426,7 +420,7 @@ final Finder _profilePage = find.byKey(
 
 /// Presses the Download button inside [scope].
 Future<void> _pressDownload(WidgetTester tester, Finder scope) async {
-  invokeShadButton(tester, _downloadButtonIn(scope), reason: 'Download');
+  invokeShadButton(tester, pdfActionButtonIn(scope), reason: 'Download');
   await settle(tester);
 }
 
@@ -816,7 +810,7 @@ void main() {
     // the form with its blanks.
     await waitFor(
       tester,
-      () => _downloadButtonIn(_profileSection).evaluate().isNotEmpty,
+      () => pdfActionButtonIn(_profileSection).evaluate().isNotEmpty,
       description: 'the Applications section of the profile page',
     );
     await _pressDownload(tester, _profileSection);
@@ -921,7 +915,7 @@ void main() {
 
     await waitFor(
       tester,
-      () => _downloadButtonIn(_profileSection).evaluate().isNotEmpty,
+      () => pdfActionButtonIn(_profileSection).evaluate().isNotEmpty,
       description: 'the Applications section of the profile page',
     );
     await _downloadWithNoQuestion(tester, _profileSection, 3);
@@ -952,7 +946,7 @@ void main() {
     await _openApplications(tester);
     await waitFor(
       tester,
-      () => _downloadButtonIn(_row(id)).evaluate().isNotEmpty,
+      () => pdfActionButtonIn(_row(id)).evaluate().isNotEmpty,
       description: 'the application on the member Applications page',
     );
     await _downloadWithNoQuestion(tester, _row(id), 5);

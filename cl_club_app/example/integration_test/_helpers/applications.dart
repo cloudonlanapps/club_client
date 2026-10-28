@@ -8,10 +8,13 @@
 //                       a bin icon (ShadIconButton), every other move an
 //                       ActionButton.
 //   * runApplicationStep — waits for the move to be on, then presses it.
+//   * pdfActionButtonIn — the PDF button (Download or Share, as the app
+//                       chose for the platform) inside a scope.
 
+import 'package:cl_club_app/src/utils/pdf_actions.dart' show appPdfAction;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shadcn_ui/shadcn_ui.dart' show ShadIconButton;
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton, ShadIconButton;
 import 'package:ui_lib/ui_lib.dart' show ActionButton;
 
 import 'pump.dart';
@@ -46,3 +49,11 @@ Future<void> runApplicationStep(WidgetTester tester, String name) async {
   onPressed!();
   await settle(tester);
 }
+
+/// The PDF button inside [scope], by the label of the app's own
+/// [appPdfAction]: Share on a phone browser that can share files,
+/// Download elsewhere (club_client#324).
+Finder pdfActionButtonIn(Finder scope) => find.descendant(
+  of: scope,
+  matching: find.widgetWithText(ShadButton, appPdfAction.label),
+);

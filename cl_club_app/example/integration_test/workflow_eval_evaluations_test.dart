@@ -15,6 +15,7 @@
 // Run (single file, fresh server):
 //   just app-test-one app_test_server2.conf workflow_eval_evaluations_test.dart
 
+import 'package:cl_club_app/src/utils/pdf_actions.dart' show appPdfAction;
 import 'package:cl_club_members/cl_club_members.dart' show UserListView;
 import 'package:cl_member_zone/src/widgets/sidebar/sidebar_item.dart'
     show SidebarItem;
@@ -328,7 +329,7 @@ void main() {
     await _waitText(tester, _kQuestion);
     await waitFor(
       tester,
-      () => find.byIcon(LucideIcons.download).evaluate().isNotEmpty,
+      () => find.byIcon(appPdfAction.icon).evaluate().isNotEmpty,
       description: 'the member copy to be offered',
     );
     await logout(tester);

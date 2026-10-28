@@ -5,11 +5,12 @@
 // and Delete are shown (club_client#398), and Finalize is greyed out
 // while texts are missing, which the heading card lists. A title
 // cleared of its English is refused on its field, and the draft keeps its
-// title and stays a draft. A declaration the server refuses
-// at its schema (a text in a language outside the label catalogue, which
-// the editor keeps as it was given, as it keeps any language it does not
-// show) shows the server's reason on the declaration field, with no toast,
-// and nothing is stored. The admin then deletes the draft.
+// title and stays a draft. A declaration with a text in a language the
+// club does not offer (which the editor keeps as it was given, as it keeps
+// any language it does not show) is refused by the server
+// (`APPLICATION_LANGUAGE_NOT_OFFERED`); the refusal names the language on
+// the declaration card, with no toast, and nothing is stored. The admin
+// then deletes the draft.
 //
 // Fixtures (all `workflow_apptemplate_` prefixed): the draft, created and
 // deleted through the UI. The admin is the stack's sudo user.
@@ -51,8 +52,14 @@ const _kSudoPassword = String.fromEnvironment('SUDO_PASSWORD');
 const _kTitle = 'workflow_apptemplate Trial';
 const _kApplications = 'Applications';
 
-/// A language code outside the server's label catalogue.
+/// A language code the club does not offer.
 const _kUnknownLanguage = 'zz';
+
+/// What a text in [_kUnknownLanguage] is refused with
+/// (`ApplicationViewStrings.languageNotOffered`).
+const _kLanguageNotOffered =
+    'The club does not offer $_kUnknownLanguage. Add it in Profile options '
+    'on Club details, or leave it out.';
 
 /// What a printed text without its English is refused with
 /// (`ApplicationFormStrings.englishRequired`).
@@ -278,8 +285,9 @@ void main() {
     expect(find.text('$_kTitle (Draft)'), findsOneWidget);
     expect(_step('publish'), findsNothing);
 
-    // 4. A declaration the server refuses at its schema shows the server's
-    // reason on the declaration field, and nothing is stored.
+    // 4. A declaration with a text in a language the club does not offer
+    // is refused: the refusal names the language on the declaration card,
+    // with no toast, and nothing is stored.
     final declaration = _section('declaration');
     await tapSectionPencil(tester, declaration);
     // The section's own form: the outermost one inside its card.
@@ -302,11 +310,16 @@ void main() {
       () => find
           .descendant(
             of: declaration,
-            matching: find.textContaining('is not a language'),
+            matching: find.text(_kLanguageNotOffered),
           )
           .evaluate()
           .isNotEmpty,
-      description: "the server's reason on the declaration field",
+      description: 'the not-offered language refusal on the declaration card',
+    );
+    expect(
+      firstErrorToastMessage(tester),
+      isNull,
+      reason: 'a refusal about what was typed is never a toast',
     );
     expect(_draft(tester).content.declaration, isNull);
     await _cancelIn(tester, declaration);

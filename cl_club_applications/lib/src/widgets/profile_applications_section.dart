@@ -77,6 +77,7 @@ class ProfileApplicationsSection extends ConsumerWidget {
               for (final template in published)
                 ApplicationDownloadRow(
                   title: applicationTitle(template),
+                  member: member,
                   download: own
                       ? ApplicationOwnForm(template.id)
                       : ApplicationMemberForm(template.id, member.username),

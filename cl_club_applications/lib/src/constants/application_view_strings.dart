@@ -46,6 +46,12 @@ abstract final class ApplicationViewStrings {
   /// before its extension.
   static String blankFormFileTitle(String title) => '$title - blank form';
 
+  /// The name a member's form of application [title] is saved under,
+  /// before its extension: the application and the member's [name]
+  /// (club_client#404).
+  static String memberFormFileTitle(String title, String name) =>
+      '$title - $name';
+
   /// The editor's button that saves a finalized template as a JSON file,
   /// to import it on another server.
   static const String exportJson = 'Export JSON';

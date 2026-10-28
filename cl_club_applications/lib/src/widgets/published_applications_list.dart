@@ -98,6 +98,7 @@ class PublishedApplicationsList extends ConsumerWidget {
           ApplicationDownloadRow(
             key: ValueKey('application.download.${template.id}'),
             title: applicationTitle(template),
+            member: currentUser,
             download: ApplicationOwnForm(template.id),
             pdfAction: pdfAction,
             onOpenProfile: onOpenProfile,

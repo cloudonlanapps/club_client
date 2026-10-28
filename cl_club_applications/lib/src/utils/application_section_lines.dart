@@ -162,14 +162,16 @@ abstract final class ApplicationSectionLines {
     );
   }
 
-  /// A note's text, then who it is from.
+  /// A note's text, then who it is from on the next line, as written: the
+  /// form prints the attribution on its own line under the note, adding no
+  /// dash (club_client#403).
   static String noteText(Object? note, ApplicationTextReader reader) {
     final map = note is Map ? note : const <Object?, Object?>{};
     final body = map.containsKey(ApplicationFormFields.textKey)
         ? map[ApplicationFormFields.textKey]
         : note;
     final from = reader.read(map[ApplicationFormFields.attributionKey]);
-    return [reader.read(body), from].where((s) => s.isNotEmpty).join(' — ');
+    return [reader.read(body), from].where((s) => s.isNotEmpty).join('\n');
   }
 
   /// The English text of catalogue label [id]; [id] when it has none.

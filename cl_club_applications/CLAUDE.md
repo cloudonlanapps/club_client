@@ -120,6 +120,11 @@ forms' ids for a schema refusal.
   downloads, No calls the host's `onOpenProfile`, or only closes the
   dialog where there is none (the profile section, already on the profile).
   An admin's preview and a member's form fetched by an admin do not ask.
+- A member's form, their own (Applications page, profile, waiting page)
+  or one an admin fetches from the member's profile, goes to the
+  `PdfAction` as "<title> - <member's full name>.pdf", the username when
+  the member has no name (`memberFormFileName`, club_client#404), through
+  `PdfAction.fileNameFor`'s cleaning. The preview keeps "<title>.pdf".
 - The editor's heading card shows **Download blank form** as an icon
   beside Preview's (club_client#393, #398): the template printed blank, no
   member and no watermark (`ApplicationBlankForm`, `downloadBlankForm`).

@@ -1,17 +1,21 @@
+import 'package:club_sdk_2/club_sdk_2.dart' show UserPrivate;
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show PdfAction;
 
 import '../constants/application_view_sizes.dart';
 import '../models/application_download.dart';
+import '../utils/application_file_name.dart';
 import 'application_download_button.dart';
 
 /// One application a member can download: its title and an
 /// [ApplicationDownloadButton] for [download], which hands the PDF to
-/// [pdfAction] named after [title].
+/// [pdfAction] named after [title] and [member] ([memberFormFileName],
+/// club_client#404).
 class ApplicationDownloadRow extends StatelessWidget {
   const ApplicationDownloadRow({
     required this.title,
+    required this.member,
     required this.download,
     required this.pdfAction,
     this.onOpenProfile,
@@ -20,6 +24,9 @@ class ApplicationDownloadRow extends StatelessWidget {
 
   /// The application's title.
   final String title;
+
+  /// The member whose form [download] fetches.
+  final UserPrivate member;
 
   /// The PDF the button fetches.
   final ApplicationDownload download;
@@ -44,7 +51,7 @@ class ApplicationDownloadRow extends StatelessWidget {
           ApplicationDownloadButton(
             download: download,
             pdfAction: pdfAction,
-            fileName: PdfAction.fileNameFor(title),
+            fileName: memberFormFileName(title, member),
             onOpenProfile: onOpenProfile,
           ),
         ],

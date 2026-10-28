@@ -316,7 +316,10 @@ so the stored layout still fits.
 
 When the extended profile is off its fields still print, as blanks. Footer:
 member ID, download day, page n of N. Filename:
-`application-<id>-<username>.pdf`.
+`application-<id>-<username>.pdf`. The app saves a member's form, their own
+or one an admin fetches, as `<title> - <member's full name>.pdf` (the
+username when the member has no name; club_client#404); the preview keeps
+`<title>.pdf` and the blank form `<title> - blank form.pdf`.
 
 **Preview.** An admin can preview a template in any state: the form drawn for
 a fictional but believable demo member (Arjun Vikram Deshpande, `demo.player`:

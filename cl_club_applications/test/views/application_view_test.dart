@@ -535,6 +535,17 @@ void main() {
       await tester.pumpAndSettle();
       expect(master.calls, ['preview 5']);
     });
+
+    testWidgets('Issue 404: Preview is named after the application alone, '
+        'with no member', (tester) async {
+      final names = <String>[];
+      await _pump(tester, status: ApplicationStatus.published, names: names);
+      await tester.tap(
+        find.byKey(const ValueKey('application.state.preview')),
+      );
+      await tester.pumpAndSettle();
+      expect(names, ['Trial.pdf']);
+    });
   });
   group('Issue 393: Download blank form', () {
     testWidgets('Issue 398: an icon right of Preview in the title row, with '

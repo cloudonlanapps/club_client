@@ -20,6 +20,12 @@ Map<int, ApplicationTemplate> _published() => {
   6: ApplicationSamples.template(id: 6),
 };
 
+/// [member] with a full name, Robin Hood (club_client#404).
+UserPrivate _named(UserPrivate member) => member.copyWith(
+  firstName: () => 'Robin',
+  lastName: () => 'Hood',
+);
+
 void main() {
   group('Issue 321: ApplicationDownloadButton', () {
     testWidgets('Issue 321: hands the downloaded bytes on', (tester) async {
@@ -87,14 +93,14 @@ void main() {
       expect(find.textContaining('raw platform words'), findsNothing);
     });
 
-    testWidgets('Issue 324: a row names the file after the application', (
-      tester,
-    ) async {
+    testWidgets('Issue 404: a row names the file after the application and '
+        'the member', (tester) async {
       final names = <String>[];
       await pumpApplications(
         tester,
         ApplicationDownloadRow(
           title: 'Membership form',
+          member: _named(eligibleMember()),
           download: const ApplicationOwnForm(4),
           pdfAction: recordingPdfAction(names: names),
         ),
@@ -102,7 +108,7 @@ void main() {
       );
       await tester.tap(find.text(testPdfActionLabel));
       await answerProfileComplete(tester);
-      expect(names, ['Membership form.pdf']);
+      expect(names, ['Membership form - Robin Hood.pdf']);
     });
 
     testWidgets('Issue 321: a member not eligible is told so under the '
@@ -217,6 +223,84 @@ void main() {
       await tester.tap(find.text(testPdfActionLabel));
       await tester.pumpAndSettle();
       expect(master.calls, ['member 4 member_a']);
+    });
+
+    testWidgets('Issue 404: one’s own form is named after one’s own name', (
+      tester,
+    ) async {
+      final names = <String>[];
+      final me = _named(eligibleMember());
+      await pumpApplications(
+        tester,
+        ProfileApplicationsSection(
+          member: me,
+          own: true,
+          pdfAction: recordingPdfAction(names: names),
+        ),
+        master: FakeApplicationsMaster(_published()),
+        currentUser: me,
+      );
+      await tester.tap(find.text(testPdfActionLabel));
+      await answerProfileComplete(tester);
+      expect(names, ['Trial - Robin Hood.pdf']);
+    });
+
+    testWidgets('Issue 404: an admin’s download of a member’s form is named '
+        'after that member', (tester) async {
+      final names = <String>[];
+      await pumpApplications(
+        tester,
+        ProfileApplicationsSection(
+          member: _named(eligibleMember()),
+          own: false,
+          pdfAction: recordingPdfAction(names: names),
+        ),
+        master: FakeApplicationsMaster(_published()),
+        currentUser: applicationsUser(admin: true).copyWith(
+          firstName: () => 'Ada',
+          lastName: () => 'Admin',
+        ),
+      );
+      await tester.tap(find.text(testPdfActionLabel));
+      await tester.pumpAndSettle();
+      expect(names, ['Trial - Robin Hood.pdf']);
+    });
+
+    testWidgets('Issue 404: a member with no name is named by their '
+        'username', (tester) async {
+      final names = <String>[];
+      await pumpApplications(
+        tester,
+        ProfileApplicationsSection(
+          member: eligibleMember(),
+          own: false,
+          pdfAction: recordingPdfAction(names: names),
+        ),
+        master: FakeApplicationsMaster(_published()),
+        currentUser: applicationsUser(admin: true),
+      );
+      await tester.tap(find.text(testPdfActionLabel));
+      await tester.pumpAndSettle();
+      expect(names, ['Trial - member_a.pdf']);
+    });
+
+    testWidgets('Issue 404: the Applications page and waiting page list '
+        'names the form after the signed-in member', (tester) async {
+      final names = <String>[];
+      final me = _named(eligibleMember());
+      await pumpApplications(
+        tester,
+        PublishedApplicationsList(
+          currentUser: me,
+          pdfAction: recordingPdfAction(names: names),
+          onOpenProfile: () {},
+        ),
+        master: FakeApplicationsMaster(_published()),
+        currentUser: me,
+      );
+      await tester.tap(find.text(testPdfActionLabel));
+      await answerProfileComplete(tester);
+      expect(names, ['Trial - Robin Hood.pdf']);
     });
 
     testWidgets('Issue 321: renders nothing while applications are off', (

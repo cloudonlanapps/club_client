@@ -31,6 +31,9 @@ dependencies:
 
 
 dev_dependencies:
+  # Test only: a fake FileService feeds CachedNetworkImage (#409). Kept at
+  # the version cached_network_image resolves to transitively.
+  flutter_cache_manager: 3.4.6
   flutter_test:
     sdk: flutter
   url_launcher_platform_interface: 2.3.2

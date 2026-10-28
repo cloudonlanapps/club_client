@@ -361,6 +361,7 @@ class DocThumb extends StatelessWidget {
                 child: CredentialedNetworkImage(
                   imageUrl: slot.uri,
                   httpHeaders: httpHeaders,
+                  requiresAuth: true,
                   fit: BoxFit.cover,
                   errorBuilder: (_) => ThumbPlaceholder(
                     theme: theme,

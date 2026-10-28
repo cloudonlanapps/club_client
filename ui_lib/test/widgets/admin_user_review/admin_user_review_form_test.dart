@@ -7,9 +7,13 @@ import 'package:ui_lib/src/constants/admin_user_review.dart'
     show kAdminReviewArmDelay, kAdminReviewReasonMaxLength;
 import 'package:ui_lib/src/widgets/admin_user_review/admin_user_review_form_data.dart'
     show AdminUserReviewAction;
+import 'package:ui_lib/src/widgets/admin_user_review/admin_user_review_page.dart'
+    show ThumbPlaceholder;
 import 'package:ui_lib/src/widgets/admin_user_review/admin_user_review_validators.dart'
     show AdminUserReviewFormValidators;
 import 'package:ui_lib/ui_lib.dart';
+
+import '../../support/fake_image_server.dart';
 
 const Size _kSurface = Size(1024, 1600);
 
@@ -498,6 +502,42 @@ void main() {
       expect(find.textContaining('DOB:'), findsOneWidget);
       expect(find.text('Approve'), findsOneWidget);
     });
+  });
+
+  group('Issue 409: document previews are fetched with a token', () {
+    Widget withHeaders(Map<String, String> headers) {
+      final rec = _Recorder();
+      return _wrap(
+        AdminUserReviewForm(
+          data: _user(),
+          httpHeaders: headers,
+          onApprove: rec.approve,
+          onReject: rec.reject,
+          onBlock: rec.block_,
+        ),
+      );
+    }
+
+    testWidgets(
+      'Issue 409: without a token no preview is fetched and none shows the '
+      'file-name placeholder; once the token arrives both are fetched with '
+      'it and shown',
+      (tester) async {
+        await _setSurface(tester);
+        final server = FakeImageServer()..install();
+
+        await tester.pumpWidget(withHeaders(const {}));
+        await settleImages(tester);
+        expect(server.requests, isEmpty);
+        expect(find.byType(ThumbPlaceholder), findsNothing);
+
+        await tester.pumpWidget(withHeaders(fakeImageGoodToken));
+        await settleImages(tester);
+        expect(server.requests, ['Bearer good', 'Bearer good']);
+        expect(find.byType(ThumbPlaceholder), findsNothing);
+        expect(imagesShown(tester), 2);
+      },
+    );
   });
 
   group('Issue 149: actions come on only after the page has armed', () {

@@ -23,6 +23,7 @@ class IdentityDocumentSlotPreview extends StatelessWidget {
     return CredentialedNetworkImage(
       imageUrl: slot.uri,
       httpHeaders: httpHeaders,
+      requiresAuth: true,
       fit: BoxFit.cover,
       errorBuilder: (_) =>
           IdentityDocumentImagePlaceholder(filename: slot.fileName),

@@ -266,6 +266,7 @@ class ZoomablePageState extends State<ZoomablePage> {
         child: CredentialedNetworkImage(
           imageUrl: widget.slot.uri,
           httpHeaders: widget.httpHeaders,
+          requiresAuth: true,
           fit: BoxFit.contain,
           errorBuilder: (_) => ImageLoadError(filename: widget.slot.fileName),
         ),

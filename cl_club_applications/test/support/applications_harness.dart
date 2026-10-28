@@ -290,8 +290,9 @@ Future<void> pumpApplications(
   bool extendedProfile = false,
   FakeApplicationLibraryMaster? library,
   FakeApplicationLabels? labels,
+  Size size = const Size(1200, 3000),
 }) async {
-  await tester.binding.setSurfaceSize(const Size(1200, 3000));
+  await tester.binding.setSurfaceSize(size);
   addTearDown(() => tester.binding.setSurfaceSize(null));
   await tester.pumpWidget(
     ProviderScope(

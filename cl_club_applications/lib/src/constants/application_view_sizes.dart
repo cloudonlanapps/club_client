@@ -27,6 +27,10 @@ abstract final class ApplicationViewSizes {
   /// Width of a read line's label.
   static const double readLabelWidth = 160;
 
+  /// Narrower than this, a read line's label stands above its value
+  /// (club_client#408): beside it, the value would keep under 240.
+  static const double readStackBelow = 400;
+
   /// Widest the create dialog grows.
   static const double dialogWidth = 480;
 

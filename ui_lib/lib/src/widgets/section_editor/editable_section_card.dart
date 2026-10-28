@@ -9,9 +9,10 @@ import 'section_editor_actions.dart';
 ///
 /// Read mode shows the section title (with an optional leading icon) plus a
 /// [SectionEditButton] when [canEdit] is true, above the read-only [read]
-/// content. Tapping the pencil (or the empty hint) flips the same card into
-/// edit mode, which renders the form returned by [editBuilder] inline with
-/// `Cancel` / `Save` actions — no dialog or popover.
+/// content; a long title wraps, the pencil staying at the end
+/// (club_client#408). Tapping the pencil (or the empty hint) flips the same
+/// card into edit mode, which renders the form returned by [editBuilder]
+/// inline with `Cancel` / `Save` actions — no dialog or popover.
 ///
 /// The card owns only UI concerns: the read/edit toggle, validation gating,
 /// no-op detection ([isDirty]) and the in-flight saving state, which turns
@@ -195,8 +196,8 @@ class _EditableSectionCardState<T> extends State<EditableSectionCard<T>> {
                 ),
                 const SizedBox(width: 8),
               ],
-              Text(widget.title, style: theme.textTheme.h4),
-              const Spacer(),
+              // The title takes what the row leaves and wraps (#408).
+              Expanded(child: Text(widget.title, style: theme.textTheme.h4)),
               if (widget.canEdit && !_editing)
                 SectionEditButton(onTap: _enterEdit),
               if (widget.titleTrailing case final Widget trailing) ...[

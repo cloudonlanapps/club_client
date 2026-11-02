@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.3.1
+
+Built against club_server 1.3.1. club_sdk_2 is pinned at cloudonlanapps/club_sdk
+83147da, the SDK's 1.3.1 commit (#431).
+
+- The staff calendar shows how far a session's attendance is taken: ◐ while
+  partly marked, ✓ once complete, on the Attendance button and in the month
+  view's day cells. A session nobody is enrolled in reads "No members
+  enrolled", and only a super-admin can open its register (#414).
+- The attendance screen names the session's day and weekday (#413).
+- My Calendar: a past session the member was never enrolled in reads "You are
+  not enrolled"; a recorded status shows as a badge alone, in the staff
+  screen's colours (#415); the month view shows a pie of each day's
+  attendance (#416).
+- The calendar draws cancelled sessions faint and striped in the week view and
+  leaves them out of the day highlight (#419); overlapping sessions sit side
+  by side (#420).
+- On a phone a card's action keeps its own size and is centred (#421), and a
+  card action that cannot be used looks disabled.
+
 ## 1.3.0
 
 Built against club_server 1.3.0. club_sdk_2 is pinned at cloudonlanapps/club_sdk

@@ -49,10 +49,13 @@ class ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
 
+    // A button with nothing to do is drawn disabled, not only one that is
+    // loading or turned off (club_client#414).
+    final active = enabled && !loading && onPressed != null;
     return ShadButton.outline(
       size: ShadButtonSize.sm,
-      enabled: enabled && !loading,
-      onPressed: enabled && !loading ? onPressed : null,
+      enabled: active,
+      onPressed: active ? onPressed : null,
       leading: loading ? null : leading,
       child: loading
           ? const SizedBox(

@@ -187,10 +187,15 @@ class AdminOccurrenceActionsState
               widget.occurrence.originalStartTimeUtc,
             ),
       reason: closed
-          ? (context) => Text(
-              noMembersEnrolledLabel,
-              style: ShadTheme.of(context).textTheme.muted,
-            )
+          ? (context) {
+              final theme = ShadTheme.of(context);
+              return Text(
+                noMembersEnrolledLabel,
+                style: theme.textTheme.small.copyWith(
+                  color: theme.colorScheme.mutedForeground,
+                ),
+              );
+            }
           : null,
     );
   }

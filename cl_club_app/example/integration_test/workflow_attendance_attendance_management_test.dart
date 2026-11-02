@@ -9,6 +9,8 @@
 //   * the open programme (14:00), public, open to all: no one enrolled;
 //   * the moved programme, private and weekly from six days ago (16:00),
 //     whose first session the super-admin moves to the next day.
+// For tomorrow the first member has leave requested on the main programme
+// and leave approved on the second (sudo files and approves it).
 // Credit-funded where the credit system is on, valid from before the first
 // session. The members are assigned now, after the past sessions, so only
 // a super-admin can mark those (club_server: a member counts for the
@@ -25,6 +27,9 @@
 //     caption, and the open programme's session reads "You are not
 //     enrolled"; on the day before, the unmarked enrolled sessions read
 //     "Attendance not recorded". The second member sees A in red.
+//  3. (Issue 416) The first member's month view: yesterday's cell shows a
+//     pie of a green and an orange slice, tomorrow's an amber and a blue
+//     one; the day before yesterday's, with nothing marked, shows none.
 //
 // Runs on both confs:
 //   just app-test-one app_test_server1.conf \
@@ -34,6 +39,8 @@
 
 import 'package:cl_club_events/src/views/event_occurences_attendance_view.dart'
     show EventOccurencesAttendanceView;
+import 'package:cl_club_events/src/widgets/attendance_pie.dart'
+    show AttendancePie;
 import 'package:cl_club_events/src/widgets/cards/attendance_badge.dart'
     show AttendanceBadge;
 import 'package:cl_club_events/src/widgets/cards/occurrence_card.dart'
@@ -198,6 +205,9 @@ void main() {
     await enrol(main, _kMember);
     await enrol(main, _kOther);
     await enrol(second, _kMember);
+    await client.myEvents.requestLeave(_kMember, main, _at(1, 10));
+    await client.myEvents.requestLeave(_kMember, second, _at(1, 12));
+    await client.attendance.approveLeave(second, _kMember, _at(1, 12));
 
     // A weekly session six days ago, moved by the super-admin to the next
     // day: its register must name the day it moved to.
@@ -309,6 +319,60 @@ void main() {
     },
     timeout: const Timeout(Duration(minutes: 10)),
   );
+
+  testWidgets(
+    "Issue 416: the member's month view shows a pie of each day's recorded "
+    'attendance, and none on a day with nothing recorded',
+    (tester) async {
+      await useTestSurface(tester, const Size(1600, 3000));
+      await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
+      await ensureLoggedOut(tester);
+
+      await loginViaUi(tester, _kMember, _kPwd);
+      await go(tester, '/memberzone/my-events/$_kMember/calendar');
+
+      // Yesterday: present at 10:00, late at 12:00 (step 1).
+      await selectCalendarDayViaUi(tester, _day(-1));
+      await _expectPie(tester, _day(-1), [Colors.green, Colors.orange]);
+
+      // The day before: sessions, none marked.
+      await selectCalendarDayViaUi(tester, _day(-2));
+      await _expectCaption(tester, _mainId, 'Attendance not recorded');
+      expect(
+        find.descendant(
+          of: calendarDayCell(_day(-2)),
+          matching: find.byType(AttendancePie),
+        ),
+        findsNothing,
+        reason: 'a day with nothing recorded shows no pie',
+      );
+
+      // Tomorrow: leave requested at 10:00, leave approved at 12:00.
+      await selectCalendarDayViaUi(tester, _day(1));
+      await _expectPie(tester, _day(1), [Colors.amber, Colors.blue]);
+      await logout(tester);
+    },
+    timeout: const Timeout(Duration(minutes: 10)),
+  );
+}
+
+/// Waits for the local [day]'s cell to show a pie of [colors], clockwise
+/// from the top.
+Future<void> _expectPie(
+  WidgetTester tester,
+  DateTime day,
+  List<Color> colors,
+) async {
+  final pie = find.descendant(
+    of: calendarDayCell(day),
+    matching: find.byType(AttendancePie),
+  );
+  await waitFor(
+    tester,
+    () => pie.evaluate().isNotEmpty,
+    description: 'the pie on ${_kDayFormat.format(day)}',
+  );
+  expect(tester.widget<AttendancePie>(pie).sliceColors, colors);
 }
 
 /// The selected day's card of the event [eventId] on My Calendar.

@@ -184,24 +184,46 @@ void main() {
         status: OccurrenceStatus.scheduled,
       ).copyWith(attendanceExpected: () => expected, attendanceMarked: () => 0);
 
-      test('Issue 414: no members expected reads "No members enrolled"', () {
-        expect(
-          OccurrenceCard.staffCaptionFor(counted(0)),
-          OccurrenceCard.noMembersCaption,
-        );
-        expect(OccurrenceCard.noMembersCaption, 'No members enrolled');
-      });
+      test(
+        'Issue 414: for a super-admin, no members expected reads '
+        '"No members enrolled"',
+        () {
+          expect(
+            OccurrenceCard.staffCaptionFor(counted(0), superAdmin: true),
+            OccurrenceCard.noMembersCaption,
+          );
+          expect(OccurrenceCard.noMembersCaption, 'No members enrolled');
+        },
+      );
+
+      test(
+        'Issue 414: for an admin or coach no caption: the disabled button '
+        'carries the reason',
+        () {
+          expect(
+            OccurrenceCard.staffCaptionFor(counted(0), superAdmin: false),
+            isNull,
+          );
+        },
+      );
 
       test('Issue 414: members expected, or no counts, give no caption', () {
-        expect(OccurrenceCard.staffCaptionFor(counted(2)), isNull);
-        expect(OccurrenceCard.staffCaptionFor(counted(null)), isNull);
+        for (final expected in [2, null]) {
+          expect(
+            OccurrenceCard.staffCaptionFor(counted(expected), superAdmin: true),
+            isNull,
+          );
+        }
       });
 
       test('Issue 414: a cancelled session keeps its Cancelled caption', () {
         final cancelled = counted(
           0,
         ).copyWith(status: OccurrenceStatus.cancelled);
-        expect(OccurrenceCard.staffCaptionFor(cancelled), 'Cancelled');
+        expect(
+          OccurrenceCard.staffCaptionFor(cancelled, superAdmin: false),
+          'Cancelled',
+        );
       });
     },
   );

@@ -1138,4 +1138,57 @@ void main() {
       });
     },
   );
+
+  group('Issue 414: a session nobody is enrolled in', () {
+    Occurrence withExpected(int? expected) =>
+        _occurrenceAt(_inAttendanceWindow, OccurrenceStatus.scheduled).copyWith(
+          attendanceExpected: () => expected,
+          attendanceMarked: () => 0,
+        );
+
+    ActionItem attendanceOf(List<ActionItem> actions) =>
+        actions.singleWhere((a) => a.label == 'Attendance');
+
+    testWidgets(
+      'Issue 414: an admin sees Attendance disabled, "No members enrolled" '
+      'beside it',
+      (tester) async {
+        final attendance = attendanceOf(
+          await _resolveActions(tester, withExpected(0)),
+        );
+        expect(attendance.onPressed, isNull);
+        expect(attendance.showsReason, isTrue);
+
+        await tester.pumpWidget(
+          ShadApp(
+            home: Scaffold(
+              body: Center(child: ActionGroup(actions: [attendance])),
+            ),
+          ),
+        );
+        expect(find.text('No members enrolled'), findsOneWidget);
+      },
+    );
+
+    testWidgets('Issue 414: a super-admin can still open the register', (
+      tester,
+    ) async {
+      final attendance = attendanceOf(
+        await _resolveActions(tester, withExpected(0), user: _superAdmin()),
+      );
+      expect(attendance.onPressed, isNotNull);
+      expect(attendance.showsReason, isFalse);
+    });
+
+    testWidgets('Issue 414: with members, or without counts, it stays open', (
+      tester,
+    ) async {
+      for (final expected in [2, null]) {
+        final attendance = attendanceOf(
+          await _resolveActions(tester, withExpected(expected)),
+        );
+        expect(attendance.onPressed, isNotNull, reason: 'expected $expected');
+      }
+    });
+  });
 }

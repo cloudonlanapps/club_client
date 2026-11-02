@@ -7,6 +7,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart';
 
 import '../../../models/admin_occurrence_action.dart';
+import '../../../models/attendance_progress.dart';
 import '../../../models/event_cancellation_messages.dart';
 import '../../../models/programme_schedule_form_helpers.dart';
 import '../../../models/stale_version_message.dart';
@@ -83,97 +84,116 @@ class AdminOccurrenceActionsState
         event: event,
         actingUser: actingUser,
       ))
-        _itemFor(action, event),
+        _itemFor(action, event, actingUser),
     ];
   }
 
   /// The [ActionItem] of [action] on an occurrence of [event], wired to its
   /// call.
-  ActionItem _itemFor(AdminOccurrenceAction action, Event event) =>
-      switch (action) {
-        AdminOccurrenceAction.attendance => ActionItem(
-          label: 'Attendance',
-          leading: AttendanceProgressIcon.buttonMark(widget.occurrence),
-          onPressed: () => widget.onMarkAttendance(
-            widget.occurrence.eventId,
-            widget.occurrence.originalStartTimeUtc,
-          ),
-        ),
-        AdminOccurrenceAction.reschedule => ActionItem(
-          label: 'Reschedule',
-          icon: LucideIcons.calendarClock,
-          onPressed: _running == null ? _handleReschedule : null,
-        ),
-        AdminOccurrenceAction.cancelOccurrence => ActionItem(
-          label: 'Cancel this occurrence',
-          icon: LucideIcons.calendarX,
-          destructive: true,
-          loading: _running == 'cancel-instance',
-          onPressed: _running != null
-              ? null
-              : () => _runAction(
-                  'cancel-instance',
-                  () => _cancelInstance(event),
-                ),
-        ),
-        AdminOccurrenceAction.cancelSeries => ActionItem(
-          label: 'Cancel entire series',
-          icon: LucideIcons.calendarOff,
-          destructive: true,
-          loading: _running == 'cancel-series',
-          onPressed: _running != null
-              ? null
-              : () => _runAction('cancel-series', () => _cancelSeries(event)),
-        ),
-        AdminOccurrenceAction.endProgramme => ActionItem(
-          label: endProgrammeLabel,
-          icon: LucideIcons.calendarOff,
-          destructive: true,
-          loading: _running == 'end-programme',
-          onPressed: _running != null
-              ? null
-              : () => _runAction('end-programme', () => _endProgramme(event)),
-        ),
-        AdminOccurrenceAction.clearEndDate => ActionItem(
-          label: clearEndDateLabel,
-          icon: LucideIcons.calendarRange,
-          loading: _running == 'clear-end',
-          onPressed: _running != null
-              ? null
-              : () => _runAction('clear-end', () => _clearEndDate(event)),
-        ),
-        AdminOccurrenceAction.callOff => ActionItem(
-          label: EventCancellationMessages.callOff,
-          icon: LucideIcons.calendarX,
-          destructive: true,
-          loading: _running == 'call-off',
-          onPressed: _running != null
-              ? null
-              : () => _runAction('call-off', () => _callOff(event)),
-        ),
-        AdminOccurrenceAction.manageRequests => ActionItem(
-          label: 'Manage requests',
-          icon: LucideIcons.userCheck,
-          loading: _running == 'requests',
-          onPressed: _running != null
-              ? null
-              : () => _runAction('requests', _handleManageRequests),
-        ),
-        AdminOccurrenceAction.undoCancel => ActionItem(
-          label: 'Undo Cancel',
-          loading: _running == 'undo',
-          onPressed: _running != null
-              ? null
-              : () => _runAction('undo', _undoCancel),
-        ),
-        AdminOccurrenceAction.reinstate => ActionItem(
-          label: EventCancellationMessages.reinstate,
-          loading: _running == 'reinstate',
-          onPressed: _running != null
-              ? null
-              : () => _runAction('reinstate', () => _reinstate(event)),
-        ),
-      };
+  ActionItem _itemFor(
+    AdminOccurrenceAction action,
+    Event event,
+    UserPrivate actingUser,
+  ) => switch (action) {
+    AdminOccurrenceAction.attendance => _attendanceItem(actingUser),
+    AdminOccurrenceAction.reschedule => ActionItem(
+      label: 'Reschedule',
+      icon: LucideIcons.calendarClock,
+      onPressed: _running == null ? _handleReschedule : null,
+    ),
+    AdminOccurrenceAction.cancelOccurrence => ActionItem(
+      label: 'Cancel this occurrence',
+      icon: LucideIcons.calendarX,
+      destructive: true,
+      loading: _running == 'cancel-instance',
+      onPressed: _running != null
+          ? null
+          : () => _runAction(
+              'cancel-instance',
+              () => _cancelInstance(event),
+            ),
+    ),
+    AdminOccurrenceAction.cancelSeries => ActionItem(
+      label: 'Cancel entire series',
+      icon: LucideIcons.calendarOff,
+      destructive: true,
+      loading: _running == 'cancel-series',
+      onPressed: _running != null
+          ? null
+          : () => _runAction('cancel-series', () => _cancelSeries(event)),
+    ),
+    AdminOccurrenceAction.endProgramme => ActionItem(
+      label: endProgrammeLabel,
+      icon: LucideIcons.calendarOff,
+      destructive: true,
+      loading: _running == 'end-programme',
+      onPressed: _running != null
+          ? null
+          : () => _runAction('end-programme', () => _endProgramme(event)),
+    ),
+    AdminOccurrenceAction.clearEndDate => ActionItem(
+      label: clearEndDateLabel,
+      icon: LucideIcons.calendarRange,
+      loading: _running == 'clear-end',
+      onPressed: _running != null
+          ? null
+          : () => _runAction('clear-end', () => _clearEndDate(event)),
+    ),
+    AdminOccurrenceAction.callOff => ActionItem(
+      label: EventCancellationMessages.callOff,
+      icon: LucideIcons.calendarX,
+      destructive: true,
+      loading: _running == 'call-off',
+      onPressed: _running != null
+          ? null
+          : () => _runAction('call-off', () => _callOff(event)),
+    ),
+    AdminOccurrenceAction.manageRequests => ActionItem(
+      label: 'Manage requests',
+      icon: LucideIcons.userCheck,
+      loading: _running == 'requests',
+      onPressed: _running != null
+          ? null
+          : () => _runAction('requests', _handleManageRequests),
+    ),
+    AdminOccurrenceAction.undoCancel => ActionItem(
+      label: 'Undo Cancel',
+      loading: _running == 'undo',
+      onPressed: _running != null
+          ? null
+          : () => _runAction('undo', _undoCancel),
+    ),
+    AdminOccurrenceAction.reinstate => ActionItem(
+      label: EventCancellationMessages.reinstate,
+      loading: _running == 'reinstate',
+      onPressed: _running != null
+          ? null
+          : () => _runAction('reinstate', () => _reinstate(event)),
+    ),
+  };
+
+  /// Attendance, with how far it is taken; closed, "No members enrolled"
+  /// beside it, when nobody is enrolled in the session and the viewer is
+  /// not a super-admin (club_client#414).
+  ActionItem _attendanceItem(UserPrivate actingUser) {
+    final closed = attendanceClosedForNoMembers(widget.occurrence, actingUser);
+    return ActionItem(
+      label: 'Attendance',
+      leading: AttendanceProgressIcon.buttonMark(widget.occurrence),
+      onPressed: closed
+          ? null
+          : () => widget.onMarkAttendance(
+              widget.occurrence.eventId,
+              widget.occurrence.originalStartTimeUtc,
+            ),
+      reason: closed
+          ? (context) => Text(
+              noMembersEnrolledLabel,
+              style: ShadTheme.of(context).textTheme.muted,
+            )
+          : null,
+    );
+  }
 
   /// Cancels this session of [event] alone, in the cancellation dialog,
   /// which asks for the reason and saves while it is open (club_client#213).

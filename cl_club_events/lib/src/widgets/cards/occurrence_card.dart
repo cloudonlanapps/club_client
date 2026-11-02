@@ -1,4 +1,5 @@
 import 'package:cl_club_venues/cl_club_venues.dart' show EventVenueLine;
+import 'package:cl_member_auth/cl_member_auth.dart' show authStateProvider;
 import 'package:cl_remote_store/cl_remote_store.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/widgets.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart';
 
+import '../../models/attendance_progress.dart';
 import 'actions/admin_occurrence_actions.dart';
 import 'actions/user_occurrence_actions.dart';
 import 'attendance_badge.dart';
@@ -179,7 +181,11 @@ class OccurrenceCard extends ConsumerWidget {
   }
 
   String? _captionFor(WidgetRef ref, Occurrence occurrence) {
-    if (username == null) return staffCaptionFor(occurrence);
+    if (username == null) {
+      final superAdmin =
+          ref.watch(authStateProvider).valueOrNull?.isSuperAdmin ?? false;
+      return staffCaptionFor(occurrence, superAdmin: superAdmin);
+    }
     final terminal = _terminalCaption(occurrence);
     if (terminal != null) return terminal;
 
@@ -213,14 +219,20 @@ class OccurrenceCard extends ConsumerWidget {
 
   /// The staff card's caption: a cancelled or completed session says so;
   /// a session the staff occurrence list says nobody is enrolled in reads
-  /// [noMembersCaption], so it is not taken for one not yet marked
-  /// (club_client#414). No counts (another response), no caption.
-  static String? staffCaptionFor(Occurrence occurrence) =>
+  /// [noMembersCaption] for a [superAdmin], whose Attendance stays open
+  /// (club_client#414). Anyone else sees the same words beside their
+  /// disabled Attendance instead. No counts (another response), no caption.
+  static String? staffCaptionFor(
+    Occurrence occurrence, {
+    required bool superAdmin,
+  }) =>
       _terminalCaption(occurrence) ??
-      (occurrence.attendanceExpected == 0 ? noMembersCaption : null);
+      (superAdmin && occurrence.attendanceExpected == 0
+          ? noMembersCaption
+          : null);
 
   /// Caption of a staff card whose session nobody is enrolled in.
-  static const String noMembersCaption = 'No members enrolled';
+  static const String noMembersCaption = noMembersEnrolledLabel;
 
   /// Caption of a past session of an event the member has no enrollment
   /// in: a public event they could see but were never in.

@@ -58,7 +58,9 @@ import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show DateFormat;
+import 'package:ui_lib/ui_lib.dart' show ActionItem;
 
+import '_helpers/actions.dart';
 import '_helpers/attendance.dart';
 import '_helpers/auth.dart';
 import '_helpers/calendar.dart';
@@ -289,7 +291,8 @@ void main() {
   );
 
   testWidgets(
-    'Issue 414: the Club Calendar captions a session nobody is enrolled in',
+    'Issue 414: on the Club Calendar a session nobody is enrolled in says so; '
+    'only a super-admin can open its register',
     (tester) async {
       await useTestSurface(tester, const Size(1600, 3000));
       await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
@@ -315,6 +318,29 @@ void main() {
       expect(caption(_kOpen), findsOneWidget);
       expect(card(_kMain), findsOneWidget);
       expect(caption(_kMain), findsNothing);
+      ActionItem attendanceOn(String title) => cardActions(
+        tester,
+        card(title).first,
+      ).singleWhere((a) => a.label == 'Attendance');
+      expect(
+        attendanceOn(_kOpen).onPressed,
+        isNotNull,
+        reason: 'a super-admin can still open the register',
+      );
+      await logout(tester);
+
+      // The organizer, an admin: Attendance is disabled, the reason beside it.
+      await loginViaUi(tester, _kAdmin, _kPwd);
+      await go(tester, '/memberzone/events/calendar');
+      await selectCalendarDayViaUi(tester, _day(-1));
+      await waitForInList(
+        tester,
+        caption(_kOpen),
+        within: find.byType(EventsCalendarScreen),
+        description: '"No members enrolled" beside the open programme',
+      );
+      expect(attendanceOn(_kOpen).onPressed, isNull);
+      expect(attendanceOn(_kMain).onPressed, isNotNull);
       await logout(tester);
     },
     timeout: const Timeout(Duration(minutes: 10)),

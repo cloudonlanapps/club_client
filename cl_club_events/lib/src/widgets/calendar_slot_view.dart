@@ -7,9 +7,11 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../providers/cached_date_items.dart';
 import '../providers/selected_occurrence.dart';
+import 'calendar_session_block.dart';
 
-/// Renders a colored cell based on events at this time slot.
-/// Used as slotBuilder for WeekGrid/DayGrid.
+/// Renders a half-hour cell of the week view, coloured by the session at
+/// this time: a [CalendarSessionBlock], striped when the session was
+/// cancelled (club_client#419). Used as slotBuilder for WeekGrid/DayGrid.
 class CalendarSlotView extends ConsumerWidget {
   const CalendarSlotView({
     required this.slotTime,
@@ -60,15 +62,22 @@ class CalendarSlotView extends ConsumerWidget {
         final isInSelectedHour =
             isSelectedDay && slotTime.hour == selectedDateTime.hour;
 
+        final Widget? session;
         Color? backgroundColor;
         if (occurrence != null && event != null) {
           final effectiveRefDate = refDate ?? DateTime.now().toUtc();
-          final isPast = occurrence.actualEndTimeUtc.isBefore(effectiveRefDate);
-          backgroundColor = theme.colorScheme.primary.withValues(
-            alpha: isSelected ? (isPast ? 0.5 : 0.9) : (isPast ? 0.2 : 0.6),
+          session = CalendarSessionBlock(
+            cancelled: occurrence.status == OccurrenceStatus.cancelled,
+            selected: isSelected,
+            past: occurrence.actualEndTimeUtc.isBefore(effectiveRefDate),
           );
-        } else if (isInSelectedHour) {
-          backgroundColor = theme.colorScheme.selection.withValues(alpha: 0.3);
+        } else {
+          session = null;
+          if (isInSelectedHour) {
+            backgroundColor = theme.colorScheme.selection.withValues(
+              alpha: 0.3,
+            );
+          }
         }
 
         return GestureDetector(
@@ -77,6 +86,7 @@ class CalendarSlotView extends ConsumerWidget {
             width: size.width,
             height: size.height,
             color: backgroundColor,
+            child: session,
           ),
         );
       },

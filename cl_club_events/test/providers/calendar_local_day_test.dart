@@ -83,4 +83,40 @@ void main() {
       expect(counts[dayBefore], isNull);
     },
   );
+
+  test(
+    'Issue 419: the member calendar does not count a cancelled session',
+    () async {
+      const username = 'member419';
+      final live = calendarOccurrence(camp.id, startUtc);
+      final cancelled = Occurrence(
+        eventId: camp.id,
+        originalStartTimeUtc: startUtc,
+        actualStartTimeUtc: startUtc,
+        actualEndTimeUtc: startUtc.add(const Duration(hours: 1)),
+        status: OccurrenceStatus.cancelled,
+        venueId: 1,
+      );
+      final container = ProviderContainer(
+        overrides: [
+          clMyOccurrencesProvider.overrideWith(
+            (ref, key) async =>
+                key.username == username ? [cancelled] : [live, cancelled],
+          ),
+          clMyEventDetailProvider.overrideWith((ref, key) async => camp),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final onlyCancelled = await container.read(
+        myDayEventCountsProvider((username: username, range: range)).future,
+      );
+      final mixed = await container.read(
+        myDayEventCountsProvider((username: 'other419', range: range)).future,
+      );
+
+      expect(onlyCancelled[localDay], isNull);
+      expect(mixed[localDay]?.camp, 1);
+    },
+  );
 }

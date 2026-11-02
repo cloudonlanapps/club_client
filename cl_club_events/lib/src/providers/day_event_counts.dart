@@ -11,7 +11,8 @@ import 'event_notifier.dart';
 /// Returns `Map<DateTime, DayEventCounts>` (DateTime is date only).
 /// Takes (user, range) key as parameter.
 ///
-/// Counts OCCURRENCES by type, not unique events.
+/// Counts OCCURRENCES by type, not unique events, leaving out cancelled
+/// ones.
 /// E.g., if Event 123 (Programme) has 3 sessions on March 1st, count = 3.
 ///
 /// Optimized to fetch each unique event only once, even if it has multiple
@@ -47,6 +48,10 @@ dayEventCountsProvider = FutureProvider.autoDispose
       final result = <DateTime, DayEventCounts>{};
 
       for (final occ in occurrences) {
+        // A cancelled session no longer happens: it does not count towards
+        // the day's highlight (club_client#419).
+        if (occ.status == OccurrenceStatus.cancelled) continue;
+
         // The local day the session starts on (date only).
         final date = DateUtils.dateOnly(occ.actualStartTimeUtc.toLocal());
 

@@ -45,6 +45,10 @@ myDayEventCountsProvider = FutureProvider.autoDispose
 
       final result = <DateTime, DayEventCounts>{};
       for (final occ in occurrences) {
+        // A cancelled session no longer happens: it does not count towards
+        // the day's highlight (club_client#419).
+        if (occ.status == OccurrenceStatus.cancelled) continue;
+
         final date = DateUtils.dateOnly(occ.actualStartTimeUtc.toLocal());
         final eventType = eventTypeMap[occ.eventId];
         if (eventType == null) continue;

@@ -25,7 +25,9 @@ import 'attendance_badge.dart';
 ///   * `username != null` → user lens. Occurrence from
 ///     `clMyOccurrencesListProvider((username, range))`. Trailing =
 ///     [UserOccurrenceActions] (or [AttendanceBadge] when past with
-///     recorded attendance).
+///     recorded attendance, with no caption beside it). A past session
+///     with none reads "Attendance not recorded" when the member was
+///     enrolled, "You are not enrolled" when not (club_client#415).
 class OccurrenceCard extends ConsumerWidget {
   const OccurrenceCard({
     required this.eventId,
@@ -185,18 +187,31 @@ class OccurrenceCard extends ConsumerWidget {
     final attendance = occurrence.attendanceStatus;
     final now = DateTime.now().toUtc();
     final isPast = occurrence.actualEndTimeUtc.isBefore(now);
-    if (isPast) return _pastCaption(attendance);
+    // A past session with a recorded status shows the badge alone
+    // (club_client#415).
+    if (isPast && attendance != null) return null;
 
-    final enrollment = ref
-        .watch(
-          clMyEnrollmentProvider(
-            (username: username!, eventId: eventId),
-          ),
-        )
-        .valueOrNull
-        ?.status;
-    return _futureCaption(attendance, enrollment);
+    final enrollmentAsync = ref.watch(
+      clMyEnrollmentProvider((username: username!, eventId: eventId)),
+    );
+    if (isPast) {
+      // Nothing to say until the enrollment is known: "not enrolled" and
+      // "not recorded" mean different things (club_client#415).
+      if (!enrollmentAsync.hasValue) return null;
+      return enrollmentAsync.value == null
+          ? notEnrolledCaption
+          : notRecordedCaption;
+    }
+    return _futureCaption(attendance, enrollmentAsync.valueOrNull?.status);
   }
+
+  /// Caption of a past session of an event the member has no enrollment
+  /// in: a public event they could see but were never in.
+  static const String notEnrolledCaption = 'You are not enrolled';
+
+  /// Caption of a past session the member was enrolled in and staff have
+  /// not marked.
+  static const String notRecordedCaption = 'Attendance not recorded';
 
   /// Member-perspective caption for an upcoming occurrence. Mirrors the
   /// `myEventsFutureCaption` helper that previously lived in cl_member_zone.
@@ -211,24 +226,6 @@ class OccurrenceCard extends ConsumerWidget {
       case AttendanceStatus.late:
       case null:
         return _enrollmentCaption(e);
-    }
-  }
-
-  /// Member-perspective caption for a past occurrence.
-  static String _pastCaption(AttendanceStatus? a) {
-    switch (a) {
-      case AttendanceStatus.present:
-        return 'You attended';
-      case AttendanceStatus.absent:
-        return 'You were absent';
-      case AttendanceStatus.late:
-        return 'You were late';
-      case AttendanceStatus.onLeave:
-        return 'You were on leave';
-      case AttendanceStatus.onLeaveRequested:
-        return 'Leave was pending';
-      case null:
-        return 'Attendance not recorded';
     }
   }
 

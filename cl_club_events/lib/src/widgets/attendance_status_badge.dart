@@ -1,6 +1,8 @@
 import 'package:club_sdk_2/club_sdk_2.dart';
 import 'package:flutter/material.dart';
 
+import '../utils/attendance_status_color.dart';
+
 /// Colored badge displaying an attendance status label.
 ///
 /// Handles null status as "Not Recorded" with grey styling.
@@ -32,13 +34,15 @@ class AttendanceStatusBadge extends StatelessWidget {
   }
 
   (String, Color) _labelAndColor() {
+    final status = this.status;
     if (status == null) return ('Not Recorded', Colors.grey);
-    return switch (status!) {
-      AttendanceStatus.present => ('Present', Colors.green),
-      AttendanceStatus.absent => ('Absent', Colors.red),
-      AttendanceStatus.late => ('Late', Colors.orange),
-      AttendanceStatus.onLeave => ('On Leave', Colors.blue),
-      AttendanceStatus.onLeaveRequested => ('Leave Req', Colors.amber),
+    final label = switch (status) {
+      AttendanceStatus.present => 'Present',
+      AttendanceStatus.absent => 'Absent',
+      AttendanceStatus.late => 'Late',
+      AttendanceStatus.onLeave => 'On Leave',
+      AttendanceStatus.onLeaveRequested => 'Leave Req',
     };
+    return (label, attendanceStatusColor(status));
   }
 }

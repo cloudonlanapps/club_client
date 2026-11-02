@@ -6,6 +6,7 @@
 // with a session at a fixed local hour every day from three days ago:
 //   * the main programme (10:00), public: both members assigned;
 //   * the second programme (12:00), public: the first member assigned;
+//   * the open programme (14:00), public, open to all: no one enrolled;
 //   * the moved programme, private and weekly from six days ago (16:00),
 //     whose first session the super-admin moves to the next day.
 // Credit-funded where the credit system is on, valid from before the first
@@ -19,6 +20,11 @@
 //     yesterday's register of the main programme, marking the first member
 //     present and the second absent, and the second programme's, marking
 //     the first member late; each header names yesterday.
+//  2. (Issue 415) The first member's My Calendar: on yesterday, the two
+//     marked sessions show their badges (P green, L orange) with no
+//     caption, and the open programme's session reads "You are not
+//     enrolled"; on the day before, the unmarked enrolled sessions read
+//     "Attendance not recorded". The second member sees A in red.
 //
 // Runs on both confs:
 //   just app-test-one app_test_server1.conf \
@@ -28,6 +34,10 @@
 
 import 'package:cl_club_events/src/views/event_occurences_attendance_view.dart'
     show EventOccurencesAttendanceView;
+import 'package:cl_club_events/src/widgets/cards/attendance_badge.dart'
+    show AttendanceBadge;
+import 'package:cl_club_events/src/widgets/cards/occurrence_card.dart'
+    show OccurrenceCard;
 import 'package:club_sdk_2/club_sdk_2.dart'
     show
         AttendanceStatus,
@@ -43,6 +53,7 @@ import 'package:shadcn_ui/shadcn_ui.dart' show DateFormat;
 
 import '_helpers/attendance.dart';
 import '_helpers/auth.dart';
+import '_helpers/calendar.dart';
 import '_helpers/capabilities.dart';
 import '_helpers/pump.dart';
 import '_helpers/surface.dart';
@@ -65,6 +76,7 @@ const _kVenue = 'workflow_attendance_venue';
 const _kMain = 'workflow_attendance_main';
 const _kSecond = 'workflow_attendance_second';
 const _kMoved = 'workflow_attendance_moved';
+const _kOpen = 'workflow_attendance_open';
 
 const List<String> _kCast = [_kAdmin, _kMember, _kOther];
 const List<String> _kWeekdays = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
@@ -91,6 +103,9 @@ DateTime _at(int offset, int hour) =>
 
 final List<int> _eventIds = [];
 late int _venueId;
+late int _mainId;
+late int _secondId;
+late int _openId;
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -173,6 +188,13 @@ void main() {
       firstUtc: _at(-3, 12),
       visibility: Visibility.public,
     );
+    _openId = await programme(
+      _kOpen,
+      firstUtc: _at(-3, 14),
+      visibility: Visibility.public,
+    );
+    _mainId = main;
+    _secondId = second;
     await enrol(main, _kMember);
     await enrol(main, _kOther);
     await enrol(second, _kMember);
@@ -254,6 +276,105 @@ void main() {
     },
     timeout: const Timeout(Duration(minutes: 10)),
   );
+
+  testWidgets(
+    'Issue 415: My Calendar shows a marked past session by its badge alone, '
+    'in the staff colours, and tells "not enrolled" from "not recorded"',
+    (tester) async {
+      await useTestSurface(tester, const Size(1600, 3000));
+      await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
+      await ensureLoggedOut(tester);
+
+      await loginViaUi(tester, _kMember, _kPwd);
+      await go(tester, '/memberzone/my-events/$_kMember/calendar');
+
+      // Yesterday: marked by staff in step 1.
+      await selectCalendarDayViaUi(tester, _day(-1));
+      await _expectBadge(tester, _mainId, 'P', Colors.green);
+      await _expectBadge(tester, _secondId, 'L', Colors.orange);
+      await _expectCaption(tester, _openId, 'You are not enrolled');
+
+      // The day before: nothing marked.
+      await selectCalendarDayViaUi(tester, _day(-2));
+      await _expectCaption(tester, _mainId, 'Attendance not recorded');
+      await _expectCaption(tester, _secondId, 'Attendance not recorded');
+      await _expectCaption(tester, _openId, 'You are not enrolled');
+      await logout(tester);
+
+      await loginViaUi(tester, _kOther, _kPwd);
+      await go(tester, '/memberzone/my-events/$_kOther/calendar');
+      await selectCalendarDayViaUi(tester, _day(-1));
+      await _expectBadge(tester, _mainId, 'A', Colors.red);
+      await logout(tester);
+    },
+    timeout: const Timeout(Duration(minutes: 10)),
+  );
+}
+
+/// The selected day's card of the event [eventId] on My Calendar.
+Finder _card(int eventId) =>
+    find.byWidgetPredicate((w) => w is OccurrenceCard && w.eventId == eventId);
+
+/// The past session captions a card can carry.
+const List<String> _kPastCaptions = [
+  'You attended',
+  'You were absent',
+  'You were late',
+  'You were on leave',
+  'Leave was pending',
+  'Attendance not recorded',
+  'You are not enrolled',
+];
+
+/// Waits for [eventId]'s card to read [caption], and no badge.
+Future<void> _expectCaption(
+  WidgetTester tester,
+  int eventId,
+  String caption,
+) async {
+  final text = find.descendant(
+    of: _card(eventId),
+    matching: find.text(caption),
+  );
+  await waitFor(
+    tester,
+    () => text.evaluate().isNotEmpty,
+    description: 'event $eventId\'s card to read "$caption"',
+  );
+  expect(
+    find.descendant(of: _card(eventId), matching: find.byType(AttendanceBadge)),
+    findsNothing,
+  );
+}
+
+/// Waits for [eventId]'s card to show the badge [code] in [color], with no
+/// caption beside it.
+Future<void> _expectBadge(
+  WidgetTester tester,
+  int eventId,
+  String code,
+  Color color,
+) async {
+  final badge = find.descendant(
+    of: _card(eventId),
+    matching: find.byType(AttendanceBadge),
+  );
+  await waitFor(
+    tester,
+    () => badge.evaluate().isNotEmpty,
+    description: 'the "$code" badge on event $eventId\'s card',
+  );
+  final codeText = tester.widget<Text>(
+    find.descendant(of: badge, matching: find.text(code)),
+  );
+  expect(codeText.style?.color, color, reason: 'the "$code" badge colour');
+  for (final caption in _kPastCaptions) {
+    expect(
+      find.descendant(of: _card(eventId), matching: find.text(caption)),
+      findsNothing,
+      reason: 'no "$caption" beside the "$code" badge',
+    );
+  }
 }
 
 /// Waits for the open register's header to name the local [day], as

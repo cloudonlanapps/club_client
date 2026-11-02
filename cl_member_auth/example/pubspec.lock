@@ -130,8 +130,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "83147da922cf1766ebdb4e3c340cbb974253439c"
-      resolved-ref: "83147da922cf1766ebdb4e3c340cbb974253439c"
+      ref: "8be92665083de830e5244e4172dc296b84ccebd4"
+      resolved-ref: "8be92665083de830e5244e4172dc296b84ccebd4"
       url: "https://github.com/cloudonlanapps/club_sdk.git"
     source: git
     version: "1.3.1"

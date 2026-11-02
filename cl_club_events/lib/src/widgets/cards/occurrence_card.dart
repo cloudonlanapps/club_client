@@ -179,10 +179,9 @@ class OccurrenceCard extends ConsumerWidget {
   }
 
   String? _captionFor(WidgetRef ref, Occurrence occurrence) {
-    if (occurrence.status == OccurrenceStatus.cancelled) return 'Cancelled';
-    if (occurrence.status == OccurrenceStatus.completed) return 'Completed';
-
-    if (username == null) return null;
+    if (username == null) return staffCaptionFor(occurrence);
+    final terminal = _terminalCaption(occurrence);
+    if (terminal != null) return terminal;
 
     final attendance = occurrence.attendanceStatus;
     final now = DateTime.now().toUtc();
@@ -204,6 +203,24 @@ class OccurrenceCard extends ConsumerWidget {
     }
     return _futureCaption(attendance, enrollmentAsync.valueOrNull?.status);
   }
+
+  static String? _terminalCaption(Occurrence occurrence) =>
+      switch (occurrence.status) {
+        OccurrenceStatus.cancelled => 'Cancelled',
+        OccurrenceStatus.completed => 'Completed',
+        _ => null,
+      };
+
+  /// The staff card's caption: a cancelled or completed session says so;
+  /// a session the staff occurrence list says nobody is enrolled in reads
+  /// [noMembersCaption], so it is not taken for one not yet marked
+  /// (club_client#414). No counts (another response), no caption.
+  static String? staffCaptionFor(Occurrence occurrence) =>
+      _terminalCaption(occurrence) ??
+      (occurrence.attendanceExpected == 0 ? noMembersCaption : null);
+
+  /// Caption of a staff card whose session nobody is enrolled in.
+  static const String noMembersCaption = 'No members enrolled';
 
   /// Caption of a past session of an event the member has no enrollment
   /// in: a public event they could see but were never in.

@@ -177,6 +177,35 @@ void main() {
     );
   });
 
+  group(
+    'Issue 414: staff card caption for a session nobody is enrolled in',
+    () {
+      Occurrence counted(int? expected) => _occurrence(
+        status: OccurrenceStatus.scheduled,
+      ).copyWith(attendanceExpected: () => expected, attendanceMarked: () => 0);
+
+      test('Issue 414: no members expected reads "No members enrolled"', () {
+        expect(
+          OccurrenceCard.staffCaptionFor(counted(0)),
+          OccurrenceCard.noMembersCaption,
+        );
+        expect(OccurrenceCard.noMembersCaption, 'No members enrolled');
+      });
+
+      test('Issue 414: members expected, or no counts, give no caption', () {
+        expect(OccurrenceCard.staffCaptionFor(counted(2)), isNull);
+        expect(OccurrenceCard.staffCaptionFor(counted(null)), isNull);
+      });
+
+      test('Issue 414: a cancelled session keeps its Cancelled caption', () {
+        final cancelled = counted(
+          0,
+        ).copyWith(status: OccurrenceStatus.cancelled);
+        expect(OccurrenceCard.staffCaptionFor(cancelled), 'Cancelled');
+      });
+    },
+  );
+
   group('Issue 415: My Calendar past session cards', () {
     Occurrence past({AttendanceStatus? status}) {
       final start = DateTime.now().toUtc().subtract(const Duration(hours: 3));

@@ -59,9 +59,18 @@ class ActionGroup extends StatelessWidget {
 /// A single inline action button. Owns the popover controller when the
 /// underlying [ActionItem.popover] is non-null.
 class InlineActionButton extends StatefulWidget {
-  const InlineActionButton({required this.item, super.key});
+  const InlineActionButton({
+    required this.item,
+    this.fitLabel = false,
+    super.key,
+  });
 
   final ActionItem item;
+
+  /// Passed to [ActionButton.fitLabel]: the label ends in an ellipsis when
+  /// the button is given less width than it needs. Only under a bounded
+  /// width.
+  final bool fitLabel;
 
   @override
   State<InlineActionButton> createState() => InlineActionButtonState();
@@ -93,6 +102,7 @@ class InlineActionButtonState extends State<InlineActionButton> {
         child: ActionButton(
           label: widget.item.label,
           loading: widget.item.loading,
+          fitLabel: widget.fitLabel,
           onPressed: widget.item.loading ? null : controller!.toggle,
         ),
       );
@@ -100,6 +110,7 @@ class InlineActionButtonState extends State<InlineActionButton> {
     return ActionButton(
       label: widget.item.label,
       loading: widget.item.loading,
+      fitLabel: widget.fitLabel,
       onPressed: widget.item.onPressed,
     );
   }

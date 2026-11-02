@@ -348,4 +348,180 @@ void main() {
     );
     expect(find.byType(Opacity), findsNothing);
   });
+
+  group('Issue 421: on a phone, the action keeps its size and is centred', () {
+    const phoneWidth = 360.0;
+
+    /// Pumps [card] at phone width and fails on any render overflow.
+    Future<void> pumpPhone(WidgetTester tester, EntityCard card) async {
+      final originalOnError = FlutterError.onError;
+      final errors = <FlutterErrorDetails>[];
+      FlutterError.onError = errors.add;
+      try {
+        await pumpAtWidth(tester, phoneWidth, card);
+        await tester.pump();
+      } finally {
+        FlutterError.onError = originalOnError;
+      }
+      expect(errors, isEmpty, reason: 'no overflow at phone width');
+    }
+
+    /// The row the actions stack in, below the info column.
+    Rect actionRow(WidgetTester tester) =>
+        tester.getRect(find.byType(MobilePrimaryActionRow));
+
+    Rect button(WidgetTester tester, String label) => tester.getRect(
+      find.ancestor(of: find.text(label), matching: find.byType(ShadButton)),
+    );
+
+    testWidgets(
+      'Issue 421: a single action is its natural width, centred in the row',
+      (tester) async {
+        await pumpPhone(
+          tester,
+          EntityCard(
+            image: EntityImage.placeholder(),
+            title: 'Morning batch',
+            trailingActions: [
+              ActionItem(label: 'Attendance', onPressed: () {}),
+            ],
+          ),
+        );
+        final row = actionRow(tester);
+        final rect = button(tester, 'Attendance');
+        expect(rect.width, lessThan(row.width * 0.6), reason: 'not stretched');
+        expect(rect.center.dx, closeTo(row.center.dx, 0.5));
+      },
+    );
+
+    testWidgets(
+      'Issue 421: with more actions, the primary stays centred and ⋮ is at '
+      'the right edge',
+      (tester) async {
+        await pumpPhone(
+          tester,
+          EntityCard(
+            image: EntityImage.placeholder(),
+            title: 'Morning batch',
+            trailingActions: [
+              ActionItem(label: 'Attendance', onPressed: () {}),
+              ActionItem(label: 'Reschedule', onPressed: () {}),
+            ],
+          ),
+        );
+        final row = actionRow(tester);
+        final rect = button(tester, 'Attendance');
+        expect(rect.width, lessThan(row.width * 0.6), reason: 'not stretched');
+        expect(rect.center.dx, closeTo(row.center.dx, 0.5));
+        final menu = tester.getRect(
+          find.byIcon(LucideIcons.ellipsisVertical),
+        );
+        expect(menu.right, lessThanOrEqualTo(row.right));
+        expect(menu.left, greaterThan(rect.right), reason: '⋮ after it');
+        expect(row.right - menu.right, lessThan(kMobileOverflowSlotWidth / 2));
+      },
+    );
+
+    testWidgets(
+      'Issue 421: a disabled action keeps its reason beside it, centred '
+      'together',
+      (tester) async {
+        await pumpPhone(
+          tester,
+          EntityCard(
+            image: EntityImage.placeholder(),
+            title: 'Member',
+            trailingActions: [
+              ActionItem(label: 'Assign', reason: (_) => const Text('0 cr')),
+              ActionItem(label: 'Trial', onPressed: () {}),
+            ],
+          ),
+        );
+        final row = actionRow(tester);
+        final reason = tester.getRect(find.text('0 cr'));
+        final rect = button(tester, 'Assign');
+        expect(reason.right, lessThanOrEqualTo(rect.left), reason: 'beside');
+        expect(rect.left - reason.right, lessThan(16));
+        final group = reason.expandToInclude(rect);
+        expect(group.center.dx, closeTo(row.center.dx, 0.5));
+      },
+    );
+
+    testWidgets(
+      'Issue 421: a long label and a long reason fit without overflow',
+      (tester) async {
+        await pumpPhone(
+          tester,
+          EntityCard(
+            image: EntityImage.placeholder(),
+            title: 'Member',
+            trailingActions: [
+              ActionItem(
+                label: 'Assign to the advanced weekend programme',
+                reason: (_) => const Text(
+                  'No credit for this programme, add credit first',
+                ),
+              ),
+              ActionItem(label: 'Trial', onPressed: () {}),
+            ],
+          ),
+        );
+        expect(
+          find.text('Assign to the advanced weekend programme'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'Issue 421: a bespoke trailing widget keeps its own size, centred',
+      (tester) async {
+        const badgeKey = Key('badge');
+        await pumpPhone(
+          tester,
+          EntityCard(
+            image: EntityImage.placeholder(),
+            title: 'Morning batch',
+            trailingAction: const SizedBox(
+              key: badgeKey,
+              width: 90,
+              height: 24,
+            ),
+          ),
+        );
+        final badge = tester.getRect(find.byKey(badgeKey));
+        expect(badge.size, const Size(90, 24));
+        final info = tester.getRect(
+          find
+              .ancestor(
+                of: find.text('Morning batch'),
+                matching: find.byType(Row),
+              )
+              .first,
+        );
+        expect(badge.center.dx, closeTo(info.center.dx, 0.5));
+      },
+    );
+
+    testWidgets('Issue 421: on desktop the actions stay to the right', (
+      tester,
+    ) async {
+      await pumpAtWidth(
+        tester,
+        800,
+        EntityCard(
+          image: EntityImage.placeholder(),
+          title: 'Desktop',
+          trailingActions: [
+            ActionItem(label: 'Attendance', onPressed: () {}),
+          ],
+        ),
+      );
+      expect(find.byType(MobilePrimaryActionRow), findsNothing);
+      final title = tester.getRect(find.text('Desktop'));
+      final rect = button(tester, 'Attendance');
+      expect((rect.top - title.top).abs(), lessThan(rect.height));
+      expect(rect.left, greaterThan(title.right));
+    });
+  });
 }

@@ -38,6 +38,7 @@ void main() {
     List<Occurrence> sessions, {
     DateTime? selected,
     Brightness brightness = Brightness.light,
+    Size size = dayCellSize,
   }) async {
     final container = staffCalendarContainer(
       events: [camp, programme],
@@ -50,6 +51,7 @@ void main() {
       day: day,
       selected: selected ?? otherDay,
       brightness: brightness,
+      size: size,
     );
   }
 
@@ -74,6 +76,24 @@ void main() {
       final date = tester.getRect(find.text('${day.day}'));
       expect(date.center.dx, closeTo(cell.center.dx, 0.5), reason: 'centred');
       await disposeCalendar(tester);
+    },
+  );
+
+  testWidgets(
+    'Issue 414: on a wide, short cell the mark takes a tenth of the width, '
+    'at most 45% of the height',
+    (tester) async {
+      // A desktop month cell (161 × 37): a tenth of the width, 16.1 px,
+      // beats a quarter of the height. A very wide one stops at 45% of it.
+      for (final (size, expected) in const [
+        (Size(161, 37), 16.1),
+        (Size(400, 37), 16.65),
+      ]) {
+        await pumpDay(tester, [session(camp, 8, 4, 4)], size: size);
+        final icon = tester.getRect(find.byType(Icon));
+        expect(icon.height, closeTo(expected, 0.01), reason: '$size');
+        await disposeCalendar(tester);
+      }
     },
   );
 

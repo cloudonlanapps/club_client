@@ -183,6 +183,25 @@ void main() {
       },
     );
 
+    testWidgets(
+      'Issue 416: on a wide, short cell the pie takes a tenth of the width, '
+      'at most 45% of the height',
+      (tester) async {
+        for (final (size, expected) in const [
+          (Size(161, 37), 16.1),
+          (Size(400, 37), 16.65),
+        ]) {
+          await _pumpCell(
+            tester,
+            statuses: [AttendanceStatus.present],
+            size: size,
+          );
+          final pie = tester.getRect(find.byType(AttendancePie));
+          expect(pie.height, closeTo(expected, 0.01), reason: '$size');
+        }
+      },
+    );
+
     for (final brightness in Brightness.values) {
       testWidgets(
         'Issue 416: on the selected day and a highlighted day, '

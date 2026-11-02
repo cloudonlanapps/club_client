@@ -252,4 +252,46 @@ void main() {
       expect(find.byKey(markKey), findsNothing);
     });
   });
+
+  group('Issue 414: a disabled action looks disabled', () {
+    Future<ShadButton> pumpButton(
+      WidgetTester tester,
+      VoidCallback? onPressed,
+    ) async {
+      await tester.pumpWidget(
+        ShadApp(
+          home: Center(
+            child: ActionGroup(
+              actions: [
+                ActionItem(
+                  label: 'Attendance',
+                  onPressed: onPressed,
+                  reason: (_) => const Text('No members enrolled'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      return tester.widget<ShadButton>(find.byType(ShadButton));
+    }
+
+    testWidgets(
+      'Issue 414: an action with nothing to do is drawn disabled, its '
+      'reason beside it',
+      (tester) async {
+        final button = await pumpButton(tester, null);
+        expect(button.enabled, isFalse);
+        expect(find.text('No members enrolled'), findsOneWidget);
+      },
+    );
+
+    testWidgets('Issue 414: an action that can be used is drawn enabled', (
+      tester,
+    ) async {
+      final button = await pumpButton(tester, () {});
+      expect(button.enabled, isTrue);
+      expect(find.text('No members enrolled'), findsNothing);
+    });
+  });
 }

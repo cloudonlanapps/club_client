@@ -1,5 +1,18 @@
 import 'package:club_sdk_2/club_sdk_2.dart';
 
+/// What a staff card says of a session nobody is enrolled in
+/// (club_client#414).
+const String noMembersEnrolledLabel = 'No members enrolled';
+
+/// Whether [actingUser] is kept from a session's register because nobody
+/// is enrolled in it: the staff occurrence list expects no member there.
+/// A super-admin is not: they may mark members who enrolled after a past
+/// session. Without counts (another response) nothing is kept closed.
+bool attendanceClosedForNoMembers(
+  Occurrence occurrence,
+  UserPrivate actingUser,
+) => occurrence.attendanceExpected == 0 && !actingUser.isSuperAdmin;
+
 /// How far a session's attendance has been taken, from the counts the staff
 /// occurrence list carries (`attendanceExpected`, `attendanceMarked`,
 /// club_server#142), and the same for a whole day (club_client#414).

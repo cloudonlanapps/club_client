@@ -1,3 +1,4 @@
+import 'package:cl_club_events/src/widgets/cards/attendance_badge.dart';
 import 'package:cl_club_events/src/widgets/cards/occurrence_card.dart';
 import 'package:cl_member_auth/cl_member_auth.dart';
 import 'package:cl_remote_store/cl_remote_store.dart';
@@ -75,9 +76,20 @@ final ({DateTime from, DateTime to}) _range = (
   to: DateTime.now().toUtc().add(const Duration(days: 30)),
 );
 
+/// The member's enrollment in the event, for a card that reads it.
+Enrollment _enrollment() => Enrollment(
+  id: 1,
+  eventId: _eventId,
+  membername: _username,
+  status: EnrollmentStatus.assigned,
+  createdAtUtc: DateTime.utc(2026),
+  enrolledAtUtc: DateTime.utc(2026),
+);
+
 Future<void> _pumpCard(
   WidgetTester tester, {
   required Occurrence occurrence,
+  Enrollment? enrollment,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -91,7 +103,7 @@ Future<void> _pumpCard(
         )).overrideWith((ref) async => [occurrence]),
         clMyEnrollmentProvider(
           (username: _username, eventId: _eventId),
-        ).overrideWith((ref) async => null),
+        ).overrideWith((ref) async => enrollment),
       ],
       child: ShadApp(
         home: Scaffold(
@@ -165,54 +177,77 @@ void main() {
     );
   });
 
-  group('Issue 543: My Calendar caption reads occurrence.attendanceStatus', () {
+  group('Issue 415: My Calendar past session cards', () {
+    Occurrence past({AttendanceStatus? status}) {
+      final start = DateTime.now().toUtc().subtract(const Duration(hours: 3));
+      return _occurrence(
+        status: OccurrenceStatus.scheduled,
+        attendanceStatus: status,
+        actualStart: start,
+        actualEnd: start.add(const Duration(hours: 1)),
+        originalStart: start,
+      );
+    }
+
     testWidgets(
-      'Issue 543: past occurrence with attendanceStatus.present shows the '
-      'recorded status caption',
+      'Issue 415: a past session of an event the member is not enrolled in '
+      'reads "You are not enrolled"',
       (tester) async {
-        final originalStart = DateTime.now().toUtc().subtract(
-          const Duration(hours: 3),
-        );
-        final actualEnd = DateTime.now().toUtc().subtract(
-          const Duration(hours: 2),
-        );
-        await _pumpCard(
-          tester,
-          occurrence: _occurrence(
-            status: OccurrenceStatus.scheduled,
-            attendanceStatus: AttendanceStatus.present,
-            actualStart: originalStart,
-            actualEnd: actualEnd,
-            originalStart: originalStart,
-          ),
-        );
-        expect(find.text('You attended'), findsOneWidget);
+        await _pumpCard(tester, occurrence: past());
+        expect(find.text('You are not enrolled'), findsOneWidget);
         expect(find.text('Attendance not recorded'), findsNothing);
       },
     );
 
     testWidgets(
-      'Issue 543: past occurrence with null attendanceStatus shows '
+      'Issue 415: an enrolled member with no status still reads '
       '"Attendance not recorded"',
       (tester) async {
-        final originalStart = DateTime.now().toUtc().subtract(
-          const Duration(hours: 3),
-        );
-        final actualEnd = DateTime.now().toUtc().subtract(
-          const Duration(hours: 2),
-        );
-        await _pumpCard(
-          tester,
-          occurrence: _occurrence(
-            status: OccurrenceStatus.scheduled,
-            actualStart: originalStart,
-            actualEnd: actualEnd,
-            originalStart: originalStart,
-          ),
-        );
+        await _pumpCard(tester, occurrence: past(), enrollment: _enrollment());
         expect(find.text('Attendance not recorded'), findsOneWidget);
+        expect(find.text('You are not enrolled'), findsNothing);
       },
     );
+
+    const expected = {
+      AttendanceStatus.present: ('P', Colors.green),
+      AttendanceStatus.absent: ('A', Colors.red),
+      AttendanceStatus.late: ('L', Colors.orange),
+      AttendanceStatus.onLeave: ('OL', Colors.blue),
+      AttendanceStatus.onLeaveRequested: ('LR', Colors.amber),
+    };
+    for (final MapEntry(key: status, value: (code, color))
+        in expected.entries) {
+      testWidgets(
+        'Issue 415: a past ${status.name} session shows the badge "$code" '
+        'alone, in the staff colour',
+        (tester) async {
+          await _pumpCard(
+            tester,
+            occurrence: past(status: status),
+            enrollment: _enrollment(),
+          );
+          final badge = find.byType(AttendanceBadge);
+          expect(badge, findsOneWidget);
+          final codeText = tester.widget<Text>(
+            find.descendant(of: badge, matching: find.text(code)),
+          );
+          expect(codeText.style?.color, color);
+          expect(tester.widget<AttendanceBadge>(badge).color, color);
+          for (final caption in const [
+            'You attended',
+            'You were absent',
+            'You were late',
+            'You were on leave',
+            'Leave was pending',
+            'Attendance not recorded',
+            'You are not enrolled',
+          ]) {
+            expect(find.text(caption), findsNothing, reason: caption);
+          }
+        },
+      );
+    }
   });
 
   group(

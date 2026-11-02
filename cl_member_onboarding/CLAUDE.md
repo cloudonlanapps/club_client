@@ -67,7 +67,8 @@ lib/src/
 
 This package follows the workspace-wide rules:
 
-- Root [`../CLAUDE.md`](../CLAUDE.md) — auth boundary, SDK boundary, server config, no hardcoded routes, view permission guidelines (including the "views assert preconditions" standard), form rules, UI style.
+- Root [`../CLAUDE.md`](../CLAUDE.md) — auth boundary, SDK boundary, server config, no hardcoded routes, view permission guidelines (including the "views assert preconditions" standard), UI style.
+- [`../docs/form_rules.md`](../docs/form_rules.md) — form rules, section-wise editors.
 - [`../docs/coding_rules.md`](../docs/coding_rules.md) — one class per file, no `_`-prefixed declarations in `lib/`, folder conventions, file size limits.
 - [`../docs/dart-data-class.md`](../docs/dart-data-class.md) — **N/A**: this package defines no domain data classes.
 - [`../docs/package_review_guidelines.md`](../docs/package_review_guidelines.md) — checklist used to audit this package.

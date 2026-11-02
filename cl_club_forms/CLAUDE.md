@@ -5,7 +5,7 @@ field-id constants and form-local values. No SDK, no Riverpod. A feature
 package hosts a form — in a create view, a dialog or an `EditableSectionCard`
 — drives it through a `GlobalKey`, and adapts its flat values to the SDK.
 
-The rules for writing a form are in the root [`CLAUDE.md`](../CLAUDE.md)
+The rules for writing a form are in [`docs/form_rules.md`](../docs/form_rules.md)
 (*Form Design Guidelines* and *Section-wise Editors*). Coding rules:
 [`docs/coding_rules.md`](../docs/coding_rules.md).
 `docs/dart-data-class.md` applies to the form-local value classes in

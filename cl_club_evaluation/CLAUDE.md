@@ -197,9 +197,10 @@ at the same refs as the sibling packages; the commented
 
 ## Conventions
 
-- Root [`../CLAUDE.md`](../CLAUDE.md) — module view wrapping, no hardcoded
-  routes, SDK access boundary, view permission guidelines, form rules,
-  section-wise editors, UI style.
+- Root [`../CLAUDE.md`](../CLAUDE.md) — package boundaries, routes and
+  views, UI style.
+- [`../docs/form_rules.md`](../docs/form_rules.md) — form rules,
+  section-wise editors.
 - [`../docs/coding_rules.md`](../docs/coding_rules.md) — one class per file,
   no `_` declarations in `lib/`, folder roles, size limits.
 - [`../docs/dart-data-class.md`](../docs/dart-data-class.md) — this package

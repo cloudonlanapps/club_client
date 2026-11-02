@@ -1,9 +1,9 @@
 // Attendance register flows for integration tests (club_core#98, #99).
 //
 // Owns:
-//   * openRegisterViaCalendarViaUi — from the Club Calendar (today), tap the
-//     "Attendance" action on the occurrence card of [eventTitle]; lands on
-//     EventOccurencesAttendanceView.
+//   * openRegisterViaCalendarViaUi — from the Club Calendar (today, or a
+//     given day), tap the "Attendance" action on the occurrence card of
+//     [eventTitle]; lands on EventOccurencesAttendanceView.
 //   * registerTile — a member's row on the open register.
 //   * markInRegisterViaUi / clearInRegisterViaUi — tap a row's toggle.
 
@@ -20,15 +20,19 @@ import 'package:ui_lib/ui_lib.dart' show ActionItem;
 
 import 'actions.dart';
 import 'auth.dart';
+import 'calendar.dart';
 import 'pump.dart';
 
-/// Opens today's register for [eventTitle] from the Club Calendar, as a
-/// coach or admin who manages the event does.
+/// Opens the register for [eventTitle] from the Club Calendar, as a coach
+/// or admin who manages the event does: today's session, or the one on the
+/// local [day] when given (picked on the grid).
 Future<void> openRegisterViaCalendarViaUi(
   WidgetTester tester, {
   required String eventTitle,
+  DateTime? day,
 }) async {
   await go(tester, '/memberzone/events/calendar');
+  if (day != null) await selectCalendarDayViaUi(tester, day);
   final card = find.ancestor(
     of: find.textContaining(eventTitle),
     matching: find.byType(OccurrenceCard),

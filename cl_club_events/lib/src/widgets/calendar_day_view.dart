@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cl_calendar/cl_calendar.dart';
 import 'package:club_sdk_2/club_sdk_2.dart' show Occurrence;
 import 'package:flutter/material.dart';
@@ -39,9 +41,24 @@ class CalendarDayView extends ConsumerWidget {
   /// recorded attendance (club_client#416).
   final String? memberUsername;
 
-  /// The size of the corner mark (the staff calendar's attendance mark,
+  /// The corner mark's least size (the staff calendar's attendance mark,
   /// the member's attendance pie), as a share of the cell's height.
   static const double markShare = 0.25;
+
+  /// The corner mark's size on a wide cell, as a share of its width.
+  static const double markWidthShare = 0.10;
+
+  /// The corner mark's largest size, as a share of the cell's height, so
+  /// it stays clear of the centred date.
+  static const double markMaxShare = 0.45;
+
+  /// The corner mark's size in a cell of [cell]: a tenth of the width or
+  /// a quarter of the height, whichever is larger, and at most 45% of the
+  /// height. A wide desktop cell (161 × 37) gets 16 px, a phone's 9 px.
+  static double markSizeFor(Size cell) => math.min(
+    math.max(cell.width * markWidthShare, cell.height * markShare),
+    cell.height * markMaxShare,
+  );
 
   /// The corner mark's gap from the cell's bottom-right corner, as a
   /// share of the cell's height.
@@ -139,7 +156,7 @@ class CalendarDayView extends ConsumerWidget {
                       bottom: size.height * markInset,
                       child: AttendanceProgressIcon(
                         progress: attendance,
-                        size: size.height * markShare,
+                        size: markSizeFor(size),
                         color: isSelected
                             ? theme.colorScheme.primaryForeground
                             : null,
@@ -151,7 +168,7 @@ class CalendarDayView extends ConsumerWidget {
                       bottom: size.height * markInset,
                       child: AttendancePie(
                         statuses: dayAttendance,
-                        diameter: size.height * markShare,
+                        diameter: markSizeFor(size),
                         outlineColor:
                             backgroundColor ?? theme.colorScheme.background,
                       ),

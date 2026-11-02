@@ -103,16 +103,17 @@ Future<void> pumpDayCell(
   required DateTime selected,
   Brightness brightness = Brightness.light,
   String? memberUsername,
+  Size size = dayCellSize,
 }) async {
   await tester.pumpWidget(
     _app(
       container,
       brightness,
       SizedBox.fromSize(
-        size: dayCellSize,
+        size: size,
         child: CalendarDayView(
           date: day,
-          size: dayCellSize,
+          size: size,
           range: MonthViewRange(year: day.year, month: day.month),
           selectedDateTime: selected,
           onChangeSelectedDateTime: (_) {},

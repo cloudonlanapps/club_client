@@ -8,7 +8,9 @@ import 'package:ui_lib/ui_lib.dart' show FilmRollColorsExtension;
 import '../models/attendance_progress.dart';
 import '../providers/cached_occurrences.dart';
 import '../providers/day_event_counts.dart';
+import '../providers/my_day_attendance.dart';
 import '../providers/my_day_event_counts.dart';
+import 'attendance_pie.dart';
 import 'attendance_progress_icon.dart';
 
 /// A day of the calendar's month view: its date, the selected / today /
@@ -33,13 +35,15 @@ class CalendarDayView extends ConsumerWidget {
 
   /// When non-null, day counts come from the member endpoint
   /// (`/myevents/{username}/...`). When null, the admin endpoint
-  /// (`/occurrences/`) is used.
+  /// (`/occurrences/`) is used. A member's day also shows a pie of its
+  /// recorded attendance (club_client#416).
   final String? memberUsername;
 
-  /// The attendance mark's size, as a share of the cell's height.
+  /// The size of the corner mark (the staff calendar's attendance mark,
+  /// the member's attendance pie), as a share of the cell's height.
   static const double markShare = 0.25;
 
-  /// The attendance mark's gap from the cell's bottom-right corner, as a
+  /// The corner mark's gap from the cell's bottom-right corner, as a
   /// share of the cell's height.
   static const double markInset = 0.06;
 
@@ -98,6 +102,17 @@ class CalendarDayView extends ConsumerWidget {
           backgroundColor = theme.colorScheme.specialEventHighlight;
         }
 
+        final dayAttendance = memberUsername == null
+            ? null
+            : ref
+                  .watch(
+                    myDayAttendanceProvider((
+                      username: memberUsername!,
+                      range: range,
+                    )),
+                  )
+                  .valueOrNull?[DateUtils.dateOnly(date)];
+
         return GestureDetector(
           onTap: () => onChangeSelectedDateTime(date),
           child: SizedBox(
@@ -128,6 +143,17 @@ class CalendarDayView extends ConsumerWidget {
                         color: isSelected
                             ? theme.colorScheme.primaryForeground
                             : null,
+                      ),
+                    ),
+                  if (dayAttendance != null && dayAttendance.isNotEmpty)
+                    Positioned(
+                      right: size.height * markInset,
+                      bottom: size.height * markInset,
+                      child: AttendancePie(
+                        statuses: dayAttendance,
+                        diameter: size.height * markShare,
+                        outlineColor:
+                            backgroundColor ?? theme.colorScheme.background,
                       ),
                     ),
                 ],

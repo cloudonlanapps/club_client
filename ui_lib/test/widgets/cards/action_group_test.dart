@@ -6,7 +6,8 @@ import 'package:ui_lib/src/widgets/action_button.dart';
 import 'package:ui_lib/src/widgets/cards/action_group.dart';
 import 'package:ui_lib/src/widgets/cards/action_item.dart';
 import 'package:ui_lib/src/widgets/cards/entity_card.dart'
-    show MobilePrimaryActionRow;
+    show EntityCard, MobilePrimaryActionRow;
+import 'package:ui_lib/src/widgets/cards/entity_image.dart';
 
 Future<void> pump(WidgetTester tester, List<ActionItem> actions) {
   return tester.pumpWidget(
@@ -193,6 +194,62 @@ void main() {
 
       expect(find.byType(ShadDialog), findsOneWidget);
       expect(find.text('Share content'), findsOneWidget);
+    });
+  });
+
+  group('Issue 414: an action draws its leading mark before its label', () {
+    const markKey = Key('mark');
+    Widget mark(BuildContext _) =>
+        const SizedBox(key: markKey, width: 14, height: 14);
+
+    for (final (width, viewport) in [(800.0, 'desktop'), (360.0, 'phone')]) {
+      testWidgets('Issue 414: inside the inline button ($viewport)', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          ShadApp(
+            home: Center(
+              child: SizedBox(
+                width: width,
+                child: EntityCard(
+                  image: EntityImage.placeholder(),
+                  title: 'Morning batch',
+                  trailingActions: [
+                    ActionItem(
+                      label: 'Attendance',
+                      leading: mark,
+                      onPressed: () {},
+                    ),
+                    ActionItem(label: 'Reschedule', onPressed: () {}),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+        final button = find.ancestor(
+          of: find.text('Attendance'),
+          matching: find.byType(ShadButton),
+        );
+        expect(
+          find.descendant(of: button, matching: find.byKey(markKey)),
+          findsOneWidget,
+        );
+        expect(
+          tester.getRect(find.byKey(markKey)).right,
+          lessThanOrEqualTo(tester.getRect(find.text('Attendance')).left),
+          reason: 'before the label',
+        );
+      });
+    }
+
+    testWidgets('Issue 414: no mark while the action is loading', (
+      tester,
+    ) async {
+      await pump(tester, [
+        ActionItem(label: 'Attendance', leading: mark, loading: true),
+      ]);
+      expect(find.byKey(markKey), findsNothing);
     });
   });
 }

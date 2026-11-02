@@ -1,4 +1,6 @@
+import 'package:cl_club_events/src/models/attendance_progress.dart';
 import 'package:cl_club_events/src/models/event_cancellation_messages.dart';
+import 'package:cl_club_events/src/widgets/attendance_progress_icon.dart';
 import 'package:cl_club_events/src/widgets/cards/actions/admin_occurrence_actions.dart';
 import 'package:cl_club_events/src/widgets/event_editor/event_cancellation_dialog.dart';
 import 'package:cl_club_forms/src/widgets/event_cancellation/event_cancellation_form_validators.dart'
@@ -10,7 +12,7 @@ import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:ui_lib/ui_lib.dart' show ActionItem;
+import 'package:ui_lib/ui_lib.dart' show ActionGroup, ActionItem;
 
 const _eventId = 101;
 const _organizer = 'the_organizer';
@@ -1072,4 +1074,68 @@ void main() {
       expect(events.calls, isEmpty);
     });
   });
+
+  group(
+    'Issue 414: the Attendance button shows how far attendance is taken',
+    () {
+      /// Draws the Attendance action of an occurrence in the attendance
+      /// window with [marked] of [expected] members marked, as a card does.
+      Future<void> pumpAttendance(
+        WidgetTester tester, {
+        required int expected,
+        required int marked,
+      }) async {
+        final actions = await _resolveActions(
+          tester,
+          _occurrenceAt(
+            _inAttendanceWindow,
+            OccurrenceStatus.scheduled,
+          ).copyWith(
+            attendanceExpected: () => expected,
+            attendanceMarked: () => marked,
+          ),
+        );
+        final attendance = actions.singleWhere((a) => a.label == 'Attendance');
+        await tester.pumpWidget(
+          ShadApp(
+            home: Scaffold(
+              body: Center(child: ActionGroup(actions: [attendance])),
+            ),
+          ),
+        );
+      }
+
+      /// The mark drawn inside the Attendance button, or null.
+      AttendanceProgressIcon? mark(WidgetTester tester) {
+        final found = find.descendant(
+          of: find.ancestor(
+            of: find.text('Attendance'),
+            matching: find.byType(ShadButton),
+          ),
+          matching: find.byType(AttendanceProgressIcon),
+        );
+        if (found.evaluate().isEmpty) return null;
+        return tester.widget<AttendanceProgressIcon>(found);
+      }
+
+      testWidgets('Issue 414: partly marked shows ◐', (tester) async {
+        await pumpAttendance(tester, expected: 5, marked: 3);
+        expect(mark(tester)?.progress, AttendanceProgress.partial);
+        expect(find.byIcon(LucideIcons.contrast), findsOneWidget);
+        expect(find.text('Attendance'), findsOneWidget, reason: 'label kept');
+      });
+
+      testWidgets('Issue 414: complete shows ✓', (tester) async {
+        await pumpAttendance(tester, expected: 5, marked: 5);
+        expect(mark(tester)?.progress, AttendanceProgress.complete);
+        expect(find.byIcon(LucideIcons.circleCheck), findsOneWidget);
+      });
+
+      testWidgets('Issue 414: nothing marked shows no icon', (tester) async {
+        await pumpAttendance(tester, expected: 5, marked: 0);
+        expect(mark(tester), isNull);
+        expect(find.text('Attendance'), findsOneWidget);
+      });
+    },
+  );
 }

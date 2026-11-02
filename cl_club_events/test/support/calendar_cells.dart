@@ -102,6 +102,7 @@ Future<void> pumpDayCell(
   required DateTime day,
   required DateTime selected,
   Brightness brightness = Brightness.light,
+  String? memberUsername,
 }) async {
   await tester.pumpWidget(
     _app(
@@ -115,6 +116,7 @@ Future<void> pumpDayCell(
           range: MonthViewRange(year: day.year, month: day.month),
           selectedDateTime: selected,
           onChangeSelectedDateTime: (_) {},
+          memberUsername: memberUsername,
         ),
       ),
     ),
@@ -123,4 +125,11 @@ Future<void> pumpDayCell(
     await tester.runAsync(() => Future<void>.delayed(Duration.zero));
     await tester.pump();
   }
+}
+
+/// Unmounts the cells and lets their providers' timers run out, so a test
+/// ends with nothing pending.
+Future<void> disposeCalendar(WidgetTester tester) async {
+  await tester.pumpWidget(const SizedBox());
+  await tester.pump(const Duration(seconds: 1));
 }

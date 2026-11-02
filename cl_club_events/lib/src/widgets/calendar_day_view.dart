@@ -1,12 +1,19 @@
 import 'package:cl_calendar/cl_calendar.dart';
+import 'package:club_sdk_2/club_sdk_2.dart' show Occurrence;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart' show FilmRollColorsExtension;
 
+import '../models/attendance_progress.dart';
+import '../providers/cached_occurrences.dart';
 import '../providers/day_event_counts.dart';
 import '../providers/my_day_event_counts.dart';
+import 'attendance_progress_icon.dart';
 
+/// A day of the calendar's month view: its date, the selected / today /
+/// camp-or-one-off highlight and, on the staff calendar, how far the day's
+/// attendance is taken in the bottom-right corner (club_client#414).
 class CalendarDayView extends ConsumerWidget {
   const CalendarDayView({
     required this.date,
@@ -28,6 +35,13 @@ class CalendarDayView extends ConsumerWidget {
   /// (`/myevents/{username}/...`). When null, the admin endpoint
   /// (`/occurrences/`) is used.
   final String? memberUsername;
+
+  /// The attendance mark's size, as a share of the cell's height.
+  static const double markShare = 0.25;
+
+  /// The attendance mark's gap from the cell's bottom-right corner, as a
+  /// share of the cell's height.
+  static const double markInset = 0.06;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -60,6 +74,21 @@ class CalendarDayView extends ConsumerWidget {
           orElse: () => false,
         );
 
+        // The staff calendar marks how far the day's attendance is taken,
+        // from the occurrence list the cells already read (club_client#414);
+        // the member's calendar does not.
+        final attendance = memberUsername != null
+            ? AttendanceProgress.none
+            : AttendanceProgress.ofDay([
+                for (final o
+                    in ref
+                            .watch(cachedOccurrencesProvider((range: range)))
+                            .data ??
+                        const <Occurrence>[])
+                  if (DateUtils.isSameDay(o.actualStartTimeUtc.toLocal(), date))
+                    o,
+              ]);
+
         Color? backgroundColor;
         if (isSelected) {
           backgroundColor = theme.colorScheme.selection;
@@ -76,14 +105,32 @@ class CalendarDayView extends ConsumerWidget {
             height: size.height,
             child: Container(
               decoration: BoxDecoration(color: backgroundColor),
-              alignment: Alignment.center,
-              child: Text(
-                date.day.toString(),
-                style: theme.textTheme.large.copyWith(
-                  color: isSelected
-                      ? theme.colorScheme.primaryForeground
-                      : null,
-                ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Center(
+                    child: Text(
+                      date.day.toString(),
+                      style: theme.textTheme.large.copyWith(
+                        color: isSelected
+                            ? theme.colorScheme.primaryForeground
+                            : null,
+                      ),
+                    ),
+                  ),
+                  if (attendance != AttendanceProgress.none)
+                    Positioned(
+                      right: size.height * markInset,
+                      bottom: size.height * markInset,
+                      child: AttendanceProgressIcon(
+                        progress: attendance,
+                        size: size.height * markShare,
+                        color: isSelected
+                            ? theme.colorScheme.primaryForeground
+                            : null,
+                      ),
+                    ),
+                ],
               ),
             ),
           ),

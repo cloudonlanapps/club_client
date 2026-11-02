@@ -7,12 +7,16 @@
 //  * Overlapping sessions sit side by side in the week view, each in the
 //    same lane in every cell it covers and each selectable; a session that
 //    overlaps nothing has the full width (club_client#420).
+//  * The Attendance button and the month view's day cell show ◐ once some
+//    members are marked and ✓ once all are, and nothing before
+//    (club_client#414).
 //
 // Setup (SDK, as the suite does for time-dependent fixtures): an admin who
-// organizes two camps, and a venue. The live camp runs one day, today,
-// starting ~25 minutes from now. The cancelled camp runs today and
-// tomorrow, starting half an hour after the live one, so the two overlap;
-// both of its days are cancelled.
+// organizes two camps, two members, and a venue. The live camp runs one
+// day, today, starting ~25 minutes from now, so its register is open (30
+// minutes ahead); both members are assigned to it before it starts. The
+// cancelled camp runs today and tomorrow, starting half an hour after the
+// live one, so the two overlap; both of its days are cancelled.
 //
 // Runs on both confs:
 //   just app-test-one app_test_server1.conf \
@@ -20,8 +24,12 @@
 //   just app-test-one app_test_server2.conf \
 //       workflow_staffcal_staff_calendar_sessions_test.dart
 
+import 'package:cl_club_events/src/models/attendance_progress.dart'
+    show AttendanceProgress;
 import 'package:cl_club_events/src/providers/selected_occurrence.dart'
     show selectedOccurrenceProvider;
+import 'package:cl_club_events/src/widgets/attendance_progress_icon.dart'
+    show AttendanceProgressIcon;
 import 'package:cl_club_events/src/widgets/calendar_day_view.dart'
     show CalendarDayView;
 import 'package:cl_club_events/src/widgets/calendar_grid.dart'
@@ -30,14 +38,20 @@ import 'package:cl_club_events/src/widgets/calendar_session_block.dart'
     show CalendarSessionBlock;
 import 'package:cl_club_events/src/widgets/calendar_slot_view.dart'
     show CalendarSlotView;
+import 'package:cl_club_events/src/widgets/cards/occurrence_card.dart'
+    show OccurrenceCard;
+import 'package:cl_member_zone/cl_member_zone.dart' show EventsCalendarScreen;
 import 'package:club_sdk_2/club_sdk_2.dart'
-    show EventType, Gender, SecureClient, Visibility;
+    show AttendanceStatus, EventType, Gender, SecureClient, Visibility;
 import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadTheme;
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show LucideIcons, ShadButton, ShadTheme;
 import 'package:ui_lib/ui_lib.dart' show FilmRollColorsExtension;
 
+import '_helpers/actions.dart';
+import '_helpers/attendance.dart';
 import '_helpers/auth.dart';
 import '_helpers/pump.dart';
 import '_helpers/surface.dart';
@@ -54,11 +68,13 @@ const _kSudoPassword = String.fromEnvironment('SUDO_PASSWORD');
 
 const _kPwd = 'WorkflowStaffcalPwd!2026';
 const _kAdmin = 'workflow_staffcal_admin';
+const _kM1 = 'workflow_staffcal_m1';
+const _kM2 = 'workflow_staffcal_m2';
 const _kVenue = 'workflow_staffcal_venue';
 const _kLiveCamp = 'workflow_staffcal_live';
 const _kCancelledCamp = 'workflow_staffcal_cancelled';
 
-const List<String> _kCast = [_kAdmin];
+const List<String> _kCast = [_kAdmin, _kM1, _kM2];
 
 /// How far ahead of setup the live session starts: inside the 30-minute
 /// register lead-in.
@@ -133,6 +149,9 @@ void main() {
       rrule: 'FREQ=DAILY;COUNT=1',
     );
     _liveId = live.id;
+    for (final member in const [_kM1, _kM2]) {
+      await client.enrollments.assign(_liveId, member);
+    }
     final cancelled = await client.events.createEvent(
       acceptConflicts: true,
       title: _kCancelledCamp,
@@ -337,6 +356,87 @@ void main() {
     },
     timeout: const Timeout(Duration(minutes: 10)),
   );
+
+  testWidgets(
+    'Issue 414: the Attendance button and the day cell show ◐ once some '
+    'members are marked and ✓ once all are',
+    (tester) async {
+      await useTestSurface(tester, const Size(1600, 3000));
+      await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
+      await ensureLoggedOut(tester);
+      await loginViaUi(tester, _kAdmin, _kPwd);
+
+      // ─── Nothing marked: no icon on the button or the day ─────────────
+      await _expectMarks(tester, null);
+
+      // ─── One of two marked: ◐ ─────────────────────────────────────────
+      await openRegisterViaCalendarViaUi(tester, eventTitle: _kLiveCamp);
+      await markInRegisterViaUi(tester, _kM1, AttendanceStatus.present);
+      await _expectMarks(tester, AttendanceProgress.partial);
+
+      // ─── Both marked: ✓ ───────────────────────────────────────────────
+      await openRegisterViaCalendarViaUi(tester, eventTitle: _kLiveCamp);
+      await markInRegisterViaUi(tester, _kM2, AttendanceStatus.absent);
+      await _expectMarks(tester, AttendanceProgress.complete);
+      await logout(tester);
+    },
+    timeout: const Timeout(Duration(minutes: 10)),
+  );
+}
+
+/// Opens the Club Calendar on today and waits until the live camp's
+/// Attendance button and today's cell both show [progress] (null: no mark).
+Future<void> _expectMarks(
+  WidgetTester tester,
+  AttendanceProgress? progress,
+) async {
+  await _openCalendar(tester);
+  final card = find.ancestor(
+    of: find.textContaining(_kLiveCamp),
+    matching: find.byType(OccurrenceCard),
+  );
+  await waitForInList(
+    tester,
+    card,
+    within: find.byType(EventsCalendarScreen),
+    description: 'the "$_kLiveCamp" occurrence on the Club Calendar',
+  );
+  await waitFor(
+    tester,
+    () => cardActions(tester, card.first).any((a) => a.label == 'Attendance'),
+    description: 'the Attendance action on "$_kLiveCamp"',
+  );
+  AttendanceProgress? markIn(Finder within) {
+    final found = find.descendant(
+      of: within,
+      matching: find.byType(AttendanceProgressIcon),
+    );
+    if (found.evaluate().isEmpty) return null;
+    return tester.widget<AttendanceProgressIcon>(found.first).progress;
+  }
+
+  final button = find.ancestor(
+    of: find.descendant(of: card.first, matching: find.text('Attendance')),
+    matching: find.byType(ShadButton),
+  );
+  final today = _dayCell(DateTime.now());
+  await waitFor(
+    tester,
+    () => markIn(button) == progress && markIn(today) == progress,
+    description:
+        "the Attendance button and today's cell marked "
+        '${progress?.name ?? 'with nothing'}',
+  );
+  if (progress != null) {
+    // Today is the selected day: the mark takes the selected text colour.
+    final mark = tester.widget<AttendanceProgressIcon>(
+      find.descendant(of: today, matching: find.byType(AttendanceProgressIcon)),
+    );
+    expect(
+      mark.color,
+      ShadTheme.of(tester.element(today)).colorScheme.primaryForeground,
+    );
+  }
 }
 
 const _kMinute = Duration(minutes: 1);

@@ -12,8 +12,10 @@ typedef ClOccurrencesKey = ({DateTime from, DateTime to});
 /// Read-only provider for occurrences within a date range (admin/coach).
 ///
 /// Restricted to the event types the club runs ([clubEventTypesProvider]).
-/// Watches `occurrencesVersion` from [clResourceVersionProvider] and
-/// refetches when any occurrence mutation bumps the version.
+/// Watches `occurrencesVersion` and `attendanceVersion` from
+/// [clResourceVersionProvider] and refetches when an occurrence mutation or
+/// an attendance change bumps either: each occurrence carries how many
+/// members its register expects and how many are marked.
 final AutoDisposeFutureProviderFamily<List<Occurrence>, ClOccurrencesKey>
 clOccurrencesProvider = FutureProvider.autoDispose
     .family<List<Occurrence>, ClOccurrencesKey>(
@@ -21,6 +23,11 @@ clOccurrencesProvider = FutureProvider.autoDispose
         ref
           ..watch(
             clResourceVersionProvider.select((s) => s.occurrencesVersion),
+          )
+          // Each occurrence carries its attendance counts
+          // (club_client#414), so a mark refetches the list.
+          ..watch(
+            clResourceVersionProvider.select((s) => s.attendanceVersion),
           )
           ..watch(clManualRefreshProvider);
         final types = ref.watch(clubEventTypesProvider);

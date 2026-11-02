@@ -4,6 +4,9 @@
 //  * A cancelled session is drawn striped in the week view, apart from a
 //    live one, and can still be selected; a day whose only sessions are
 //    cancelled has no highlight in the month view (club_client#419).
+//  * Overlapping sessions sit side by side in the week view, each in the
+//    same lane in every cell it covers and each selectable; a session that
+//    overlaps nothing has the full width (club_client#420).
 //
 // Setup (SDK, as the suite does for time-dependent fixtures): an admin who
 // organizes two camps, and a venue. The live camp runs one day, today,
@@ -256,6 +259,84 @@ void main() {
     },
     timeout: const Timeout(Duration(minutes: 10)),
   );
+
+  testWidgets(
+    'Issue 420: two overlapping sessions show in two lanes in the week view, '
+    'each keeping its lane and each selectable',
+    (tester) async {
+      await useTestSurface(tester, const Size(1600, 3000));
+      await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
+      await ensureLoggedOut(tester);
+      await loginViaUi(tester, _kAdmin, _kPwd);
+      await _openCalendar(tester);
+      await _showWeek(tester);
+
+      // The cell where both run: the live session left, the cancelled
+      // one right, each half the width.
+      final shared = _slotCell(_slotOf(_cancelledStartUtc));
+      await waitFor(
+        tester,
+        () => _blocksIn(tester, shared).length == 2,
+        description: 'both sessions in the shared cell',
+      );
+      final lanes = _laneRects(tester, shared);
+      expect(lanes.map((l) => l.$1.cancelled), [false, true]);
+      final half = _cellWidth(tester, shared) / 2;
+      expect(lanes[0].$2.width, closeTo(half, 1));
+      expect(lanes[1].$2.width, closeTo(half, 1));
+      expect(lanes[1].$2.left, closeTo(lanes[0].$2.right, 1));
+
+      // Each keeps its lane in a cell of its own.
+      final liveOnly = _laneRects(tester, _slotCell(_slotOf(_liveStartUtc)));
+      expect(liveOnly.map((l) => l.$1.cancelled), [false]);
+      expect(liveOnly.single.$2.left, closeTo(lanes[0].$2.left, 1));
+      expect(liveOnly.single.$2.width, closeTo(half, 1));
+      final cancelledOnly = _laneRects(
+        tester,
+        _slotCell(_slotOf(_cancelledStartUtc.add(_kSessionLength - _kMinute))),
+      );
+      expect(cancelledOnly.map((l) => l.$1.cancelled), [true]);
+      expect(cancelledOnly.single.$2.left, closeTo(lanes[1].$2.left, 1));
+
+      // Each lane selects its own session.
+      final blocks = find.descendant(
+        of: shared,
+        matching: find.byType(CalendarSessionBlock),
+      );
+      Finder lane({required bool cancelled}) => find.descendant(
+        of: shared,
+        matching: find.byWidgetPredicate(
+          (w) => w is CalendarSessionBlock && w.cancelled == cancelled,
+        ),
+      );
+      expect(blocks, findsNWidgets(2));
+      await _tapBlock(tester, lane(cancelled: true));
+      expect(
+        container(tester).read(selectedOccurrenceProvider)?.eventId,
+        _cancelledId,
+      );
+      await _tapBlock(tester, lane(cancelled: false));
+      expect(
+        container(tester).read(selectedOccurrenceProvider)?.eventId,
+        _liveId,
+      );
+
+      // Tomorrow's cancelled session overlaps nothing: the full width, when
+      // tomorrow is in this week.
+      final tomorrow = _cancelledStartUtc.add(const Duration(days: 1));
+      final tomorrowCell = _slotCell(_slotOf(tomorrow));
+      if (tomorrowCell.evaluate().isNotEmpty) {
+        final alone = _laneRects(tester, tomorrowCell);
+        expect(alone, hasLength(1));
+        expect(
+          alone.single.$2.width,
+          closeTo(_cellWidth(tester, tomorrowCell), 1),
+        );
+      }
+      await logout(tester);
+    },
+    timeout: const Timeout(Duration(minutes: 10)),
+  );
 }
 
 const _kMinute = Duration(minutes: 1);
@@ -349,6 +430,28 @@ List<CalendarSessionBlock> _blocksIn(WidgetTester tester, Finder cell) => tester
       find.descendant(of: cell, matching: find.byType(CalendarSessionBlock)),
     )
     .toList();
+
+/// The width the week view gives [cell]'s sessions.
+double _cellWidth(WidgetTester tester, Finder cell) =>
+    tester.widget<CalendarSlotView>(cell).size.width;
+
+/// The sessions drawn in [cell] with where they are, left to right.
+List<(CalendarSessionBlock, Rect)> _laneRects(
+  WidgetTester tester,
+  Finder cell,
+) {
+  final found = find.descendant(
+    of: cell,
+    matching: find.byType(CalendarSessionBlock),
+  );
+  return [
+    for (final e in found.evaluate())
+      (
+        e.widget as CalendarSessionBlock,
+        tester.getRect(find.byWidget(e.widget)),
+      ),
+  ]..sort((a, b) => a.$2.left.compareTo(b.$2.left));
+}
 
 /// Scrolls the week view to [block] and taps it.
 Future<void> _tapBlock(WidgetTester tester, Finder block) async {

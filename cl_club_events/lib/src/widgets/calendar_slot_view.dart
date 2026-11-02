@@ -1,17 +1,20 @@
 import 'package:cl_calendar/cl_calendar.dart';
 import 'package:club_sdk_2/club_sdk_2.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../providers/cached_date_items.dart';
 import '../providers/selected_occurrence.dart';
+import '../utils/session_lanes.dart';
 import 'calendar_session_block.dart';
 
-/// Renders a half-hour cell of the week view, coloured by the session at
-/// this time: a [CalendarSessionBlock], striped when the session was
-/// cancelled (club_client#419). Used as slotBuilder for WeekGrid/DayGrid.
+/// Renders a half-hour cell of the week view, coloured by the sessions at
+/// this time: each a [CalendarSessionBlock], striped when the session was
+/// cancelled (club_client#419). Sessions that overlap sit side by side in
+/// lanes worked out for the whole day ([sessionLanes]), so a session keeps
+/// its lane in every cell it covers, and each lane is its own tap target
+/// (club_client#420). Used as slotBuilder for WeekGrid/DayGrid.
 class CalendarSlotView extends ConsumerWidget {
   const CalendarSlotView({
     required this.slotTime,
@@ -44,49 +47,51 @@ class CalendarSlotView extends ConsumerWidget {
         final items = cached.data ?? [];
 
         final selectedKey = ref.watch(selectedOccurrenceProvider);
+        final now = refDate ?? DateTime.now().toUtc();
 
-        // Find item that overlaps with this slot
-        final item = items.firstWhereOrNull(
-          (item) => isInSlot(item.$1, slotTime),
-        );
-
-        final occurrence = item?.$1;
-        final event = item?.$2;
-
-        final isSelected =
-            occurrence != null &&
-            selectedKey?.eventId == occurrence.eventId &&
-            selectedKey?.originalStartTime == occurrence.originalStartTimeUtc;
+        // The day's sessions in their lanes; this cell draws those it
+        // overlaps, each in its lane's share of the width.
+        final inCell = sessionLanes(
+          items,
+        ).where((l) => isInSlot(l.item.$1, slotTime));
 
         final isSelectedDay = DateUtils.isSameDay(selectedDateTime, slotTime);
         final isInSelectedHour =
             isSelectedDay && slotTime.hour == selectedDateTime.hour;
 
-        final Widget? session;
-        Color? backgroundColor;
-        if (occurrence != null && event != null) {
-          final effectiveRefDate = refDate ?? DateTime.now().toUtc();
-          session = CalendarSessionBlock(
-            cancelled: occurrence.status == OccurrenceStatus.cancelled,
-            selected: isSelected,
-            past: occurrence.actualEndTimeUtc.isBefore(effectiveRefDate),
-          );
-        } else {
-          session = null;
-          if (isInSelectedHour) {
-            backgroundColor = theme.colorScheme.selection.withValues(
-              alpha: 0.3,
-            );
-          }
-        }
-
         return GestureDetector(
-          onTap: () => handleTap(ref, occurrence),
+          // A tap on a part of the cell no session covers.
+          onTap: () => handleTap(ref, null),
           child: Container(
             width: size.width,
             height: size.height,
-            color: backgroundColor,
-            child: session,
+            color: isInSelectedHour
+                ? theme.colorScheme.selection.withValues(alpha: 0.3)
+                : null,
+            child: Stack(
+              children: [
+                for (final l in inCell)
+                  Positioned(
+                    left: size.width * l.lane / l.lanes,
+                    width: size.width / l.lanes,
+                    top: 0,
+                    bottom: 0,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => handleTap(ref, l.item.$1),
+                      child: CalendarSessionBlock(
+                        cancelled:
+                            l.item.$1.status == OccurrenceStatus.cancelled,
+                        selected:
+                            selectedKey?.eventId == l.item.$1.eventId &&
+                            selectedKey?.originalStartTime ==
+                                l.item.$1.originalStartTimeUtc,
+                        past: l.item.$1.actualEndTimeUtc.isBefore(now),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         );
       },

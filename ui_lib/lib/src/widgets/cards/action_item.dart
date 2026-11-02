@@ -15,6 +15,7 @@ class ActionItem {
     this.destructive = false,
     this.popover,
     this.reason,
+    this.leading,
   });
 
   final String label;
@@ -29,6 +30,11 @@ class ActionItem {
   /// count. Generic: the widget says what it likes; nothing here knows what
   /// it is about.
   final WidgetBuilder? reason;
+
+  /// Drawn before the label inside the inline button, e.g. a state mark
+  /// such as how far attendance has been taken. Generic, like [reason]. The
+  /// overflow menu shows [icon] instead.
+  final WidgetBuilder? leading;
 
   /// Whether the action can be used: it is not [loading] and has either
   /// [onPressed] or [popover].

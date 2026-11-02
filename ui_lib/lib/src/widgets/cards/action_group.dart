@@ -103,6 +103,7 @@ class InlineActionButtonState extends State<InlineActionButton> {
           label: widget.item.label,
           loading: widget.item.loading,
           fitLabel: widget.fitLabel,
+          leading: widget.item.leading?.call(context),
           onPressed: widget.item.loading ? null : controller!.toggle,
         ),
       );
@@ -111,6 +112,7 @@ class InlineActionButtonState extends State<InlineActionButton> {
       label: widget.item.label,
       loading: widget.item.loading,
       fitLabel: widget.fitLabel,
+      leading: widget.item.leading?.call(context),
       onPressed: widget.item.onPressed,
     );
   }

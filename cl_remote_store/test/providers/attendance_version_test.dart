@@ -56,6 +56,35 @@ class _FakeAttendance extends Fake implements AttendanceSource {
   }) async {}
 }
 
+/// The staff occurrence list, carrying the register's counts from [_marks].
+class _FakeOccurrences extends Fake implements OccurrenceSource {
+  int reads = 0;
+
+  @override
+  Future<List<Occurrence>> listOccurrences({
+    required DateTime fromTimeUtc,
+    required DateTime toTimeUtc,
+    EventType? eventType,
+    Visibility? visibility,
+    int? limit,
+    int? offset,
+  }) async {
+    reads++;
+    return [
+      Occurrence(
+        eventId: _eventId,
+        originalStartTimeUtc: _time,
+        actualStartTimeUtc: _time,
+        actualEndTimeUtc: _time.add(const Duration(hours: 1)),
+        status: OccurrenceStatus.scheduled,
+        venueId: 1,
+        attendanceExpected: 2,
+        attendanceMarked: _marks.length,
+      ),
+    ];
+  }
+}
+
 class _FakeMyEvents extends Fake implements MyEventsSource {
   int attendanceListReads = 0;
   int occurrenceReads = 0;
@@ -132,17 +161,20 @@ void main() {
   );
 
   late _FakeMyEvents myEvents;
+  late _FakeOccurrences occurrenceSource;
   late ProviderContainer container;
 
   setUp(() {
     _marks.clear();
     myEvents = _FakeMyEvents();
+    occurrenceSource = _FakeOccurrences();
     container = ProviderContainer(
       overrides: [
         secureClientProvider.overrideWith(
           (ref) async => fakeSecureClient(
             attendance: _FakeAttendance(),
             myEvents: myEvents,
+            occurrences: occurrenceSource,
           ),
         ),
       ],
@@ -191,6 +223,42 @@ void main() {
       expect(after.single.status, AttendanceStatus.present);
       await container.read(clMyOccurrencesProvider(occurrencesKey).future);
       expect(myEvents.occurrenceReads, 2);
+    },
+  );
+
+  test(
+    'Issue 414: after markAttendance, the staff occurrence list refetches '
+    'with the new attendance counts',
+    () async {
+      final staffRange = (
+        from: DateTime.utc(2026, 10),
+        to: DateTime.utc(2026, 11),
+      );
+      final sub = container.listen(
+        clOccurrencesProvider(staffRange),
+        (_, _) {},
+      );
+      addTearDown(sub.close);
+      final before = await container.read(
+        clOccurrencesProvider(staffRange).future,
+      );
+      expect(before.single.attendanceMarked, 0);
+      expect(occurrenceSource.reads, 1);
+
+      await container
+          .read(clAttendancesMasterProvider(staffKey).notifier)
+          .markAttendance(const [
+            AttendanceMarkRecord(
+              membername: _member,
+              status: AttendanceStatus.present,
+            ),
+          ]);
+
+      final after = await container.read(
+        clOccurrencesProvider(staffRange).future,
+      );
+      expect(occurrenceSource.reads, 2);
+      expect(after.single.attendanceMarked, 1);
     },
   );
 

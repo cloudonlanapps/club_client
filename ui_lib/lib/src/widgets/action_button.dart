@@ -22,6 +22,7 @@ class ActionButton extends StatelessWidget {
     this.enabled = true,
     this.loading = false,
     this.fitLabel = false,
+    this.leading,
     this.child,
     super.key,
   });
@@ -36,6 +37,10 @@ class ActionButton extends StatelessWidget {
   /// bounded: a phone's action row, not a row that sizes to its children.
   final bool fitLabel;
 
+  /// Drawn before the label, e.g. a small state icon. Hidden while
+  /// [loading].
+  final Widget? leading;
+
   /// Optional custom child. When provided, replaces the default label text.
   /// The loading spinner still takes precedence when [loading] is true.
   final Widget? child;
@@ -48,6 +53,7 @@ class ActionButton extends StatelessWidget {
       size: ShadButtonSize.sm,
       enabled: enabled && !loading,
       onPressed: enabled && !loading ? onPressed : null,
+      leading: loading ? null : leading,
       child: loading
           ? const SizedBox(
               width: 14,

@@ -17,6 +17,7 @@ import '../../../utils/programme_end_date.dart';
 import '../../../utils/programme_end_date_messages.dart';
 import '../../../utils/read_programme_schedules.dart';
 import '../../../utils/save_confirming_schedule_clash.dart';
+import '../../attendance_progress_icon.dart';
 import '../../event_editor/event_cancellation_dialog.dart';
 import '../../event_editor/programme_end_date_dialog.dart';
 import 'manage_requests_dialog.dart';
@@ -92,6 +93,7 @@ class AdminOccurrenceActionsState
       switch (action) {
         AdminOccurrenceAction.attendance => ActionItem(
           label: 'Attendance',
+          leading: AttendanceProgressIcon.buttonMark(widget.occurrence),
           onPressed: () => widget.onMarkAttendance(
             widget.occurrence.eventId,
             widget.occurrence.originalStartTimeUtc,

@@ -58,13 +58,16 @@ class _NoCredit extends ClEventCreditRosterNotifier {
 }
 
 /// Pumps the register for a one-hour session that started at [startUtc],
-/// viewed by [viewer].
+/// viewed by [viewer]. [movedToUtc] is the session's new start when it was
+/// rescheduled; [startUtc] stays its slot key.
 Future<void> _pumpRegister(
   WidgetTester tester, {
   required UserPrivate viewer,
   required DateTime startUtc,
+  DateTime? movedToUtc,
 }) async {
   final endUtc = startUtc.add(const Duration(hours: 1));
+  final actualStartUtc = movedToUtc ?? startUtc;
   final event = Event(
     id: _eventId,
     title: 'Issue 211 Camp',
@@ -90,9 +93,11 @@ Future<void> _pumpRegister(
           (ref, key) async => Occurrence(
             eventId: _eventId,
             originalStartTimeUtc: startUtc,
-            actualStartTimeUtc: startUtc,
-            actualEndTimeUtc: endUtc,
-            status: OccurrenceStatus.scheduled,
+            actualStartTimeUtc: actualStartUtc,
+            actualEndTimeUtc: actualStartUtc.add(const Duration(hours: 1)),
+            status: movedToUtc == null
+                ? OccurrenceStatus.scheduled
+                : OccurrenceStatus.rescheduled,
             venueId: 1,
           ),
         ),
@@ -164,4 +169,39 @@ void main() {
       expect(find.textContaining('Edit window closed'), findsNothing);
     },
   );
+
+  testWidgets(
+    "Issue 413: the header names the session's local day and weekday",
+    (tester) async {
+      // 20:00 UTC is already the next day east of UTC: the day shown is the
+      // viewer's, not UTC's.
+      final startUtc = DateTime.utc(2026, 10, 31, 20);
+      await _pumpRegister(
+        tester,
+        viewer: _user('root413', superAdmin: true),
+        startUtc: startUtc,
+      );
+
+      final day = DateFormat('EEE d MMM y').format(startUtc.toLocal());
+      expect(find.text('Attendance · $day'), findsOneWidget);
+    },
+  );
+
+  testWidgets('Issue 413: a rescheduled session shows its new day', (
+    tester,
+  ) async {
+    final slotUtc = DateTime.utc(2026, 10, 28, 6);
+    final movedToUtc = DateTime.utc(2026, 10, 30, 6);
+    await _pumpRegister(
+      tester,
+      viewer: _user('root413', superAdmin: true),
+      startUtc: slotUtc,
+      movedToUtc: movedToUtc,
+    );
+
+    final newDay = DateFormat('EEE d MMM y').format(movedToUtc.toLocal());
+    final slotDay = DateFormat('EEE d MMM y').format(slotUtc.toLocal());
+    expect(find.text('Attendance · $newDay'), findsOneWidget);
+    expect(find.text('Attendance · $slotDay'), findsNothing);
+  });
 }

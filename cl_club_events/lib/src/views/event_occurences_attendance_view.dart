@@ -9,6 +9,7 @@ import 'package:ui_lib/ui_lib.dart' show TitleRow;
 
 import '../models/event_write_messages.dart';
 import '../utils/attendance_roster_builder.dart';
+import '../utils/attendance_session_subtitle.dart';
 import '../widgets/attendance_empty_roster.dart';
 import '../widgets/attendance_layout_toggle.dart';
 import '../widgets/attendance_roster_list.dart';
@@ -132,7 +133,7 @@ class EventOccurencesAttendanceViewState
       children: [
         TitleRow(
           title: event?.title ?? 'Event #${widget.eventId}',
-          subtitle: 'Attendance',
+          subtitle: attendanceSessionSubtitle(effectiveStartTimeUtc),
           onBack: widget.onBack,
         ),
         const Divider(height: 1),

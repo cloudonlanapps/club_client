@@ -10,8 +10,9 @@ const double kCardRadius = 8;
 const double kImageWidth = 64;
 
 /// Width at or below which [EntityCard] switches to its mobile layout —
-/// title/body in the top row and the primary action stacked as a full-width
-/// row beneath. Aliases the workspace-wide [Breakpoints.mobileMaxWidth].
+/// title/body in the top row and the actions in a row beneath, the primary
+/// action centred at its own width. Aliases the workspace-wide
+/// [Breakpoints.mobileMaxWidth].
 const double kEntityCardMobileBreakpoint = Breakpoints.mobileMaxWidth;
 
 /// Shared parent for every list-row entity card.
@@ -20,15 +21,16 @@ const double kEntityCardMobileBreakpoint = Breakpoints.mobileMaxWidth;
 /// `[image][InfoColumn(title, caption?, body?)][trailing?]`.
 /// On mobile (`maxWidth < kEntityCardMobileBreakpoint`):
 ///   * the row stays `[image][InfoColumn]` only,
-///   * the trailing action area drops to a full-width row underneath the
-///     info column.
+///   * the trailing action area drops to a row underneath the info column:
+///     the primary action (or the bespoke [trailingAction]) at its own
+///     width, centred, and the `⋮` menu at the row's right edge.
 ///
 /// Callers pass actions via one of two slots:
 ///   * [trailingActions] (typed) — preferred. The first action renders inline
 ///     on every viewport; the remaining actions collapse behind a `⋮` menu,
 ///     which is their one home on mobile and desktop alike.
 ///   * [trailingAction] (widget) — bespoke. Renders to the right on desktop
-///     and as a stacked full-width row on mobile.
+///     and centred, at its own size, in the row beneath on mobile.
 ///
 /// Image bleeds to the card's left edge with left-rounded corners that match
 /// the card chrome. The card never uses Material widgets — tap is wired via
@@ -66,8 +68,8 @@ class EntityCard extends StatelessWidget {
   final Widget? body;
 
   /// Bespoke trailing widget. On desktop it sits to the right of the info
-  /// column. On mobile it stacks as a full-width row beneath the info
-  /// column. The widget renders as-is.
+  /// column. On mobile it sits beneath the info column, centred at its own
+  /// size, never stretched.
   ///
   /// Prefer [trailingActions] when the trailing content is a list of
   /// [ActionItem]s — it gets primary-inline + overflow-menu treatment.
@@ -206,8 +208,8 @@ class EntityCard extends StatelessWidget {
     return trailingAction;
   }
 
-  /// Trailing content for the stacked mobile row. `null` means nothing to
-  /// stack below the info column.
+  /// Trailing content for the stacked mobile row, centred at its own
+  /// width. `null` means nothing to stack below the info column.
   Widget? _mobileTrailing() {
     final actions = trailingActions;
     if (actions != null && actions.isNotEmpty) {
@@ -216,7 +218,8 @@ class EntityCard extends StatelessWidget {
         overflow: actions.skip(1).toList(),
       );
     }
-    return trailingAction;
+    final bespoke = trailingAction;
+    return bespoke == null ? null : Center(child: bespoke);
   }
 
   static Widget _wrapTappable({
@@ -235,11 +238,17 @@ class EntityCard extends StatelessWidget {
   }
 }
 
-/// Full-width row used as the mobile-stacked action area. Renders the
-/// primary action as an `InlineActionButton`, preceded by its reason when
-/// it is disabled with one (as `ActionGroup` does on desktop), and, when
-/// there are more actions, the shared `OverflowActionMenu` that lists them —
-/// the only place secondary actions appear on mobile.
+/// Width of the slot that holds the `⋮` menu at the right of
+/// [MobilePrimaryActionRow]. The row keeps a slot as wide on its left, so
+/// the primary action stays centred under the card's text.
+const double kMobileOverflowSlotWidth = 48;
+
+/// The mobile-stacked action area, below the info column. The primary
+/// action keeps its own width and is centred in the row, preceded by its
+/// reason when it is disabled with one (as `ActionGroup` does on desktop);
+/// when there are more actions, the shared `OverflowActionMenu` that lists
+/// them sits at the row's right edge, the only place secondary actions
+/// appear on mobile.
 class MobilePrimaryActionRow extends StatelessWidget {
   const MobilePrimaryActionRow({
     required this.primary,
@@ -252,17 +261,33 @@ class MobilePrimaryActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasOverflow = overflow.isNotEmpty;
     return Row(
       children: [
-        if (primary.showsReason) ...[
-          Flexible(child: primary.reason!(context)),
-          const SizedBox(width: 4),
-        ],
-        Expanded(child: InlineActionButton(item: primary)),
-        if (overflow.isNotEmpty) ...[
-          const SizedBox(width: 4),
-          OverflowActionMenu(items: overflow),
-        ],
+        if (hasOverflow) const SizedBox(width: kMobileOverflowSlotWidth),
+        Expanded(
+          // Each child keeps its own width, centred; a shown reason too
+          // long to sit beside the button goes above it, and a label longer
+          // than the row ends in an ellipsis.
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 4,
+            runSpacing: 4,
+            children: [
+              if (primary.showsReason) primary.reason!(context),
+              InlineActionButton(item: primary, fitLabel: true),
+            ],
+          ),
+        ),
+        if (hasOverflow)
+          SizedBox(
+            width: kMobileOverflowSlotWidth,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: OverflowActionMenu(items: overflow),
+            ),
+          ),
       ],
     );
   }

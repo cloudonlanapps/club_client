@@ -21,6 +21,7 @@ class ActionButton extends StatelessWidget {
     this.onPressed,
     this.enabled = true,
     this.loading = false,
+    this.fitLabel = false,
     this.child,
     super.key,
   });
@@ -29,6 +30,11 @@ class ActionButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool enabled;
   final bool loading;
+
+  /// Whether the label shrinks, ending in an ellipsis, when the button is
+  /// given less width than it needs. Set it only where the button's width is
+  /// bounded: a phone's action row, not a row that sizes to its children.
+  final bool fitLabel;
 
   /// Optional custom child. When provided, replaces the default label text.
   /// The loading spinner still takes precedence when [loading] is true.
@@ -48,7 +54,17 @@ class ActionButton extends StatelessWidget {
               height: 14,
               child: CircularProgressIndicator(strokeWidth: 2),
             )
-          : child ?? Text(label, style: theme.textTheme.buttonLabel),
+          : child ??
+                (fitLabel
+                    ? Flexible(
+                        child: Text(
+                          label,
+                          style: theme.textTheme.buttonLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      )
+                    : Text(label, style: theme.textTheme.buttonLabel)),
     );
   }
 }

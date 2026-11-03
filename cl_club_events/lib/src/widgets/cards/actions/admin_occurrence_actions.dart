@@ -21,7 +21,7 @@ import '../../../utils/save_confirming_schedule_clash.dart';
 import '../../attendance_progress_icon.dart';
 import '../../event_editor/event_cancellation_dialog.dart';
 import '../../event_editor/programme_end_date_dialog.dart';
-import 'manage_requests_dialog.dart';
+import '../../requests/requests_sheet.dart';
 import 'occurrence_reschedule_dialog.dart';
 
 /// The staff actions of a single occurrence, as [adminOccurrenceActionsFor]
@@ -384,33 +384,9 @@ class AdminOccurrenceActionsState
     }
   }
 
-  /// Reloads the event's enrolments and opens Manage requests on the
-  /// pending ones, or says there are none.
-  Future<void> _handleManageRequests() async {
-    ref.invalidate(clEnrollmentsMasterProvider(widget.occurrence.eventId));
-    final enrollments = await ref.read(
-      clEnrollmentsMasterProvider(widget.occurrence.eventId).future,
-    );
-    final requesting = enrollments.entries
-        .where((e) => e.value == EnrollmentStatus.requested)
-        .map((e) => e.key)
-        .toList();
-    if (!mounted) return;
-    if (requesting.isEmpty) {
-      ShadToaster.of(context).show(
-        const ShadToast(description: Text('No pending requests.')),
-      );
-      return;
-    }
-    await showDialog<void>(
-      context: context,
-      builder: (_) => ManageRequestsDialog(
-        eventId: widget.occurrence.eventId,
-        requestingUsers: requesting,
-        onComplete: () {},
-      ),
-    );
-  }
+  /// Opens the Requests sheet of this session (club_client#437).
+  Future<void> _handleManageRequests() =>
+      showRequestsSheet(context, ref, occurrence: widget.occurrence);
 
   Future<void> _runAction(
     String key,

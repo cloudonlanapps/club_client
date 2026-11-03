@@ -10,17 +10,19 @@ import 'programme_end_date.dart';
 ///
 /// | Occurrence | Before `start − 30min` | From `start − 30min` |
 /// |---|---|---|
-/// | scheduled / rescheduled | [scheduledActionsFor] the event, and Manage requests | Attendance, until `end + 15d` (a super-admin: no end, then [lateSuperAdminActions] on a camp or programme) |
+/// | scheduled / rescheduled | [scheduledActionsFor] the event, and Manage requests (an assigned coach: Manage requests alone) | Attendance, until `end + 15d` (a super-admin: no end, then [lateSuperAdminActions] on a camp or programme) |
 /// | cancelled | Undo Cancel | Undo Cancel, a super-admin only |
 /// | cancelled one-off | Reinstate | Reinstate until the start, then none |
 /// | live one-off, for a super-admin | as above | Attendance, and Call off |
 /// | completed | none | Attendance, as above |
 ///
-/// Attendance is offered to the event's staff (`canManageAttendance`); every
-/// other action to its organizer or an admin only (`canManageEvent`), as the
-/// server requires (club_core#146). From 30 minutes before the start the
-/// server restores a cancelled occurrence for a super-admin only, and never
-/// record attendance on one (club_client#177).
+/// Attendance and Manage requests are offered to the event's staff
+/// (`canManageAttendance`): a coach assigned to the event decides leave in
+/// the Requests sheet and reads its enrolment requests (club_client#437).
+/// Every other action goes to its organizer or an admin only
+/// (`canManageEvent`), as the server requires (club_core#146). From 30
+/// minutes before the start the server restores a cancelled occurrence for
+/// a super-admin only, and never record attendance on one (club_client#177).
 ///
 /// A one-off is called off and reinstated through its own verbs (`drop`,
 /// `reinstate`), never the per-occurrence cancel and undo-cancel, which the
@@ -79,9 +81,13 @@ List<AdminOccurrenceAction> adminOccurrenceActionsFor({
   }
 
   // Past the edit window, the server rejects further mutations; the
-  // remaining actions are the organizer's or an admin's (club_core#146).
-  if (!inSchedulingWindow || !canManageEvent(event, actingUser)) {
-    return const [];
+  // remaining actions are the organizer's or an admin's (club_core#146),
+  // except Manage requests, which an assigned coach opens too (#437).
+  if (!inSchedulingWindow) return const [];
+  if (!canManageEvent(event, actingUser)) {
+    return isLive(occurrence) && canManageAttendance(event, actingUser)
+        ? const [AdminOccurrenceAction.manageRequests]
+        : const [];
   }
 
   // A rescheduled occurrence is still a live, future day: it offers the

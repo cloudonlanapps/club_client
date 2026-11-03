@@ -10,13 +10,22 @@
 //  * The Attendance button and the month view's day cell show ◐ once some
 //    members are marked and ✓ once all are, and nothing before
 //    (club_client#414).
+//  * A session that runs past midnight shows whole on the day it starts and
+//    nothing of it on the next day (club_client#435).
 //
 // Setup (SDK, as the suite does for time-dependent fixtures): an admin who
-// organizes two camps, two members, and a venue. The live camp runs one
-// day, today, starting ~25 minutes from now, so its register is open (30
-// minutes ahead); both members are assigned to it before it starts. The
-// cancelled camp runs today and tomorrow, starting half an hour after the
-// live one, so the two overlap; both of its days are cancelled.
+// organizes four camps, two members, and a venue.
+//
+//  * The register camp runs one day, today, starting 10-25 minutes from now
+//    on a quarter hour, so its register is open (30 minutes ahead); both
+//    members are assigned to it before it starts.
+//  * The lane camp runs next week's Tuesday, 10:00-11:00 local. The
+//    cancelled camp runs next week's Tuesday and Wednesday, 10:30-11:30, so
+//    the two overlap; both of its days are cancelled.
+//  * The midnight camp runs next week's Thursday, 23:30 to Friday 00:30.
+//
+// Only the register camp depends on the time of day; the others sit at
+// fixed local times next week so they never run into the day after.
 //
 // Runs on both confs:
 //   just app-test-one app_test_server1.conf \
@@ -72,19 +81,23 @@ const _kM1 = 'workflow_staffcal_m1';
 const _kM2 = 'workflow_staffcal_m2';
 const _kVenue = 'workflow_staffcal_venue';
 const _kLiveCamp = 'workflow_staffcal_live';
+const _kLaneCamp = 'workflow_staffcal_lanes';
 const _kCancelledCamp = 'workflow_staffcal_cancelled';
+const _kMidnightCamp = 'workflow_staffcal_midnight';
 
 const List<String> _kCast = [_kAdmin, _kM1, _kM2];
 
-/// How far ahead of setup the live session starts: inside the 30-minute
-/// register lead-in.
+/// At most how far ahead of setup the register session starts: inside the
+/// 30-minute register lead-in.
 const _kSessionLead = Duration(minutes: 25);
 
 /// How long each session runs.
 const _kSessionLength = Duration(hours: 1);
 
-/// How much later than the live session the cancelled one starts.
+/// How much later than the lane session the cancelled one starts.
 const _kCancelledOffset = Duration(minutes: 30);
+
+const _kHalfHour = Duration(minutes: 30);
 
 Future<SecureClient> _sudoClient() async {
   final c = await createTestClient(baseUrl: _kApiBaseUrl);
@@ -94,11 +107,19 @@ Future<SecureClient> _sudoClient() async {
 
 late int _venueId;
 late int _liveId;
+late int _laneId;
 late int _cancelledId;
+late int _midnightId;
 
-/// Today's live session, and the cancelled camp's today session.
+/// Today's register session.
 late DateTime _liveStartUtc;
+
+/// Next week's Tuesday: the lane session and the cancelled camp's first day.
+late DateTime _laneStartUtc;
 late DateTime _cancelledStartUtc;
+
+/// Next week's Thursday 23:30 local, running past midnight.
+late DateTime _midnightStartUtc;
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -133,9 +154,20 @@ void main() {
       soon.month,
       soon.day,
       soon.hour,
-      soon.minute,
+      soon.minute - soon.minute % 15,
     );
-    _cancelledStartUtc = _liveStartUtc.add(_kCancelledOffset);
+    final today = DateUtils.dateOnly(DateTime.now());
+    final nextMonday = today.add(Duration(days: 8 - today.weekday));
+    DateTime nextWeek(int day, int hour, int minute) => DateTime(
+      nextMonday.year,
+      nextMonday.month,
+      nextMonday.day + day,
+      hour,
+      minute,
+    ).toUtc();
+    _laneStartUtc = nextWeek(1, 10, 0);
+    _cancelledStartUtc = _laneStartUtc.add(_kCancelledOffset);
+    _midnightStartUtc = nextWeek(3, 23, 30);
     final live = await client.events.createEvent(
       acceptConflicts: true,
       title: _kLiveCamp,
@@ -152,6 +184,32 @@ void main() {
     for (final member in const [_kM1, _kM2]) {
       await client.enrollments.assign(_liveId, member);
     }
+    final lane = await client.events.createEvent(
+      acceptConflicts: true,
+      title: _kLaneCamp,
+      description: 'workflow_staffcal lane camp',
+      type: EventType.camp,
+      visibility: Visibility.public,
+      venueId: venue.id,
+      startTimeUtc: _laneStartUtc,
+      endTimeUtc: _laneStartUtc.add(_kSessionLength),
+      organizerName: _kAdmin,
+      rrule: 'FREQ=DAILY;COUNT=1',
+    );
+    _laneId = lane.id;
+    final midnight = await client.events.createEvent(
+      acceptConflicts: true,
+      title: _kMidnightCamp,
+      description: 'workflow_staffcal midnight camp',
+      type: EventType.camp,
+      visibility: Visibility.public,
+      venueId: venue.id,
+      startTimeUtc: _midnightStartUtc,
+      endTimeUtc: _midnightStartUtc.add(_kSessionLength),
+      organizerName: _kAdmin,
+      rrule: 'FREQ=DAILY;COUNT=1',
+    );
+    _midnightId = midnight.id;
     final cancelled = await client.events.createEvent(
       acceptConflicts: true,
       title: _kCancelledCamp,
@@ -185,7 +243,7 @@ void main() {
 
   tearDownAll(() async {
     final client = await _sudoClient();
-    for (final id in [_liveId, _cancelledId]) {
+    for (final id in [_liveId, _laneId, _cancelledId, _midnightId]) {
       try {
         await client.events.deleteEvent(id);
       } on Object catch (_) {}
@@ -226,8 +284,8 @@ void main() {
       // Give the month's sessions time to load before reading the colour.
       await waitFor(
         tester,
-        () => _dayCellColour(tester, _dayCell(_liveStartUtc.toLocal())) != null,
-        description: "today's cell drawn",
+        () => _dayCellColour(tester, _dayCell(_laneStartUtc.toLocal())) != null,
+        description: "the lane session's cell drawn",
       );
       await settle(tester);
       final highlight = ShadTheme.of(
@@ -242,8 +300,8 @@ void main() {
       );
 
       // ─── Week view: the cancelled session, striped ────────────────────
-      await _showWeek(tester);
-      // The last half-hour cell of the cancelled session is past the live
+      await _showWeekOf(tester, _cancelledStartUtc.toLocal());
+      // The last half-hour cell of the cancelled session is past the lane
       // one's end, so it holds the cancelled session alone.
       final onlyCancelled = _slotCell(
         _slotOf(_cancelledStartUtc.add(_kSessionLength - _kMinute)),
@@ -255,7 +313,7 @@ void main() {
       );
       final block = _blocksIn(tester, onlyCancelled).single;
       expect(block.cancelled, isTrue, reason: 'drawn as cancelled');
-      final liveCell = _slotCell(_slotOf(_liveStartUtc));
+      final liveCell = _slotCell(_slotOf(_laneStartUtc));
       expect(
         _blocksIn(tester, liveCell).map((b) => b.cancelled),
         contains(false),
@@ -288,9 +346,9 @@ void main() {
       await ensureLoggedOut(tester);
       await loginViaUi(tester, _kAdmin, _kPwd);
       await _openCalendar(tester);
-      await _showWeek(tester);
+      await _showWeekOf(tester, _cancelledStartUtc.toLocal());
 
-      // The cell where both run: the live session left, the cancelled
+      // The cell where both run: the lane session left, the cancelled
       // one right, each half the width.
       final shared = _slotCell(_slotOf(_cancelledStartUtc));
       await waitFor(
@@ -306,7 +364,7 @@ void main() {
       expect(lanes[1].$2.left, closeTo(lanes[0].$2.right, 1));
 
       // Each keeps its lane in a cell of its own.
-      final liveOnly = _laneRects(tester, _slotCell(_slotOf(_liveStartUtc)));
+      final liveOnly = _laneRects(tester, _slotCell(_slotOf(_laneStartUtc)));
       expect(liveOnly.map((l) => l.$1.cancelled), [false]);
       expect(liveOnly.single.$2.left, closeTo(lanes[0].$2.left, 1));
       expect(liveOnly.single.$2.width, closeTo(half, 1));
@@ -337,21 +395,65 @@ void main() {
       await _tapBlock(tester, lane(cancelled: false));
       expect(
         container(tester).read(selectedOccurrenceProvider)?.eventId,
-        _liveId,
+        _laneId,
       );
 
-      // Tomorrow's cancelled session overlaps nothing: the full width, when
-      // tomorrow is in this week.
+      // Wednesday's cancelled session overlaps nothing: the full width.
       final tomorrow = _cancelledStartUtc.add(const Duration(days: 1));
       final tomorrowCell = _slotCell(_slotOf(tomorrow));
-      if (tomorrowCell.evaluate().isNotEmpty) {
-        final alone = _laneRects(tester, tomorrowCell);
-        expect(alone, hasLength(1));
-        expect(
-          alone.single.$2.width,
-          closeTo(_cellWidth(tester, tomorrowCell), 1),
-        );
-      }
+      final alone = _laneRects(tester, tomorrowCell);
+      expect(alone, hasLength(1));
+      expect(
+        alone.single.$2.width,
+        closeTo(_cellWidth(tester, tomorrowCell), 1),
+      );
+      await logout(tester);
+    },
+    timeout: const Timeout(Duration(minutes: 10)),
+  );
+
+  testWidgets(
+    'Issue 435: a session that runs past midnight shows whole on the day it '
+    'starts and nothing of it on the next day',
+    (tester) async {
+      await useTestSurface(tester, const Size(1600, 3000));
+      await pumpApp(tester, apiBaseUrl: _kApiBaseUrl);
+      await ensureLoggedOut(tester);
+      await loginViaUi(tester, _kAdmin, _kPwd);
+      await _openCalendar(tester);
+      await _showWeekOf(tester, _midnightStartUtc.toLocal());
+
+      // Thursday 23:30: the session, alone, the full width.
+      final startCell = _slotCell(_slotOf(_midnightStartUtc));
+      await waitFor(
+        tester,
+        () => _blocksIn(tester, startCell).isNotEmpty,
+        description: 'the midnight session in its 23:30 cell',
+      );
+      final lanes = _laneRects(tester, startCell);
+      expect(lanes.map((l) => l.$1.cancelled), [false]);
+      expect(lanes.single.$2.width, closeTo(_cellWidth(tester, startCell), 1));
+
+      // Friday 00:00: the session's last half hour, but not its day.
+      final nextDayCell = _slotCell(_slotOf(_midnightStartUtc.add(_kHalfHour)));
+      expect(nextDayCell, findsOneWidget, reason: 'Friday is in this week');
+      expect(
+        _blocksIn(tester, nextDayCell),
+        isEmpty,
+        reason: 'a session shows on the day it starts only',
+      );
+
+      // Tapping it selects it.
+      await _tapBlock(
+        tester,
+        find.descendant(
+          of: startCell,
+          matching: find.byType(CalendarSessionBlock),
+        ),
+      );
+      final selected = container(tester).read(selectedOccurrenceProvider);
+      expect(selected?.eventId, _midnightId);
+      expect(selected?.originalStartTime, _midnightStartUtc);
       await logout(tester);
     },
     timeout: const Timeout(Duration(minutes: 10)),
@@ -479,6 +581,32 @@ Future<void> _showWeek(WidgetTester tester) async {
     () => find.byType(CalendarSlotView).evaluate().isNotEmpty,
     description: 'the week view',
   );
+}
+
+/// Switches to the week view and moves it to the week holding [day].
+Future<void> _showWeekOf(WidgetTester tester, DateTime day) async {
+  await _showWeek(tester);
+  final target = DateUtils.dateOnly(day);
+  for (var i = 0; i < 8; i++) {
+    final shown = tester
+        .widgetList<CalendarSlotView>(find.byType(CalendarSlotView))
+        .map((v) => DateUtils.dateOnly(v.slotTime))
+        .toSet();
+    if (shown.contains(target)) return;
+    final first = shown.reduce((a, b) => a.isBefore(b) ? a : b);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(CalendarGrid),
+        matching: find.byIcon(
+          target.isAfter(first)
+              ? LucideIcons.chevronRight
+              : LucideIcons.chevronLeft,
+        ),
+      ),
+    );
+    await settle(tester);
+  }
+  fail('the week view never showed the week of $target');
 }
 
 /// The month view's cell for [day].

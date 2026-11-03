@@ -22,6 +22,7 @@ import '../../attendance_progress_icon.dart';
 import '../../event_editor/event_cancellation_dialog.dart';
 import '../../event_editor/programme_end_date_dialog.dart';
 import '../../requests/requests_sheet.dart';
+import '../../requests_mark_icon.dart';
 import 'occurrence_reschedule_dialog.dart';
 
 /// The staff actions of a single occurrence, as [adminOccurrenceActionsFor]
@@ -151,6 +152,7 @@ class AdminOccurrenceActionsState
     AdminOccurrenceAction.manageRequests => ActionItem(
       label: 'Manage requests',
       icon: LucideIcons.userCheck,
+      leading: RequestsMarkIcon.buttonMark(widget.occurrence),
       loading: _running == 'requests',
       onPressed: _running != null
           ? null

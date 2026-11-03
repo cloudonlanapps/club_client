@@ -1180,6 +1180,75 @@ void main() {
     },
   );
 
+  group('Issue 439: Manage requests shows what is waiting', () {
+    /// Draws the Manage requests action of a future session carrying the
+    /// given counts, as a card does.
+    Future<void> pumpRequests(
+      WidgetTester tester, {
+      int leave = 0,
+      int enrollment = 0,
+      int withdrawal = 0,
+      int marked = 0,
+    }) async {
+      final actions = await _resolveActions(
+        tester,
+        _occurrence(OccurrenceStatus.scheduled).copyWith(
+          attendanceExpected: () => 5,
+          attendanceMarked: () => marked,
+          leaveRequestsPending: () => leave,
+          enrollmentRequestsPending: () => enrollment,
+          withdrawalRequestsPending: () => withdrawal,
+        ),
+      );
+      final requests = actions.singleWhere((a) => a.label == 'Manage requests');
+      await tester.pumpWidget(
+        ShadApp(
+          home: Scaffold(
+            body: Center(child: ActionGroup(actions: [requests])),
+          ),
+        ),
+      );
+    }
+
+    for (final (name, leave, enrollment, withdrawal) in [
+      ('a leave request', 1, 0, 0),
+      ('an enrollment request', 0, 1, 0),
+      ('a withdrawal request', 0, 0, 1),
+    ]) {
+      testWidgets('Issue 439: $name pending shows the hourglass', (
+        tester,
+      ) async {
+        await pumpRequests(
+          tester,
+          leave: leave,
+          enrollment: enrollment,
+          withdrawal: withdrawal,
+          marked: 1,
+        );
+        expect(find.byIcon(LucideIcons.hourglass), findsOneWidget);
+        expect(find.byIcon(LucideIcons.contrast), findsNothing);
+        expect(find.text('Manage requests'), findsOneWidget);
+      });
+    }
+
+    testWidgets('Issue 439: approved leave and nothing pending shows ◐', (
+      tester,
+    ) async {
+      await pumpRequests(tester, marked: 2);
+      expect(find.byIcon(LucideIcons.contrast), findsOneWidget);
+      expect(find.byIcon(LucideIcons.hourglass), findsNothing);
+    });
+
+    testWidgets('Issue 439: nothing waiting and no leave shows no mark', (
+      tester,
+    ) async {
+      await pumpRequests(tester);
+      expect(find.byIcon(LucideIcons.contrast), findsNothing);
+      expect(find.byIcon(LucideIcons.hourglass), findsNothing);
+      expect(find.text('Manage requests'), findsOneWidget);
+    });
+  });
+
   group('Issue 414: a session nobody is enrolled in', () {
     Occurrence withExpected(int? expected) =>
         _occurrenceAt(_inAttendanceWindow, OccurrenceStatus.scheduled).copyWith(

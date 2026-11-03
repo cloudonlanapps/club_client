@@ -310,7 +310,42 @@ void main() {
       'Manage requests',
     ];
 
-    testWidgets('Issue 146: a coach assigned to the event is offered none', (
+    testWidgets(
+      'Issue 437: a coach assigned to the event is offered Manage requests '
+      'alone on a future session, and nothing on a cancelled one',
+      (tester) async {
+        final user = _coach(_assignedCoach);
+        for (final status in [
+          OccurrenceStatus.scheduled,
+          OccurrenceStatus.rescheduled,
+        ]) {
+          expect(
+            await _resolveLabels(tester, _occurrence(status), user: user),
+            ['Manage requests'],
+            reason: '$status',
+          );
+        }
+        expect(
+          await _resolveLabels(
+            tester,
+            _occurrence(OccurrenceStatus.cancelled),
+            user: user,
+          ),
+          isEmpty,
+        );
+        expect(
+          await _resolveLabels(
+            tester,
+            _occurrenceAt(const Duration(days: -2), OccurrenceStatus.completed),
+            user: user,
+          ),
+          isNot(contains('Manage requests')),
+        );
+      },
+    );
+
+    testWidgets('Issue 146: a coach assigned to the event is offered none '
+        "of the organizer's actions", (
       tester,
     ) async {
       final user = _coach(_assignedCoach);
@@ -320,7 +355,13 @@ void main() {
           _occurrence(OccurrenceStatus.scheduled),
           user: user,
         ),
-        isEmpty,
+        isNot(
+          anyOf(
+            contains('Reschedule'),
+            contains('Cancel this occurrence'),
+            contains('Cancel entire series'),
+          ),
+        ),
       );
       expect(
         await _resolveLabels(

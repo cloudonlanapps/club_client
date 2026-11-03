@@ -2,6 +2,7 @@ import 'package:cl_member_auth/cl_member_auth.dart' show canManageEvent;
 import 'package:club_sdk_2/club_sdk_2.dart';
 
 import '../models/admin_occurrence_action.dart';
+import '../models/requests_mark.dart';
 import 'one_off_time_rules.dart';
 import 'programme_end_date.dart';
 
@@ -111,6 +112,24 @@ List<AdminOccurrenceAction> adminOccurrenceActionsFor({
       })
         action,
     AdminOccurrenceAction.manageRequests,
+  ];
+}
+
+/// [actions] with Manage requests moved to the front when [occurrence]
+/// has a requests mark (⏳ or ◐), so it is the card's visible action
+/// (club_client#441). Otherwise [actions] unchanged.
+List<AdminOccurrenceAction> leadWithRequests(
+  List<AdminOccurrenceAction> actions,
+  Occurrence occurrence,
+) {
+  if (RequestsMark.of(occurrence) == RequestsMark.none ||
+      !actions.contains(AdminOccurrenceAction.manageRequests)) {
+    return actions;
+  }
+  return [
+    AdminOccurrenceAction.manageRequests,
+    for (final a in actions)
+      if (a != AdminOccurrenceAction.manageRequests) a,
   ];
 }
 

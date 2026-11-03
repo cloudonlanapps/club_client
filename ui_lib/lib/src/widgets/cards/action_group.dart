@@ -161,15 +161,26 @@ class OverflowActionMenu extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                 ],
-                Text(
-                  items[i].label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: items[i].destructive
-                        ? theme.colorScheme.destructive
-                        : theme.colorScheme.foreground,
+                // A label too long for the menu ends in an ellipsis rather
+                // than overflowing the row.
+                Flexible(
+                  child: Text(
+                    items[i].label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: items[i].destructive
+                          ? theme.colorScheme.destructive
+                          : theme.colorScheme.foreground,
+                    ),
                   ),
                 ),
+                // The item's mark, as its inline button shows it (#441).
+                if (items[i].leading != null) ...[
+                  const SizedBox(width: 6),
+                  items[i].leading!(context),
+                ],
                 if (items[i].showsReason) ...[
                   const SizedBox(width: 8),
                   items[i].reason!(context),

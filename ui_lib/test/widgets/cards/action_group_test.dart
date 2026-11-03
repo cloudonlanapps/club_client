@@ -294,4 +294,45 @@ void main() {
       expect(find.text('No members enrolled'), findsNothing);
     });
   });
+
+  testWidgets("Issue 441: the overflow menu draws an item's mark", (
+    tester,
+  ) async {
+    await pump(tester, [
+      ActionItem(label: 'Reschedule', onPressed: () {}),
+      ActionItem(label: 'Cancel', onPressed: () {}),
+      ActionItem(
+        label: 'Manage requests',
+        onPressed: () {},
+        leading: (_) => const SizedBox(key: ValueKey('mark'), width: 8),
+      ),
+    ]);
+    expect(find.byKey(const ValueKey('mark')), findsNothing);
+    await tester.tap(find.byType(PopupMenuButton<int>));
+    await tester.pumpAndSettle();
+    expect(find.text('Manage requests'), findsOneWidget);
+    expect(find.byKey(const ValueKey('mark')), findsOneWidget);
+  });
+
+  testWidgets('Issue 441: inlineLimit 1 folds the second of two actions', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ShadApp(
+        home: Center(
+          child: ActionGroup(
+            inlineLimit: 1,
+            actions: [
+              ActionItem(label: 'Manage requests', onPressed: () {}),
+              ActionItem(label: 'Reschedule', onPressed: () {}),
+            ],
+          ),
+        ),
+      ),
+    );
+    expect(find.byType(ActionButton), findsOneWidget);
+    expect(find.text('Manage requests'), findsOneWidget);
+    expect(find.text('Reschedule'), findsNothing);
+    expect(find.byType(PopupMenuButton<int>), findsOneWidget);
+  });
 }

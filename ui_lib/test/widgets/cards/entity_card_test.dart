@@ -524,4 +524,45 @@ void main() {
       expect(rect.left, greaterThan(title.right));
     });
   });
+
+  testWidgets('Issue 441: titleTrailing sits beside the title', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      EntityCard(
+        image: EntityImage.placeholder(),
+        title: 'Morning batch',
+        titleTrailing: const SizedBox(key: ValueKey('mark'), width: 10),
+      ),
+    );
+    final title = tester.getRect(find.text('Morning batch'));
+    final mark = tester.getRect(find.byKey(const ValueKey('mark')));
+    expect(mark.left, greaterThanOrEqualTo(title.right));
+    expect(mark.center.dy, closeTo(title.center.dy, title.height));
+  });
+
+  testWidgets('Issue 441: actionsInlineLimit 1 shows one button on a wide '
+      'card', (tester) async {
+    await tester.pumpWidget(
+      ShadApp(
+        home: Center(
+          child: SizedBox(
+            width: 900,
+            child: EntityCard(
+              image: EntityImage.placeholder(),
+              title: 'Morning batch',
+              actionsInlineLimit: 1,
+              trailingActions: [
+                ActionItem(label: 'Manage requests', onPressed: () {}),
+                ActionItem(label: 'Reschedule', onPressed: () {}),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Manage requests'), findsOneWidget);
+    expect(find.text('Reschedule'), findsNothing);
+  });
 }

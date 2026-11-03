@@ -44,6 +44,8 @@ class EntityCard extends StatelessWidget {
     this.body,
     this.trailingAction,
     this.trailingActions,
+    this.actionsInlineLimit = 2,
+    this.titleTrailing,
     this.onTap,
     this.dense = false,
     this.muted = false,
@@ -79,6 +81,15 @@ class EntityCard extends StatelessWidget {
   /// inline on every viewport. On mobile the remaining entries are exposed
   /// through a `⋮` overflow menu at the end of the primary action's row.
   final List<ActionItem>? trailingActions;
+
+  /// How many of [trailingActions] may render inline on a wide card before
+  /// the rest fold behind `⋮` ([ActionGroup.inlineLimit]). On mobile only
+  /// the first is inline whatever this says.
+  final int actionsInlineLimit;
+
+  /// Optional small widget beside the title, such as a state mark
+  /// (club_client#441).
+  final Widget? titleTrailing;
 
   /// Whole-card tap handler. `null` makes the card non-tappable.
   final VoidCallback? onTap;
@@ -120,11 +131,21 @@ class EntityCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          title,
-          style: titleStyle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                title,
+                style: titleStyle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (titleTrailing != null) ...[
+              const SizedBox(width: 6),
+              titleTrailing!,
+            ],
+          ],
         ),
         if (caption != null && caption!.isNotEmpty) ...[
           const SizedBox(height: 4),
@@ -203,7 +224,10 @@ class EntityCard extends StatelessWidget {
   /// Trailing widget to render on desktop. `null` means no trailing slot.
   Widget? _desktopTrailing() {
     if (trailingActions != null && trailingActions!.isNotEmpty) {
-      return ActionGroup(actions: trailingActions!);
+      return ActionGroup(
+        actions: trailingActions!,
+        inlineLimit: actionsInlineLimit,
+      );
     }
     return trailingAction;
   }

@@ -56,6 +56,9 @@ class AdminOccurrenceActions extends ConsumerStatefulWidget {
       AdminOccurrenceActionsState();
 }
 
+/// The label of [AdminOccurrenceAction.manageRequests].
+const String manageRequestsLabel = 'Manage requests';
+
 /// The label of [AdminOccurrenceAction.endProgramme].
 const String endProgrammeLabel = 'End programme from here';
 
@@ -80,10 +83,13 @@ class AdminOccurrenceActionsState
         .valueOrNull?[widget.occurrence.eventId];
     if (actingUser == null || event == null) return const [];
     return [
-      for (final action in adminOccurrenceActionsFor(
-        occurrence: widget.occurrence,
-        event: event,
-        actingUser: actingUser,
+      for (final action in leadWithRequests(
+        adminOccurrenceActionsFor(
+          occurrence: widget.occurrence,
+          event: event,
+          actingUser: actingUser,
+        ),
+        widget.occurrence,
       ))
         _itemFor(action, event, actingUser),
     ];
@@ -150,7 +156,7 @@ class AdminOccurrenceActionsState
           : () => _runAction('call-off', () => _callOff(event)),
     ),
     AdminOccurrenceAction.manageRequests => ActionItem(
-      label: 'Manage requests',
+      label: manageRequestsLabel,
       icon: LucideIcons.userCheck,
       leading: RequestsMarkIcon.buttonMark(widget.occurrence),
       loading: _running == 'requests',

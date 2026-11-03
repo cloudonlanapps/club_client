@@ -8,6 +8,9 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:ui_lib/ui_lib.dart';
 
 import '../../models/attendance_progress.dart';
+import '../../models/requests_mark.dart';
+import '../attendance_progress_icon.dart';
+import '../requests_mark_icon.dart';
 import 'actions/admin_occurrence_actions.dart';
 import 'actions/user_occurrence_actions.dart';
 import 'attendance_badge.dart';
@@ -105,6 +108,8 @@ class OccurrenceCard extends ConsumerWidget {
     EntityCard card({
       Widget? trailingAction,
       List<ActionItem>? trailingActions,
+      Widget? titleTrailing,
+      int actionsInlineLimit = 2,
     }) => EntityCard(
       image: EntityImage.placeholder(),
       title: title,
@@ -117,6 +122,8 @@ class OccurrenceCard extends ConsumerWidget {
       ),
       trailingAction: trailingAction,
       trailingActions: trailingActions,
+      titleTrailing: titleTrailing,
+      actionsInlineLimit: actionsInlineLimit,
       onTap: onTap,
       dense: dense,
       muted: muted,
@@ -127,8 +134,24 @@ class OccurrenceCard extends ConsumerWidget {
       return AdminOccurrenceActions(
         occurrence: occurrence,
         onMarkAttendance: onMarkAttendance!,
-        builder: (context, actions) =>
-            card(trailingActions: actions.isEmpty ? null : actions),
+        builder: (context, actions) {
+          // Manage requests leads when the session has a requests mark:
+          // the card shows that mark by its title and keeps the one button
+          // in view, Reschedule and the rest behind ⋮ (club_client#441).
+          final leads =
+              actions.isNotEmpty && actions.first.label == manageRequestsLabel;
+          final mark = RequestsMark.of(occurrence);
+          return card(
+            trailingActions: actions.isEmpty ? null : actions,
+            titleTrailing: leads && mark != RequestsMark.none
+                ? RequestsMarkIcon(
+                    mark: mark,
+                    size: AttendanceProgressIcon.buttonSize,
+                  )
+                : null,
+            actionsInlineLimit: leads ? 1 : 2,
+          );
+        },
       );
     }
 

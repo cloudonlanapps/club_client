@@ -117,12 +117,14 @@ List<AdminOccurrenceAction> adminOccurrenceActionsFor({
 
 /// [actions] with Manage requests moved to the front when [occurrence]
 /// has a requests mark (⏳ or ◐), so it is the card's visible action
-/// (club_client#441). Otherwise [actions] unchanged.
+/// (club_client#441). Otherwise [actions] unchanged. While Attendance is
+/// offered it stays first (club_client#444).
 List<AdminOccurrenceAction> leadWithRequests(
   List<AdminOccurrenceAction> actions,
   Occurrence occurrence,
 ) {
   if (RequestsMark.of(occurrence) == RequestsMark.none ||
+      actions.contains(AdminOccurrenceAction.attendance) ||
       !actions.contains(AdminOccurrenceAction.manageRequests)) {
     return actions;
   }

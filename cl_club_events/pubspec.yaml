@@ -32,7 +32,7 @@ dependencies:
   club_sdk_2:
     git:
       url: https://github.com/cloudonlanapps/club_sdk.git
-      ref: 6394fdb668988092b3f6373c52bfdd4c1f29f3d9
+      ref: 7d9be5552a31807d81993288b9e55aff3c36598f
   collection: 1.19.1
   flutter:
     sdk: flutter

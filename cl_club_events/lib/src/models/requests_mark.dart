@@ -13,14 +13,19 @@ enum RequestsMark {
 
   /// The mark of [occurrence], from the counts the staff occurrence list
   /// carries (club_server#142, #153). A future session's marked members are
-  /// its approved leave, since nobody is marked before it starts.
-  static RequestsMark of(Occurrence occurrence) {
+  /// its approved leave, since nobody is marked before it starts. Once it
+  /// has started they are its attendance, so a started session never shows
+  /// ◐ (club_client#444).
+  static RequestsMark of(Occurrence occurrence, {DateTime? now}) {
     final pending =
         (occurrence.leaveRequestsPending ?? 0) +
         (occurrence.enrollmentRequestsPending ?? 0) +
         (occurrence.withdrawalRequestsPending ?? 0);
     if (pending > 0) return RequestsMark.pending;
-    if ((occurrence.attendanceMarked ?? 0) > 0) {
+    final started = !(now ?? DateTime.now()).toUtc().isBefore(
+      occurrence.actualStartTimeUtc,
+    );
+    if (!started && (occurrence.attendanceMarked ?? 0) > 0) {
       return RequestsMark.approvedLeave;
     }
     return RequestsMark.none;

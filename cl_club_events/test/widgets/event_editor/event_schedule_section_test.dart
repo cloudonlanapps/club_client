@@ -1,5 +1,5 @@
 import 'package:cl_club_events/src/models/camp_schedule_form_helpers.dart'
-    show campStartedMessage;
+    show campAttendanceRecordedMessage;
 import 'package:cl_club_events/src/widgets/event_editor/event_schedule_section.dart';
 import 'package:cl_club_forms/cl_club_forms.dart'
     show
@@ -36,6 +36,20 @@ Event _event(EventType type, {required DateTime startUtc}) => Event(
   updatedAtUtc: DateTime.utc(2026),
   rrule: type == EventType.oneOff ? null : 'FREQ=DAILY;COUNT=5',
 );
+
+/// A session of event 1 starting at [start] with one member marked: the
+/// camp's dates are then frozen (club_client#443).
+List<Occurrence> _marked(DateTime start) => [
+  Occurrence(
+    eventId: 1,
+    originalStartTimeUtc: start,
+    actualStartTimeUtc: start,
+    actualEndTimeUtc: start.add(const Duration(hours: 2)),
+    status: OccurrenceStatus.scheduled,
+    venueId: 7,
+    attendanceMarked: 1,
+  ),
+];
 
 DateTime _hoursFromNow(int hours) {
   final t = DateTime.now().toUtc().add(Duration(hours: hours));
@@ -117,6 +131,7 @@ Future<_RecordingEvents> _pump(
   WidgetTester tester,
   Event event, {
   List<EventSchedule> schedules = const [],
+  List<Occurrence> occurrences = const [],
 }) async {
   tester.view.physicalSize = const Size(1200, 2400);
   tester.view.devicePixelRatio = 1;
@@ -127,7 +142,7 @@ Future<_RecordingEvents> _pump(
     ProviderScope(
       overrides: [
         clEventsMasterProvider.overrideWith(() => events),
-        clOccurrencesProvider.overrideWith((ref, key) async => const []),
+        clOccurrencesProvider.overrideWith((ref, key) async => occurrences),
         clEventSchedulesProvider.overrideWith((ref, id) async => schedules),
       ],
       child: ShadApp(
@@ -175,21 +190,34 @@ void main() {
   ) async {
     await _pump(tester, _event(EventType.camp, startUtc: _hoursFromNow(72)));
 
-    expect(find.text(campStartedMessage), findsNothing);
+    expect(find.text(campAttendanceRecordedMessage), findsNothing);
     await _openEditor(tester);
     expect(find.byType(CampScheduleForm), findsOneWidget);
   });
 
   testWidgets(
-    'Issue 85: a started camp says its dates are fixed and corrects its '
-    'timetable through updateEvent',
+    'Issue 443: a started camp with no attendance edits its whole schedule',
     (tester) async {
+      await _pump(tester, _event(EventType.camp, startUtc: _hoursFromNow(-30)));
+
+      expect(find.text(campAttendanceRecordedMessage), findsNothing);
+      await _openEditor(tester);
+      expect(find.byType(CampScheduleForm), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Issue 85: a camp with attendance recorded says its dates are fixed '
+    'and corrects its timetable through updateEvent',
+    (tester) async {
+      final start = _hoursFromNow(-30);
       final events = await _pump(
         tester,
-        _event(EventType.camp, startUtc: _hoursFromNow(-30)),
+        _event(EventType.camp, startUtc: start),
+        occurrences: _marked(start),
       );
 
-      expect(find.text(campStartedMessage), findsOneWidget);
+      expect(find.text(campAttendanceRecordedMessage), findsOneWidget);
       await _openEditor(tester);
       expect(find.byType(CampScheduleForm), findsNothing);
       expect(find.byType(EventTimetableForm), findsOneWidget);
@@ -247,6 +275,7 @@ void main() {
       final events = await _pump(
         tester,
         _event(EventType.camp, startUtc: _hoursFromNow(-30)),
+        occurrences: _marked(_hoursFromNow(-30)),
       );
       events.error = const ServerException(
         statusCode: 422,
@@ -297,6 +326,7 @@ void main() {
     final events = await _pump(
       tester,
       _event(EventType.camp, startUtc: _hoursFromNow(-30)),
+      occurrences: _marked(_hoursFromNow(-30)),
     );
     events.error = const ServerException(
       statusCode: 422,

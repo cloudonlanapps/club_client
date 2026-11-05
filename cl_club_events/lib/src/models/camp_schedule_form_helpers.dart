@@ -63,40 +63,52 @@ CampScheduleData buildCampScheduleInitialValues(Event event) {
 /// never offer an edit the server will reject:
 ///
 /// - a cancelled series is terminal (`isEventSeriesCancelled`);
-/// - the series must not have started — the server rejects once the first
-///   occurrence is in the past (or any attendance exists). We approximate with
-///   the series anchor [Event.startTimeUtc]; if attendance pushes the server to
-///   reject anyway, the caller surfaces a friendly error.
+/// - once attendance (leave included) is recorded against any session the
+///   dates are frozen, since attendance is keyed by session time (camp R2c).
+///   A start in the past alone does not freeze them (club_client#443).
 ///
 /// Drives the read-only lock hint shown to an admin who can't edit. Role gating
 /// (admin) stays with the caller.
-String? campRescheduleLockReason(Event event, {DateTime? now}) {
+String? campRescheduleLockReason(
+  Event event, {
+  required bool attendanceRecorded,
+}) {
   if (isEventSeriesCancelled(event)) {
     return 'This series has been cancelled, so its schedule can no longer be '
         'edited.';
   }
-  final nowUtc = (now ?? DateTime.now()).toUtc();
-  if (!event.startTimeUtc.isAfter(nowUtc)) return campStartedMessage;
+  if (attendanceRecorded) return campAttendanceRecordedMessage;
   return null;
 }
 
-/// Why a started camp's dates are fixed, and what can still change: its
-/// timetable (club_core#85).
-const String campStartedMessage =
-    'This camp has started, so its dates can no longer be changed. Its '
-    'timetable can still be corrected.';
+/// Why a camp's dates are fixed once attendance is recorded, and what can
+/// still change: its timetable (club_core#85, club_client#443).
+const String campAttendanceRecordedMessage =
+    'Attendance has been recorded for this camp, so its dates can no longer '
+    'be changed. Its timetable can still be corrected.';
 
-/// Whether [event] is a camp that has started and is not cancelled: its
+/// Whether [event] is a camp, not cancelled, with attendance recorded: its
 /// dates are fixed, and only its timetable can be corrected.
-bool isCampTimetableOnly(Event event, {DateTime? now}) =>
+bool isCampTimetableOnly(Event event, {required bool attendanceRecorded}) =>
     event.type == EventType.camp &&
     !isEventSeriesCancelled(event) &&
-    !event.startTimeUtc.isAfter((now ?? DateTime.now()).toUtc());
+    attendanceRecorded;
 
 /// Whether [event]'s schedule may be rescheduled right now — the inverse of a
 /// non-null [campRescheduleLockReason].
-bool canRescheduleCamp(Event event, {DateTime? now}) =>
-    campRescheduleLockReason(event, now: now) == null;
+bool canRescheduleCamp(Event event, {required bool attendanceRecorded}) =>
+    campRescheduleLockReason(event, attendanceRecorded: attendanceRecorded) ==
+    null;
+
+/// Whether any of [occurrences] of the event [eventId] has a mark or a
+/// pending leave request, from the counts the staff occurrence list
+/// carries: the server then refuses to move the camp's dates (camp R2c).
+bool hasRecordedAttendance(Iterable<Occurrence> occurrences, int eventId) =>
+    occurrences.any(
+      (o) =>
+          o.eventId == eventId &&
+          ((o.attendanceMarked ?? 0) > 0 || (o.leaveRequestsPending ?? 0) > 0),
+    );
 
 /// Schedule fields assembled from a [CampScheduleData], ready for the SDK.
 typedef CampScheduleFields = ({

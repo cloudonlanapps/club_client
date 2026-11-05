@@ -9,13 +9,15 @@
 // the server refuses once the camp has started.
 //
 // Setup (SDK, as the suite does for time-dependent fixtures): an admin, a
-// venue, a 5-day camp whose first day was yesterday and a daily programme
-// whose first session was ten days ago, each two hours long.
+// member, a venue, a 5-day camp whose first day was yesterday, with the
+// member marked present that day (its dates are frozen only once attendance
+// is recorded, club_client#443), and a daily programme whose first session
+// was ten days ago, each two hours long.
 //
 // Steps (UI), for the camp and then the programme:
 //  1. The admin opens the event from its staff list; the Schedule section
-//     offers the timetable editor (for the camp, with a note that its dates
-//     are fixed).
+//     offers the timetable editor (for the camp, with a note that attendance
+//     has been recorded, so its dates are fixed).
 //  2. They split the day into "Warm-up" (30 min) and "Drills" (90 min) and
 //     save.
 // Then the server is asked for the event: the sessions are corrected, the
@@ -29,7 +31,7 @@
 
 import 'package:cl_club_events/cl_club_events.dart' show EventDetailsView;
 import 'package:cl_club_events/src/models/camp_schedule_form_helpers.dart'
-    show campStartedMessage;
+    show campAttendanceRecordedMessage;
 import 'package:cl_club_forms/cl_club_forms.dart'
     show
         EventTimetableForm,
@@ -39,7 +41,14 @@ import 'package:cl_club_forms/cl_club_forms.dart'
 import 'package:cl_remote_store/cl_remote_store.dart'
     show clEventsMasterProvider;
 import 'package:club_sdk_2/club_sdk_2.dart'
-    show Event, EventType, Gender, SecureClient, Visibility;
+    show
+        AttendanceMarkRecord,
+        AttendanceStatus,
+        Event,
+        EventType,
+        Gender,
+        SecureClient,
+        Visibility;
 import 'package:flutter/material.dart' hide Visibility;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -64,6 +73,7 @@ const _kSudoPassword = String.fromEnvironment('SUDO_PASSWORD');
 
 const _kPwd = 'WorkflowTimetablePwd!2026';
 const _kAdmin = 'workflow_timetable_admin';
+const _kMember = 'workflow_timetable_member';
 const _kVenue = 'workflow_timetable_venue';
 const _kCamp = 'workflow_timetable_camp';
 const _kProgramme = 'workflow_timetable_programme';
@@ -105,16 +115,21 @@ void main() {
 
   setUpAll(() async {
     final client = await _sudoClient();
-    await client.users.createUser(
-      username: _kAdmin,
-      passwordHash: _kPwd,
-      firstName: 'WTimetable',
-      lastName: 'admin',
-      phone: '7400543210',
-      email: '$_kAdmin@example.com',
-      gender: Gender.preferNotToSay,
-      dateOfBirthUtc: DateTime.utc(2000, 1, 1),
-    );
+    for (final (username, last) in const [
+      (_kMember, 'member'),
+      (_kAdmin, 'admin'),
+    ]) {
+      await client.users.createUser(
+        username: username,
+        passwordHash: _kPwd,
+        firstName: 'WTimetable',
+        lastName: last,
+        phone: '7400543210',
+        email: '$username@example.com',
+        gender: Gender.preferNotToSay,
+        dateOfBirthUtc: DateTime.utc(2000, 1, 1),
+      );
+    }
     await client.users.assignRole(_kAdmin, 'admin');
     final venue = await client.venues.createVenue(name: _kVenue);
     _venueId = venue.id;
@@ -131,6 +146,18 @@ void main() {
       organizerName: _kAdmin,
       rrule: 'FREQ=DAILY;COUNT=5',
     );
+    await client.enrollments.assign(_camp.id, _kMember);
+    final report = await client.attendance.markAttendance(
+      _camp.id,
+      campStart,
+      const [
+        AttendanceMarkRecord(
+          membername: _kMember,
+          status: AttendanceStatus.present,
+        ),
+      ],
+    );
+    expect(report.refused, isEmpty, reason: 'the camp has attendance');
     // Three hours before the camp's hour, so their sessions never overlap:
     // the server refuses a venue or organizer clash (club_server#74).
     final programmeStart = _daysAgo(10).subtract(const Duration(hours: 3));
@@ -160,9 +187,11 @@ void main() {
     try {
       await client.venues.deleteVenue(_venueId);
     } on Object catch (_) {}
-    try {
-      await client.users.deleteUser(_kAdmin);
-    } on Object catch (_) {}
+    for (final username in const [_kAdmin, _kMember]) {
+      try {
+        await client.users.deleteUser(username);
+      } on Object catch (_) {}
+    }
     await client.auth.logout();
   });
 
@@ -178,7 +207,7 @@ void main() {
       // ─── 1. The started camp: its dates are fixed, its timetable is not ─
       await _openDetail(tester, list: 'camps', title: _kCamp);
       expect(
-        find.text(campStartedMessage),
+        find.text(campAttendanceRecordedMessage),
         findsOneWidget,
         reason: 'the Schedule section says only the timetable can change',
       );

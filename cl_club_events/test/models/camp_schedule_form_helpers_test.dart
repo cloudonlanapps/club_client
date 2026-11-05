@@ -190,24 +190,31 @@ void main() {
   });
 
   group('Issue 705: canRescheduleCamp', () {
-    final now = DateTime.utc(2026, 8, 1, 12);
-
     test('true for a future camp', () {
       final event = _event(
         startTimeUtc: DateTime.utc(2026, 8, 2, 6),
         endTimeUtc: DateTime.utc(2026, 8, 2, 8),
         rrule: 'FREQ=DAILY;COUNT=3',
       );
-      expect(canRescheduleCamp(event, now: now), isTrue);
+      expect(canRescheduleCamp(event, attendanceRecorded: false), isTrue);
     });
 
-    test('false once the camp has started', () {
+    test('Issue 443: true for a started camp with no attendance', () {
       final event = _event(
         startTimeUtc: DateTime.utc(2026, 7, 30, 6),
         endTimeUtc: DateTime.utc(2026, 7, 30, 8),
         rrule: 'FREQ=DAILY;COUNT=3',
       );
-      expect(canRescheduleCamp(event, now: now), isFalse);
+      expect(canRescheduleCamp(event, attendanceRecorded: false), isTrue);
+    });
+
+    test('Issue 443: false once attendance is recorded', () {
+      final event = _event(
+        startTimeUtc: DateTime.utc(2026, 7, 30, 6),
+        endTimeUtc: DateTime.utc(2026, 7, 30, 8),
+        rrule: 'FREQ=DAILY;COUNT=3',
+      );
+      expect(canRescheduleCamp(event, attendanceRecorded: true), isFalse);
     });
 
     test('false for a cancelled series', () {
@@ -217,30 +224,31 @@ void main() {
         rrule: 'FREQ=DAILY;COUNT=3',
         untilTimeUtc: DateTime.utc(2026, 8, 1),
       );
-      expect(canRescheduleCamp(event, now: now), isFalse);
+      expect(canRescheduleCamp(event, attendanceRecorded: false), isFalse);
     });
   });
 
   group('Issue 85: isCampTimetableOnly', () {
-    final now = DateTime.utc(2026, 8, 1, 12);
+    final started = _event(
+      startTimeUtc: DateTime.utc(2026, 7, 30, 6),
+      endTimeUtc: DateTime.utc(2026, 7, 30, 8),
+      rrule: 'FREQ=DAILY;COUNT=3',
+    );
 
-    test('Issue 85: false before the camp starts', () {
-      final event = _event(
-        startTimeUtc: DateTime.utc(2026, 8, 2, 6),
-        endTimeUtc: DateTime.utc(2026, 8, 2, 8),
-        rrule: 'FREQ=DAILY;COUNT=3',
+    test('Issue 443: false while no attendance is recorded', () {
+      expect(isCampTimetableOnly(started, attendanceRecorded: false), isFalse);
+      expect(
+        campRescheduleLockReason(started, attendanceRecorded: false),
+        isNull,
       );
-      expect(isCampTimetableOnly(event, now: now), isFalse);
     });
 
-    test('Issue 85: true once the camp has started', () {
-      final event = _event(
-        startTimeUtc: DateTime.utc(2026, 7, 30, 6),
-        endTimeUtc: DateTime.utc(2026, 7, 30, 8),
-        rrule: 'FREQ=DAILY;COUNT=3',
+    test('Issue 443: true once attendance is recorded', () {
+      expect(isCampTimetableOnly(started, attendanceRecorded: true), isTrue);
+      expect(
+        campRescheduleLockReason(started, attendanceRecorded: true),
+        campAttendanceRecordedMessage,
       );
-      expect(isCampTimetableOnly(event, now: now), isTrue);
-      expect(campRescheduleLockReason(event, now: now), campStartedMessage);
     });
 
     test('Issue 85: false for a cancelled series', () {
@@ -250,7 +258,29 @@ void main() {
         rrule: 'FREQ=DAILY;COUNT=3',
         untilTimeUtc: DateTime.utc(2026, 7, 31, 6),
       );
-      expect(isCampTimetableOnly(event, now: now), isFalse);
+      expect(isCampTimetableOnly(event, attendanceRecorded: true), isFalse);
+    });
+  });
+
+  group('Issue 443: hasRecordedAttendance', () {
+    Occurrence occ(int eventId, {int marked = 0, int leave = 0}) => Occurrence(
+      eventId: eventId,
+      originalStartTimeUtc: DateTime.utc(2026, 7, 30, 6),
+      actualStartTimeUtc: DateTime.utc(2026, 7, 30, 6),
+      actualEndTimeUtc: DateTime.utc(2026, 7, 30, 8),
+      status: OccurrenceStatus.scheduled,
+      venueId: 1,
+      attendanceMarked: marked,
+      leaveRequestsPending: leave,
+    );
+
+    test('Issue 443: no marks on the event means nothing recorded', () {
+      expect(hasRecordedAttendance([occ(1), occ(2, marked: 3)], 1), isFalse);
+    });
+
+    test('Issue 443: a mark or a pending leave request is recorded', () {
+      expect(hasRecordedAttendance([occ(1), occ(1, marked: 1)], 1), isTrue);
+      expect(hasRecordedAttendance([occ(1, leave: 1)], 1), isTrue);
     });
   });
 

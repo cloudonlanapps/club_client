@@ -209,7 +209,7 @@ class CampScheduleSectionState extends ConsumerState<CampScheduleSection> {
   String _messageFor(ServerException e) {
     switch (e.code) {
       case SdkErrorCode.eventAlreadyStarted:
-        return campStartedMessage;
+        return campAttendanceRecordedMessage;
       case SdkErrorCode.invalidSessionsTotal:
         return EventTimetableFormValidators.totalMismatchMessage;
       case SdkErrorCode.occurrenceOverridesPresent:
